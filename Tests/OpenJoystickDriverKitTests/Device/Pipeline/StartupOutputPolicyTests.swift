@@ -119,7 +119,7 @@ struct USBStartupOutputPolicyTests {
     await startTask.value
 
     #expect(dispatcher.dispatchCount == 0)
-    #expect(await session.closeCount() == 1)
+    #expect(await waitUntil { await session.closeCount() == 1 })
     #expect(!dispatcher.ownershipStates.contains(.exclusive))
   }
 
@@ -235,8 +235,7 @@ struct USBStartupOutputPolicyTests {
   }
 }
 
-private final class StartupInputParser: InputParser, @unchecked Sendable {
-  func performHandshake(handle: (any USBTransportSession)?) async throws { await Task.yield() }
+private final class StartupInputParser: InputParser {
   func parse(data: Data) throws -> [ControllerEvent] { [] }
 }
 

@@ -31,7 +31,7 @@ private enum DS4ConnectionMode {
 /// transport/control prefix.
 public final class DS4Parser: InputParser, PhysicalHIDRumbleOutput, PhysicalHIDColorOutput,
   HIDStartupOutputReportProvider, HIDStartupFeatureReadRequestProvider, HIDFeatureReportConsumer,
-  ControllerBatteryTelemetryProvider, @unchecked Sendable
+  ControllerBatteryTelemetryProvider
 {
   public var physicalDefaultColor: (red: UInt8, green: UInt8, blue: UInt8) { (0, 0, 64) }
 
@@ -77,10 +77,6 @@ public final class DS4Parser: InputParser, PhysicalHIDRumbleOutput, PhysicalHIDC
   }
 
   /// No-op because DS4 requires no handshake.
-  public func performHandshake(handle: (any USBTransportSession)?) throws {
-    // Required by InputParser; DS4 needs no handshake.
-  }
-
   public func hidStartupFeatureReadRequests() -> [PhysicalHIDFeatureReadRequest] {
     hidStartupFeatureReadRequests(transport: nil)
   }

@@ -107,22 +107,29 @@ extension DevicePipeline {
   }
 
   func performUSBHandshake(handle: any USBTransportSession) async -> Bool {
-    do {
-      try await parser.performHandshake(handle: handle)
-      try await sendUSBStartupOutputPackets(handle: handle)
-      print("[DevicePipeline] Handshake complete:" + " \(identifier)")
-      return true
-    } catch {
-      print("[DevicePipeline] Handshake failed" + " for \(identifier): \(error)")
-      usbHandle = nil
-      await handle.close()
-      return false
+    let retryDelays = (parser as? any USBStartupOutputProvider)?.usbStartupRetryDelays ?? []
+    for attempt in 0...retryDelays.count {
+      do {
+        try await sendUSBStartupOutputPackets(handle: handle)
+        print("[DevicePipeline] Handshake complete:" + " \(identifier)")
+        return true
+      } catch {
+        print(
+          "[DevicePipeline] Handshake attempt \(attempt + 1) failed for \(identifier): \(error)"
+        )
+        guard attempt < retryDelays.count else { break }
+        do { try await Task.sleep(nanoseconds: retryDelays[attempt]) } catch { break }
+      }
     }
+    usbHandle = nil
+    await handle.close()
+    return false
   }
 
   func sendUSBStartupOutputPackets(handle: any USBTransportSession) async throws {
     guard let startupOutput = parser as? USBStartupOutputProvider else { return }
-    for packet in startupOutput.usbStartupOutputPackets() {
+    let packets = startupOutput.usbStartupOutputPackets()
+    for (index, packet) in packets.enumerated() {
       do {
         _ = try await handle.writeInterruptPacket(
           endpoint: transportProfile.outputEndpoint,
@@ -136,6 +143,9 @@ extension DevicePipeline {
         print(
           "[DevicePipeline] Optional USB startup output rejected for \(identifier):" + " \(error)"
         )
+      }
+      if index < packets.count - 1, startupOutput.usbStartupOutputIntervalNanoseconds > 0 {
+        try await Task.sleep(nanoseconds: startupOutput.usbStartupOutputIntervalNanoseconds)
       }
     }
   }
@@ -265,7 +275,16 @@ extension DevicePipeline {
   }
 
   func runKeepAlive(handle: any USBTransportSession) async {
-    do { try await parser.keepAlive(handle: handle) } catch {
+    guard let packet = (parser as? any USBKeepAliveOutputProvider)?.usbKeepAlivePacket() else {
+      return
+    }
+    do {
+      _ = try await handle.writeInterruptPacket(
+        endpoint: packet.endpoint,
+        data: packet.bytes,
+        timeout: packet.timeoutMilliseconds
+      )
+    } catch {
       print("[DevicePipeline] Keep-alive failed" + " for \(identifier): \(error)")
     }
   }

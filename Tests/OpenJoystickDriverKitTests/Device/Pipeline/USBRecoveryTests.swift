@@ -112,29 +112,25 @@ struct USBPipelineRecoveryTests {
   }
 }
 
-private class RecoveryInputParser: InputParser, @unchecked Sendable {
-  func performHandshake(handle: (any USBTransportSession)?) throws {}
+private class RecoveryInputParser: InputParser {
   func parse(data: Data) throws -> [ControllerEvent] { [] }
 }
 
-private final class RecoveryRumbleParser: RecoveryInputParser, PhysicalRumbleOutput,
-  @unchecked Sendable
-{
+private final class RecoveryRumbleParser: RecoveryInputParser, PhysicalRumbleOutput {
   var physicalRumbleMotors: [PhysicalRumbleMotor] {
     [.leftMain, .rightMain, .leftTrigger, .rightTrigger]
   }
 
-  func sendPhysicalRumble(
-    handle: any USBTransportSession,
+  func physicalRumblePacket(
     left: UInt8,
     right: UInt8,
     lt: UInt8,
     rt: UInt8
-  ) async throws {
-    _ = try await handle.writeInterruptPacket(
+  ) -> PhysicalUSBOutputPacket {
+    PhysicalUSBOutputPacket(
       endpoint: 2,
-      data: [left, right, lt, rt],
-      timeout: 2_000
+      bytes: [left, right, lt, rt],
+      timeoutMilliseconds: 2_000
     )
   }
 }

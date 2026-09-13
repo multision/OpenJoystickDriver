@@ -41,7 +41,7 @@ public enum DualSenseParserError: Error, Equatable { case invalidBluetoothCRC }
 /// its Linux-compatible CRC32 validates.
 public final class DualSenseParser: InputParser, HIDStartupFeatureReadRequestProvider,
   HIDFeatureReportConsumer, PhysicalHIDRumbleOutput, PhysicalHIDPlayerIndicatorOutput,
-  PhysicalHIDColorOutput, PhysicalHIDAdaptiveTriggerOutput, @unchecked Sendable
+  PhysicalHIDColorOutput, PhysicalHIDAdaptiveTriggerOutput
 {
   public var physicalDefaultColor: (red: UInt8, green: UInt8, blue: UInt8) { (0, 0, 255) }
 
@@ -95,10 +95,6 @@ public final class DualSenseParser: InputParser, HIDStartupFeatureReadRequestPro
   }
 
   /// No-op for the current experimental HID input slice.
-  public func performHandshake(handle: (any USBTransportSession)?) async throws {
-    await Task.yield()
-  }
-
   public func hidStartupFeatureReadRequests() -> [PhysicalHIDFeatureReadRequest] {
     [PhysicalHIDFeatureReadRequest(reportID: 0x05, length: 41)]
   }

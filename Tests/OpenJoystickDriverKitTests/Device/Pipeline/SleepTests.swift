@@ -26,7 +26,7 @@ struct DevicePipelineSleepTests {
     await pipeline.feedHIDData(Data([3]))
 
     #expect(dispatcher.dispatchCount == dispatchCountBeforeSleepInput)
-    #expect(abs(pipeline.inputState().leftStickX - 0.8) < 0.001)
+    #expect(abs(await pipeline.inputState().leftStickX - 0.8) < 0.001)
   }
 
   @Test
@@ -220,9 +220,7 @@ struct DevicePipelineSleepTests {
 
 }
 
-private final class ScriptedInputParser: InputParser, @unchecked Sendable {
-  func performHandshake(handle: (any USBTransportSession)?) async throws { await Task.yield() }
-
+private final class ScriptedInputParser: InputParser {
   func parse(data: Data) throws -> [ControllerEvent] {
     switch data.first {
     case 1: return [.buttonPressed(.a)]
@@ -240,7 +238,7 @@ private final class ScriptedInputParser: InputParser, @unchecked Sendable {
 }
 
 private final class ScriptedLifecycleInputParser: InputParser, ControllerInputConnectionLifecycle,
-  HIDStartupFeatureReportProvider, HIDShutdownFeatureReportProvider, @unchecked Sendable
+  HIDStartupFeatureReportProvider, HIDShutdownFeatureReportProvider
 {
   private var connected = false
   private var pendingState: ControllerInputConnectionState?
@@ -260,8 +258,6 @@ private final class ScriptedLifecycleInputParser: InputParser, ControllerInputCo
     pendingState = nil
     return state
   }
-
-  func performHandshake(handle: (any USBTransportSession)?) async throws { await Task.yield() }
 
   func parse(data: Data) throws -> [ControllerEvent] {
     switch data.first {

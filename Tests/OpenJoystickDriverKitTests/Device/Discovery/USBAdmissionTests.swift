@@ -162,6 +162,7 @@ struct USBDetectionAdmissionTests {
       await manager.handleUSBDeviceAdded(device, provider: provider)
         == .claimed(DeviceIdentifier(vendorID: 1_118, productID: 721, locationID: 9))
     )
+    await manager.stop()
   }
 
   @Test

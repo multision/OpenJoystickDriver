@@ -18,8 +18,7 @@ public enum NintendoControllerLayout: Sendable {
 /// and two packed 12-bit stick fields. This experimental slice uses default
 /// center calibration until physical hardware can verify SPI calibration reads.
 public final class SwitchProParser: InputParser, HIDStartupOutputReportProvider,
-  HIDStartupRecoveryProvider, PhysicalHIDRumbleOutput, PhysicalHIDPlayerIndicatorOutput,
-  @unchecked Sendable
+  HIDStartupRecoveryProvider, PhysicalHIDRumbleOutput, PhysicalHIDPlayerIndicatorOutput
 {
 
   private enum ReportOffset {
@@ -66,10 +65,6 @@ public final class SwitchProParser: InputParser, HIDStartupOutputReportProvider,
   }
 
   public var minimumPhysicalOutputIntervalNanoseconds: UInt64 { 50_000_000 }
-
-  public func performHandshake(handle: (any USBTransportSession)?) async throws {
-    await Task.yield()
-  }
 
   public func hidStartupReports() -> [PhysicalHIDOutputReport] {
     let prefix =

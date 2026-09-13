@@ -156,7 +156,7 @@ extension DeviceManager {
       externalOutputAllowed: externalOutputAllowed
     )
     pipelines[identifier] = pipeline
-    Task { await pipeline.start() }
+    await pipeline.start()
     return .claimed(identifier)
   }
 

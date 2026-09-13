@@ -6,7 +6,7 @@ import Foundation
 /// Windows driver analysis shows that structurally valid but cryptographically
 /// empty responses let the device reach FULL_POWER through xboxgip.sys
 /// retry/timeout logic.
-final class GIPAuthHandler: @unchecked Sendable {
+final class GIPAuthHandler {
   /// Current device power state, driven by auth progress.
   private(set) var deviceState: GIPDeviceState = .start
 

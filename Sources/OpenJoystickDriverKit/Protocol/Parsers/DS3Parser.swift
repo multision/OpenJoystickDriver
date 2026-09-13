@@ -24,8 +24,7 @@ private let ds3OutputReportLength = 36
 /// 49-byte report. Physical rumble and player LEDs use the fixed 36-byte
 /// Sixaxis output report from Linux `hid-sony.c`; sensors remain intentionally omitted.
 public final class DS3Parser: InputParser, HIDStartupFeatureReadRequestProvider,
-  HIDStartupFeatureReportProvider, PhysicalHIDRumbleOutput, PhysicalHIDPlayerIndicatorOutput,
-  @unchecked Sendable
+  HIDStartupFeatureReportProvider, PhysicalHIDRumbleOutput, PhysicalHIDPlayerIndicatorOutput
 {
 
   private enum ReportOffset {
@@ -58,10 +57,6 @@ public final class DS3Parser: InputParser, HIDStartupFeatureReadRequestProvider,
   public init() {}
 
   public var physicalBinaryRumbleMotors: [PhysicalRumbleMotor] { [.rightMain] }
-
-  public func performHandshake(handle: (any USBTransportSession)?) async throws {
-    await Task.yield()
-  }
 
   public func hidStartupFeatureReadRequests() -> [PhysicalHIDFeatureReadRequest] {
     [

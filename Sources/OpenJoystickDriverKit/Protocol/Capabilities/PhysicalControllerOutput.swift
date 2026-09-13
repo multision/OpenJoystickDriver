@@ -155,24 +155,33 @@ public struct PhysicalHIDOutputReport: Equatable, Sendable {
   }
 }
 
+public struct PhysicalUSBOutputPacket: Equatable, Sendable {
+  public let endpoint: UInt8
+  public let bytes: [UInt8]
+  public let timeoutMilliseconds: UInt32
+
+  public init(endpoint: UInt8, bytes: [UInt8], timeoutMilliseconds: UInt32) {
+    self.endpoint = endpoint
+    self.bytes = bytes
+    self.timeoutMilliseconds = timeoutMilliseconds
+  }
+}
+
 /// Optional physical output support exposed by USB-backed controller protocols.
-public protocol PhysicalRumbleOutput: AnyObject, Sendable {
+public protocol PhysicalRumbleOutput: AnyObject {
   /// Rumble motors the protocol implementation can address.
   var physicalRumbleMotors: [PhysicalRumbleMotor] { get }
 
   /// True when the protocol has source-backed physical rumble output.
   var supportsPhysicalRumble: Bool { get }
 
-  /// Sends physical rumble to the source controller.
-  ///
-  /// Values are 0...255. Unsupported actuator values must be ignored.
-  func sendPhysicalRumble(
-    handle: any USBTransportSession,
+  /// Builds the transport packet for physical rumble.
+  func physicalRumblePacket(
     left: UInt8,
     right: UInt8,
     lt: UInt8,
     rt: UInt8
-  ) async throws
+  ) -> PhysicalUSBOutputPacket
 }
 
 extension PhysicalRumbleOutput {
@@ -182,7 +191,7 @@ extension PhysicalRumbleOutput {
 }
 
 /// Optional physical output support exposed by HID-backed controller protocols.
-public protocol PhysicalHIDRumbleOutput: AnyObject, Sendable {
+public protocol PhysicalHIDRumbleOutput: AnyObject {
   var physicalRumbleMotors: [PhysicalRumbleMotor] { get }
   var physicalBinaryRumbleMotors: [PhysicalRumbleMotor] { get }
   var minimumPhysicalOutputIntervalNanoseconds: UInt64 { get }
@@ -206,7 +215,7 @@ extension PhysicalHIDRumbleOutput {
 }
 
 /// Optional feature-report haptics used by controllers without conventional rumble motors.
-public protocol PhysicalHIDFeatureHapticOutput: AnyObject, Sendable {
+public protocol PhysicalHIDFeatureHapticOutput: AnyObject {
   var physicalRumbleMotors: [PhysicalRumbleMotor] { get }
 
   func physicalHapticReports(
@@ -217,7 +226,7 @@ public protocol PhysicalHIDFeatureHapticOutput: AnyObject, Sendable {
 }
 
 /// Optional RGB lightbar support delivered through a HID output report.
-public protocol PhysicalHIDColorOutput: AnyObject, Sendable {
+public protocol PhysicalHIDColorOutput: AnyObject {
   var physicalLightingFeatures: [PhysicalLightingFeature] { get }
   var physicalDefaultColor: (red: UInt8, green: UInt8, blue: UInt8) { get }
   func physicalColorReport(red: UInt8, green: UInt8, blue: UInt8) -> PhysicalHIDOutputReport
@@ -228,7 +237,7 @@ extension PhysicalHIDColorOutput {
 }
 
 /// Optional scalar LED-brightness support delivered through a HID feature report.
-public protocol PhysicalHIDFeatureBrightnessOutput: AnyObject, Sendable {
+public protocol PhysicalHIDFeatureBrightnessOutput: AnyObject {
   var physicalLightingFeatures: [PhysicalLightingFeature] { get }
   func physicalBrightnessReport(_ brightness: UInt8) -> PhysicalHIDOutputReport
 }
@@ -238,7 +247,7 @@ extension PhysicalHIDFeatureBrightnessOutput {
 }
 
 /// Optional physical player-indicator support exposed by HID-backed protocols.
-public protocol PhysicalHIDPlayerIndicatorOutput: AnyObject, Sendable {
+public protocol PhysicalHIDPlayerIndicatorOutput: AnyObject {
   var physicalLightingFeatures: [PhysicalLightingFeature] { get }
 
   func physicalPlayerIndicatorReport(
@@ -247,7 +256,7 @@ public protocol PhysicalHIDPlayerIndicatorOutput: AnyObject, Sendable {
 }
 
 /// Optional adaptive-trigger support delivered through a HID output report.
-public protocol PhysicalHIDAdaptiveTriggerOutput: AnyObject, Sendable {
+public protocol PhysicalHIDAdaptiveTriggerOutput: AnyObject {
   var physicalAdaptiveTriggers: [PhysicalAdaptiveTrigger] { get }
   func physicalAdaptiveTriggerReport(
     _ trigger: PhysicalAdaptiveTrigger,
@@ -266,13 +275,12 @@ extension PhysicalHIDPlayerIndicatorOutput {
 }
 
 /// Optional physical player-indicator support exposed by USB-backed protocols.
-public protocol PhysicalPlayerIndicatorOutput: AnyObject, Sendable {
+public protocol PhysicalPlayerIndicatorOutput: AnyObject {
   var physicalLightingFeatures: [PhysicalLightingFeature] { get }
 
-  func sendPhysicalPlayerIndicator(
-    handle: any USBTransportSession,
-    indicator: PhysicalPlayerIndicator
-  ) async throws
+  func physicalPlayerIndicatorPacket(
+    _ indicator: PhysicalPlayerIndicator
+  ) -> PhysicalUSBOutputPacket
 }
 
 extension PhysicalPlayerIndicatorOutput {

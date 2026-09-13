@@ -14,7 +14,7 @@ private let flydigiHatNeutral: UInt8 = 0
 /// page, so the descriptor-driven fallback maps neither correctly. Button
 /// usages are also non-contiguous, which shifts every index after the first
 /// gap. This parser reads the observed 15-byte layout by offset instead.
-public final class FlydigiParser: InputParser, @unchecked Sendable {
+public final class FlydigiParser: InputParser {
 
   private enum ReportOffset {
     static let leftStickX: Int = 1
@@ -65,10 +65,6 @@ public final class FlydigiParser: InputParser, @unchecked Sendable {
   public init() {}
 
   /// No-op because the controller streams input without a handshake.
-  public func performHandshake(handle: (any USBTransportSession)?) throws {
-    // Required by InputParser; Flydigi BLE needs no handshake.
-  }
-
   /// Parses one Flydigi input report and returns zero or more controller events.
   public func parse(data: Data) throws -> [ControllerEvent] {
     let bytes = [UInt8](data)

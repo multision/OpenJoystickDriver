@@ -14,7 +14,7 @@ public enum ControllerInputConnectionState: Sendable, Equatable {
 }
 
 /// Optional parser hook for logical controller lifecycle inside a physical input transport.
-public protocol ControllerInputConnectionLifecycle: AnyObject, Sendable {
+public protocol ControllerInputConnectionLifecycle: AnyObject {
   /// True when output should not be created until a logical controller connect event arrives.
   var requiresInputConnectionBeforeOutput: Bool { get }
 
@@ -23,13 +23,13 @@ public protocol ControllerInputConnectionLifecycle: AnyObject, Sendable {
 }
 
 /// Optional parser hook for receiver status requests over HID feature reports.
-public protocol HIDInputConnectionStatusRequester: AnyObject, Sendable {
+public protocol HIDInputConnectionStatusRequester: AnyObject {
   /// Feature report that asks the receiver to emit its current logical connection state.
   func inputConnectionStatusRequestReport() -> PhysicalHIDOutputReport?
 }
 
 /// Optional parser hook for startup output reports sent through a HID transport.
-public protocol HIDStartupOutputReportProvider: AnyObject, Sendable {
+public protocol HIDStartupOutputReportProvider: AnyObject {
   /// Source-backed startup reports needed before the controller emits full input reports.
   func hidStartupReports() -> [PhysicalHIDOutputReport]
   func hidStartupReports(transport: String?) -> [PhysicalHIDOutputReport]
@@ -53,33 +53,44 @@ extension HIDStartupOutputReportProvider {
 }
 
 /// Bounded follow-up reads for startup protocols whose replies arrive through the input stream.
-public protocol HIDStartupRecoveryProvider: AnyObject, Sendable {
+public protocol HIDStartupRecoveryProvider: AnyObject {
   func pendingHIDStartupReports() -> [PhysicalHIDOutputReport]
   func expireHIDStartupRequests()
 }
 
 /// Optional USB output emitted when a receiver-backed controller connects or disconnects.
-public protocol USBInputConnectionOutputProvider: AnyObject, Sendable {
+public protocol USBInputConnectionOutputProvider: AnyObject {
   /// Source-backed packets for one logical controller lifecycle transition.
   func usbInputConnectionOutputPackets(for state: ControllerInputConnectionState) -> [[UInt8]]
 }
 
 /// Optional parser hook for startup output packets sent through a USB interrupt OUT endpoint.
-public protocol USBStartupOutputProvider: AnyObject, Sendable {
+public protocol USBStartupOutputProvider: AnyObject {
   /// Source-backed startup packets needed when OJD starts consuming a USB controller.
   func usbStartupOutputPackets() -> [[UInt8]]
+  var usbStartupOutputIntervalNanoseconds: UInt64 { get }
+  var usbStartupRetryDelays: [UInt64] { get }
+}
+
+extension USBStartupOutputProvider {
+  public var usbStartupOutputIntervalNanoseconds: UInt64 { 0 }
+  public var usbStartupRetryDelays: [UInt64] { [] }
+}
+
+public protocol USBKeepAliveOutputProvider: AnyObject {
+  func usbKeepAlivePacket() -> PhysicalUSBOutputPacket?
 }
 
 /// Optional parser hook for transport packets produced while parsing input.
 ///
 /// Protocol parsing remains synchronous and deterministic. The owning pipeline
 /// drains these packets and performs the asynchronous USB writes in order.
-public protocol USBDeferredOutputProvider: AnyObject, Sendable {
+public protocol USBDeferredOutputProvider: AnyObject {
   func consumeUSBOutputPackets() -> [[UInt8]]
 }
 
 /// Optional parser hook for startup feature reports sent through a HID transport.
-public protocol HIDStartupFeatureReportProvider: AnyObject, Sendable {
+public protocol HIDStartupFeatureReportProvider: AnyObject {
   /// Source-backed feature reports needed when OJD starts consuming the physical input.
   func hidStartupFeatureReports() -> [PhysicalHIDOutputReport]
   func hidStartupFeatureReports(transport: String?) -> [PhysicalHIDOutputReport]
@@ -93,13 +104,13 @@ extension HIDStartupFeatureReportProvider {
 }
 
 /// Optional parser hook for shutdown feature reports sent through a HID transport.
-public protocol HIDShutdownFeatureReportProvider: AnyObject, Sendable {
+public protocol HIDShutdownFeatureReportProvider: AnyObject {
   /// Source-backed feature reports needed when OJD stops consuming the physical input.
   func hidShutdownFeatureReports() -> [PhysicalHIDOutputReport]
 }
 
 /// Optional parser hook for startup feature-report reads sent through a HID transport.
-public protocol HIDStartupFeatureReadRequestProvider: AnyObject, Sendable {
+public protocol HIDStartupFeatureReadRequestProvider: AnyObject {
   /// Source-backed feature reads needed to put the controller into operational mode.
   func hidStartupFeatureReadRequests() -> [PhysicalHIDFeatureReadRequest]
   func hidStartupFeatureReadRequests(transport: String?) -> [PhysicalHIDFeatureReadRequest]
@@ -112,7 +123,7 @@ extension HIDStartupFeatureReadRequestProvider {
 }
 
 /// Receives feature-read replies on the owning pipeline actor, serialized with input parsing.
-public protocol HIDFeatureReportConsumer: AnyObject, Sendable {
+public protocol HIDFeatureReportConsumer: AnyObject {
   /// False means the report was rejected and the previous parser state remains valid.
   func consumeHIDFeatureReport(
     _ data: Data,
@@ -122,7 +133,7 @@ public protocol HIDFeatureReportConsumer: AnyObject, Sendable {
 }
 
 /// Optional semantic input path for descriptor-defined HID gamepads.
-public protocol HIDElementValueParser: AnyObject, Sendable {
+public protocol HIDElementValueParser: AnyObject {
   /// Whether the parser maps this descriptor element into controller input.
   func acceptsElement(usagePage: UInt32, usage: UInt32) -> Bool
 
@@ -131,21 +142,13 @@ public protocol HIDElementValueParser: AnyObject, Sendable {
 }
 
 /// Optional parser state exposed to diagnostics without entering the controller event stream.
-public protocol ControllerBatteryTelemetryProvider: AnyObject, Sendable {
+public protocol ControllerBatteryTelemetryProvider: AnyObject {
   var batteryTelemetry: ControllerBatteryTelemetry? { get }
 }
 
-public protocol InputParser: AnyObject, Sendable {
+public protocol InputParser: AnyObject {
   /// Immutable sample-format capabilities implemented by this parser.
   var physicalInputCapabilities: PhysicalControllerInputCapabilities { get }
-
-  /// Runs the startup handshake the controller needs before it starts sending input.
-  ///
-  /// For example, GIP controllers require a power-on packet. Protocols that
-  /// have no handshake (DS4, GenericHID) leave this as a no-op.
-  /// - Parameter handle: The physical USB transport session. Pass `nil` for HID devices.
-  /// - Throws: A protocol-specific error if the handshake fails.
-  func performHandshake(handle: (any USBTransportSession)?) async throws
 
   /// Reads one raw data packet and returns zero or more controller events.
   ///
@@ -156,13 +159,6 @@ public protocol InputParser: AnyObject, Sendable {
   /// Receives the host receipt time for protocols without a reliable device sample clock.
   func parse(data: Data, receivedAtNanoseconds: UInt64) throws -> [ControllerEvent]
 
-  /// Sends profile-selected periodic output so the controller does not power off.
-  ///
-  /// ``DevicePipeline`` calls this at a regular interval during the input
-  /// loop. The default implementation does nothing; protocol profiles may
-  /// override it when periodic output is supported and hardware evidence
-  /// requires it.
-  func keepAlive(handle: (any USBTransportSession)?) async throws
 }
 
 extension InputParser {
@@ -172,6 +168,4 @@ extension InputParser {
 
   public var physicalInputCapabilities: PhysicalControllerInputCapabilities { .none }
 
-  /// Default no-op keep-alive implementation.
-  public func keepAlive(handle: (any USBTransportSession)?) async throws { await Task.yield() }
 }

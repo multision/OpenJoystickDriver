@@ -83,16 +83,8 @@ public enum Xbox360LEDPattern: UInt8, Sendable {
 ///   byte 2 : LED pattern (see Xbox360LEDPattern)
 /// ```
 public final class Xbox360Parser: InputParser, PhysicalRumbleOutput, PhysicalPlayerIndicatorOutput,
-  USBStartupOutputProvider, ControllerInputConnectionLifecycle, USBInputConnectionOutputProvider,
-  @unchecked Sendable
+  USBStartupOutputProvider, ControllerInputConnectionLifecycle, USBInputConnectionOutputProvider
 {
-
-  // MARK: - Thread safety
-  //
-  // @unchecked Sendable safety:
-  // - Only the owning DevicePipeline actor accesses mutable state
-  //   (prevButtons, prevLT/RT, prevLS/RS), so access is serial.
-
   private let outEndpoint: UInt8
   private let isWirelessReceiver: Bool
   private var receiverConnected = false
@@ -125,10 +117,6 @@ public final class Xbox360Parser: InputParser, PhysicalRumbleOutput, PhysicalPla
   // MARK: - InputParser
 
   /// Xbox 360 starts input without a handshake; startup output only sets the ring LED.
-  public func performHandshake(handle: (any USBTransportSession)?) throws {
-    // Xbox 360 starts sending input reports immediately after interface claim.
-  }
-
   public func usbStartupOutputPackets() -> [[UInt8]] {
     isWirelessReceiver ? [] : [[0x01, 0x03, Xbox360LEDPattern.player1On.rawValue]]
   }
@@ -206,6 +194,19 @@ public final class Xbox360Parser: InputParser, PhysicalRumbleOutput, PhysicalPla
     rt: UInt8
   ) async throws { try await sendRumble(handle: handle, left: left, right: right) }
 
+  public func physicalRumblePacket(
+    left: UInt8,
+    right: UInt8,
+    lt _: UInt8,
+    rt _: UInt8
+  ) -> PhysicalUSBOutputPacket {
+    PhysicalUSBOutputPacket(
+      endpoint: outEndpoint,
+      bytes: rumblePacket(left: left, right: right),
+      timeoutMilliseconds: 2_000
+    )
+  }
+
   /// Sets the ring-of-light LED pattern on the physical controller.
   ///
   /// - Parameters:
@@ -260,6 +261,16 @@ public final class Xbox360Parser: InputParser, PhysicalRumbleOutput, PhysicalPla
     handle: any USBTransportSession,
     indicator: PhysicalPlayerIndicator
   ) async throws { try await sendLED(handle: handle, pattern: Self.ledPattern(for: indicator)) }
+
+  public func physicalPlayerIndicatorPacket(
+    _ indicator: PhysicalPlayerIndicator
+  ) -> PhysicalUSBOutputPacket {
+    PhysicalUSBOutputPacket(
+      endpoint: outEndpoint,
+      bytes: ledPacket(pattern: Self.ledPattern(for: indicator)),
+      timeoutMilliseconds: 2_000
+    )
+  }
 
   // MARK: - Private parsing
 

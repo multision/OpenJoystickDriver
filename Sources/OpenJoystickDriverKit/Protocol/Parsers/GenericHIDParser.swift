@@ -4,7 +4,7 @@ import Foundation
 ///
 /// Raw report layouts vary between devices, so IOKit decodes descriptor elements
 /// and this parser maps standard Generic Desktop and Button usages.
-public final class GenericHIDParser: InputParser, HIDElementValueParser, @unchecked Sendable {
+public final class GenericHIDParser: InputParser, HIDElementValueParser {
   private static let buttonUsagePage: UInt32 = 0x09
   private static let genericDesktopUsagePage: UInt32 = 0x01
   private static let simulationControlsUsagePage: UInt32 = 0x02
@@ -44,8 +44,6 @@ public final class GenericHIDParser: InputParser, HIDElementValueParser, @unchec
   }
 
   /// No-op; generic HID controllers require no handshake.
-  public func performHandshake(handle: (any USBTransportSession)?) throws {}
-
   /// Raw reports are handled through IOKit's descriptor-decoded element callback.
   public func parse(data _: Data) throws -> [ControllerEvent] { [] }
 

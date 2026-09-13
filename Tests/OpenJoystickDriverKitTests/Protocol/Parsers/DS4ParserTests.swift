@@ -399,16 +399,16 @@ struct DS4ParserTests {
     await pipeline.feedHIDData(makeDS4Report())
 
     await pipeline.feedHIDData(makeDS4Report(buttons0: 0x00))
-    #expect(pipeline.inputState().pressedButtons == [Button.dpadUp.rawValue])
+    #expect(await pipeline.inputState().pressedButtons == [Button.dpadUp.rawValue])
 
     await pipeline.feedHIDData(makeDS4Report(buttons0: 0x03))
     #expect(
-      Set(pipeline.inputState().pressedButtons)
+      Set(await pipeline.inputState().pressedButtons)
         == Set([Button.dpadRight.rawValue, Button.dpadDown.rawValue])
     )
 
     await pipeline.feedHIDData(makeDS4Report())
-    #expect(pipeline.inputState().pressedButtons.isEmpty)
+    #expect(await pipeline.inputState().pressedButtons.isEmpty)
   }
   @Test
   func testPipelineSnapshotsBatteryWithoutDispatchingItAsInput() async throws {
@@ -424,7 +424,7 @@ struct DS4ParserTests {
     await pipeline.feedHIDData(makeDS4Report(status: 0x1B))
 
     #expect(
-      pipeline.batteryTelemetry()
+      await pipeline.batteryTelemetry()
         == ControllerBatteryTelemetry(percentage: 100, chargingState: .full, cableState: .connected)
     )
     #expect(dispatcher.events.count == 1)

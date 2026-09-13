@@ -36,7 +36,7 @@ private let steamControllerRightTrackpadModeSetting: UInt8 = 0x08
 public final class SteamControllerParser: InputParser, ControllerInputConnectionLifecycle,
   HIDInputConnectionStatusRequester, HIDStartupFeatureReportProvider,
   HIDShutdownFeatureReportProvider, PhysicalHIDFeatureHapticOutput,
-  PhysicalHIDFeatureBrightnessOutput, @unchecked Sendable
+  PhysicalHIDFeatureBrightnessOutput
 {
 
   private enum ReportOffset {
@@ -159,10 +159,6 @@ public final class SteamControllerParser: InputParser, ControllerInputConnection
   }
 
   /// No-op for the current experimental input slice.
-  public func performHandshake(handle: (any USBTransportSession)?) async throws {
-    await Task.yield()
-  }
-
   /// Parses one Steam Controller state report and returns controller events.
   public func parse(data: Data) throws -> [ControllerEvent] {
     try parse(data: data, receivedAtNanoseconds: DispatchTime.now().uptimeNanoseconds)

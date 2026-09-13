@@ -4,6 +4,41 @@ import OpenJoystickDriverKit
 import OpenJoystickDriverUSB
 
 private let controllerRecordProbeKeepAliveIntervalNanoseconds: UInt64 = 4_000_000_000
+private actor ControllerRecordProbeIsolation {
+  private let parser: any InputParser
+
+  init(parser: sending any InputParser) { self.parser = parser }
+
+  func printRecord(plan: ControllerRecordProbePlan) {
+    renderProbeRecord(plan: plan, parser: parser, isolation: self)
+  }
+
+  func sendStartupPackets(
+    session: any USBTransportSession,
+    endpoint: UInt8
+  ) async throws {
+    try await writeProbeStartupPackets(
+      parser: parser,
+      session: session,
+      endpoint: endpoint,
+      isolation: self
+    )
+  }
+
+  func monitor(
+    plan: ControllerRecordProbePlan,
+    session: any USBTransportSession,
+    seconds: Int
+  ) async throws -> (packets: Int, events: Int, parseErrors: Int) {
+    try await monitorProbeInput(
+      parser: parser,
+      plan: plan,
+      session: session,
+      seconds: seconds,
+      isolation: self
+    )
+  }
+}
 
 func runControllerRecordProbe(recordPath: String, seconds: Int, validateOnly: Bool) -> Never {
   let exitCode = ExitCodeBox()
@@ -14,7 +49,8 @@ func runControllerRecordProbe(recordPath: String, seconds: Int, validateOnly: Bo
     do {
       let plan = try ControllerRecordProbePlan(contentsOf: URL(fileURLWithPath: recordPath))
       let parser = plan.makeParser()
-      printRecord(plan: plan, parser: parser)
+      let isolation = ControllerRecordProbeIsolation(parser: parser)
+      await isolation.printRecord(plan: plan)
       if validateOnly {
         print("RECORD_VALIDATION result=valid")
         return
@@ -53,19 +89,16 @@ func runControllerRecordProbe(recordPath: String, seconds: Int, validateOnly: Bo
           + " route=\(device.route.rawValue) result=opened"
       )
 
-      try await parser.performHandshake(handle: session)
-      print("RECORD_HANDSHAKE driver=\(plan.driver.rawValue) result=complete")
-      try await sendStartupPackets(
-        parser: parser,
+      try await isolation.sendStartupPackets(
         session: session,
         endpoint: transport.outputEndpoint
       )
+      print("RECORD_HANDSHAKE driver=\(plan.driver.rawValue) result=complete")
 
       if transport.postHandshakeSettleNanoseconds > 0 {
         try await Task.sleep(nanoseconds: transport.postHandshakeSettleNanoseconds)
       }
-      let summary = try await monitor(
-        parser: parser,
+      let summary = try await isolation.monitor(
         plan: plan,
         session: session,
         seconds: seconds
@@ -86,7 +119,11 @@ func runControllerRecordProbe(recordPath: String, seconds: Int, validateOnly: Bo
   exit(exitCode.value)
 }
 
-private func printRecord(plan: ControllerRecordProbePlan, parser: any InputParser) {
+private func renderProbeRecord(
+  plan: ControllerRecordProbePlan,
+  parser: any InputParser,
+  isolation _: isolated ControllerRecordProbeIsolation
+) {
   let profileStartup = plan.startupPackets.map(\.rawValue).joined(separator: ",")
   let usbStartup = (parser as? any USBStartupOutputProvider)?.usbStartupOutputPackets() ?? []
   let usbStartupBytes = usbStartup.map(\.hexBytes).joined(separator: ",")
@@ -101,10 +138,11 @@ private func printRecord(plan: ControllerRecordProbePlan, parser: any InputParse
   )
 }
 
-private func sendStartupPackets(
+private func writeProbeStartupPackets(
   parser: any InputParser,
   session: any USBTransportSession,
-  endpoint: UInt8
+  endpoint: UInt8,
+  isolation _: isolated ControllerRecordProbeIsolation
 ) async throws {
   guard let startupOutput = parser as? any USBStartupOutputProvider else { return }
   for packet in startupOutput.usbStartupOutputPackets() {
@@ -122,11 +160,12 @@ private func sendStartupPackets(
   }
 }
 
-private func monitor(
+private func monitorProbeInput(
   parser: any InputParser,
   plan: ControllerRecordProbePlan,
   session: any USBTransportSession,
-  seconds: Int
+  seconds: Int,
+  isolation: isolated ControllerRecordProbeIsolation
 ) async throws -> (packets: Int, events: Int, parseErrors: Int) {
   let deadline = Date().addingTimeInterval(TimeInterval(seconds))
   var lastKeepAlive = DispatchTime.now().uptimeNanoseconds
@@ -142,8 +181,14 @@ private func monitor(
         print("USB_KEEPALIVE result=disabled")
       } else {
         do {
-          try await parser.keepAlive(handle: session)
-          print("USB_KEEPALIVE result=sent")
+          if let packet = (parser as? any USBKeepAliveOutputProvider)?.usbKeepAlivePacket() {
+            _ = try await session.writeInterruptPacket(
+              endpoint: packet.endpoint,
+              data: packet.bytes,
+              timeout: packet.timeoutMilliseconds
+            )
+            print("USB_KEEPALIVE result=sent")
+          }
         } catch { print("USB_KEEPALIVE result=error detail=\(error.localizedDescription)") }
       }
     }
@@ -161,7 +206,12 @@ private func monitor(
       )
       do {
         let events = try parser.parse(data: Data(bytes))
-        try await sendLifecyclePackets(parser: parser, session: session, plan: plan)
+        try await sendLifecyclePackets(
+          parser: parser,
+          session: session,
+          plan: plan,
+          isolation: isolation
+        )
         eventCount += events.count
         for event in events { print("EVENT \(String(describing: event))") }
       } catch {
@@ -177,7 +227,8 @@ private func monitor(
 private func sendLifecyclePackets(
   parser: any InputParser,
   session: any USBTransportSession,
-  plan: ControllerRecordProbePlan
+  plan: ControllerRecordProbePlan,
+  isolation _: isolated ControllerRecordProbeIsolation
 ) async throws {
   guard let lifecycle = parser as? any ControllerInputConnectionLifecycle,
     let state = lifecycle.consumeInputConnectionStateChange()

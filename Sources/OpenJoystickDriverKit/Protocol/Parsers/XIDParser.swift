@@ -12,7 +12,7 @@ private let xidStickMax = Float(Int16.max)
 /// analog black/white shoulders in bytes 8–9, analog triggers in bytes 10–11,
 /// and Int16 LE sticks at bytes 12–19. Any nonzero analog face or shoulder
 /// value is pressed, matching `input_report_key` in `xpad.c`.
-public final class XIDParser: InputParser, @unchecked Sendable {
+public final class XIDParser: InputParser {
   private var prevDigital: UInt8 = 0
   private var prevA: UInt8 = 0
   private var prevB: UInt8 = 0
@@ -28,10 +28,6 @@ public final class XIDParser: InputParser, @unchecked Sendable {
   private var prevRSY: Int16 = 0
 
   public init() {}
-
-  public func performHandshake(handle: (any USBTransportSession)?) async throws {
-    await Task.yield()
-  }
 
   public func parse(data: Data) throws -> [ControllerEvent] {
     guard data.count >= xidInputReportLength else { return [] }
