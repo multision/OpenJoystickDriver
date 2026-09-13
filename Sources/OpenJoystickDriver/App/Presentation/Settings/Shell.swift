@@ -5,77 +5,6 @@
   import OpenJoystickDriverKit
   import SwiftUI
 
-  // SF Symbol via NSImage(systemSymbolName:), else fallback text.
-  struct OJDSystemSymbol: View {
-    let name: String
-    let fallback: String
-    let fallbackSymbolName: String?
-
-    init(name: String, fallback: String, fallbackSymbolName: String? = nil) {
-      self.name = name
-      self.fallback = fallback
-      self.fallbackSymbolName = fallbackSymbolName
-    }
-
-    var body: some View {
-      if #available(macOS 11.0, *) {
-        if let image = NSImage(systemSymbolName: name, accessibilityDescription: nil) {
-          Image(nsImage: image)
-        } else if let fallbackSymbolName,
-          let image = NSImage(systemSymbolName: fallbackSymbolName, accessibilityDescription: nil)
-        {
-          Image(nsImage: image)
-        } else {
-          Text(fallback).font(.caption)
-        }
-      } else {
-        Text(fallback).font(.caption)
-      }
-    }
-  }
-
-  extension View {
-    @ViewBuilder
-    func ojdAccessibilityLabel(_ label: String) -> some View {
-      if #available(macOS 11.0, *) {
-        accessibilityLabel(Text(label))
-      } else {
-        accessibility(label: Text(label))
-      }
-    }
-
-    @ViewBuilder
-    func ojdAccessibilityValue(_ value: String) -> some View {
-      if #available(macOS 11.0, *) {
-        accessibilityValue(Text(value))
-      } else {
-        accessibility(value: Text(value))
-      }
-    }
-
-    @ViewBuilder
-    func ojdAccessibilityHidden(_ hidden: Bool) -> some View {
-      if #available(macOS 11.0, *) {
-        accessibilityHidden(hidden)
-      } else {
-        accessibility(hidden: hidden)
-      }
-    }
-
-    @ViewBuilder
-    func ojdAccessibilitySelection(_ selected: Bool) -> some View {
-      let value = OJDLocalized.string(
-        selected ? "common.selected" : "common.notSelected",
-        fallback: selected ? "Selected" : "Not selected"
-      )
-      if #available(macOS 11.0, *) {
-        accessibilityValue(Text(value)).accessibilityAddTraits(selected ? .isSelected : [])
-      } else {
-        accessibility(value: Text(value)).accessibility(addTraits: selected ? .isSelected : [])
-      }
-    }
-  }
-
   enum SettingsPane: String, CaseIterable, Identifiable, Hashable {
     case overview
     case controllers
@@ -92,7 +21,8 @@
       case .controllers: return OJDLocalized.string("common.controllers", fallback: "Controllers")
       case .profiles: return OJDLocalized.string("common.profiles", fallback: "Profiles")
       case .console: return OJDLocalized.string("console.title", fallback: "Console")
-      case .developer: return OJDLocalized.string("developer.title", fallback: "Developer")
+      case .developer:
+        return OJDLocalized.string("settings.developerTools", fallback: "Developer Tools")
       case .settings: return OJDLocalized.string("settings.title", fallback: "Settings")
       }
     }
@@ -254,18 +184,25 @@
     @ObservedObject
     var viewModel: RuntimeViewModel
     let notificationPermission: NotificationPermissionModel
-    let preferences: SettingsPreferencesModel
+    @ObservedObject
+    var preferences: SettingsPreferencesModel
     let console: ConsoleViewModel
     let developerTools: DeveloperToolsViewModel
     let restartApplication: @MainActor () -> Void
     let openInputTest: @MainActor (ApplicationServiceDeviceDescription) -> Void
 
     var body: some View {
-      detail.id(navigation.selectedPane).frame(
-        maxWidth: .infinity,
-        minHeight: 0,
-        maxHeight: .infinity
-      ).background(Color(NSColor.windowBackgroundColor)).frame(
+      NavigationView {
+        SettingsSidebar(
+          navigation: navigation,
+          panes: SettingsPane.primaryCases(developerToolsEnabled: preferences.developerToolsEnabled)
+        )
+        detail.id(navigation.selectedPane).frame(
+          maxWidth: .infinity,
+          minHeight: 0,
+          maxHeight: .infinity
+        ).background(Color(NSColor.windowBackgroundColor))
+      }.navigationViewStyle(DoubleColumnNavigationViewStyle()).frame(
         maxWidth: .infinity,
         maxHeight: .infinity
       ).onAppear { refreshIfNeeded() }.alert(
@@ -420,65 +357,24 @@
     }
 
     var body: some View {
-      ScrollView {
-        VStack(alignment: .leading, spacing: 20) {
-          PageHeader(title: OJDLocalized.string("settings.overview", fallback: "Overview"))
-          SystemExtensionSetupCard(viewModel: viewModel, navigation: navigation)
-          accessSummary
-          statusCard
-        }.padding(28).frame(maxWidth: .infinity, alignment: .leading)
+      GeometryReader { proxy in
+        ScrollView {
+          VStack(alignment: .leading, spacing: 20) {
+            PageHeader(title: OJDLocalized.string("settings.overview", fallback: "Overview"))
+            SystemExtensionSetupCard(viewModel: viewModel, navigation: navigation)
+            accessSummary(width: proxy.size.width - 56)
+            statusCard
+          }.padding(28).frame(maxWidth: .infinity, alignment: .leading)
+        }
       }.onAppear { notificationPermission.refresh() }.onReceive(
         NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)
       ) { _ in notificationPermission.refresh() }
     }
 
-    private var accessSummary: some View {
+    private func accessSummary(width: CGFloat) -> some View {
       GroupBox {
         VStack(alignment: .leading, spacing: 12) {
-          HStack(alignment: .top, spacing: 12) {
-            AccessRequirementCard(
-              title: OJDLocalized.string("common.inputMonitoring", fallback: "Input Monitoring"),
-              value: inputMonitoringStatus.value,
-              symbol: "keyboard",
-              tone: inputMonitoringStatus.tone,
-              action: inputMonitoringStatus.isActionable
-                ? {
-                  PermissionAccessActions.requestControllerAccess(
-                    viewModel: viewModel,
-                    requirement: .inputMonitoring
-                  )
-                } : nil
-            )
-            AccessRequirementCard(
-              title: OJDLocalized.string("common.accessibility", fallback: "Accessibility"),
-              value: accessibilityStatus.value,
-              symbol: "lock.shield",
-              tone: accessibilityStatus.tone,
-              action: accessibilityStatus.isActionable
-                ? {
-                  PermissionAccessActions.requestControllerAccess(
-                    viewModel: viewModel,
-                    requirement: .accessibility
-                  )
-                } : nil
-            )
-            AccessRequirementCard(
-              title: OJDLocalized.string("common.keyboardPointer", fallback: "Keyboard & pointer"),
-              value: postEventStatus.value,
-              symbol: "cursorarrow",
-              tone: postEventStatus.tone,
-              action: postEventStatus.isActionable
-                ? { PermissionAccessActions.requestPostEventAccess(viewModel: viewModel) } : nil
-            )
-            AccessRequirementCard(
-              title: OJDLocalized.string("settings.notifications", fallback: "Notifications"),
-              value: notificationStatus.value,
-              symbol: "bell",
-              tone: notificationStatus.tone,
-              action: notificationStatus.isActionable
-                ? { notificationPermission.requestOrOpenSettings() } : nil
-            )
-          }
+          accessCards(width: width)
           if needsPermissionRestart {
             Button(
               OJDLocalized.string(
@@ -499,6 +395,90 @@
           fallback: "Access and readiness"
         )
       ).ojdAccessibilityValue(accessSummaryValue)
+    }
+
+    @ViewBuilder
+    private func accessCards(width: CGFloat) -> some View {
+      if width >= 850 {
+        HStack(alignment: .top, spacing: 12) {
+          inputMonitoringCard
+          accessibilityCard
+          postEventCard
+          notificationCard
+        }
+      } else if width >= 430 {
+        VStack(alignment: .leading, spacing: 12) {
+          HStack(alignment: .top, spacing: 12) {
+            inputMonitoringCard
+            accessibilityCard
+          }
+          HStack(alignment: .top, spacing: 12) {
+            postEventCard
+            notificationCard
+          }
+        }
+      } else {
+        VStack(alignment: .leading, spacing: 12) {
+          inputMonitoringCard
+          accessibilityCard
+          postEventCard
+          notificationCard
+        }
+      }
+    }
+
+    private var inputMonitoringCard: some View {
+      AccessRequirementCard(
+        title: OJDLocalized.string("common.inputMonitoring", fallback: "Input Monitoring"),
+        value: inputMonitoringStatus.value,
+        symbol: "keyboard",
+        tone: inputMonitoringStatus.tone,
+        action: inputMonitoringStatus.isActionable
+          ? {
+            PermissionAccessActions.requestControllerAccess(
+              viewModel: viewModel,
+              requirement: .inputMonitoring
+            )
+          } : nil
+      )
+    }
+
+    private var accessibilityCard: some View {
+      AccessRequirementCard(
+        title: OJDLocalized.string("common.accessibility", fallback: "Accessibility"),
+        value: accessibilityStatus.value,
+        symbol: "lock.shield",
+        tone: accessibilityStatus.tone,
+        action: accessibilityStatus.isActionable
+          ? {
+            PermissionAccessActions.requestControllerAccess(
+              viewModel: viewModel,
+              requirement: .accessibility
+            )
+          } : nil
+      )
+    }
+
+    private var postEventCard: some View {
+      AccessRequirementCard(
+        title: OJDLocalized.string("common.keyboardPointer", fallback: "Keyboard & pointer"),
+        value: postEventStatus.value,
+        symbol: "cursorarrow",
+        tone: postEventStatus.tone,
+        action: postEventStatus.isActionable
+          ? { PermissionAccessActions.requestPostEventAccess(viewModel: viewModel) } : nil
+      )
+    }
+
+    private var notificationCard: some View {
+      AccessRequirementCard(
+        title: OJDLocalized.string("settings.notifications", fallback: "Notifications"),
+        value: notificationStatus.value,
+        symbol: "bell",
+        tone: notificationStatus.tone,
+        action: notificationStatus.isActionable
+          ? { notificationPermission.requestOrOpenSettings() } : nil
+      )
     }
 
     private var accessSummaryValue: String {

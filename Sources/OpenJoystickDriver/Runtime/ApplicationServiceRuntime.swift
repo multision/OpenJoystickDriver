@@ -195,19 +195,31 @@ final class ApplicationServiceRuntime: @unchecked Sendable {
       )
     }
 
-    func setColor(
+    func previewColor(
       for selector: RuntimeDeviceSelector,
+      token: UUID,
       red: UInt8,
       green: UInt8,
       blue: UInt8
     ) async throws -> Bool {
       let identifier = DeviceIdentifier(vendorID: selector.vendorID, productID: selector.productID)
-      return await manager.setPhysicalColor(
+      return await manager.previewPhysicalColor(
         for: identifier,
         runtimeIdentifier: selector.runtimeIdentifier,
+        token: token,
         red: red,
         green: green,
         blue: blue
+      )
+    }
+
+    func releaseColorPreview(for selector: RuntimeDeviceSelector, token: UUID) async throws -> Bool
+    {
+      let identifier = DeviceIdentifier(vendorID: selector.vendorID, productID: selector.productID)
+      return await manager.releasePhysicalColorPreview(
+        for: identifier,
+        runtimeIdentifier: selector.runtimeIdentifier,
+        token: token
       )
     }
 

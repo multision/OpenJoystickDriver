@@ -84,6 +84,15 @@
       Task { @MainActor in await viewModel.refreshSystemExtensionSetup() }
     }
 
+    func applicationShouldHandleReopen(
+      _ sender: NSApplication,
+      hasVisibleWindows flag: Bool
+    ) -> Bool {
+      refreshLiveStatus()
+      openSettings(pane: .overview)
+      return true
+    }
+
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
       termination.request {
         self.removeStatusItem()

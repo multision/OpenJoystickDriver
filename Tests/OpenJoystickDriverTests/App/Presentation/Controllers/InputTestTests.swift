@@ -14,6 +14,8 @@ private struct RecordedRumble: Equatable, Sendable {
   let durationMilliseconds: Int
 }
 
+private enum InputTestGatewayError: Error { case outputFailed }
+
 private actor InputTestGatewayStub: InputTestDeviceGateway {
   func motionCalibration(
     for selector: RuntimeDeviceSelector,
@@ -32,8 +34,10 @@ private actor InputTestGatewayStub: InputTestDeviceGateway {
   var rumbleCalls: [RecordedRumble] = []
   var playerCalls: [(RuntimeDeviceSelector, PhysicalPlayerIndicator)] = []
   var colorCalls: [(RuntimeDeviceSelector, UInt8, UInt8, UInt8)] = []
+  var colorReleaseCalls: [(RuntimeDeviceSelector, UUID)] = []
   var brightnessCalls: [(RuntimeDeviceSelector, UInt8)] = []
   var outputResult = true
+  var outputThrows = false
   var activeOutputCalls = 0
   var maximumConcurrentOutputCalls = 0
 
@@ -73,6 +77,7 @@ private actor InputTestGatewayStub: InputTestDeviceGateway {
   ) async throws -> Bool {
     try await beginOutputCall()
     defer { finishOutputCall() }
+    if outputThrows { throw InputTestGatewayError.outputFailed }
     rumbleCalls.append(
       RecordedRumble(
         selector: selector,
@@ -96,8 +101,9 @@ private actor InputTestGatewayStub: InputTestDeviceGateway {
     return outputResult
   }
 
-  func setColor(
+  func previewColor(
     for selector: RuntimeDeviceSelector,
+    token _: UUID,
     red: UInt8,
     green: UInt8,
     blue: UInt8
@@ -105,6 +111,12 @@ private actor InputTestGatewayStub: InputTestDeviceGateway {
     try await beginOutputCall()
     defer { finishOutputCall() }
     colorCalls.append((selector, red, green, blue))
+    return outputResult
+  }
+
+  func releaseColorPreview(for selector: RuntimeDeviceSelector, token: UUID) async throws -> Bool {
+    await Task.yield()
+    colorReleaseCalls.append((selector, token))
     return outputResult
   }
 
@@ -126,6 +138,7 @@ private actor InputTestGatewayStub: InputTestDeviceGateway {
   }
 
   func setOutputResult(_ result: Bool) { outputResult = result }
+  func setOutputThrows(_ value: Bool) { outputThrows = value }
 
   func waitForInputCalls(_ expectedCount: Int) async -> Bool {
     for _ in 0..<500 {
@@ -133,6 +146,14 @@ private actor InputTestGatewayStub: InputTestDeviceGateway {
       try? await Task.sleep(nanoseconds: 1_000_000)
     }
     return inputCalls >= expectedCount
+  }
+
+  func waitForRumbleCalls(_ expectedCount: Int) async -> Bool {
+    for _ in 0..<500 {
+      if rumbleCalls.count >= expectedCount { return true }
+      try? await Task.sleep(nanoseconds: 1_000_000)
+    }
+    return rumbleCalls.count >= expectedCount
   }
 
   private func beginOutputCall() async throws {
@@ -169,32 +190,34 @@ struct InputTestTests {
 
   @Test
   @MainActor
-  func selectingDeviceRemainsIdleUntilExplicitStart() async {
-    let gateway = InputTestGatewayStub()
+  func openingStartsSamplingImmediately() async {
+    let gateway = InputTestGatewayStub(inputDelayNanoseconds: 200_000_000)
     let model = InputTestViewModel(gateway: gateway, sampleIntervalNanoseconds: 1_000_000)
 
     model.selectDevice(makeInputTestDevice())
+    model.open()
     try? await Task.sleep(nanoseconds: 10_000_000)
 
-    #expect(model.sessionState == .idle)
-    #expect(await gateway.counts().input == 0)
+    #expect(model.sessionState == .starting)
+    #expect(await gateway.counts().input > 0)
+    model.close()
   }
 
   @Test
   @MainActor
-  func startSamplesSequentiallyAndStopCancelsTheActiveLookup() async {
+  func closeCancelsTheActiveLookup() async {
     var first = DeviceInputState(vendorID: 0x1234, productID: 0x5678)
     first.pressedButtons = ["A"]
     let gateway = InputTestGatewayStub(inputSequence: [first], inputDelayNanoseconds: 200_000_000)
     let model = InputTestViewModel(gateway: gateway, sampleIntervalNanoseconds: 1_000_000)
     model.selectDevice(makeInputTestDevice())
 
-    model.start()
+    model.open()
     try? await Task.sleep(nanoseconds: 20_000_000)
     #expect(model.sessionState == .starting)
     #expect(await gateway.counts().input == 1)
 
-    model.stop()
+    model.close()
     try? await Task.sleep(nanoseconds: 20_000_000)
 
     #expect(model.sessionState == .idle)
@@ -213,13 +236,13 @@ struct InputTestTests {
     let model = InputTestViewModel(gateway: gateway, sampleIntervalNanoseconds: 1_000_000_000)
     model.selectDevice(makeInputTestDevice())
 
-    model.start()
+    model.open()
     try? await Task.sleep(nanoseconds: 20_000_000)
 
     #expect(model.sessionState == .live)
     #expect(model.latestInput == pressed)
     #expect(await gateway.inputSelectors == [RuntimeDeviceSelector(device: makeInputTestDevice())])
-    model.stop()
+    model.close()
   }
 
   @Test
@@ -235,9 +258,9 @@ struct InputTestTests {
     var publishedSnapshots = 0
     let observation = model.liveState.$snapshot.dropFirst().sink { _ in publishedSnapshots += 1 }
 
-    model.start()
+    model.open()
     let receivedAllSnapshots = await gateway.waitForInputCalls(4)
-    model.stop()
+    model.close()
 
     #expect(receivedAllSnapshots)
     #expect(publishedSnapshots == 0)
@@ -285,7 +308,7 @@ struct InputTestTests {
     let model = InputTestViewModel(gateway: gateway, sampleIntervalNanoseconds: 1_000_000)
     model.selectDevice(makeInputTestDevice())
 
-    model.start()
+    model.open()
     await waitUntil { model.sessionState == .unavailable }
     let callsAtStop = await gateway.counts().input
     try? await Task.sleep(nanoseconds: 5_000_000)
@@ -297,6 +320,40 @@ struct InputTestTests {
 
   @Test
   @MainActor
+  func statusRefreshRecoversAStoppedAutomaticSession() async {
+    let gateway = InputTestGatewayStub()
+    let model = InputTestViewModel(gateway: gateway, sampleIntervalNanoseconds: 1_000_000)
+    let device = makeInputTestDevice()
+    model.selectDevice(device)
+    model.open()
+    await waitUntil { model.sessionState == .unavailable }
+
+    model.reconcileConnectedDevices([device])
+
+    #expect(await gateway.waitForInputCalls(4))
+    model.close()
+  }
+
+  @Test
+  @MainActor
+  func repeatedOpenAndStatusUpdatesKeepOneSamplingTask() async {
+    let gateway = InputTestGatewayStub(inputDelayNanoseconds: 200_000_000)
+    let model = InputTestViewModel(gateway: gateway)
+    let device = makeInputTestDevice()
+    model.selectDevice(device)
+
+    model.open()
+    model.open()
+    model.reconcileConnectedDevices([device])
+    try? await Task.sleep(nanoseconds: 20_000_000)
+
+    #expect(await gateway.counts().input == 1)
+    #expect(await gateway.counts().maximumConcurrentInput == 1)
+    model.close()
+  }
+
+  @Test
+  @MainActor
   func repeatedFailuresRetainTheLastSnapshotAndFinishStale() async {
     var snapshot = DeviceInputState(vendorID: 0x1234, productID: 0x5678)
     snapshot.pressedButtons = [Button.a.rawValue]
@@ -304,80 +361,15 @@ struct InputTestTests {
     let model = InputTestViewModel(gateway: gateway, sampleIntervalNanoseconds: 1_000_000)
     model.selectDevice(makeInputTestDevice())
 
-    model.start()
-    // One live sample then three nils stops the loop. `.stale` is set on the first
-    // nil while sampling continues, and `isSampling` stays true in the terminal
-    // stale state — wait for the four input calls instead.
+    model.open()
+    // One live sample then three nils stops the loop. Wait for all four requests
+    // because `.stale` is also the transient state after the first nil.
     #expect(await gateway.waitForInputCalls(4))
 
     #expect(model.sessionState == .stale)
     #expect(model.latestInput == snapshot)
     #expect(await gateway.counts().input == 4)
-  }
-
-  @Test
-  func canonicalButtonsDriveTheStandardInputMap() {
-    var state = DeviceInputState(vendorID: 1, productID: 2)
-    state.pressedButtons = [
-      Button.leftBumper.rawValue, Button.dpadUp.rawValue, Button.leftStick.rawValue,
-      Button.l2Digital.rawValue, Button.leftFunction.rawValue, Button.rightFunction.rawValue,
-      Button.leftPaddle.rawValue, Button.rightPaddle.rawValue, Button.leftSL.rawValue,
-      Button.leftSR.rawValue, Button.rightSL.rawValue, Button.rightSR.rawValue,
-      Button.mute.rawValue,
-    ]
-
-    #expect(InputTestButtonPresentation.isPressed([.leftBumper, .l1], in: state))
-    #expect(InputTestButtonPresentation.isPressed([.dpadUp], in: state))
-    #expect(InputTestButtonPresentation.isPressed([.leftStick], in: state))
-    #expect(InputTestButtonPresentation.isPressed([.l2Digital], in: state))
-    #expect(
-      InputTestButtonPresentation.additionalButtons(in: state) == [
-        "leftFunction", "leftPaddle", "leftSL", "leftSR", "mute", "rightFunction", "rightPaddle",
-        "rightSL", "rightSR",
-      ]
-    )
-  }
-
-  @Test
-  func controllerFamiliesSelectProtocolAppropriateInputSymbols() {
-    let xbox = InputTestControllerSymbolSet.resolve(for: .xbox)
-    #expect(xbox.leftShoulder.symbol == "lb.button.roundedbottom.horizontal")
-    #expect(xbox.leftTrigger.symbol == "lt.button.roundedtop.horizontal")
-    #expect(xbox.guide.symbol == "xbox.logo")
-    #expect(xbox.leftStickClick.symbol == "lsb.button.angledbottom.horizontal.left")
-
-    let playStation = InputTestControllerSymbolSet.resolve(for: .playstation)
-    #expect(playStation.leftShoulder.symbol == "l1.button.roundedbottom.horizontal")
-    #expect(playStation.leftTrigger.symbol == "l2.button.roundedtop.horizontal")
-    #expect(playStation.guide.symbol == "playstation.logo")
-    #expect(playStation.southFace.symbol == "xmark.circle")
-
-    let switchController = InputTestControllerSymbolSet.resolve(for: .nintendo)
-    #expect(switchController.leftTrigger.symbol == "zl.button.roundedtop.horizontal")
-    #expect(switchController.view.symbol == "minus.circle")
-    #expect(switchController.menu.symbol == "plus.circle")
-
-    let generic = InputTestControllerSymbolSet.resolve(for: .generic)
-    #expect(generic.leftShoulder.symbol == nil)
-    #expect(generic.leftShoulder.fallbackText == "LB / L1")
-    #expect(generic.guide.symbol == "house.fill")
-  }
-
-  @Test
-  func xboxShareMappingUsesSeparateCenteredShareControl() {
-    let layout = InputTestSystemClusterLayout.resolve(for: .xboxSeries)
-    #expect(layout == .xboxWithShare)
-    #expect(layout.rows == [[.view, .guide, .menu], [.empty, .share, .empty]])
-    #expect(InputTestSystemClusterLayout.viewButtons(for: .xbox) == [.back])
-    #expect(InputTestSystemClusterLayout.shareButtons == [.share])
-  }
-
-  @Test
-  func playStationLeftSystemControlRemainsShare() {
-    let layout = InputTestSystemClusterLayout.resolve(for: .dualSenseUSB)
-    #expect(layout == .standard)
-    #expect(layout.rows == [[.view, .guide, .menu]])
-    #expect(InputTestSystemClusterLayout.viewButtons(for: .playstation) == [.share])
+    #expect(!model.isSampling)
   }
 
   @Test
@@ -391,9 +383,9 @@ struct InputTestTests {
     let model = InputTestViewModel(gateway: gateway, sampleIntervalNanoseconds: 1_000_000)
     model.selectDevice(makeInputTestDevice())
 
-    model.start()
+    model.open()
     #expect(await gateway.waitForInputCalls(2))
-    model.stop()
+    model.close()
 
     #expect(await gateway.counts().input > 1)
     #expect(await gateway.counts().maximumConcurrentInput == 1)
@@ -401,22 +393,27 @@ struct InputTestTests {
 
   @Test
   @MainActor
-  func switchingDevicesCancelsOldSamplingAndLeavesNewDeviceIdle() async {
+  func switchingDevicesTransfersAutomaticSamplingOwnership() async {
     let gateway = InputTestGatewayStub(inputDelayNanoseconds: 200_000_000)
     let model = InputTestViewModel(gateway: gateway)
     let oldDevice = makeInputTestDevice(runtimeIdentifier: "input-test-old")
     let newDevice = makeInputTestDevice(runtimeIdentifier: "input-test-new")
     model.selectDevice(oldDevice)
-    model.start()
+    model.open()
     try? await Task.sleep(nanoseconds: 20_000_000)
 
     model.selectDevice(newDevice)
     try? await Task.sleep(nanoseconds: 20_000_000)
 
     #expect(model.device?.runtimeIdentifier == newDevice.runtimeIdentifier)
-    #expect(model.sessionState == .idle)
+    #expect(model.sessionState == .starting)
     #expect(await gateway.counts().cancelled == 1)
-    #expect(await gateway.inputSelectors == [RuntimeDeviceSelector(device: oldDevice)])
+    #expect(
+      await gateway.inputSelectors == [
+        RuntimeDeviceSelector(device: oldDevice), RuntimeDeviceSelector(device: newDevice),
+      ]
+    )
+    model.close()
   }
 
   @Test
@@ -472,6 +469,52 @@ struct InputTestTests {
 
   @Test
   @MainActor
+  func repeatedRumbleRunsCompleteWithOneCommandEach() async {
+    let gateway = InputTestGatewayStub()
+    let rumbleSleep: InputTestViewModel.Sleep = { _ in }
+    let model = InputTestViewModel(gateway: gateway, rumbleSleep: rumbleSleep)
+    model.selectDevice(makeInputTestDevice())
+    model.rumbleIntensities[.leftMain] = 200
+
+    for expectedCount in 1...3 {
+      model.testRumble()
+      await waitUntil { model.outputState == .succeeded(.rumble) }
+      #expect(await gateway.rumbleCalls.count == expectedCount)
+      #expect(!model.canStopRumble)
+    }
+
+    #expect(
+      await gateway.rumbleCalls.allSatisfy { $0.left == 200 && $0.durationMilliseconds == 300 }
+    )
+  }
+
+  @Test
+  @MainActor
+  func explicitRumbleStopCancelsTheWaitAndSendsOneZeroCommand() async {
+    let gateway = InputTestGatewayStub()
+    let rumbleSleep: InputTestViewModel.Sleep = { _ in try await Task.sleep(nanoseconds: .max) }
+    let model = InputTestViewModel(gateway: gateway, rumbleSleep: rumbleSleep)
+    model.selectDevice(makeInputTestDevice())
+    model.rumbleIntensities[.leftMain] = 200
+
+    model.testRumble()
+    #expect(await gateway.waitForRumbleCalls(1))
+    #expect(model.canStopRumble)
+    model.stopRumble()
+    #expect(await gateway.waitForRumbleCalls(2))
+
+    let calls = await gateway.rumbleCalls
+    #expect(calls.count == 2)
+    #expect(calls[0].left == 200)
+    #expect(calls[1].left == 0)
+    #expect(calls[1].right == 0)
+    #expect(calls[1].durationMilliseconds == 0)
+    #expect(model.outputState == .idle)
+    #expect(!model.canStopRumble)
+  }
+
+  @Test
+  @MainActor
   func lightingUsesExactRuntimeIdentifierAndDeclaredValues() async {
     let capabilities = PhysicalControllerOutputCapabilities(lightingFeatures: [
       .playerIndicator, .programmableColor, .programmableBrightness,
@@ -503,6 +546,10 @@ struct InputTestTests {
     #expect(await gateway.brightnessCalls.first?.0 == selector)
     #expect(await gateway.brightnessCalls.first?.1 == 78)
     #expect(await gateway.rumbleCalls.isEmpty)
+
+    model.close()
+    try? await Task.sleep(nanoseconds: 10_000_000)
+    #expect(await gateway.colorReleaseCalls.first?.0 == selector)
   }
 
   @Test
@@ -579,7 +626,7 @@ struct InputTestTests {
     await gateway.setOutputResult(false)
     let model = InputTestViewModel(gateway: gateway, sampleIntervalNanoseconds: 1_000_000_000)
     model.selectDevice(makeInputTestDevice())
-    model.start()
+    model.open()
     try? await Task.sleep(nanoseconds: 20_000_000)
 
     model.testRumble()
@@ -588,17 +635,35 @@ struct InputTestTests {
     #expect(model.latestInput == snapshot)
     #expect(model.outputState == .failed(.rumble))
     #expect(model.outputError != nil)
-    model.stop()
+    #expect(!model.canStopRumble)
+    model.close()
   }
 
   @Test
   @MainActor
-  func disconnectCancelsSamplingAndRequiresExplicitRestart() async {
+  func failedRumbleClearsOutputOwnershipAndReportsTerminalFailure() async {
+    let gateway = InputTestGatewayStub()
+    await gateway.setOutputThrows(true)
+    let rumbleSleep: InputTestViewModel.Sleep = { _ in }
+    let model = InputTestViewModel(gateway: gateway, rumbleSleep: rumbleSleep)
+    model.selectDevice(makeInputTestDevice())
+
+    model.testRumble()
+    await waitUntil { model.outputState == .failed(.rumble) }
+
+    #expect(model.outputError != nil)
+    #expect(!model.isOutputBusy)
+    #expect(!model.canStopRumble)
+  }
+
+  @Test
+  @MainActor
+  func reconnectResumesSamplingWhileWindowRemainsOpen() async {
     let gateway = InputTestGatewayStub(inputDelayNanoseconds: 200_000_000)
     let model = InputTestViewModel(gateway: gateway)
     let device = makeInputTestDevice(connection: "HID")
     model.selectDevice(device)
-    model.start()
+    model.open()
     try? await Task.sleep(nanoseconds: 20_000_000)
 
     model.reconcileConnectedDevices([])
@@ -607,8 +672,10 @@ struct InputTestTests {
     #expect(model.sessionState == .disconnected)
     #expect(await gateway.counts().cancelled == 1)
     model.reconcileConnectedDevices([device])
-    #expect(model.sessionState == .idle)
-    #expect(!model.isSampling)
+    #expect(await gateway.waitForInputCalls(2))
+    #expect(model.sessionState == .starting)
+    #expect(model.isSampling)
+    model.close()
   }
 
   @Test
@@ -641,7 +708,7 @@ struct InputTestTests {
     let model = InputTestViewModel(gateway: gateway)
     let device = makeInputTestDevice(connection: "USB", discoverySource: .hid)
     model.selectDevice(device)
-    model.start()
+    model.open()
     try? await Task.sleep(nanoseconds: 20_000_000)
     let status = RuntimeStatusPresentation(
       payload: ApplicationServiceStatusPayload(

@@ -328,38 +328,52 @@
     }
 
     var body: some View {
-      ScrollView {
-        VStack(alignment: .leading, spacing: 20) {
-          PageHeader(title: OJDLocalized.string("settings.title", fallback: "Settings"))
-          HStack(alignment: .top, spacing: 16) {
-            generalSettings
-            developerSettings
-          }
+      GeometryReader { proxy in
+        ScrollView {
+          VStack(alignment: .leading, spacing: 20) {
+            PageHeader(title: OJDLocalized.string("settings.title", fallback: "Settings"))
+            primarySettings(width: proxy.size.width - 48)
 
-          notificationSettings
-          updateSettings
+            notificationSettings
+            updateSettings
 
-          if let errorMessage = preferences.errorMessage {
-            HStack(alignment: .top, spacing: 8) {
-              OJDSystemSymbol(name: "exclamationmark.triangle", fallback: "!").foregroundColor(
-                Color(NSColor.systemOrange)
-              )
-              Text(errorMessage).fixedSize(horizontal: false, vertical: true)
-              Spacer(minLength: 12)
-              if preferences.notificationAuthorization == .denied {
-                Button(
-                  OJDLocalized.string("settings.openSystemSettings", fallback: "Open Settings")
-                ) { preferences.openNotificationSettings() }
-              }
-              Button(OJDLocalized.string("common.dismiss", fallback: "Dismiss")) {
-                preferences.dismissError()
-              }
-            }.padding(10).background(Color(NSColor.controlBackgroundColor)).cornerRadius(8)
-          }
-        }.padding(24).frame(maxWidth: .infinity, alignment: .leading)
+            if let errorMessage = preferences.errorMessage {
+              HStack(alignment: .top, spacing: 8) {
+                OJDSystemSymbol(name: "exclamationmark.triangle", fallback: "!").foregroundColor(
+                  Color(NSColor.systemOrange)
+                )
+                Text(errorMessage).fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: 12)
+                if preferences.notificationAuthorization == .denied {
+                  Button(
+                    OJDLocalized.string("settings.openSystemSettings", fallback: "Open Settings")
+                  ) { preferences.openNotificationSettings() }
+                }
+                Button(OJDLocalized.string("common.dismiss", fallback: "Dismiss")) {
+                  preferences.dismissError()
+                }
+              }.padding(10).background(Color(NSColor.controlBackgroundColor)).cornerRadius(8)
+            }
+          }.padding(24).frame(maxWidth: .infinity, alignment: .leading)
+        }
       }.onAppear { preferences.refreshNotificationAuthorization() }.onReceive(
         NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)
       ) { _ in preferences.refreshNotificationAuthorization() }
+    }
+
+    @ViewBuilder
+    private func primarySettings(width: CGFloat) -> some View {
+      if width < 650 {
+        VStack(alignment: .leading, spacing: 16) {
+          generalSettings
+          developerSettings
+        }
+      } else {
+        HStack(alignment: .top, spacing: 16) {
+          generalSettings
+          developerSettings
+        }
+      }
     }
 
     private var generalSettings: some View {

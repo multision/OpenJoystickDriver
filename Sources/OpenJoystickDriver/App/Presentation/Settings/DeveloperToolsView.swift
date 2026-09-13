@@ -11,22 +11,24 @@
     init(model: DeveloperToolsViewModel) { self.model = model }
 
     var body: some View {
-      ScrollView {
-        VStack(alignment: .leading, spacing: 20) {
-          PageHeader(
-            title: OJDLocalized.string("developer.title", fallback: "Developer"),
-            subtitle: OJDLocalized.string(
-              "developer.subtitle",
-              fallback: "View controller input and USB packets."
+      GeometryReader { proxy in
+        ScrollView {
+          VStack(alignment: .leading, spacing: 20) {
+            PageHeader(
+              title: OJDLocalized.string("developer.title", fallback: "Developer"),
+              subtitle: OJDLocalized.string(
+                "developer.subtitle",
+                fallback: "View controller input and USB packets."
+              )
             )
-          )
-          content
-        }.padding(24).frame(maxWidth: .infinity, alignment: .leading)
+            content(compact: proxy.size.width < 760)
+          }.padding(24).frame(maxWidth: .infinity, alignment: .leading)
+        }
       }.onAppear { model.requestRefresh() }.onDisappear { model.close() }
     }
 
     @ViewBuilder
-    private var content: some View {
+    private func content(compact: Bool) -> some View {
       switch model.loadState {
       case .idle, .loading:
         LoadingStateView(
@@ -59,7 +61,7 @@
           message: message
         ) { Task { @MainActor in await model.refresh() } }
       case .ready:
-        DeveloperControllerSummaryView(model: model)
+        DeveloperControllerSummaryView(model: model, compact: compact)
         DeveloperPacketCaptureView(model: model)
         extraInputDiscovery
         diagnosticMode

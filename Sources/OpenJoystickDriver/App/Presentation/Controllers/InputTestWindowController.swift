@@ -1,17 +1,25 @@
 #if canImport(AppKit) && canImport(SwiftUI)
 
   import AppKit
-  import Combine
   import OpenJoystickDriverKit
   import SwiftUI
+
+  enum InputTestWindowSizingPolicy {
+    static let defaultContentSize = NSSize(width: 900, height: 620)
+    static let minimumContentSize = NSSize(width: 700, height: 500)
+
+    static func fittingContentSize(_ current: NSSize) -> NSSize {
+      NSSize(
+        width: max(current.width, minimumContentSize.width),
+        height: max(current.height, minimumContentSize.height)
+      )
+    }
+  }
 
   @MainActor
   final class InputTestWindowController: NSWindowController, NSWindowDelegate {
     private static let toolbarIdentifier = NSToolbar.Identifier(
       "OpenJoystickDriver.InputTestToolbar"
-    )
-    private static let startStopIdentifier = NSToolbarItem.Identifier(
-      "OpenJoystickDriver.InputTest.StartStop"
     )
     private static let refreshIdentifier = NSToolbarItem.Identifier(
       "OpenJoystickDriver.InputTest.Refresh"
@@ -19,7 +27,6 @@
 
     let model: InputTestViewModel
     private let runtimeViewModel: RuntimeViewModel
-    private var stateObservation: AnyCancellable?
 
     init(runtime: any InputTestDeviceGateway, runtimeViewModel: RuntimeViewModel) {
       model = InputTestViewModel(gateway: runtime)
@@ -27,23 +34,25 @@
       let rootView = InputTestView(model: model, runtimeViewModel: runtimeViewModel)
       let host = NSHostingView(rootView: rootView)
       let window = NSWindow(
-        contentRect: NSRect(x: 0, y: 0, width: 900, height: 540),
+        contentRect: NSRect(origin: .zero, size: InputTestWindowSizingPolicy.defaultContentSize),
         styleMask: [.titled, .closable, .resizable],
         backing: .buffered,
         defer: false
       )
-      window.contentMinSize = NSSize(width: 800, height: 500)
+      window.contentMinSize = InputTestWindowSizingPolicy.minimumContentSize
       window.hidesOnDeactivate = false
-      window.setFrameAutosaveName("InputTestWindowGeometryV2")
+      let autosaveName = "InputTestWindowGeometryV2"
+      let restoredFrame = window.setFrameUsingName(autosaveName)
+      window.setFrameAutosaveName(autosaveName)
       window.isReleasedWhenClosed = false
       window.contentView = host
-      window.center()
+      let restoredContentSize = window.contentView?.bounds.size ?? .zero
+      window.setContentSize(InputTestWindowSizingPolicy.fittingContentSize(restoredContentSize))
+      if !restoredFrame { window.center() }
+      WindowFramePolicy.clamp(window)
       super.init(window: window)
       window.delegate = self
       configureToolbar(for: window)
-      stateObservation = model.$sessionState.sink { [weak self] state in
-        self?.updateToolbar(for: state)
-      }
     }
 
     @available(*, unavailable)
@@ -59,7 +68,8 @@
           requested: runtimeViewModel.requestedCompatibilityIdentity
         ).productName
       )
-      updateToolbar(for: model.sessionState)
+      model.open()
+      if let window { WindowFramePolicy.clamp(window) }
       window?.makeKeyAndOrderFront(nil)
       NSApplication.shared.activate(ignoringOtherApps: true)
     }
@@ -82,36 +92,6 @@
       toolbar.isVisible = true
     }
 
-    private func updateToolbar(for state: InputTestViewModel.SessionState) {
-      guard
-        let item = window?.toolbar?.items.first(where: {
-          $0.itemIdentifier == Self.startStopIdentifier
-        })
-      else { return }
-      let running: Bool
-      switch state {
-      case .starting, .live, .stale: running = true
-      case .idle, .disconnected, .permissionRequired, .unavailable, .error: running = false
-      }
-      item.label =
-        running
-        ? OJDLocalized.string("common.stop", fallback: "Stop")
-        : OJDLocalized.string("inputTest.start", fallback: "Start Input Test")
-      item.toolTip = item.label
-      item.isEnabled = model.device != nil && state != .disconnected && state != .permissionRequired
-      if #available(macOS 11.0, *) {
-        item.image = NSImage(
-          systemSymbolName: running ? "stop.fill" : "play.fill",
-          accessibilityDescription: item.label
-        )
-      }
-    }
-
-    @objc
-    private func toggleSampling(_ sender: Any?) {
-      if model.isSampling { model.stop() } else { model.start() }
-    }
-
     @objc
     private func refreshController(_ sender: Any?) {
       Task { @MainActor [weak self] in await self?.runtimeViewModel.refreshControllerInventory() }
@@ -120,11 +100,11 @@
 
   extension InputTestWindowController: NSToolbarDelegate {
     func toolbarAllowedItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
-      [Self.startStopIdentifier, Self.refreshIdentifier, .flexibleSpace]
+      [Self.refreshIdentifier, .flexibleSpace]
     }
 
     func toolbarDefaultItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
-      [Self.startStopIdentifier, .flexibleSpace, Self.refreshIdentifier]
+      [.flexibleSpace, Self.refreshIdentifier]
     }
 
     func toolbarSelectableItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] { [] }
@@ -135,12 +115,6 @@
       willBeInsertedIntoToolbar flag: Bool
     ) -> NSToolbarItem? {
       switch itemIdentifier {
-      case Self.startStopIdentifier:
-        let item = NSToolbarItem(itemIdentifier: itemIdentifier)
-        item.target = self
-        item.action = #selector(toggleSampling(_:))
-        item.paletteLabel = OJDLocalized.string("inputTest.start", fallback: "Start Input Test")
-        return item
       case Self.refreshIdentifier:
         let item = NSToolbarItem(itemIdentifier: itemIdentifier)
         item.target = self

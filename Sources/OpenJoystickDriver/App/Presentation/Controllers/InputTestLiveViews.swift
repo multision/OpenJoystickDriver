@@ -8,65 +8,84 @@
     @ObservedObject
     var liveState: InputTestLiveState
     let publishedProfile: VirtualDeviceProfile
+    let embedded: Bool
 
+    init(
+      liveState: InputTestLiveState,
+      publishedProfile: VirtualDeviceProfile,
+      embedded: Bool = false
+    ) {
+      self.liveState = liveState
+      self.publishedProfile = publishedProfile
+      self.embedded = embedded
+    }
+
+    @ViewBuilder
     var body: some View {
+      if embedded {
+        content
+      } else {
+        GroupBox {
+          content
+        } label: {
+          Text(OJDLocalized.string("inputTest.controls", fallback: "Live input")).font(.headline)
+        }
+      }
+    }
+
+    private var content: some View {
       let snapshot = liveState.snapshot
       let pressedButtons = Set(snapshot.pressedButtons)
       let presentation = publishedProfile.presentation
       let symbols = InputTestControllerSymbolSet.resolve(for: presentation.glyphFamily)
-      GroupBox {
-        VStack(spacing: 10) {
-          shoulderRow(snapshot: snapshot, pressedButtons: pressedButtons, symbols: symbols)
+      return VStack(spacing: 10) {
+        shoulderRow(snapshot: snapshot, pressedButtons: pressedButtons, symbols: symbols)
+        Divider()
+        HStack(alignment: .center, spacing: 18) {
+          dpadCluster(pressedButtons: pressedButtons).frame(maxWidth: .infinity)
+          systemCluster(
+            pressedButtons: pressedButtons,
+            symbols: symbols,
+            publishedProfile: publishedProfile
+          ).frame(maxWidth: .infinity)
+          faceButtonCluster(pressedButtons: pressedButtons, symbols: symbols).frame(
+            maxWidth: .infinity
+          )
+        }
+        Divider()
+        HStack(alignment: .top, spacing: 24) {
+          InputTestStickView(
+            title: OJDLocalized.string("inputTest.leftStick", fallback: "Left stick"),
+            x: snapshot.leftStickX,
+            y: snapshot.leftStickY,
+            clickPresentation: symbols.leftStickClick,
+            clickActive: isPressed([.leftStick], in: pressedButtons)
+          )
+          InputTestStickView(
+            title: OJDLocalized.string("inputTest.rightStick", fallback: "Right stick"),
+            x: snapshot.rightStickX,
+            y: snapshot.rightStickY,
+            clickPresentation: symbols.rightStickClick,
+            clickActive: isPressed([.rightStick], in: pressedButtons)
+          )
+        }
+        let additionalButtons = InputTestButtonPresentation.additionalButtons(in: snapshot)
+        if !additionalButtons.isEmpty {
           Divider()
-          HStack(alignment: .center, spacing: 18) {
-            dpadCluster(pressedButtons: pressedButtons).frame(maxWidth: .infinity)
-            systemCluster(
-              pressedButtons: pressedButtons,
-              symbols: symbols,
-              publishedProfile: publishedProfile
-            ).frame(maxWidth: .infinity)
-            faceButtonCluster(pressedButtons: pressedButtons, symbols: symbols).frame(
-              maxWidth: .infinity
-            )
-          }
-          Divider()
-          HStack(alignment: .top, spacing: 24) {
-            InputTestStickView(
-              title: OJDLocalized.string("inputTest.leftStick", fallback: "Left stick"),
-              x: snapshot.leftStickX,
-              y: snapshot.leftStickY,
-              clickPresentation: symbols.leftStickClick,
-              clickActive: isPressed([.leftStick], in: pressedButtons)
-            )
-            InputTestStickView(
-              title: OJDLocalized.string("inputTest.rightStick", fallback: "Right stick"),
-              x: snapshot.rightStickX,
-              y: snapshot.rightStickY,
-              clickPresentation: symbols.rightStickClick,
-              clickActive: isPressed([.rightStick], in: pressedButtons)
-            )
-          }
-          let additionalButtons = InputTestButtonPresentation.additionalButtons(in: snapshot)
-          if !additionalButtons.isEmpty {
-            Divider()
+          VStack(alignment: .leading, spacing: 8) {
+            Text(OJDLocalized.string("inputTest.additionalButtons", fallback: "Additional buttons"))
+              .font(.subheadline.weight(.semibold))
             VStack(alignment: .leading, spacing: 8) {
-              Text(
-                OJDLocalized.string("inputTest.additionalButtons", fallback: "Additional buttons")
-              ).font(.subheadline.weight(.semibold))
-              VStack(alignment: .leading, spacing: 8) {
-                ForEach(additionalButtons, id: \.self) { rawName in
-                  InputTestIndicator(
-                    title: InputTestButtonPresentation.localizedTitle(for: rawName),
-                    active: true
-                  )
-                }
+              ForEach(additionalButtons, id: \.self) { rawName in
+                InputTestIndicator(
+                  title: InputTestButtonPresentation.localizedTitle(for: rawName),
+                  active: true
+                )
               }
-            }.frame(maxWidth: .infinity, alignment: .leading)
-          }
-        }.padding(6)
-      } label: {
-        Text(OJDLocalized.string("inputTest.controls", fallback: "Live input")).font(.headline)
-      }
+            }
+          }.frame(maxWidth: .infinity, alignment: .leading)
+        }
+      }.padding(6)
     }
 
     private func shoulderRow(
@@ -268,41 +287,56 @@
   struct InputTestAxisValuesView: View {
     @ObservedObject
     var liveState: InputTestLiveState
+    let embedded: Bool
 
+    init(liveState: InputTestLiveState, embedded: Bool = false) {
+      self.liveState = liveState
+      self.embedded = embedded
+    }
+
+    @ViewBuilder
     var body: some View {
-      let snapshot = liveState.snapshot
-      GroupBox {
-        HStack(alignment: .top, spacing: 14) {
-          VStack(spacing: 8) {
-            InputTestAxisRow(
-              label: OJDLocalized.string("inputTest.leftX", fallback: "Left X"),
-              value: snapshot.leftStickX,
-              signed: true
-            )
-            InputTestAxisRow(
-              label: OJDLocalized.string("inputTest.leftY", fallback: "Left Y"),
-              value: snapshot.leftStickY,
-              signed: true
-            )
-            InputTestAxisRow(label: "LT", value: snapshot.leftTrigger, signed: false)
-          }
-          VStack(spacing: 8) {
-            InputTestAxisRow(
-              label: OJDLocalized.string("inputTest.rightX", fallback: "Right X"),
-              value: snapshot.rightStickX,
-              signed: true
-            )
-            InputTestAxisRow(
-              label: OJDLocalized.string("inputTest.rightY", fallback: "Right Y"),
-              value: snapshot.rightStickY,
-              signed: true
-            )
-            InputTestAxisRow(label: "RT", value: snapshot.rightTrigger, signed: false)
-          }
-        }.padding(4)
-      } label: {
-        Text(OJDLocalized.string("inputTest.axisValues", fallback: "Axis values")).font(.headline)
+      if embedded {
+        content
+      } else {
+        GroupBox {
+          content
+        } label: {
+          Text(OJDLocalized.string("inputTest.axisValues", fallback: "Axis values")).font(.headline)
+        }
       }
+    }
+
+    private var content: some View {
+      let snapshot = liveState.snapshot
+      return HStack(alignment: .top, spacing: 14) {
+        VStack(spacing: 8) {
+          InputTestAxisRow(
+            label: OJDLocalized.string("inputTest.leftX", fallback: "Left X"),
+            value: snapshot.leftStickX,
+            signed: true
+          )
+          InputTestAxisRow(
+            label: OJDLocalized.string("inputTest.leftY", fallback: "Left Y"),
+            value: snapshot.leftStickY,
+            signed: true
+          )
+          InputTestAxisRow(label: "LT", value: snapshot.leftTrigger, signed: false)
+        }
+        VStack(spacing: 8) {
+          InputTestAxisRow(
+            label: OJDLocalized.string("inputTest.rightX", fallback: "Right X"),
+            value: snapshot.rightStickX,
+            signed: true
+          )
+          InputTestAxisRow(
+            label: OJDLocalized.string("inputTest.rightY", fallback: "Right Y"),
+            value: snapshot.rightStickY,
+            signed: true
+          )
+          InputTestAxisRow(label: "RT", value: snapshot.rightTrigger, signed: false)
+        }
+      }.padding(4)
     }
   }
 

@@ -7,23 +7,25 @@ import Testing
 @Suite
 struct SettingsNavigationTests {
   @Test
-  func controllersPaneUsesAContentMinimumThatFitsTheThreeColumnIdentityGrid() {
-    let controllerMinimum = SettingsWindowSizingPolicy.minimumContentSize(for: .controllers)
-    let defaultMinimum = SettingsWindowSizingPolicy.minimumContentSize(for: .overview)
-
-    #expect(controllerMinimum == NSSize(width: 900, height: 500))
-    #expect(defaultMinimum == NSSize(width: 640, height: 400))
+  func settingsWindowUsesStableContentSizingAcrossPanes() {
+    #expect(SettingsWindowSizingPolicy.defaultContentSize == NSSize(width: 960, height: 640))
+    #expect(SettingsWindowSizingPolicy.minimumContentSize == NSSize(width: 720, height: 480))
     #expect(
-      SettingsWindowSizingPolicy.fittingContentSize(
-        current: NSSize(width: 1_100, height: 700),
-        minimum: controllerMinimum
-      ) == NSSize(width: 1_100, height: 700)
+      SettingsWindowSizingPolicy.fittingContentSize(NSSize(width: 1_100, height: 700))
+        == NSSize(width: 1_100, height: 700)
     )
     #expect(
-      SettingsWindowSizingPolicy.fittingContentSize(
-        current: NSSize(width: 700, height: 460),
-        minimum: controllerMinimum
-      ) == controllerMinimum
+      SettingsWindowSizingPolicy.fittingContentSize(NSSize(width: 600, height: 400))
+        == SettingsWindowSizingPolicy.minimumContentSize
+    )
+  }
+
+  @Test
+  func restoredWindowFramesAreClampedToTheUsableScreen() {
+    let screen = NSRect(x: 0, y: 0, width: 1_440, height: 900)
+    #expect(
+      WindowFramePolicy.clampedFrame(NSRect(x: 1_300, y: -100, width: 900, height: 620), to: screen)
+        == NSRect(x: 540, y: 0, width: 900, height: 620)
     )
   }
 

@@ -16,13 +16,21 @@
 
     var body: some View {
       GeometryReader { proxy in
-        HStack(spacing: 0) {
-          controllerList.frame(width: controllerListWidth(for: proxy.size.width)).frame(
-            maxHeight: .infinity,
-            alignment: .topLeading
-          )
-          Divider()
-          controllerDetail.frame(maxWidth: .infinity, maxHeight: .infinity)
+        if proxy.size.width < 620 {
+          VStack(spacing: 0) {
+            controllerList.frame(height: min(200, proxy.size.height * 0.34))
+            Divider()
+            controllerDetail.frame(maxWidth: .infinity, maxHeight: .infinity)
+          }
+        } else {
+          HStack(spacing: 0) {
+            controllerList.frame(width: controllerListWidth(for: proxy.size.width)).frame(
+              maxHeight: .infinity,
+              alignment: .topLeading
+            )
+            Divider()
+            controllerDetail.frame(maxWidth: .infinity, maxHeight: .infinity)
+          }
         }
       }.onAppear { selectFirstControllerIfNeeded() }.onReceive(viewModel.$statusState) { state in
         guard case .available(let status) = state else { return }
@@ -118,11 +126,13 @@
               action: { selectedRuntimeIdentifier = device.runtimeIdentifier },
               label: {
                 HStack(spacing: 8) {
-                  OJDSystemSymbol(
-                    name: published.presentation.controllerSymbolName,
-                    fallback: OJDLocalized.string("common.controller", fallback: "Controller"),
-                    fallbackSymbolName: published.presentation.controllerSymbolFallback
-                  ).foregroundColor(published.presentation.glyphFamily.controllerSymbolColor)
+                  OJDListGlyphSlot {
+                    OJDSystemSymbol(
+                      name: published.presentation.controllerSymbolName,
+                      fallback: "◉",
+                      fallbackSymbolName: published.presentation.controllerSymbolFallback
+                    ).foregroundColor(published.presentation.glyphFamily.controllerSymbolColor)
+                  }
                   VStack(alignment: .leading, spacing: 2) {
                     Text(device.name).lineLimit(1)
                     Text(published.publishedUSBIdentityLabel).font(.caption).foregroundColor(
@@ -371,6 +381,18 @@
           value: serialNumberLabel
         )
         KeyValueRow(
+          label: OJDLocalized.string("controllers.battery", fallback: "Battery"),
+          value: batteryPercentageLabel
+        )
+        KeyValueRow(
+          label: OJDLocalized.string("controllers.chargingState", fallback: "Charging state"),
+          value: chargingStateLabel
+        )
+        KeyValueRow(
+          label: OJDLocalized.string("controllers.cableState", fallback: "Cable state"),
+          value: cableStateLabel
+        )
+        KeyValueRow(
           label: OJDLocalized.string("controllers.usbIdentifier", fallback: "USB VID/PID"),
           value: usbIdentifier
         )
@@ -399,6 +421,33 @@
       return String(format: "%04X:%04X", device.vendorID, device.productID)
     }
 
+    private var batteryPercentageLabel: String {
+      guard let percentage = device.battery?.percentageDescription else {
+        return OJDLocalized.string("common.unknown", fallback: "Unknown")
+      }
+      return percentage
+    }
+
+    private var chargingStateLabel: String {
+      switch device.battery?.chargingState ?? .unknown {
+      case .discharging:
+        return OJDLocalized.string("controllers.discharging", fallback: "Discharging")
+      case .charging: return OJDLocalized.string("controllers.charging", fallback: "Charging")
+      case .full: return OJDLocalized.string("controllers.batteryFull", fallback: "Full")
+      case .unknown: return OJDLocalized.string("common.unknown", fallback: "Unknown")
+      }
+    }
+
+    private var cableStateLabel: String {
+      switch device.battery?.cableState ?? .unknown {
+      case .connected:
+        return OJDLocalized.string("settings.controllerConnectedShort", fallback: "Connected")
+      case .disconnected:
+        return OJDLocalized.string("settings.controllerDisconnectedShort", fallback: "Disconnected")
+      case .unknown: return OJDLocalized.string("common.unknown", fallback: "Unknown")
+      }
+    }
+
     private func reportedValue(_ value: String) -> String {
       let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
       return trimmed.isEmpty
@@ -412,7 +461,7 @@
     }
 
     private var accessibilityValue: String {
-      OJDLocalized.formatted(
+      let details = OJDLocalized.formatted(
         "controllers.accessibilityDetails",
         fallback: "%@. %@. Protocol: %@. Parser: %@. Serial number: %@. "
           + "USB VID/PID: %@. Input endpoint: %@. Output endpoint: %@.",
@@ -425,6 +474,14 @@
         endpointLabel(device.inputEndpoint),
         endpointLabel(device.outputEndpoint)
       )
+      let battery = OJDLocalized.formatted(
+        "controllers.batteryAccessibilityDetails",
+        fallback: "Battery: %@. Charging state: %@. Cable state: %@.",
+        batteryPercentageLabel,
+        chargingStateLabel,
+        cableStateLabel
+      )
+      return "\(details) \(battery)"
     }
 
     private var profileAccessibilityValue: String {

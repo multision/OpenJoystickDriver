@@ -7,6 +7,7 @@
   struct DeveloperControllerSummaryView: View {
     @ObservedObject
     var model: DeveloperToolsViewModel
+    let compact: Bool
 
     var body: some View {
       GroupBox {
@@ -32,10 +33,18 @@
 
           if let device = model.selectedDevice {
             Divider()
-            HStack(alignment: .top, spacing: 24) {
-              identityColumn(device)
-              transportColumn(device)
-              inputColumn
+            if compact {
+              VStack(alignment: .leading, spacing: 14) {
+                identityColumn(device)
+                transportColumn(device)
+                inputColumn
+              }
+            } else {
+              HStack(alignment: .top, spacing: 24) {
+                identityColumn(device)
+                transportColumn(device)
+                inputColumn
+              }
             }
           }
         }.padding(4)

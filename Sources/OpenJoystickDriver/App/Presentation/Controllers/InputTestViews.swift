@@ -4,21 +4,42 @@
   import OpenJoystickDriverKit
   import SwiftUI
 
+  enum InputTestSection: Int, CaseIterable, Equatable {
+    case liveInput
+    case axes
+    case motion
+    case rumble
+    case lighting
+  }
+
+  enum InputTestLayoutPolicy {
+    enum WidthClass: Equatable {
+      case compact
+      case regular
+      case wide
+    }
+
+    static let sectionOrder = InputTestSection.allCases
+
+    static func widthClass(for width: CGFloat) -> WidthClass {
+      if width < 780 { return .compact }
+      if width < 1_060 { return .regular }
+      return .wide
+    }
+  }
+
   struct InputTestView: View {
     @ObservedObject
     var model: InputTestViewModel
     let runtimeViewModel: RuntimeViewModel
-
     var body: some View {
-      ScrollView {
-        VStack(alignment: .leading, spacing: 12) {
-          controllerHeader
-          HStack(alignment: .top, spacing: 16) {
-            InputTestLiveInputView(liveState: model.liveState, publishedProfile: publishedProfile)
-              .frame(minWidth: 460, maxWidth: .infinity, alignment: .topLeading)
-            diagnosticsColumn.frame(width: 330, alignment: .topLeading)
-          }
-        }.padding(18).frame(maxWidth: .infinity, alignment: .leading)
+      GeometryReader { proxy in
+        ScrollView {
+          VStack(alignment: .leading, spacing: 18) {
+            controllerHeader
+            dashboard(for: InputTestLayoutPolicy.widthClass(for: proxy.size.width))
+          }.padding(18).frame(maxWidth: .infinity, alignment: .topLeading)
+        }
       }.background(Color(NSColor.windowBackgroundColor)).onReceive(runtimeViewModel.$statusState) {
         state in
         guard case .available(let status) = state else { return }
@@ -51,123 +72,197 @@
       )
     }
 
-    private var diagnosticsColumn: some View {
-      VStack(alignment: .leading, spacing: 16) {
-        InputTestAxisValuesView(liveState: model.liveState)
-        MotionCalibrationControls(model: model.motionCalibration)
-        InputTestOutputControlsView(settings: model.outputSettings) {
-          VStack(alignment: .leading, spacing: 16) {
+    @ViewBuilder
+    private func dashboard(for widthClass: InputTestLayoutPolicy.WidthClass) -> some View {
+      switch widthClass {
+      case .compact:
+        VStack(alignment: .leading, spacing: 18) {
+          liveInput
+          axisValues
+          motionGroup
+          rumbleGroup
+          lightingGroup
+        }
+      case .regular:
+        VStack(alignment: .leading, spacing: 18) {
+          HStack(alignment: .top, spacing: 18) {
+            liveInput
+            VStack(alignment: .leading, spacing: 18) {
+              axisValues
+              motionGroup
+            }.frame(width: 260)
+          }
+          HStack(alignment: .top, spacing: 18) {
             rumbleGroup
             lightingGroup
-            outputErrorView
           }
         }
+      case .wide:
+        HStack(alignment: .top, spacing: 18) {
+          liveInput.frame(minWidth: 380, idealWidth: 420, maxWidth: 480)
+          HStack(alignment: .top, spacing: 18) {
+            VStack(alignment: .leading, spacing: 18) {
+              axisValues
+              rumbleGroup
+            }
+            VStack(alignment: .leading, spacing: 18) {
+              motionGroup
+              lightingGroup
+            }
+          }.frame(maxWidth: .infinity, alignment: .topLeading)
+        }
       }
     }
 
-    @ViewBuilder
+    private var motionGroup: some View {
+      GroupBox {
+        MotionCalibrationControls(model: model.motionCalibration, embedded: true)
+      } label: {
+        Text(OJDLocalized.string("motion.calibration.title", fallback: "Motion calibration"))
+      }.frame(maxWidth: .infinity, alignment: .topLeading)
+    }
+
+    private var liveInput: some View {
+      InputTestLiveInputView(
+        liveState: model.liveState,
+        publishedProfile: publishedProfile,
+        embedded: true
+      ).frame(maxWidth: .infinity, alignment: .topLeading)
+    }
+
+    private var axisValues: some View {
+      GroupBox {
+        InputTestAxisValuesView(liveState: model.liveState, embedded: true)
+      } label: {
+        Text(OJDLocalized.string("inputTest.axisValues", fallback: "Axis values"))
+      }
+    }
+
     private var rumbleGroup: some View {
       GroupBox {
-        if model.capabilities.supportsRumble {
+        InputTestOutputControlsView(settings: model.outputSettings) {
           VStack(alignment: .leading, spacing: 10) {
-            rumbleMotorGrid.disabled(!model.canSendOutput || model.isOutputBusy)
-            Divider()
-            VStack(alignment: .leading, spacing: 5) {
-              HStack {
-                Text(OJDLocalized.string("inputTest.duration", fallback: "Duration"))
-                Spacer()
-                Text(
-                  OJDLocalized.formatted(
-                    "inputTest.durationValue",
-                    fallback: "%d ms",
-                    Int(model.rumbleDurationMilliseconds)
-                  )
-                ).font(.system(.caption, design: .monospaced))
-              }
-              Slider(value: rumbleDurationBinding, in: 100...2_000, step: 50)
-            }.disabled(!model.canSendOutput || model.isOutputBusy)
-            HStack(spacing: 8) {
-              Button(OJDLocalized.string("inputTest.testRumble", fallback: "Test Rumble")) {
-                model.testRumble()
-              }.disabled(!model.canSendOutput || model.isOutputBusy)
-              Button(OJDLocalized.string("common.stop", fallback: "Stop")) { model.stopRumble() }
-                .disabled(!model.canStopRumble)
-              Spacer()
-              outputStatus(for: .rumble)
-            }
-          }.padding(4)
-        } else {
-          unavailableOutputLabel(
-            OJDLocalized.string(
-              "inputTest.rumbleUnavailable",
-              fallback: "Rumble is not supported by this controller."
-            )
-          )
+            rumbleContent
+            if outputErrorBelongs(to: [.rumble]) { outputErrorView }
+          }
         }
       } label: {
-        Text(OJDLocalized.string("inputTest.rumble", fallback: "Rumble")).font(.headline)
+        Text(OJDLocalized.string("inputTest.rumble", fallback: "Rumble"))
+      }.frame(maxWidth: .infinity, alignment: .topLeading)
+    }
+
+    private var lightingGroup: some View {
+      GroupBox {
+        InputTestOutputControlsView(settings: model.outputSettings) {
+          VStack(alignment: .leading, spacing: 10) {
+            lightingContent
+            if outputErrorBelongs(to: [.playerIndicator, .color, .brightness]) { outputErrorView }
+          }
+        }
+      } label: {
+        Text(OJDLocalized.string("inputTest.lighting", fallback: "Lighting"))
+      }.frame(maxWidth: .infinity, alignment: .topLeading)
+    }
+
+    @ViewBuilder
+    private var rumbleContent: some View {
+      if model.capabilities.supportsRumble {
+        VStack(alignment: .leading, spacing: 10) {
+          rumbleMotorGrid.disabled(!model.canSendOutput || model.isOutputBusy)
+          Divider()
+          VStack(alignment: .leading, spacing: 5) {
+            HStack {
+              Text(OJDLocalized.string("inputTest.duration", fallback: "Duration"))
+              Spacer()
+              Text(
+                OJDLocalized.formatted(
+                  "inputTest.durationValue",
+                  fallback: "%d ms",
+                  Int(model.rumbleDurationMilliseconds)
+                )
+              ).font(.system(.caption, design: .monospaced))
+            }
+            Slider(value: rumbleDurationBinding, in: 100...2_000, step: 50)
+          }.disabled(!model.canSendOutput || model.isOutputBusy)
+          HStack(spacing: 8) {
+            Button(OJDLocalized.string("inputTest.testRumble", fallback: "Test Rumble")) {
+              model.testRumble()
+            }.disabled(!model.canSendOutput || model.isOutputBusy)
+            Button(OJDLocalized.string("common.stop", fallback: "Stop")) { model.stopRumble() }
+              .disabled(!model.canStopRumble)
+            Spacer()
+            outputStatus(for: .rumble)
+          }
+        }.padding(4)
+      } else {
+        unavailableOutputLabel(
+          OJDLocalized.string(
+            "inputTest.rumbleUnavailable",
+            fallback: "Rumble is not supported by this controller."
+          )
+        )
       }
     }
 
     @ViewBuilder
-    private var lightingGroup: some View {
-      GroupBox {
-        if model.capabilities.lightingFeatures.isEmpty {
-          unavailableOutputLabel(
-            OJDLocalized.string(
-              "inputTest.lightingUnavailable",
-              fallback: "Lighting controls are not available for this controller."
-            )
+    private var lightingContent: some View {
+      if model.capabilities.lightingFeatures.isEmpty {
+        unavailableOutputLabel(
+          OJDLocalized.string(
+            "inputTest.lightingUnavailable",
+            fallback: "Lighting controls are not available for this controller."
           )
-        } else {
-          VStack(alignment: .leading, spacing: 12) {
-            if model.capabilities.supportsPlayerIndicator {
-              VStack(alignment: .leading, spacing: 6) {
-                Text(OJDLocalized.string("inputTest.playerIndicator", fallback: "Player indicator"))
-                Picker("", selection: playerIndicatorBinding) {
-                  Text(OJDLocalized.string("inputTest.off", fallback: "Off")).tag(
-                    PhysicalPlayerIndicator.off
-                  )
-                  Text("1").tag(PhysicalPlayerIndicator.player1)
-                  Text("2").tag(PhysicalPlayerIndicator.player2)
-                  Text("3").tag(PhysicalPlayerIndicator.player3)
-                  Text("4").tag(PhysicalPlayerIndicator.player4)
-                }.pickerStyle(.segmented).labelsHidden()
-                Button(OJDLocalized.string("common.apply", fallback: "Apply")) {
-                  model.applyPlayerIndicator()
-                }
+        )
+      } else {
+        VStack(alignment: .leading, spacing: 12) {
+          if model.capabilities.supportsPlayerIndicator {
+            VStack(alignment: .leading, spacing: 6) {
+              Text(OJDLocalized.string("inputTest.playerIndicator", fallback: "Player indicator"))
+              Picker("", selection: playerIndicatorBinding) {
+                Text(OJDLocalized.string("inputTest.off", fallback: "Off")).tag(
+                  PhysicalPlayerIndicator.off
+                )
+                Text("1").tag(PhysicalPlayerIndicator.player1)
+                Text("2").tag(PhysicalPlayerIndicator.player2)
+                Text("3").tag(PhysicalPlayerIndicator.player3)
+                Text("4").tag(PhysicalPlayerIndicator.player4)
+              }.pickerStyle(.segmented).labelsHidden()
+              Button(OJDLocalized.string("common.apply", fallback: "Apply")) {
+                model.applyPlayerIndicator()
               }
             }
-            if model.capabilities.lightingFeatures.contains(.programmableColor) {
+          }
+          if model.capabilities.lightingFeatures.contains(.programmableColor) {
+            HStack {
+              Text(OJDLocalized.string("inputTest.color", fallback: "Color"))
+              Spacer()
+              OJDPhysicalColorWell(color: colorBinding).frame(width: 44, height: 24)
+              Button(OJDLocalized.string("common.apply", fallback: "Apply")) { model.applyColor() }
+            }
+          }
+          if model.capabilities.supportsProgrammableBrightness {
+            VStack(alignment: .leading, spacing: 5) {
               HStack {
-                Text(OJDLocalized.string("inputTest.color", fallback: "Color"))
+                Text(OJDLocalized.string("inputTest.brightness", fallback: "Brightness"))
                 Spacer()
-                PhysicalColorWell(color: colorBinding).frame(width: 44, height: 24)
+                Text("\(Int(model.brightness))").font(.system(.caption, design: .monospaced))
+              }
+              HStack {
+                Slider(value: brightnessBinding, in: 0...255, step: 1)
                 Button(OJDLocalized.string("common.apply", fallback: "Apply")) {
-                  model.applyColor()
+                  model.applyBrightness()
                 }
               }
             }
-            if model.capabilities.supportsProgrammableBrightness {
-              VStack(alignment: .leading, spacing: 5) {
-                HStack {
-                  Text(OJDLocalized.string("inputTest.brightness", fallback: "Brightness"))
-                  Spacer()
-                  Text("\(Int(model.brightness))").font(.system(.caption, design: .monospaced))
-                }
-                HStack {
-                  Slider(value: brightnessBinding, in: 0...255, step: 1)
-                  Button(OJDLocalized.string("common.apply", fallback: "Apply")) {
-                    model.applyBrightness()
-                  }
-                }
-              }
-            }
-          }.padding(4).disabled(!model.canSendOutput || model.isOutputBusy)
-        }
-      } label: {
-        Text(OJDLocalized.string("inputTest.lighting", fallback: "Lighting")).font(.headline)
+          }
+        }.padding(4).disabled(!model.canSendOutput || model.isOutputBusy)
       }
+    }
+
+    private func outputErrorBelongs(to operations: Set<InputTestViewModel.OutputOperation>) -> Bool
+    {
+      guard case .failed(let operation) = model.outputState else { return false }
+      return operations.contains(operation)
     }
 
     @ViewBuilder
@@ -339,7 +434,7 @@
     var body: some View { content() }
   }
 
-  private struct PhysicalColorWell: NSViewRepresentable {
+  struct OJDPhysicalColorWell: NSViewRepresentable {
     @Binding
     var color: NSColor
 
@@ -358,9 +453,9 @@
     }
 
     final class Coordinator: NSObject {
-      var parent: PhysicalColorWell
+      var parent: OJDPhysicalColorWell
 
-      init(parent: PhysicalColorWell) { self.parent = parent }
+      init(parent: OJDPhysicalColorWell) { self.parent = parent }
 
       @MainActor
       @objc

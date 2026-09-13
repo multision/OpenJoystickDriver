@@ -18,12 +18,14 @@
       for selector: RuntimeDeviceSelector,
       indicator: PhysicalPlayerIndicator
     ) async throws -> Bool
-    func setColor(
+    func previewColor(
       for selector: RuntimeDeviceSelector,
+      token: UUID,
       red: UInt8,
       green: UInt8,
       blue: UInt8
     ) async throws -> Bool
+    func releaseColorPreview(for selector: RuntimeDeviceSelector, token: UUID) async throws -> Bool
     func setBrightness(for selector: RuntimeDeviceSelector, brightness: UInt8) async throws -> Bool
   }
 
@@ -179,22 +181,28 @@
     private let gateway: any InputTestDeviceGateway
     private let sampleIntervalNanoseconds: UInt64
     private let sleep: Sleep
+    private let rumbleSleep: Sleep
     private var samplingTask: Task<Void, Never>?
     private var outputTask: Task<Void, Never>?
     private var samplingGeneration: UInt64 = 0
+    private var isWindowActive = false
     private var outputGeneration: UInt64 = 0
     private var outputSelector: RuntimeDeviceSelector?
     private var outputMayRequireRumbleStop = false
+    private let colorPreviewToken = UUID()
+    private var colorPreviewSelector: RuntimeDeviceSelector?
 
     init(
       gateway: any InputTestDeviceGateway,
       sampleIntervalNanoseconds: UInt64 = 33_333_333,
-      sleep: @escaping Sleep = { try await Task.sleep(nanoseconds: $0) }
+      sleep: @escaping Sleep = { try await Task.sleep(nanoseconds: $0) },
+      rumbleSleep: @escaping Sleep = { try await Task.sleep(nanoseconds: $0) }
     ) {
       self.gateway = gateway
       motionCalibration = MotionCalibrationViewModel(gateway: gateway)
       self.sampleIntervalNanoseconds = sampleIntervalNanoseconds
       self.sleep = sleep
+      self.rumbleSleep = rumbleSleep
     }
 
     var capabilities: PhysicalControllerOutputCapabilities {
@@ -203,12 +211,7 @@
 
     var latestInput: DeviceInputState { liveState.snapshot }
 
-    var isSampling: Bool {
-      switch sessionState {
-      case .starting, .live, .stale: return true
-      case .idle, .disconnected, .permissionRequired, .unavailable, .error: return false
-      }
-    }
+    var isSampling: Bool { samplingTask != nil }
 
     var isOutputBusy: Bool {
       if case .running = outputState { return true }
@@ -222,6 +225,7 @@
       motionCalibration.select(RuntimeDeviceSelector(device: selectedDevice))
       guard device?.runtimeIdentifier != selectedDevice.runtimeIdentifier else {
         device = selectedDevice
+        startSamplingIfNeeded()
         return
       }
       let oldSelector = device.map(RuntimeDeviceSelector.init(device:))
@@ -238,6 +242,7 @@
       sessionState = .idle
       outputState = .idle
       outputError = nil
+      startSamplingIfNeeded()
     }
 
     func reconcileConnectedDevices(_ devices: [ApplicationServiceDeviceDescription]) {
@@ -254,7 +259,10 @@
       device = refreshed
       isDeviceConnected = true
       motionCalibration.select(RuntimeDeviceSelector(device: refreshed))
-      if sessionState == .disconnected { sessionState = .idle }
+      if sessionState == .disconnected || sessionState == .permissionRequired {
+        sessionState = .idle
+      }
+      startSamplingIfNeeded()
     }
 
     func reconcileStatus(_ status: RuntimeStatusPresentation) {
@@ -265,12 +273,17 @@
       sessionState = .permissionRequired
     }
 
-    func start() {
+    func open() {
+      isWindowActive = true
+      startSamplingIfNeeded()
+    }
+
+    private func startSamplingIfNeeded() {
+      guard isWindowActive, samplingTask == nil, isDeviceConnected else { return }
       guard let device else {
         sessionState = .disconnected
         return
       }
-      cancelSampling(nextState: .starting)
       samplingGeneration &+= 1
       let generation = samplingGeneration
       let selector = RuntimeDeviceSelector(device: device)
@@ -280,13 +293,10 @@
       }
     }
 
-    func stop() {
+    func close() {
+      isWindowActive = false
       cancelSampling(nextState: device == nil ? .disconnected : .idle)
       cancelOutput(stopSelector: device.map(RuntimeDeviceSelector.init(device:)))
-    }
-
-    func close() {
-      stop()
       motionCalibration.select(nil)
     }
 
@@ -295,7 +305,7 @@
       let command = rumbleCommand()
       let selector = RuntimeDeviceSelector(device: device)
       let duration = max(100, min(2_000, Int(rumbleDurationMilliseconds.rounded())))
-      beginOutputOperation(.rumble, selector: selector) { [gateway] in
+      beginOutputOperation(.rumble, selector: selector) { [gateway, rumbleSleep] in
         let sent = try await gateway.sendRumble(
           for: selector,
           left: command.left,
@@ -305,25 +315,8 @@
           durationMilliseconds: duration
         )
         guard sent else { return false }
-        do { try await Task.sleep(nanoseconds: UInt64(duration) * 1_000_000) } catch {
-          _ = try? await gateway.sendRumble(
-            for: selector,
-            left: 0,
-            right: 0,
-            leftTrigger: 0,
-            rightTrigger: 0,
-            durationMilliseconds: 0
-          )
-          throw error
-        }
-        return try await gateway.sendRumble(
-          for: selector,
-          left: 0,
-          right: 0,
-          leftTrigger: 0,
-          rightTrigger: 0,
-          durationMilliseconds: 0
-        )
+        try await rumbleSleep(UInt64(duration) * 1_000_000)
+        return true
       }
     }
 
@@ -346,9 +339,12 @@
       else { return }
       let selector = RuntimeDeviceSelector(device: device)
       let components = (Self.byte(red), Self.byte(green), Self.byte(blue))
+      let token = colorPreviewToken
+      colorPreviewSelector = selector
       beginOutputOperation(.color, selector: selector) { [gateway] in
-        try await gateway.setColor(
+        try await gateway.previewColor(
           for: selector,
+          token: token,
           red: components.0,
           green: components.1,
           blue: components.2
@@ -438,7 +434,7 @@
           let succeeded = try await body()
           try Task.checkCancellation()
           guard let self, generation == self.outputGeneration else { return }
-          self.outputMayRequireRumbleStop = false
+          self.clearOutputOperation()
           self.outputState = succeeded ? .succeeded(operation) : .failed(operation)
           if !succeeded {
             self.outputError = OJDLocalized.string(
@@ -446,12 +442,24 @@
               fallback: "The controller rejected this output test."
             )
           }
-        } catch is CancellationError { return } catch {
+        } catch is CancellationError {
           guard let self, generation == self.outputGeneration else { return }
+          self.clearOutputOperation()
+          self.outputState = .idle
+          self.outputError = nil
+        } catch {
+          guard let self, generation == self.outputGeneration else { return }
+          self.clearOutputOperation()
           self.outputState = .failed(operation)
           self.outputError = RuntimePresentation.userFacingError(error)
         }
       }
+    }
+
+    private func clearOutputOperation() {
+      outputTask = nil
+      outputSelector = nil
+      outputMayRequireRumbleStop = false
     }
 
     private func cancelOutput(stopSelector selector: RuntimeDeviceSelector?) {
@@ -459,6 +467,9 @@
       let previousTask = outputTask
       let activeSelector = outputSelector ?? selector
       let shouldStopRumble = outputMayRequireRumbleStop
+      let previewSelector = colorPreviewSelector
+      colorPreviewSelector = nil
+      let colorPreviewToken = colorPreviewToken
       previousTask?.cancel()
       outputSelector = nil
       outputMayRequireRumbleStop = false
@@ -466,15 +477,19 @@
       outputError = nil
       outputTask = Task { [gateway] in
         await previousTask?.value
-        guard shouldStopRumble, let activeSelector else { return }
-        _ = try? await gateway.sendRumble(
-          for: activeSelector,
-          left: 0,
-          right: 0,
-          leftTrigger: 0,
-          rightTrigger: 0,
-          durationMilliseconds: 0
-        )
+        if shouldStopRumble, let activeSelector {
+          _ = try? await gateway.sendRumble(
+            for: activeSelector,
+            left: 0,
+            right: 0,
+            leftTrigger: 0,
+            rightTrigger: 0,
+            durationMilliseconds: 0
+          )
+        }
+        if let previewSelector {
+          _ = try? await gateway.releaseColorPreview(for: previewSelector, token: colorPreviewToken)
+        }
       }
     }
 
