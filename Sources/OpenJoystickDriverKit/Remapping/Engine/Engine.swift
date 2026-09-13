@@ -201,6 +201,22 @@ public actor RemappingEventEngine {
     try await commit(requiring: permit) { state in state.releaseController(identifier) }
   }
 
+  public func setProfileColor(
+    _ color: RemappingPhysicalColor?,
+    for identifier: DeviceIdentifier,
+    requiring permit: RemappingEmissionPermit
+  ) async throws {
+    await acquireOperation()
+    defer { finishOperation() }
+    try ensureAvailable()
+    guard let lease = emissionBarrier.acquireLease(requiring: permit) else {
+      throw RemappingEventEngineError.outputSuspended
+    }
+    defer { lease.finish() }
+    guard let physicalOutputSink else { return }
+    try await physicalOutputSink.setProfileColor(color, for: identifier)
+  }
+
   /// Releases all keyboard and pointer state. Repeated drains are no-ops.
   public func drain() async throws {
     guard let permit = emissionBarrier.currentPermit() else {

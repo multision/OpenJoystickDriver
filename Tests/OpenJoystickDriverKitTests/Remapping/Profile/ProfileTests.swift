@@ -5,6 +5,35 @@ import Testing
 
 struct RemappingProfileTests {
   @Test
+  func optionalPhysicalColorIsBackwardCompatibleAndRoundTripsBlack() throws {
+    let oldData = try JSONEncoder().encode(
+      RemappingProfile(
+        id: fixedUUID(1),
+        name: "Old",
+        device: RemappingDeviceScope(vendorID: 1, productID: 2),
+        applicationScope: .global,
+        bindings: []
+      )
+    )
+    let oldProfile = try JSONDecoder().decode(RemappingProfile.self, from: oldData)
+    #expect(oldProfile.physicalColor == nil)
+
+    let selectedBlack = RemappingProfile(
+      id: fixedUUID(2),
+      name: "Black",
+      device: RemappingDeviceScope(vendorID: 1, productID: 2),
+      applicationScope: .global,
+      physicalColor: RemappingPhysicalColor(red: 0, green: 0, blue: 0),
+      bindings: []
+    )
+    let roundTrip = try JSONDecoder().decode(
+      RemappingProfile.self,
+      from: JSONEncoder().encode(selectedBlack)
+    )
+    #expect(roundTrip.physicalColor == RemappingPhysicalColor(red: 0, green: 0, blue: 0))
+  }
+
+  @Test
   func codableRoundTripPreservesRepresentativeControllerSources() throws {
     let profile = RemappingProfile(
       id: fixedUUID(10),

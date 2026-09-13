@@ -352,10 +352,14 @@ actor RemappingRoutingCore {
 
     switch selection {
     case .compatibility:
+      let permit = try requireOperationalPermit(proposedPermit)
+      try await engine.setProfileColor(nil, for: identifier, requiring: permit)
       let route = compatibilityRoute()
       _ = try requireOperationalPermit(proposedPermit)
       routes[identifier] = route
     case .remapping(let profile):
+      let permit = try requireOperationalPermit(proposedPermit)
+      try await engine.setProfileColor(profile.physicalColor, for: identifier, requiring: permit)
       let route = RemappingControllerRoute(
         selection: .remapping(profile),
         eligibilitySnapshot: RemappingEligibilitySnapshot(
@@ -368,6 +372,8 @@ actor RemappingRoutingCore {
       routes[identifier] = route
       try await reconcileEligibility(for: identifier, requiring: proposedPermit)
     case .unavailable(let error):
+      let permit = try requireOperationalPermit(proposedPermit)
+      try await engine.setProfileColor(nil, for: identifier, requiring: permit)
       _ = try requireOperationalPermit(proposedPermit)
       routes[identifier] = RemappingControllerRoute(
         selection: selection,

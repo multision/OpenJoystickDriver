@@ -291,6 +291,17 @@ public protocol RemappingPhysicalOutputSink: AnyObject, Sendable {
     for identifier: DeviceIdentifier
   ) async throws
   func releaseAll(for identifier: DeviceIdentifier) async throws
+  func setProfileColor(
+    _ color: RemappingPhysicalColor?,
+    for identifier: DeviceIdentifier
+  ) async throws
+}
+
+extension RemappingPhysicalOutputSink {
+  public func setProfileColor(
+    _ color: RemappingPhysicalColor?,
+    for identifier: DeviceIdentifier
+  ) async throws { await Task.yield() }
 }
 
 extension RemappingGamepadSink {
