@@ -12,14 +12,16 @@ final class AutomaticUserSpaceOutputDispatcher: CompatibilityUserSpaceOutputDisp
   private let consumerProvider: @Sendable () -> CompatibilityConsumerFamily
   private let identityProvider:
     @Sendable (ApplicationServiceDeviceDescription, CompatibilityConsumerFamily) ->
-      CompatibilityIdentity
+      AutomaticCompatibilityTarget
   private let builder:
-    @Sendable (CompatibilityIdentity) throws -> any CompatibilityUserSpaceOutputDispatching
-  private let transitionRequester: @Sendable () -> Void
+    @Sendable (AutomaticCompatibilityTarget) throws -> any CompatibilityUserSpaceOutputDispatching
   private let coordinator = AutomaticDispatcherCoordinator()
   private let stateLock = NSLock()
   private var suppressedOutput = false
   private var remappingSuppressedOutput = false
+  private var consumer: CompatibilityConsumerFamily
+  private var consumerRevision: UInt64 = 0
+  private var diagnosticTargets: [DeviceIdentifier: AutomaticCompatibilityTarget] = [:]
   private var observationTask: Task<Void, Never>?
   init(
     deviceManager: DeviceManager,
@@ -27,16 +29,15 @@ final class AutomaticUserSpaceOutputDispatcher: CompatibilityUserSpaceOutputDisp
       nil,
     consumerProvider: @escaping @Sendable () -> CompatibilityConsumerFamily,
     builder:
-      @escaping @Sendable (CompatibilityIdentity) throws ->
+      @escaping @Sendable (AutomaticCompatibilityTarget) throws ->
       any CompatibilityUserSpaceOutputDispatching,
     observeConsumerChanges: Bool = true,
     descriptionsProvider: (@Sendable () async -> [ApplicationServiceDeviceDescription])? = nil,
     identityProvider:
       @escaping @Sendable (ApplicationServiceDeviceDescription, CompatibilityConsumerFamily) ->
-      CompatibilityIdentity = { description, consumer in
-        AutomaticCompatibilityResolver.resolve(for: description, consumer: consumer).identity
-      },
-    transitionRequester: @escaping @Sendable () -> Void = {}
+      AutomaticCompatibilityTarget = { description, consumer in
+        AutomaticCompatibilityResolver.target(for: description, consumer: consumer)
+      }
   ) {
     self.deviceManager = deviceManager
     self.ownershipProvider =
@@ -45,14 +46,18 @@ final class AutomaticUserSpaceOutputDispatcher: CompatibilityUserSpaceOutputDisp
     self.descriptionsProvider =
       descriptionsProvider ?? { await deviceManager.connectedDeviceDescriptions() }
     self.consumerProvider = consumerProvider
+    self.consumer = consumerProvider()
     self.identityProvider = identityProvider
     self.builder = builder
-    self.transitionRequester = transitionRequester
     if observeConsumerChanges {
       observationTask = Task { [weak self] in
         guard let self else { return }
-        for await _ in CompatibilityConsumerRouting.changes() {
-          await self.refreshForCurrentConsumer()
+        await withTaskGroup(of: Void.self) { group in
+          for await consumer in CompatibilityConsumerRouting.changes() {
+            let revision = self.register(consumer: consumer)
+            group.addTask { await self.refresh(consumer: consumer, revision: revision) }
+          }
+          group.cancelAll()
         }
       }
     }
@@ -65,26 +70,28 @@ final class AutomaticUserSpaceOutputDispatcher: CompatibilityUserSpaceOutputDisp
     try await coordinator.activateOne(
       identifier: identifier,
       descriptions: await descriptionsProvider(),
-      consumer: consumerProvider(),
-      isEligible: { [weak self] identifier, identity in
-        await self?.isEligible(identifier, identity: identity) ?? false
+      consumer: currentConsumer(),
+      isEligible: { [weak self] identifier, target in
+        await self?.isEligible(identifier, target: target) ?? false
       },
       identityProvider: identityProvider,
       factory: builder
     )
+    await synchronizeDiagnostics()
   }
 
   func activate(for identifiers: [DeviceIdentifier]) async throws {
     try await coordinator.activate(
       identifiers: identifiers,
       descriptions: await descriptionsProvider(),
-      consumer: consumerProvider(),
-      isEligible: { [weak self] identifier, identity in
-        await self?.isEligible(identifier, identity: identity) ?? false
+      consumer: currentConsumer(),
+      isEligible: { [weak self] identifier, target in
+        await self?.isEligible(identifier, target: target) ?? false
       },
       identityProvider: identityProvider,
       factory: builder
     )
+    await synchronizeDiagnostics()
   }
 
   func setOutputSuppressed(_ suppressed: Bool) async {
@@ -97,7 +104,13 @@ final class AutomaticUserSpaceOutputDispatcher: CompatibilityUserSpaceOutputDisp
       self.stateLock.withLock { self.remappingSuppressedOutput }
     }
   }
-  var status: String { "automatic" }
+  var status: String {
+    stateLock.withLock {
+      let targets = Set(diagnosticTargets.values.map(Self.diagnosticTarget)).sorted()
+      let suffix = targets.isEmpty ? "" : ", targets: \(targets.joined(separator: "; "))"
+      return "automatic, consumer: \(consumer.rawValue)\(suffix)"
+    }
+  }
   var lastRumbleStatus: String { "none" }
   func dispatch(events: [ControllerEvent], from identifier: DeviceIdentifier) async {
     try? await deliver(events: events, state: nil, from: identifier)
@@ -120,6 +133,7 @@ final class AutomaticUserSpaceOutputDispatcher: CompatibilityUserSpaceOutputDisp
       throw error
     }
     await lease.release()
+    await synchronizeDiagnostics()
   }
 
   func send(_ motion: RemappingVirtualMotionState?, for identifier: DeviceIdentifier) async throws {
@@ -139,6 +153,7 @@ final class AutomaticUserSpaceOutputDispatcher: CompatibilityUserSpaceOutputDisp
       throw error
     }
     await lease.release()
+    await synchronizeDiagnostics()
   }
 
   private func deliver(
@@ -149,15 +164,15 @@ final class AutomaticUserSpaceOutputDispatcher: CompatibilityUserSpaceOutputDisp
     let description = await descriptionsProvider().first {
       $0.runtimeIdentifier == identifier.runtimeIdentifier
     }
-    let consumer = consumerProvider()
-    let identity = description.map { identityProvider($0, consumer) } ?? .genericHID
+    let consumer = currentConsumer()
+    let target = description.map { identityProvider($0, consumer) } ?? .genericHID
     guard
       let lease = await coordinator.leaseForDispatch(
         controller: identifier,
         consumer: consumer,
-        identity: identity,
-        isEligible: { [weak self] identifier, identity in
-          await self?.isEligible(identifier, identity: identity) ?? false
+        identity: target,
+        isEligible: { [weak self] identifier, target in
+          await self?.isEligible(identifier, target: target) ?? false
         },
         factory: builder
       )
@@ -172,6 +187,7 @@ final class AutomaticUserSpaceOutputDispatcher: CompatibilityUserSpaceOutputDisp
       throw error
     }
     await lease.release()
+    await synchronizeDiagnostics()
   }
 
   private func deliver(
@@ -183,15 +199,15 @@ final class AutomaticUserSpaceOutputDispatcher: CompatibilityUserSpaceOutputDisp
     let description = await descriptionsProvider().first {
       $0.runtimeIdentifier == identifier.runtimeIdentifier
     }
-    let consumer = consumerProvider()
-    let identity = description.map { identityProvider($0, consumer) } ?? .genericHID
+    let consumer = currentConsumer()
+    let target = description.map { identityProvider($0, consumer) } ?? .genericHID
     guard
       let lease = await coordinator.leaseForDispatch(
         controller: identifier,
         consumer: consumer,
-        identity: identity,
-        isEligible: { [weak self] identifier, identity in
-          await self?.isEligible(identifier, identity: identity) ?? false
+        identity: target,
+        isEligible: { [weak self] identifier, target in
+          await self?.isEligible(identifier, target: target) ?? false
         },
         factory: builder
       )
@@ -210,30 +226,67 @@ final class AutomaticUserSpaceOutputDispatcher: CompatibilityUserSpaceOutputDisp
       throw error
     }
     await lease.release()
+    await synchronizeDiagnostics()
   }
   func controllerDidStop(_ identifier: DeviceIdentifier) async {
     await coordinator.stop(identifier)
+    await synchronizeDiagnostics()
   }
   func refreshForCurrentConsumer() async {
     let consumer = consumerProvider()
+    let revision = register(consumer: consumer)
+    await refresh(consumer: consumer, revision: revision)
+  }
+
+  private func refresh(consumer: CompatibilityConsumerFamily, revision: UInt64) async {
     let descriptions = await descriptionsProvider()
-    if await coordinator.adoptConsumerIfEligible(
+    await coordinator.replaceForConsumer(
       consumer,
+      revision: revision,
       descriptions: descriptions,
-      isEligible: { [weak self] identifier, identity in
-        await self?.isEligible(identifier, identity: identity) ?? false
+      isEligible: { [weak self] identifier, target in
+        await self?.isEligible(identifier, target: target) ?? false
       },
-      identityProvider: identityProvider
-    ) {
-      return
+      identityProvider: identityProvider,
+      factory: builder
+    )
+    await synchronizeDiagnostics()
+  }
+
+  private func register(consumer: CompatibilityConsumerFamily) -> UInt64 {
+    stateLock.withLock {
+      self.consumer = consumer
+      consumerRevision &+= 1
+      return consumerRevision
     }
-    transitionRequester()
+  }
+
+  private func currentConsumer() -> CompatibilityConsumerFamily { stateLock.withLock { consumer } }
+
+  private func synchronizeDiagnostics() async {
+    let targets = await coordinator.installedTargets()
+    stateLock.withLock { diagnosticTargets = targets }
+  }
+
+  private static func diagnosticTarget(_ target: AutomaticCompatibilityTarget) -> String {
+    let profile: VirtualDeviceProfile
+    let variant: String
+    switch target.reportVariant {
+    case .canonical:
+      profile = CompatibilityOutputProfileCatalog.profile(for: target.identity).deviceProfile
+      variant = "canonical"
+    case .geckoXboxOneS:
+      profile = .firefoxXboxOneS
+      variant = "gecko-xbox-one-s"
+    }
+    return "\(variant) \(String(format: "%04X:%04X", profile.vendorID, profile.productID))"
   }
 
   private func isEligible(
     _ identifier: DeviceIdentifier,
-    identity: CompatibilityIdentity
+    target: AutomaticCompatibilityTarget
   ) async -> Bool {
+    let identity = target.identity
     guard identity != .automatic else { return false }
     guard
       let description = await descriptionsProvider().first(where: {

@@ -2,35 +2,48 @@ import AppKit
 import OpenJoystickDriverKit
 
 enum CompatibilityConsumerRouting {
+  private static let browserEngineDetector = BrowserEngineDetector()
+  private static let bundledSDLDetector = BundledSDLDetector()
+
   static func changes() -> AsyncStream<CompatibilityConsumerFamily> {
     AsyncStream { continuation in
       final class TokenBox: @unchecked Sendable { var token: NSObjectProtocol? }
       let box = TokenBox()
-      box.token = observe { continuation.yield(current()) }
+      box.token = observe { continuation.yield($0) }
       continuation.onTermination = { _ in
         if let token = box.token { NSWorkspace.shared.notificationCenter.removeObserver(token) }
       }
     }
   }
 
-  static func observe(_ change: @escaping @Sendable () -> Void) -> NSObjectProtocol {
-    NSWorkspace.shared.notificationCenter.addObserver(
+  static func observe(
+    notificationCenter: NotificationCenter = NSWorkspace.shared.notificationCenter,
+    activatedBundleURL: @escaping @Sendable (Notification) -> URL? = { notification in
+      (notification.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication)?
+        .bundleURL
+    },
+    consumerResolver: @escaping @Sendable (URL?) -> CompatibilityConsumerFamily = consumer,
+    _ change: @escaping @Sendable (CompatibilityConsumerFamily) -> Void
+  ) -> NSObjectProtocol {
+    notificationCenter.addObserver(
       forName: NSWorkspace.didActivateApplicationNotification,
       object: nil,
       queue: .main
-    ) { _ in change() }
+    ) { notification in change(consumerResolver(activatedBundleURL(notification))) }
   }
 
   static func current() -> CompatibilityConsumerFamily {
-    guard let bundleID = NSWorkspace.shared.frontmostApplication?.bundleIdentifier else {
-      return .unknown
-    }
-    switch bundleID {
-    case "com.google.Chrome", "com.brave.Browser": return .chromiumGamepad
-    case "com.apple.Safari": return .webkitGamepad
-    case "org.mozilla.firefox": return .geckoGamepad
-    case "com.valvesoftware.Steam", "net.pcsx2.pcsx2": return .sdlHIDAPI
-    default: return .unknown
+    consumer(bundleURL: NSWorkspace.shared.frontmostApplication?.bundleURL)
+  }
+
+  static func consumer(bundleURL: URL?) -> CompatibilityConsumerFamily {
+    guard let bundleURL else { return .unknown }
+    switch browserEngineDetector.detect(bundleURL: bundleURL) {
+    case .blink: return .blinkGamepad
+    case .gecko: return .geckoGamepad
+    case .webkit: return .webkitGamepad
+    case .unknown: return .unknownBrowserGamepad
+    case nil: return bundledSDLDetector.detect(bundleURL: bundleURL) ? .sdlHIDAPI : .unknown
     }
   }
 }

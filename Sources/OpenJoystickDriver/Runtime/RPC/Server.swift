@@ -41,8 +41,6 @@ public final class ApplicationServiceServer: NSObject, @unchecked Sendable {
   var compatibilityLiveIdentity: CompatibilityIdentity?
   var compatibilityRetrySnapshot: CompatibilityRetrySnapshot?
   var userSpaceCloseSlot: CompatibilityBackendCloseSlot?
-  var userSpaceAutomaticGeneration: UUID?
-  var pendingAutomaticTransitionGeneration: UUID?
   var rpcServer: LocalServiceRPCServer?
   var compatibilityServerStopped = false
   static let compatibilityIdentityDefaultsKey = "CompatibilityIdentity"
@@ -52,18 +50,15 @@ public final class ApplicationServiceServer: NSObject, @unchecked Sendable {
     let dispatcher: any CompatibilityUserSpaceOutputDispatching
     let status: String
     let closeSlot: CompatibilityBackendCloseSlot
-    let automaticGeneration: UUID?
 
     init(
       dispatcher: any CompatibilityUserSpaceOutputDispatching,
       status: String,
-      closeSlot: CompatibilityBackendCloseSlot? = nil,
-      automaticGeneration: UUID? = nil
+      closeSlot: CompatibilityBackendCloseSlot? = nil
     ) {
       self.dispatcher = dispatcher
       self.status = status
       self.closeSlot = closeSlot ?? CompatibilityBackendCloseSlot(dispatcher)
-      self.automaticGeneration = automaticGeneration
     }
   }
 
@@ -114,8 +109,6 @@ public final class ApplicationServiceServer: NSObject, @unchecked Sendable {
     self.compatibilityLiveIdentity = nil
     self.compatibilityRetrySnapshot = Self.loadCompatibilityRetrySnapshot()
     self.userSpaceCloseSlot = nil
-    self.userSpaceAutomaticGeneration = nil
-    self.pendingAutomaticTransitionGeneration = nil
     super.init()
 
     if initializeCompatibilityBackend { _ = self.initializeCompatibilityBackend() }
@@ -157,8 +150,6 @@ public final class ApplicationServiceServer: NSObject, @unchecked Sendable {
       let slot = userSpaceCloseSlot
       userSpaceDispatcher = nil
       userSpaceCloseSlot = nil
-      userSpaceAutomaticGeneration = nil
-      pendingAutomaticTransitionGeneration = nil
       userSpaceEnabled = false
       compatibilityLiveIdentity = nil
       userSpaceStatus = "off"
@@ -215,25 +206,31 @@ public final class ApplicationServiceServer: NSObject, @unchecked Sendable {
       return UserSpaceDispatcherBuild(dispatcher: dispatcher, status: dispatcher.status)
     }
     if identity == .automatic {
-      let generation = UUID()
       let automatic = AutomaticUserSpaceOutputDispatcher(
         deviceManager: deviceManager,
-        consumerProvider: CompatibilityConsumerRouting.current,
-        builder: { [weak self] identity in
-          guard let self else { throw UserSpaceOutputDispatcher.CreationError.createFailed }
-          return try self.buildUserSpaceDispatcher(identity: identity).dispatcher
-        },
-        transitionRequester: { [weak self] in
-          self?.requestAutomaticCompatibilityTransition(generation: generation)
-        }
-      )
-      return UserSpaceDispatcherBuild(
-        dispatcher: automatic,
-        status: automatic.status,
-        automaticGeneration: generation
-      )
+        consumerProvider: CompatibilityConsumerRouting.current
+      ) { [weak self] target in
+        guard let self else { throw UserSpaceOutputDispatcher.CreationError.createFailed }
+        return try self.buildAutomaticUserSpaceDispatcher(target: target)
+      }
+      return UserSpaceDispatcherBuild(dispatcher: automatic, status: automatic.status)
     }
     let composition = try CompatibilityOutputCompositionFactory.make(identity: identity)
+    return try buildUserSpaceDispatcher(composition: composition, identity: identity)
+  }
+
+  private func buildAutomaticUserSpaceDispatcher(
+    target: AutomaticCompatibilityTarget
+  ) throws -> any CompatibilityUserSpaceOutputDispatching {
+    let composition = try CompatibilityOutputCompositionFactory.make(target: target)
+    return try buildUserSpaceDispatcher(composition: composition, identity: target.identity)
+      .dispatcher
+  }
+
+  private func buildUserSpaceDispatcher(
+    composition: CompatibilityOutputComposition,
+    identity: CompatibilityIdentity
+  ) throws -> UserSpaceDispatcherBuild {
     let compatibilityProfile = composition.profile
     let profile = compatibilityProfile.deviceProfile
     let format = composition.format
@@ -273,7 +270,6 @@ public final class ApplicationServiceServer: NSObject, @unchecked Sendable {
       userSpaceLock.withLock {
         userSpaceDispatcher = build.dispatcher
         userSpaceCloseSlot = build.closeSlot
-        userSpaceAutomaticGeneration = build.automaticGeneration
         dispatcher.setBackend(build.dispatcher)
         userSpaceEnabled = true
         userSpaceStatus = build.status
@@ -302,7 +298,9 @@ public final class ApplicationServiceServer: NSObject, @unchecked Sendable {
       } else {
         rumble = ", rumble: \(dispatcher.lastRumbleStatus)"
       }
-      return "\(dispatcher.status)\(rumble)"
+      let liveStatus = "\(dispatcher.status)\(rumble)"
+      return userSpaceStatus.hasPrefix("error:")
+        ? "\(userSpaceStatus); live: \(liveStatus)" : liveStatus
     }
   }
 
@@ -317,7 +315,9 @@ public final class ApplicationServiceServer: NSObject, @unchecked Sendable {
   func userSpaceStatusSnapshot() -> UserSpaceStatusSnapshot {
     userSpaceLock.withLock {
       let status: String
-      if let userSpaceDispatcher, userSpaceDispatcher.lastRumbleStatus != "none" {
+      if userSpaceStatus.hasPrefix("error:"), let userSpaceDispatcher {
+        status = "\(userSpaceStatus); live: \(userSpaceDispatcher.status)"
+      } else if let userSpaceDispatcher, userSpaceDispatcher.lastRumbleStatus != "none" {
         status = "\(userSpaceDispatcher.status), rumble: \(userSpaceDispatcher.lastRumbleStatus)"
       } else if let userSpaceDispatcher {
         status = userSpaceDispatcher.status
@@ -375,37 +375,6 @@ public final class ApplicationServiceServer: NSObject, @unchecked Sendable {
       clock: compatibilityTransitionClock,
       error: error
     )
-  }
-
-  func requestAutomaticCompatibilityTransition(generation: UUID) {
-    let shouldSchedule = userSpaceLock.withLock { () -> Bool in
-      guard compatibilityIdentity == .automatic, userSpaceAutomaticGeneration == generation,
-        pendingAutomaticTransitionGeneration != generation
-      else { return false }
-      pendingAutomaticTransitionGeneration = generation
-      return true
-    }
-    guard shouldSchedule else { return }
-    Task { [weak self] in
-      guard let self else { return }
-      _ = await compatibilityTransitionCoordinator.enqueue { [weak self] in
-        guard let self else { return false }
-        defer {
-          self.userSpaceLock.withLock {
-            if self.pendingAutomaticTransitionGeneration == generation {
-              self.pendingAutomaticTransitionGeneration = nil
-            }
-          }
-        }
-        guard
-          self.userSpaceLock.withLock({
-            self.compatibilityIdentity == .automatic
-              && self.userSpaceAutomaticGeneration == generation
-          })
-        else { return false }
-        return await self.performCompatibilityIdentityTransition(to: .automatic, force: true)
-      }
-    }
   }
 
   static func loadCompatibilityRetrySnapshot(

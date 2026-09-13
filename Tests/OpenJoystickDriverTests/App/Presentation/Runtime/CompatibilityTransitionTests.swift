@@ -121,6 +121,7 @@ struct CompatibilityTransitionTests {
   private func transitionServer(
     factory: CompatibilityTransitionFactory,
     identifiers: [DeviceIdentifier],
+    priorIdentity: CompatibilityIdentity = .genericHID,
     timeouts: CompatibilityTransitionTimeouts = .standard,
     clock: CompatibilityTransitionClock = .system,
     identifierProvider: (@Sendable () async -> [DeviceIdentifier])? = nil
@@ -151,13 +152,14 @@ struct CompatibilityTransitionTests {
       compatibilityTransitionClock: clock,
       initializeCompatibilityBackend: false
     )
-    let old = CompatibilityTransitionProbe(identity: .genericHID)
+    let old = CompatibilityTransitionProbe(identity: priorIdentity)
     server.userSpaceLock.withLock {
-      server.compatibilityIdentity = .genericHID
+      server.compatibilityIdentity = priorIdentity
+      server.persistedCompatibilityIdentity = priorIdentity
       server.userSpaceDispatcher = old
       server.userSpaceEnabled = true
       server.userSpaceStatus = old.status
-      server.compatibilityLiveIdentity = .genericHID
+      server.compatibilityLiveIdentity = priorIdentity
       compatibilityDispatcher.setBackend(old)
     }
     return (server, old)
@@ -221,6 +223,42 @@ struct CompatibilityTransitionTests {
   }
 
   @Test
+  func failedPriorRestorationActivatesGenericFallbackWithoutPersistingIt() async {
+    let defaults = UserDefaults.standard
+    let key = ApplicationServiceServer.compatibilityIdentityDefaultsKey
+    let prior = defaults.object(forKey: key)
+    defaults.set(CompatibilityIdentity.sdl2_3.rawValue, forKey: key)
+    defer {
+      if let prior { defaults.set(prior, forKey: key) } else { defaults.removeObject(forKey: key) }
+    }
+
+    let factory = CompatibilityTransitionFactory()
+    factory.activationFailures = [.appleGameController, .sdl2_3]
+    let (server, old) = transitionServer(
+      factory: factory,
+      identifiers: [DeviceIdentifier(vendorID: 1, productID: 2)],
+      priorIdentity: .sdl2_3
+    )
+
+    #expect(await requestIdentity(server, .appleGameController) == false)
+    #expect(old.closeCountValue == 1)
+    #expect(factory.values().map(\.identity) == [.appleGameController, .sdl2_3, .genericHID])
+    #expect(factory.values().dropLast().allSatisfy { $0.closeCountValue == 1 })
+    #expect(server.userSpaceDispatcher === factory.values().last)
+    #expect(server.compatibilityLiveIdentity == .genericHID)
+    #expect(server.compatibilityIdentity == .sdl2_3)
+    #expect(defaults.string(forKey: key) == CompatibilityIdentity.sdl2_3.rawValue)
+    #expect(
+      server.compatibilityRetrySnapshot
+        == CompatibilityRetrySnapshot(
+          requestedIdentity: .appleGameController,
+          priorProfileIdentity: .sdl2_3,
+          phase: .rollbackActivation
+        )
+    )
+  }
+
+  @Test
   func candidateFailureRollsBackOneCoherentPriorBackend() async {
     let defaults = UserDefaults.standard
     let key = ApplicationServiceServer.compatibilityIdentityDefaultsKey
@@ -279,8 +317,8 @@ struct CompatibilityTransitionTests {
     #expect(server.userSpaceDispatcher == nil)
     #expect(server.userSpaceEnabled == false)
     #expect(server.currentUserSpaceStatus().hasPrefix("error:"))
-    #expect(server.compatibilityIdentity == .appleGameController)
-    #expect(defaults.string(forKey: key) == CompatibilityIdentity.appleGameController.rawValue)
+    #expect(server.compatibilityIdentity == .genericHID)
+    #expect(defaults.string(forKey: key) == CompatibilityIdentity.genericHID.rawValue)
     #expect(
       server.compatibilityRetrySnapshot
         == CompatibilityRetrySnapshot(
@@ -341,40 +379,6 @@ struct CompatibilityTransitionTests {
     #expect(server.compatibilityLiveIdentity == .appleGameController)
     #expect(server.compatibilityRetrySnapshot == nil)
     #expect(defaults.object(forKey: retryKey) == nil)
-  }
-
-  @Test
-  func automaticTransitionRequestsAreGenerationScopedAndCoalesced() async {
-    let defaults = UserDefaults.standard
-    let identityKey = ApplicationServiceServer.compatibilityIdentityDefaultsKey
-    let priorIdentity = defaults.object(forKey: identityKey)
-    defer {
-      if let priorIdentity {
-        defaults.set(priorIdentity, forKey: identityKey)
-      } else {
-        defaults.removeObject(forKey: identityKey)
-      }
-    }
-    let factory = CompatibilityTransitionFactory()
-    let (server, _) = transitionServer(
-      factory: factory,
-      identifiers: [DeviceIdentifier(vendorID: 1, productID: 2)]
-    )
-    let generation = UUID()
-    server.userSpaceLock.withLock {
-      server.compatibilityIdentity = .automatic
-      server.userSpaceAutomaticGeneration = generation
-    }
-
-    server.requestAutomaticCompatibilityTransition(generation: generation)
-    server.requestAutomaticCompatibilityTransition(generation: generation)
-    await factory.waitForCount(1)
-    while server.compatibilityLiveIdentity != .automatic { await Task.yield() }
-
-    #expect(factory.values().count == 1)
-    server.requestAutomaticCompatibilityTransition(generation: generation)
-    await Task.yield()
-    #expect(factory.values().count == 1)
   }
 
   @Test

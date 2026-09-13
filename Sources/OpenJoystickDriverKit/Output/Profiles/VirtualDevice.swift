@@ -399,6 +399,8 @@ public struct VirtualDeviceProfile: Equatable, Sendable {
     transport: "USB"
   )
 
+  /// Stable non-spoof Generic HID identity. Its name, version, descriptor, and report
+  /// layout form one consumer contract; incompatible layouts require a new product ID.
   public static let openJoystickDriverGenericHID = Self(
     vendorID: 0x4F4A,
     productID: 0x4449,
@@ -416,6 +418,16 @@ public struct VirtualDeviceProfile: Equatable, Sendable {
     // Important: SDL mapping DB entry for macOS expects version=0x0000 for GUID
     // `030000005e040000fd02000000000000` (Xbox One Controller, platform: Mac OS X).
     // Matching this makes SDL treat the device as a Gamepad with automatic mappings.
+    versionNumber: 0x0000,
+    productName: "Xbox Wireless Controller",
+    manufacturer: "Microsoft",
+    transport: "Bluetooth"
+  )
+
+  /// Xbox One S Bluetooth identity whose Firefox remapper matches the native report.
+  public static let firefoxXboxOneS = Self(
+    vendorID: 0x045E,
+    productID: 0x02E0,
     versionNumber: 0x0000,
     productName: "Xbox Wireless Controller",
     manufacturer: "Microsoft",

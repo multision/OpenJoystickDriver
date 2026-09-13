@@ -251,6 +251,15 @@ enum RuntimeStatusText {
           + " settleMs=\(device.postHandshakeSettleMs)"
       )
       lines.append("    quirks=\(quirks) backends=\(backends)")
+      if let battery = device.battery {
+        let percentage = battery.percentageDescription ?? "unknown"
+        lines.append(
+          "    battery=\(percentage) status=\(battery.chargingState.rawValue)"
+            + " cable=\(battery.cableState.rawValue)"
+        )
+      } else {
+        lines.append("    battery=unknown")
+      }
       let capabilities = device.physicalOutputCapabilities
       let motors = capabilities.rumbleMotors.map(\.rawValue)
       let lighting = capabilities.lightingFeatures.map(\.rawValue)

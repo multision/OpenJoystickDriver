@@ -48,11 +48,38 @@ public enum CompatibilityConsumerFamily: String, Codable, Sendable {
   case genericHID
   case sdlHIDAPI
   case appleGameController
-  case chromiumGamepad
+  case blinkGamepad
   case webkitGamepad
   case geckoGamepad
+  case unknownBrowserGamepad
   case xbox360HID
   case unknown
+}
+
+public enum AutomaticCompatibilityReportVariant: Sendable {
+  case canonical
+  case geckoXboxOneS
+}
+
+public struct AutomaticCompatibilityTarget: Equatable, Sendable {
+  public let identity: CompatibilityIdentity
+  public let reportVariant: AutomaticCompatibilityReportVariant
+
+  public init(
+    identity: CompatibilityIdentity,
+    reportVariant: AutomaticCompatibilityReportVariant = .canonical
+  ) {
+    self.identity = identity
+    self.reportVariant = reportVariant
+  }
+
+  public static let genericHID = Self(identity: .genericHID)
+  public static let sdl2_3 = Self(identity: .sdl2_3)
+  public static let appleGameController = Self(identity: .appleGameController)
+  public static let xbox360HID = Self(identity: .xbox360HID)
+  public static let dualShock4 = Self(identity: .dualShock4)
+  public static let dualSense = Self(identity: .dualSense)
+  public static let switchPro = Self(identity: .switchPro)
 }
 
 /// Official wire families. Krypton vs Argon is XUSB transport, not a backend.
@@ -276,6 +303,39 @@ public enum AutomaticCompatibilityResolver {
   public static func resolve(
     for device: ApplicationServiceDeviceDescription
   ) -> AutomaticCompatibilityResolution { resolve(for: device, consumer: .unknown) }
+
+  public static func target(
+    for device: ApplicationServiceDeviceDescription,
+    consumer: CompatibilityConsumerFamily
+  ) -> AutomaticCompatibilityTarget {
+    if let browserTarget = browserTarget(for: device, consumer: consumer) { return browserTarget }
+    let resolution = resolve(for: device, consumer: consumer)
+    return AutomaticCompatibilityTarget(identity: resolution.identity)
+  }
+
+  private static func browserTarget(
+    for device: ApplicationServiceDeviceDescription,
+    consumer: CompatibilityConsumerFamily
+  ) -> AutomaticCompatibilityTarget? {
+    let xboxFallback: AutomaticCompatibilityTarget
+    switch consumer {
+    case .blinkGamepad, .webkitGamepad, .unknownBrowserGamepad: xboxFallback = .appleGameController
+    case .geckoGamepad:
+      xboxFallback = AutomaticCompatibilityTarget(
+        identity: .appleGameController,
+        reportVariant: .geckoXboxOneS
+      )
+    case .genericHID, .sdlHIDAPI, .appleGameController, .xbox360HID, .unknown: return nil
+    }
+
+    switch device.protocolVariant {
+    case .dualShock4: return consumer == .unknownBrowserGamepad ? .appleGameController : .dualShock4
+    case .dualSense: return consumer == .unknownBrowserGamepad ? .appleGameController : .dualSense
+    case .xid, .xbox360, .xbox360Wireless, .xboxOne, .xboxAdaptiveJoystick, .dualShock3, .switchPro,
+      .steamController, .flydigi, .genericHID, .unknown:
+      return xboxFallback
+    }
+  }
 }
 
 public enum CompatibilityOutputProfileCatalog {
@@ -313,14 +373,15 @@ public enum CompatibilityOutputProfileCatalog {
         deviceProfile: .xboxSeries,
         displayName: "Apple GameController",
         notes: "Apple GameController profile using the Xbox Series Bluetooth layout. "
-          + "macOS controller gestures can delay View or reserve Guide and Share unless the "
-          + "client disables those gestures.",
+          + "Blink is hardware-verified. Gecko currently mis-maps this otherwise unchanged "
+          + "native Xbox Series report.",
         isHardwareSpoof: true,
         emitsXboxGuideReport: false,
         evidence: .sourceBacked,
         consumerFamily: .appleGameController,
         evidenceByConsumer: [
-          .appleGameController: .sourceBacked, .chromiumGamepad: .reportedFailure,
+          .appleGameController: .sourceBacked, .blinkGamepad: .hardwareVerified,
+          .geckoGamepad: .reportedFailure,
         ]
       )
     case .xbox360HID:
@@ -394,6 +455,26 @@ public struct CompatibilityOutputComposition: Sendable {
 }
 
 public enum CompatibilityOutputCompositionFactory {
+  public static func make(
+    target: AutomaticCompatibilityTarget
+  ) throws -> CompatibilityOutputComposition {
+    guard target.reportVariant == .geckoXboxOneS else { return try make(identity: target.identity) }
+    let base = CompatibilityOutputProfileCatalog.profile(for: target.identity)
+    let profile = CompatibilityOutputProfile(
+      identity: base.identity,
+      deviceProfile: .firefoxXboxOneS,
+      displayName: base.displayName,
+      notes: base.notes,
+      isHardwareSpoof: base.isHardwareSpoof,
+      emitsXboxGuideReport: base.emitsXboxGuideReport,
+      evidence: base.evidence,
+      consumerFamily: base.consumerFamily,
+      automaticallyRecommended: base.automaticallyRecommended,
+      evidenceByConsumer: base.evidenceByConsumer
+    )
+    return CompatibilityOutputComposition(profile: profile, format: try XboxGeckoHIDReportFormat())
+  }
+
   public static func make(identity: CompatibilityIdentity) throws -> CompatibilityOutputComposition
   {
     let profile = CompatibilityOutputProfileCatalog.profile(for: identity)

@@ -6,7 +6,8 @@ status. Automatic routing is conservative. It selects an exact catalog-backed tu
 one exists. Otherwise it follows the wire-family list: if the physical device is
 already a first-party identity that family can publish, keep it; else spoof the closest
 official device for that same protocol. XUSB clones publish Microsoft
-`045E:028E`. GIP clones publish Xbox Series `045E:0B13`. DualShock 4, DualSense,
+`045E:028E`. GIP clones normally publish Xbox Series `045E:0B13`; Automatic
+uses Xbox One S `045E:02E0` while a Gecko browser is frontmost. DualShock 4, DualSense,
 and Switch Pro physical HID pads publish their first-party USB identities
 automatically. Other HID stays Generic HID. Steam and Flydigi stay Generic HID.
 XID (original Xbox USB) is parsed in userspace and is not HID. DualShock 1/2 used the
@@ -14,6 +15,13 @@ PlayStation controller port, not USB HID. Frontmost-app lists do not gate this.
 Never cross families automatically: GameSir G7 SE does not become an Xbox 360
 pad or ASTRO C40. Explicit picker/CLI may publish a first-party packer
 identity for live consumer-bind, then return to automatic.
+
+Automatic identifies browser engines from browser-role metadata and bundled
+engine files. It does not use browser names or bundle identifiers. Unknown or
+ambiguous browser fingerprints use the canonical Blink-verified Xbox Series
+variant. SDL routing is detected separately from bundled Mach-O dependencies.
+Compatibility reports continue while the device is active; foreground changes
+only trigger transactional Automatic variant transitions.
 
 Status marks appear only in the support lists below:
 
@@ -79,8 +87,13 @@ Explicit picker may publish this identity from another family for live bind.
 ### `generic-hid`
 
 Use for unknown or unsupported consumers that fit none of the specialized
-profiles. The descriptor exposes a plain gamepad under OJD VID/PID.
-Vendor-specific controls may be absent.
+profiles. The descriptor exposes a plain, non-spoof gamepad as `4F4A:4449`
+`OpenJoystickDriver Generic HID Gamepad`. This identity provides device-neutral,
+lossless raw input; it does not guarantee browser `mapping: "standard"`.
+Sticks occupy axes 0–3, LT/RT occupy the positive halves of axes 4–5, and
+digital controls use B0–B5/B8–B17 without duplicated trigger buttons or a
+D-pad axis. Vendor-specific controls may be absent. This layout and identity are
+stable; an incompatible future layout requires a new PID.
 
 ### `xbox360-hid`
 
@@ -101,7 +114,7 @@ Only explicit identities are persistence guarantees: a successful selection is
 stored and rebuilt on service startup. With `automatic`, the persisted value is
 the automatic intent, not a fixed identity. Foreground-consumer routing may
 replace or retire the per-controller user-space backend at runtime and does not
-persist that temporary choice.
+persist the detected engine, VID/PID variant, or other temporary choice.
 
 ## Controller support
 
@@ -159,6 +172,11 @@ persist that temporary choice.
   keepalives is not a failed handshake; the 48-entry log ages out that rest
   `0x20`. A 20s `controller trace` with no physical press saw only status.
   Steam `hid_init` still hangs. Automatic GIP was restored to Series.
+- Blink, WebKit, and unknown Automatic consumers retain the hardware-verified
+  Xbox Series `045E:0B13` contract. Gecko Automatic uses `045E:02E0` with the
+  same stick/trigger ordering, hat-only D-pad, and standard B0–B16 mapping.
+  Firefox's native remapper does not expose Xbox Share as B17. The explicit
+  `apple-gamecontroller` profile always remains `045E:0B13`.
 - Earlier Xbox One Bluetooth `045E:02FD` spoof experiments reported no usable
   SDL HIDAPI input and are gone from selectable identities; unknown persisted
   identity strings sanitize to `automatic` on load.
@@ -175,18 +193,20 @@ remain preferred when their exact protocol tuples are proven.
 
 ## Browser Gamepad API testing
 
-For manual browser testing, **Hardwaretester remains the canonical external manual site**:
+For manual browser testing, **ControllerTest.io is the canonical external manual site**:
 
-**<https://hardwaretester.com/gamepad>**
+**<https://controllertest.io/>**
 
 Run each matrix row from a clean browser document and record the exact browser
 version, Gamepad `id`, mapping, slot/count, every button and axis, timestamps,
-disconnect/reconnect behavior, and exposed actuator fields. The optional
-[local Gamepad API probe](../testing/browser-gamepad-api.md) runs only through
-localhost and requires explicit Start/Stop; it exports redacted observed state
-for deeper event and polling detail. A result in one browser does not establish
-support in another, and enumeration or rumble alone is not a support claim.
-See the [Plan 06 browser matrix](../testing/browser-gamepad-api.md#exact-beta3-matrix).
+disconnect/reconnect behavior, and exposed actuator fields. A result in one
+browser does not establish support in another, and enumeration or rumble alone
+is not a support claim.
+Generic HID is expected to use `mapping: n/a`, with sticks on axes 0–3,
+analog LT/RT pressure on axes 4–5, and digital controls on B0–B5 and B8–B17.
+Digital-only trigger sources use full-scale values on axes 4–5. It intentionally
+does not expose B6/B7 or a D-pad axis.
+See the [browser test protocol and reported observations](../testing/browser-gamepad-api.md).
 
 ### ❌ Not implemented
 
@@ -204,7 +224,7 @@ publishes first-party Microsoft `045E:028E` for XUSB pads only. It does not
 cross into GIP, DualShock, or Nintendo merely because SDL HIDAPI also has
 drivers for those protocols. Explicit picker/CLI may publish a first-party
 packer identity on GIP for live bind. When no verified adjacent identity exists, OJD uses generic HID rather than guessing.
-Browser reports remain per-engine because Chromium, WebKit, and Gecko can map
+Browser reports remain per-engine because Blink, WebKit, and Gecko can map
 the same family differently.
 
 | Physical family/mode | SDL/HIDAPI | Apple GameController | Automatic result |

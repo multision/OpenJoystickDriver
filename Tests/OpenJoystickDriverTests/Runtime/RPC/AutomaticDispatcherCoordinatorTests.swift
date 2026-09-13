@@ -44,12 +44,25 @@ private actor InstallationGate {
   }
 }
 
+private final class AutomaticBuildCounter: @unchecked Sendable {
+  private let lock = NSLock()
+  private var value = 0
+
+  func next() -> Int {
+    lock.withLock {
+      defer { value += 1 }
+      return value
+    }
+  }
+}
+
 private final class InstallationBackend: CompatibilityUserSpaceOutputDispatching,
   @unchecked Sendable
 {
-  enum Stage: Sendable { case activation, suppression, retirement }
+  enum Stage: Sendable { case none, activation, suppression, retirement }
   let stage: Stage
   let gate: InstallationGate
+  let failsActivation: Bool
   private let lock = NSLock()
   private var suppressed = false
   private var closes = 0
@@ -61,14 +74,16 @@ private final class InstallationBackend: CompatibilityUserSpaceOutputDispatching
   var status: String { "probe" }
   var lastRumbleStatus: String { "none" }
 
-  init(stage: Stage, gate: InstallationGate) {
+  init(stage: Stage, gate: InstallationGate, failsActivation: Bool = false) {
     self.stage = stage
     self.gate = gate
+    self.failsActivation = failsActivation
   }
 
   func activate(for identifiers: [DeviceIdentifier]) async throws {
     lock.withLock { activations += 1 }
     if stage == .activation { await gate.suspend() }
+    if failsActivation { throw UserSpaceOutputDispatcher.CreationError.createFailed }
   }
 
   func setOutputSuppressed(_ value: Bool) async {
@@ -88,6 +103,19 @@ private final class InstallationBackend: CompatibilityUserSpaceOutputDispatching
 
 struct AutomaticDispatcherCoordinatorTests {
   private let identifier = DeviceIdentifier(vendorID: 1, productID: 2)
+
+  private var description: ApplicationServiceDeviceDescription {
+    ApplicationServiceDeviceDescription(
+      name: "probe",
+      vendorID: identifier.vendorID,
+      productID: identifier.productID,
+      parser: "GIP",
+      connection: "USB",
+      serialNumber: nil,
+      protocolVariant: .xboxOne,
+      runtimeIdentifier: identifier.runtimeIdentifier
+    )
+  }
 
   @Test(.timeLimit(.minutes(1)))
   func installationUsesSuppressionChangedDuringSuspension() async throws {
@@ -206,5 +234,119 @@ struct AutomaticDispatcherCoordinatorTests {
     #expect(await lease == nil)
     #expect(backend.counts().activations == 0)
     await coordinator.close()
+  }
+
+  @Test(.timeLimit(.minutes(1)))
+  func failedEngineVariantActivationRestoresPriorTarget() async throws {
+    let coordinator = AutomaticDispatcherCoordinator()
+    let original = InstallationBackend(stage: .none, gate: InstallationGate())
+    let failed = InstallationBackend(stage: .none, gate: InstallationGate(), failsActivation: true)
+    let restored = InstallationBackend(stage: .none, gate: InstallationGate())
+    let canonical = AutomaticCompatibilityTarget.appleGameController
+    let gecko = AutomaticCompatibilityTarget(
+      identity: .appleGameController,
+      reportVariant: .geckoXboxOneS
+    )
+    let canonicalBuilds = AutomaticBuildCounter()
+    let factory: AutomaticDispatcherCoordinator.Factory = { target in
+      if target == gecko { return failed }
+      return canonicalBuilds.next() == 0 ? original : restored
+    }
+
+    let first = await coordinator.leaseForDispatch(
+      controller: identifier,
+      consumer: .blinkGamepad,
+      identity: canonical,
+      isEligible: { _, _ in true },
+      factory: factory
+    )
+    try #require(first != nil)
+    await first?.release()
+    let replacement = await coordinator.leaseForDispatch(
+      controller: identifier,
+      consumer: .blinkGamepad,
+      identity: gecko,
+      isEligible: { _, _ in true },
+      factory: factory
+    )
+
+    #expect(replacement == nil)
+    #expect(original.counts().closes == 1)
+    #expect(failed.counts() == (1, 1))
+    #expect(restored.counts() == (1, 0))
+    let retained = await coordinator.leaseForDispatch(
+      controller: identifier,
+      consumer: .blinkGamepad,
+      identity: canonical,
+      isEligible: { _, _ in true },
+      factory: factory
+    )
+    #expect(retained != nil)
+    await retained?.release()
+    await coordinator.close()
+    #expect(restored.counts().closes == 1)
+  }
+
+  @Test(.timeLimit(.minutes(1)))
+  func consumerRevisionsReplaceGenericWithGeckoAndWebKitAndRejectStaleActivation() async throws {
+    let coordinator = AutomaticDispatcherCoordinator()
+    let generic = InstallationBackend(stage: .none, gate: InstallationGate())
+    let gecko = InstallationBackend(stage: .none, gate: InstallationGate())
+    let webkit = InstallationBackend(stage: .none, gate: InstallationGate())
+    let geckoTarget = AutomaticCompatibilityTarget(
+      identity: .appleGameController,
+      reportVariant: .geckoXboxOneS
+    )
+    let factory: AutomaticDispatcherCoordinator.Factory = { target in
+      if target == .genericHID { return generic }
+      return target == geckoTarget ? gecko : webkit
+    }
+    let initial = await coordinator.leaseForDispatch(
+      controller: identifier,
+      consumer: .unknown,
+      identity: .genericHID,
+      isEligible: { _, _ in true },
+      factory: factory
+    )
+    try #require(initial != nil)
+    await initial?.release()
+
+    await coordinator.replaceForConsumer(
+      .geckoGamepad,
+      revision: 1,
+      descriptions: [description],
+      isEligible: { _, _ in true },
+      identityProvider: { _, _ in geckoTarget },
+      factory: factory
+    )
+    #expect(generic.counts().closes == 1)
+    let installedGecko = await coordinator.installedTargets()
+    #expect(installedGecko[identifier] == geckoTarget)
+
+    await coordinator.replaceForConsumer(
+      .webkitGamepad,
+      revision: 2,
+      descriptions: [description],
+      isEligible: { _, _ in true },
+      identityProvider: { _, _ in .appleGameController },
+      factory: factory
+    )
+    #expect(gecko.counts().closes == 1)
+    let installedWebKit = await coordinator.installedTargets()
+    #expect(installedWebKit[identifier] == .appleGameController)
+
+    await coordinator.replaceForConsumer(
+      .geckoGamepad,
+      revision: 1,
+      descriptions: [description],
+      isEligible: { _, _ in true },
+      identityProvider: { _, _ in geckoTarget },
+      factory: factory
+    )
+    let installedAfterStaleActivation = await coordinator.installedTargets()
+    #expect(installedAfterStaleActivation[identifier] == .appleGameController)
+    #expect(webkit.counts() == (1, 0))
+    await coordinator.close()
+    #expect(webkit.counts().closes == 1)
   }
 }

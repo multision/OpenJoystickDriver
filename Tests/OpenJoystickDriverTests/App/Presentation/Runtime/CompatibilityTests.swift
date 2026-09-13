@@ -26,13 +26,8 @@ private final class AutomaticBackendProbe: CompatibilityUserSpaceOutputDispatchi
 }
 
 private final class AutomaticConsumerBox: @unchecked Sendable {
-  private let lock = NSLock()
   var value = CompatibilityConsumerFamily.sdlHIDAPI
   var created: [AutomaticBackendProbe] = []
-  private var transitionRequests = 0
-
-  func requestTransition() { lock.withLock { transitionRequests += 1 } }
-  func transitionRequestCount() -> Int { lock.withLock { transitionRequests } }
 }
 
 private final class ConcurrentBackendProbe: CompatibilityUserSpaceOutputDispatching,
@@ -203,7 +198,7 @@ struct CompatibilityTests {
   }
 
   @Test
-  func automaticEffectiveIdentityChangeDelegatesWithoutOverlappingChildren() async throws {
+  func automaticEffectiveIdentityChangeReplacesChildren() async throws {
     let identifiers = [
       DeviceIdentifier(vendorID: 1, productID: 2), DeviceIdentifier(vendorID: 3, productID: 4),
     ]
@@ -222,22 +217,21 @@ struct CompatibilityTests {
       observeConsumerChanges: false,
       descriptionsProvider: { descriptions },
       identityProvider: { _, consumer in consumer == .sdlHIDAPI ? .genericHID : .appleGameController
-      },
-      transitionRequester: { box.requestTransition() }
+      }
     )
 
     try await dispatcher.activate(for: identifiers)
     box.value = .appleGameController
     await dispatcher.refreshForCurrentConsumer()
 
-    #expect(box.transitionRequestCount() == 1)
-    #expect(created.created.count == 2)
-    #expect(created.created.allSatisfy { !$0.closed })
+    #expect(created.created.count == 4)
+    #expect(created.created.prefix(2).allSatisfy { $0.closed })
+    #expect(created.created.suffix(2).allSatisfy { !$0.closed })
     await dispatcher.close()
   }
 
   @Test
-  func repeatedChangedIdentityRefreshRequestsTheOwningTransition() async throws {
+  func repeatedConsumerRefreshKeepsCurrentChildren() async throws {
     let identifiers = [
       DeviceIdentifier(vendorID: 1, productID: 2), DeviceIdentifier(vendorID: 3, productID: 4),
     ]
@@ -256,8 +250,7 @@ struct CompatibilityTests {
       observeConsumerChanges: false,
       descriptionsProvider: { descriptions },
       identityProvider: { _, consumer in consumer == .sdlHIDAPI ? .genericHID : .appleGameController
-      },
-      transitionRequester: { box.requestTransition() }
+      }
     )
 
     try await dispatcher.activate(for: identifiers)
@@ -266,9 +259,9 @@ struct CompatibilityTests {
     await dispatcher.refreshForCurrentConsumer()
     await dispatcher.refreshForCurrentConsumer()
 
-    #expect(box.transitionRequestCount() == 2)
-    #expect(created.created.count == 2)
-    #expect(original.allSatisfy { !$0.closed })
+    #expect(created.created.count == 4)
+    #expect(original.allSatisfy { $0.closed })
+    #expect(created.created.suffix(2).allSatisfy { !$0.closed })
     await dispatcher.close()
   }
 
@@ -503,13 +496,11 @@ struct CompatibilityTests {
       runtimeIdentifier: identifier.runtimeIdentifier
     )
     let box = AutomaticConsumerBox()
-    let builder:
-      @Sendable (CompatibilityIdentity) throws -> any CompatibilityUserSpaceOutputDispatching = {
-        _ in
-        let backend = AutomaticBackendProbe()
-        box.created.append(backend)
-        return backend
-      }
+    let builder: AutomaticDispatcherCoordinator.Factory = { _ in
+      let backend = AutomaticBackendProbe()
+      box.created.append(backend)
+      return backend
+    }
     let consumerProvider: @Sendable () -> CompatibilityConsumerFamily = { box.value }
     let descriptionsProvider: @Sendable () async -> [ApplicationServiceDeviceDescription] = {
       [description]

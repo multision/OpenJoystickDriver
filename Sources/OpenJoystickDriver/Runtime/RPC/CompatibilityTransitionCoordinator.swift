@@ -1,77 +1,6 @@
 import Foundation
 import OpenJoystickDriverKit
 
-struct CompatibilityTransitionTimeouts: Sendable {
-  static let standard = Self(
-    stageNanoseconds: 2_000_000_000,
-    perControllerNanoseconds: 2_000_000_000,
-    totalNanoseconds: 10_000_000_000,
-    zeroControllerActivationNanoseconds: 2_000_000_000,
-    feedbackNanoseconds: 2_000_000_000,
-    candidateCloseNanoseconds: 2_000_000_000,
-    rollbackStageNanoseconds: 2_000_000_000,
-    rollbackActivationTotalNanoseconds: 10_000_000_000,
-    zeroDeviceNanoseconds: 20_000_000_000
-  )
-
-  let stageNanoseconds: UInt64
-  let perControllerNanoseconds: UInt64
-  let totalNanoseconds: UInt64
-  let zeroControllerActivationNanoseconds: UInt64
-  let feedbackNanoseconds: UInt64
-  let candidateCloseNanoseconds: UInt64
-  let rollbackStageNanoseconds: UInt64
-  let rollbackActivationTotalNanoseconds: UInt64
-  let zeroDeviceNanoseconds: UInt64
-
-  init(
-    stageNanoseconds: UInt64,
-    perControllerNanoseconds: UInt64,
-    totalNanoseconds: UInt64,
-    zeroControllerActivationNanoseconds: UInt64 = 2_000_000_000,
-    feedbackNanoseconds: UInt64 = 2_000_000_000,
-    candidateCloseNanoseconds: UInt64 = 2_000_000_000,
-    rollbackStageNanoseconds: UInt64 = 2_000_000_000,
-    rollbackActivationTotalNanoseconds: UInt64 = 10_000_000_000,
-    zeroDeviceNanoseconds: UInt64 = 20_000_000_000
-  ) {
-    self.stageNanoseconds = stageNanoseconds
-    self.perControllerNanoseconds = perControllerNanoseconds
-    self.totalNanoseconds = totalNanoseconds
-    self.zeroControllerActivationNanoseconds = zeroControllerActivationNanoseconds
-    self.feedbackNanoseconds = feedbackNanoseconds
-    self.candidateCloseNanoseconds = candidateCloseNanoseconds
-    self.rollbackStageNanoseconds = rollbackStageNanoseconds
-    self.rollbackActivationTotalNanoseconds = rollbackActivationTotalNanoseconds
-    self.zeroDeviceNanoseconds = zeroDeviceNanoseconds
-  }
-
-  func activationNanoseconds(for count: Int) -> UInt64 {
-    guard count > 0 else { return zeroControllerActivationNanoseconds }
-    let perController = perControllerNanoseconds.multipliedReportingOverflow(by: UInt64(count))
-    return min(perController.overflow ? UInt64.max : perController.partialValue, totalNanoseconds)
-  }
-
-  func rollbackActivationNanoseconds(for count: Int) -> UInt64 {
-    guard count > 0 else { return zeroControllerActivationNanoseconds }
-    let perController = perControllerNanoseconds.multipliedReportingOverflow(by: UInt64(count))
-    return min(
-      perController.overflow ? UInt64.max : perController.partialValue,
-      rollbackActivationTotalNanoseconds
-    )
-  }
-}
-
-struct CompatibilityTransitionClock: Sendable {
-  static let system = Self(
-    now: { DispatchTime.now().uptimeNanoseconds },
-    sleep: { nanoseconds in try await Task.sleep(nanoseconds: nanoseconds) }
-  )
-
-  let now: @Sendable () -> UInt64
-  let sleep: @Sendable (UInt64) async throws -> Void
-}
-
 enum CompatibilityTransitionError: Error, Sendable {
   case stageTimedOut
   case feedbackTimedOut
@@ -359,7 +288,14 @@ extension ApplicationServiceServer {
         identity: identity,
         timeout: compatibilityTransitionTimeouts.stageNanoseconds
       )
-    } catch { return false }
+    } catch {
+      recordCompatibilityTransitionFailure(
+        phase: .stage,
+        requestedIdentity: identity,
+        priorProfileIdentity: prior.liveIdentity ?? prior.requestedIdentity
+      )
+      return false
+    }
 
     guard !isCompatibilityServerStopped() else {
       _ = await closeCompatibilityBackend(candidate.dispatcher, slot: candidate.closeSlot)
@@ -374,6 +310,11 @@ extension ApplicationServiceServer {
       )
     else {
       _ = await closeCompatibilityBackend(candidate.dispatcher, slot: candidate.closeSlot)
+      recordCompatibilityTransitionFailure(
+        phase: .feedbackQuiescence,
+        requestedIdentity: identity,
+        priorProfileIdentity: prior.liveIdentity ?? prior.requestedIdentity
+      )
       return false
     }
     var zeroDeviceStarted: UInt64?
@@ -385,7 +326,7 @@ extension ApplicationServiceServer {
         installUnavailableCompatibilityState(
           phase: .candidateClose,
           requestedIdentity: identity,
-          priorProfileIdentity: prior.liveIdentity ?? prior.requestedIdentity
+          prior: prior
         )
         return false
       }
@@ -439,28 +380,40 @@ extension ApplicationServiceServer {
         installUnavailableCompatibilityState(
           phase: .zeroDeviceInterval,
           requestedIdentity: identity,
-          priorProfileIdentity: prior.liveIdentity ?? prior.requestedIdentity
+          prior: prior
         )
         return false
       }
       guard !isCompatibilityServerStopped() else { return false }
-      guard prior.dispatcher != nil else {
-        installUnavailableCompatibilityState(
+      let rollbackIdentifiers = await connectedIdentifiers()
+      if prior.dispatcher != nil,
+        await rollbackCompatibilityDispatcher(
+          identity: prior.liveIdentity ?? prior.requestedIdentity,
+          identifiers: rollbackIdentifiers,
+          prior: prior,
+          requestedIdentityAfterFailure: identity,
+          zeroDeviceStarted: zeroDeviceStarted
+        )
+      {
+        recordCompatibilityTransitionFailure(
           phase: .activation,
           requestedIdentity: identity,
           priorProfileIdentity: prior.liveIdentity ?? prior.requestedIdentity
         )
-        return false
-      }
-      let rollbackIdentifiers = await connectedIdentifiers()
-      if await rollbackCompatibilityDispatcher(
-        identity: prior.liveIdentity ?? prior.requestedIdentity,
+        feedbackGate.resume()
+      } else if await activateGenericFallback(
         identifiers: rollbackIdentifiers,
         prior: prior,
         requestedIdentityAfterFailure: identity,
         zeroDeviceStarted: zeroDeviceStarted
       ) {
         feedbackGate.resume()
+      } else {
+        installUnavailableCompatibilityState(
+          phase: prior.dispatcher == nil ? .activation : .rollbackActivation,
+          requestedIdentity: identity,
+          prior: prior
+        )
       }
       return false
     }
@@ -585,15 +538,77 @@ extension ApplicationServiceServer {
         installUnavailableCompatibilityState(
           phase: .zeroDeviceInterval,
           requestedIdentity: requestedIdentityAfterFailure,
-          priorProfileIdentity: prior.liveIdentity ?? prior.requestedIdentity
+          prior: prior
         )
         return false
       }
-      guard !isCompatibilityServerStopped() else { return false }
-      installUnavailableCompatibilityState(
+      return false
+    }
+  }
+
+  private func activateGenericFallback(
+    identifiers: [DeviceIdentifier],
+    prior: CompatibilityTransitionSnapshot,
+    requestedIdentityAfterFailure: CompatibilityIdentity,
+    zeroDeviceStarted: UInt64?
+  ) async -> Bool {
+    let priorIdentity = prior.liveIdentity ?? prior.requestedIdentity
+    guard prior.dispatcher == nil || priorIdentity != .genericHID, !isCompatibilityServerStopped()
+    else { return false }
+    var candidate: UserSpaceDispatcherBuild?
+    do {
+      let remaining =
+        zeroDeviceStarted.map {
+          remainingNanoseconds(
+            since: $0,
+            within: compatibilityTransitionTimeouts.zeroDeviceNanoseconds
+          )
+        } ?? UInt64.max
+      guard remaining > 0 else { throw CompatibilityTransitionError.zeroDeviceIntervalTimedOut }
+      let staged = try await stageCompatibilityDispatcher(
+        identity: .genericHID,
+        timeout: min(compatibilityTransitionTimeouts.rollbackStageNanoseconds, remaining)
+      )
+      candidate = staged
+      let timeout = min(
+        compatibilityTransitionTimeouts.rollbackActivationNanoseconds(for: identifiers.count),
+        zeroDeviceStarted.map {
+          remainingNanoseconds(
+            since: $0,
+            within: compatibilityTransitionTimeouts.zeroDeviceNanoseconds
+          )
+        } ?? UInt64.max
+      )
+      guard timeout > 0 else { throw CompatibilityTransitionError.zeroDeviceIntervalTimedOut }
+      _ = try await activateCompatibilityDispatcher(
+        staged.dispatcher,
+        for: identifiers,
+        timeout: timeout
+      )
+      guard await connectedIdentifiers() == identifiers, !isCompatibilityServerStopped() else {
+        throw CompatibilityTransitionError.rollbackTimedOut
+      }
+      guard
+        commitCompatibilityDispatcher(
+          staged,
+          identity: .genericHID,
+          identifiers: identifiers,
+          persistedIdentity: prior.persistedIdentity,
+          requestedIdentity: prior.requestedIdentity
+        )
+      else { throw CompatibilityTransitionError.serverStopped }
+      recordCompatibilityTransitionFailure(
         phase: .rollbackActivation,
         requestedIdentity: requestedIdentityAfterFailure,
-        priorProfileIdentity: prior.liveIdentity ?? prior.requestedIdentity
+        priorProfileIdentity: priorIdentity,
+        retainedStatus: "using generic-hid fallback"
+      )
+      return true
+    } catch {
+      _ = await closeCompatibilityBackendWithinZeroDeviceBudget(
+        candidate?.dispatcher,
+        slot: candidate?.closeSlot,
+        zeroDeviceStarted: zeroDeviceStarted
       )
       return false
     }
@@ -612,8 +627,6 @@ extension ApplicationServiceServer {
       dispatcher.setBackend(build.dispatcher)
       userSpaceDispatcher = build.dispatcher
       userSpaceCloseSlot = build.closeSlot
-      userSpaceAutomaticGeneration = build.automaticGeneration
-      pendingAutomaticTransitionGeneration = nil
       userSpaceEnabled = true
       userSpaceStatus = build.dispatcher.status
       compatibilityLiveIdentity = identity
@@ -633,33 +646,43 @@ extension ApplicationServiceServer {
 
   private func installUnavailableCompatibilityState(
     phase: CompatibilityTransitionPhase,
-    requestedIdentity: CompatibilityIdentity? = nil,
-    priorProfileIdentity: CompatibilityIdentity? = nil
+    requestedIdentity: CompatibilityIdentity,
+    prior: CompatibilityTransitionSnapshot
   ) {
     userSpaceLock.withLock {
       dispatcher.setBackend(nil)
       userSpaceDispatcher = nil
       userSpaceCloseSlot = nil
-      userSpaceAutomaticGeneration = nil
-      pendingAutomaticTransitionGeneration = nil
       userSpaceEnabled = false
       compatibilityLiveIdentity = nil
-      if let requestedIdentity {
-        compatibilityIdentity = requestedIdentity
-        persistedCompatibilityIdentity = requestedIdentity
-        UserDefaults.standard.set(
-          requestedIdentity.rawValue,
-          forKey: Self.compatibilityIdentityDefaultsKey
-        )
-        let retrySnapshot = CompatibilityRetrySnapshot(
-          requestedIdentity: requestedIdentity,
-          priorProfileIdentity: priorProfileIdentity ?? requestedIdentity,
-          phase: phase
-        )
-        compatibilityRetrySnapshot = retrySnapshot
-        Self.persistCompatibilityRetrySnapshot(retrySnapshot)
-      }
+      compatibilityIdentity = prior.requestedIdentity
+      persistedCompatibilityIdentity = prior.persistedIdentity
+      let retrySnapshot = CompatibilityRetrySnapshot(
+        requestedIdentity: requestedIdentity,
+        priorProfileIdentity: prior.liveIdentity ?? prior.requestedIdentity,
+        phase: phase
+      )
+      compatibilityRetrySnapshot = retrySnapshot
+      Self.persistCompatibilityRetrySnapshot(retrySnapshot)
       userSpaceStatus = "error: compatibility \(phase.rawValue) failed; output unavailable"
+    }
+  }
+
+  private func recordCompatibilityTransitionFailure(
+    phase: CompatibilityTransitionPhase,
+    requestedIdentity: CompatibilityIdentity,
+    priorProfileIdentity: CompatibilityIdentity,
+    retainedStatus: String? = nil
+  ) {
+    userSpaceLock.withLock {
+      let retrySnapshot = CompatibilityRetrySnapshot(
+        requestedIdentity: requestedIdentity,
+        priorProfileIdentity: priorProfileIdentity,
+        phase: phase
+      )
+      compatibilityRetrySnapshot = retrySnapshot
+      let status = retainedStatus ?? "retained \(priorProfileIdentity.rawValue)"
+      userSpaceStatus = "error: compatibility \(phase.rawValue) failed; \(status)"
     }
   }
 

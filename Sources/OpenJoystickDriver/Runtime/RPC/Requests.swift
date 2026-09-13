@@ -8,20 +8,29 @@ extension ApplicationServiceServer {
     let dm = deviceManager
     Task {
       let devices = await dm.connectedDeviceDescriptions()
-      let strings = devices.map { d in
-        let sn = d.serialNumber ?? "none"
-        let quirks = d.quirks.isEmpty ? "none" : d.quirks.joined(separator: ",")
-        let backends =
-          d.preferredBackends.isEmpty ? "none" : d.preferredBackends.joined(separator: ",")
-        return "\(d.name) (VID:\(d.vendorID)" + " PID:\(d.productID) \(d.parser)"
-          + " [\(d.connection)] SN:\(sn))" + " protocol=\(d.protocolVariant.rawValue)"
-          + " endpoints=in:0x\(String(d.inputEndpoint, radix: 16))"
-          + " out:0x\(String(d.outputEndpoint, radix: 16))"
-          + " setConfig=\(d.needsSetConfiguration)" + " settleMs=\(d.postHandshakeSettleMs)"
-          + " quirks=\(quirks)" + " backends=\(backends)"
-      }
+      let strings = devices.map(Self.deviceDescriptionLine)
       callback.call(strings)
     }
+  }
+
+  static func deviceDescriptionLine(_ device: ApplicationServiceDeviceDescription) -> String {
+    let serialNumber = device.serialNumber ?? "none"
+    let quirks = device.quirks.isEmpty ? "none" : device.quirks.joined(separator: ",")
+    let backends =
+      device.preferredBackends.isEmpty ? "none" : device.preferredBackends.joined(separator: ",")
+    let battery = device.battery.map(Self.batteryDescription) ?? "unknown"
+    return "\(device.name) (VID:\(device.vendorID)" + " PID:\(device.productID) \(device.parser)"
+      + " [\(device.connection)] SN:\(serialNumber))"
+      + " protocol=\(device.protocolVariant.rawValue)"
+      + " endpoints=in:0x\(String(device.inputEndpoint, radix: 16))"
+      + " out:0x\(String(device.outputEndpoint, radix: 16))"
+      + " setConfig=\(device.needsSetConfiguration)" + " settleMs=\(device.postHandshakeSettleMs)"
+      + " quirks=\(quirks)" + " backends=\(backends)" + " battery=\(battery)"
+  }
+
+  private static func batteryDescription(_ battery: ControllerBatteryTelemetry) -> String {
+    let percentage = battery.percentageDescription ?? "unknown"
+    return "\(percentage),\(battery.chargingState.rawValue),cable-\(battery.cableState.rawValue)"
   }
 
   /// Returns the current application service status including input monitoring state and
