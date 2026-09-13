@@ -114,8 +114,8 @@ extension DevicePipeline {
       return true
     } catch {
       print("[DevicePipeline] Handshake failed" + " for \(identifier): \(error)")
-      await handle.close()
       usbHandle = nil
+      await handle.close()
       return false
     }
   }
@@ -212,6 +212,7 @@ extension DevicePipeline {
         shouldThrottleIdle = true
       } catch let error as USBTransportError where error.isDisconnected {
         print("[DevicePipeline] Device disconnected:" + " \(identifier)")
+        await invalidateUSBHandle(handle)
         shouldBreak = true
       } catch let error as USBTransportError where error.isInputOutput {
         consecutiveUSBIOErrors += 1
@@ -232,12 +233,13 @@ extension DevicePipeline {
 
         if consecutiveUSBIOErrors >= usbIOErrorReconnectThreshold {
           print("[DevicePipeline] Too many USB I/O errors. Reconnecting:" + " \(identifier)")
+          await invalidateUSBHandle(handle)
           shouldBreak = true
         }
       } catch {
         // Slow down after an unknown failure, then reconnect.
         print("[DevicePipeline] Read error" + " for \(identifier):" + " \(error). Reconnecting")
-        try? await Task.sleep(nanoseconds: 250_000_000)
+        await invalidateUSBHandle(handle)
         shouldBreak = true
       }
 
@@ -252,10 +254,9 @@ extension DevicePipeline {
       }
     }
 
+    await invalidateUSBHandle(handle)
     await reportUSBInputOwnership(.unknown)
     await neutralizeOutput()
-    await handle.close()
-    usbHandle = nil
     print("[DevicePipeline] Input loop ended:" + " \(identifier)")
   }
 
@@ -281,7 +282,9 @@ extension DevicePipeline {
     from bytes: [UInt8],
     receivedAtNanoseconds: UInt64 = DispatchTime.now().uptimeNanoseconds
   ) throws -> [ControllerEvent] {
-    try parser.parse(data: Data(bytes), receivedAtNanoseconds: receivedAtNanoseconds)
+    let events = try parser.parse(data: Data(bytes), receivedAtNanoseconds: receivedAtNanoseconds)
+    snapshotBatteryTelemetry()
+    return events
   }
 
   func sendDeferredUSBOutputPackets(handle: any USBTransportSession) async {

@@ -151,6 +151,8 @@ public struct ApplicationServiceDeviceDescription: Codable, Sendable {
   public let physicalOutputCapabilities: PhysicalControllerOutputCapabilities
   /// Sample formats implemented by the active parser; independent of calibration or mappings.
   public let physicalInputCapabilities: PhysicalControllerInputCapabilities
+  /// Latest battery telemetry reported by the physical controller.
+  public let battery: ControllerBatteryTelemetry?
 
   private enum CodingKeys: String, CodingKey {
     case name
@@ -173,6 +175,7 @@ public struct ApplicationServiceDeviceDescription: Codable, Sendable {
     case preferredBackends
     case physicalOutputCapabilities
     case physicalInputCapabilities
+    case battery
   }
 
   /// Creates a new ApplicationServiceDeviceDescription.
@@ -196,6 +199,7 @@ public struct ApplicationServiceDeviceDescription: Codable, Sendable {
     preferredBackends: [String] = [],
     physicalOutputCapabilities: PhysicalControllerOutputCapabilities = .none,
     physicalInputCapabilities: PhysicalControllerInputCapabilities = .none,
+    battery: ControllerBatteryTelemetry? = nil,
     runtimeIdentifier: String? = nil
   ) {
     self.runtimeIdentifier = runtimeIdentifier ?? String(format: "%04X:%04X:M", vendorID, productID)
@@ -218,6 +222,7 @@ public struct ApplicationServiceDeviceDescription: Codable, Sendable {
     self.preferredBackends = preferredBackends
     self.physicalOutputCapabilities = physicalOutputCapabilities
     self.physicalInputCapabilities = physicalInputCapabilities
+    self.battery = battery
   }
 
   public init(from decoder: Decoder) throws {
@@ -263,6 +268,7 @@ public struct ApplicationServiceDeviceDescription: Codable, Sendable {
         PhysicalControllerInputCapabilities.self,
         forKey: .physicalInputCapabilities
       ) ?? .none
+    self.battery = try container.decodeIfPresent(ControllerBatteryTelemetry.self, forKey: .battery)
   }
 }
 

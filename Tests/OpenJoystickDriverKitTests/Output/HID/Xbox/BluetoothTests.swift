@@ -14,6 +14,42 @@ struct XboxOneHIDReportFormatTests {
   private func report(buttonBit: Int) throws -> [UInt8] {
     try format().buildInputReport(from: VirtualGamepadState(buttons: 1 << UInt32(buttonBit)))
   }
+
+  @Test
+  func appleGameControllerReportContractCoversEveryDigitalControl() throws {
+    let neutral = try format().buildInputReport(from: VirtualGamepadState())
+    let controls: [(GamepadHIDDescriptor.ButtonBit, Int, UInt8)] = [
+      (.a, 14, 0x01), (.b, 14, 0x02), (.x, 14, 0x04), (.y, 14, 0x08), (.leftBumper, 14, 0x10),
+      (.rightBumper, 14, 0x20), (.back, 14, 0x40), (.start, 14, 0x80), (.leftStick, 15, 0x01),
+      (.rightStick, 15, 0x02), (.guide, 15, 0x04), (.dpadUp, 15, 0x08), (.dpadDown, 15, 0x10),
+      (.dpadLeft, 15, 0x20), (.dpadRight, 15, 0x40), (.share, 16, 0x01),
+    ]
+
+    #expect(neutral == [1, 0, 128, 0, 128, 0, 128, 0, 128, 0, 0, 0, 0, 0, 0, 0, 0])
+    for (button, byte, mask) in controls {
+      let value = try report(buttonBit: button.rawValue)
+      #expect(value[byte] == mask)
+      #expect(
+        value.enumerated().allSatisfy { index, element in index == byte || element == neutral[index]
+        }
+      )
+    }
+  }
+
+  @Test
+  func appleGameControllerIdentityAndReportShapeRemainXboxSeries() throws {
+    let profile = VirtualDeviceProfile.xboxSeries
+    let parsed = try #require(
+      HIDReportDescriptorParser.parse(descriptor: XboxOneBluetoothHIDDescriptor.seriesDescriptor)
+    )
+
+    #expect(profile.vendorID == 0x045E)
+    #expect(profile.productID == 0x0B13)
+    #expect(profile.productName == "Xbox Wireless Controller")
+    #expect(try format().inputReportID == 1)
+    #expect(parsed.payloadSizeBytesByReportID[1] == 16)
+    #expect(parsed.payloadSizeBytesByReportID[2] == 1)
+  }
   @Test
   func testMapsFaceAndShoulderButtonsDirectly() throws {
     let a = try report(buttonBit: 0)

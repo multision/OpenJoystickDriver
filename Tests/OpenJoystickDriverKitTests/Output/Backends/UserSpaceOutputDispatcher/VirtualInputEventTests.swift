@@ -17,6 +17,63 @@ struct VirtualInputEventTests {
     }
   }
 
+  @Test(arguments: [false, true])
+  func ds4USBAndBluetoothFixturesReachVirtualReports(bluetooth: Bool) throws {
+    let parser = DS4Parser(prefersBluetooth: bluetooth)
+    var packet = [UInt8](repeating: 0, count: bluetooth ? 78 : 64)
+    let base = bluetooth ? 3 : 1
+    packet[0] = bluetooth ? 0x11 : 0x01
+    if bluetooth {
+      packet[1] = 0xC0
+      packet[2] = 0
+    }
+    packet[base] = 255
+    packet[base + 1] = 0
+    packet[base + 2] = 0
+    packet[base + 3] = 255
+    packet[base + 4] = 0x28
+    packet[base + 5] = 0x01
+    packet[base + 6] = 0x01
+    packet[base + 7] = 255
+    packet[base + 8] = 128
+    packet[base + 12] = 1
+    packet[base + 18] = 2
+    packet[base + 29] = bluetooth ? 0x19 : 0x09
+
+    let events = try parser.parse(data: Data(packet))
+    var state = VirtualGamepadState()
+    apply(events, to: &state)
+    let virtualReport = DualShock4USBHIDReportFormat().buildInputReport(from: state)
+
+    #expect(events.contains(.buttonPressed(.cross)))
+    #expect(events.contains(.buttonPressed(.l1)))
+    #expect(events.contains(.buttonPressed(.ps)))
+    #expect(
+      events.contains {
+        if case .motionSample = $0 { return true }
+        return false
+      }
+    )
+    #expect(state.leftStickX > 32_000)
+    #expect(state.leftStickY == -Int16.max)
+    #expect(state.rightStickX == -Int16.max)
+    #expect(state.rightStickY > 32_000)
+    #expect(virtualReport[5] & 0xF0 == 0x20)
+    #expect(virtualReport[6] & 0x01 == 0x01)
+    #expect(virtualReport[7] & 0x01 == 0x01)
+    #expect(virtualReport[8] == 255)
+    #expect(virtualReport[9] == 127)
+    #expect(
+      parser.batteryTelemetry
+        == ControllerBatteryTelemetry(
+          percentage: 95,
+          percentageRange: 90...99,
+          chargingState: bluetooth ? .charging : .discharging,
+          cableState: bluetooth ? .connected : .disconnected
+        )
+    )
+  }
+
   @Test
   func nintendoDigitalTriggersSurviveParserAndVirtualOutput() throws {
     let parser = SwitchProParser()

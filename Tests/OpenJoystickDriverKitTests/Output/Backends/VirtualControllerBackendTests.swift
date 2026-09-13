@@ -97,7 +97,8 @@ struct VirtualControllerBackendTests {
     #expect(sdl.automaticallyRecommended)
     #expect(!apple.automaticallyRecommended)
     #expect(apple.consumerFamily == .appleGameController)
-    #expect(apple.evidenceByConsumer[.chromiumGamepad] == .reportedFailure)
+    #expect(apple.evidenceByConsumer[.blinkGamepad] == .hardwareVerified)
+    #expect(apple.evidenceByConsumer[.geckoGamepad] == .reportedFailure)
     #expect(xbox360.deviceProfile == .xbox360Wired)
     #expect(xbox360.consumerFamily == .xbox360HID)
     #expect(xbox360.displayName == "Xbox 360 HID")
@@ -232,7 +233,8 @@ struct VirtualControllerBackendTests {
     #expect(steam360.reason == .selectedExplicitIdentity)
     #expect(steam360.evidence == .sourceBacked)
     for consumer: CompatibilityConsumerFamily in [
-      .chromiumGamepad, .webkitGamepad, .geckoGamepad, .genericHID, .appleGameController,
+      .blinkGamepad, .webkitGamepad, .geckoGamepad, .unknownBrowserGamepad, .genericHID,
+      .appleGameController,
     ] {
       let resolved = AutomaticCompatibilityResolver.resolve(for: wired360, consumer: consumer)
       #expect(resolved.identity == .sdl2_3)
@@ -336,80 +338,6 @@ struct VirtualControllerBackendTests {
   }
 
   @Test
-  func testGenericReportDpadButtonPolicy() {
-    let state = VirtualGamepadState(
-      buttons: GamepadHIDDescriptor.dpadButtonBits(for: .north)
-        | (1 << GamepadHIDDescriptor.ButtonBit.share.rawValue),
-      hat: .north
-    )
-
-    let generic = OJDGenericGamepadFormat().buildInputReport(from: state)
-    #expect((UInt16(generic[1]) & 0x88) == 0x88)
-    #expect((generic[14] & 0x0F) == GamepadHIDDescriptor.Hat.north.rawValue)
-
-    let sdl2_3 = OJDGenericGamepadFormat(includesDpadButtonBits: false).buildInputReport(
-      from: state
-    )
-    #expect((UInt16(sdl2_3[1]) & 0x78) == 0)
-    #expect((UInt16(sdl2_3[1]) & 0x80) == 0x80)
-    #expect((sdl2_3[14] & 0x0F) == GamepadHIDDescriptor.Hat.north.rawValue)
-  }
-
-  @Test
-  func testSdlReportUsesButtonDpadAndNeutralTriggers() throws {
-    let parsed = try HIDDescriptorReportFormat(descriptor: OJDSDLGamepadFormat().descriptor)
-    let neutral = OJDSDLGamepadFormat().buildInputReport(from: VirtualGamepadState())
-    let dpad = OJDSDLGamepadFormat().buildInputReport(
-      from: VirtualGamepadState(
-        buttons: GamepadHIDDescriptor.dpadButtonBits(for: .north)
-          | GamepadHIDDescriptor.dpadButtonBits(for: .east),
-        hat: .northEast
-      )
-    )
-    let triggers = OJDSDLGamepadFormat().buildInputReport(
-      from: VirtualGamepadState(leftTrigger: 32_767, rightTrigger: 16_384)
-    )
-
-    #expect(parsed.inputReportPayloadSize == 14)
-    #expect(!OJDSDLGamepadFormat().descriptor.contains(0x39))
-    #expect(
-      OJDSDLGamepadFormat().descriptor.containsSequence([
-        0x09, 0x32,  // LT/Z
-        0x15, 0x00,  // Logical Minimum: 0
-        0x26, 0xFF, 0x7F,
-      ])
-    )
-    #expect(
-      OJDSDLGamepadFormat().descriptor.containsSequence([
-        0x09, 0x35,  // RT/Rz
-        0x15, 0x00,  // Logical Minimum: 0
-        0x26, 0xFF, 0x7F,
-      ])
-    )
-    #expect(neutral[6] == 0x00)
-    #expect(neutral[7] == 0x00)
-    #expect(neutral[12] == 0x00)
-    #expect(neutral[13] == 0x00)
-    #expect((UInt16(dpad[1]) & 0x48) == 0x48)
-    #expect(triggers[6] == 0xFF)
-    #expect(triggers[7] == 0x7F)
-    #expect(triggers[12] == 0x00)
-    #expect(triggers[13] == 0x40)
-  }
-
-  @Test
-  func testSdlRumbleOutputReportUsesVendorPayload() {
-    #expect(SDLGamepadHIDDescriptor.maxOutputReportPayloadSize == 7)
-    #expect(OJDSDLGamepadFormat().outputReportPayloadSize == 7)
-    #expect(
-      OJDSDLGamepadFormat().descriptor.containsSequence([
-        0x06, 0x00, 0xFF,  // vendor-defined output page
-        0x09, 0x01, 0x15, 0x00, 0x26, 0xFF, 0x00, 0x75, 0x08, 0x95, 0x07, 0x91, 0x02,
-      ])
-    )
-  }
-
-  @Test
   func testUserSpaceSDLIdentityAdvertisesXbox360HIDAPIReportSizes() {
     let format = Xbox360MacHIDReportFormat()
     let properties = UserSpaceOutputDispatcher.deviceProperties(
@@ -504,36 +432,8 @@ struct VirtualControllerBackendTests {
   }
 
   @Test
-  func testFixedCompatibilityReportHasNoHatAxis() throws {
-    let parsed = try HIDDescriptorReportFormat(descriptor: OJDSDLGamepadFormat().descriptor)
-    let full = OJDSDLGamepadFormat().buildInputReport(
-      from: VirtualGamepadState(
-        buttons: GamepadHIDDescriptor.dpadButtonBits(for: .south)
-          | (1 << GamepadHIDDescriptor.ButtonBit.leftStick.rawValue)
-          | (1 << GamepadHIDDescriptor.ButtonBit.rightStick.rawValue)
-          | (1 << GamepadHIDDescriptor.ButtonBit.start.rawValue)
-          | (1 << GamepadHIDDescriptor.ButtonBit.back.rawValue)
-          | (1 << GamepadHIDDescriptor.ButtonBit.guide.rawValue)
-          | (1 << GamepadHIDDescriptor.ButtonBit.share.rawValue),
-        leftTrigger: 32_767,
-        rightTrigger: 32_767,
-        hat: .south
-      )
-    )
-
-    #expect(parsed.inputReportPayloadSize == 14)
-    #expect(!OJDSDLGamepadFormat().descriptor.contains(0x39))
-    #expect(full[1] == 0x97)
-    #expect(full[6] == 0xFF)
-    #expect(full[7] == 0x7F)
-    #expect(full[12] == 0xFF)
-    #expect(full[13] == 0x7F)
-  }
-
-  @Test
   func testCompatibilityFormatsReturnFullyNeutralReportsAfterRelease() throws {
     let generic = OJDGenericGamepadFormat().buildInputReport(from: VirtualGamepadState())
-    let sdl = OJDSDLGamepadFormat().buildInputReport(from: VirtualGamepadState())
     let apple = Xbox360MacHIDReportFormat(topLevelUsage: UInt8(kHIDUsage_GD_GamePad))
       .buildInputReport(from: VirtualGamepadState())
     let x360 = Xbox360MacHIDReportFormat().buildInputReport(from: VirtualGamepadState())
@@ -542,7 +442,6 @@ struct VirtualControllerBackendTests {
     ).buildInputReport(from: VirtualGamepadState())
 
     #expect(generic == [UInt8](repeating: 0, count: generic.count))
-    #expect(sdl == [UInt8](repeating: 0, count: sdl.count))
     #expect(Array(apple.dropFirst(2)) == [UInt8](repeating: 0, count: apple.count - 2))
     #expect(Array(x360.dropFirst(2)) == [UInt8](repeating: 0, count: x360.count - 2))
     #expect(xone[0] == 1)

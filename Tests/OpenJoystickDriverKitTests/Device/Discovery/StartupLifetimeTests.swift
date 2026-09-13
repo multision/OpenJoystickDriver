@@ -56,9 +56,24 @@ struct StartupLifetimeTests {
   @Test
   func featureReadsDispatchTransportThroughTheProtocol() {
     let provider: any HIDStartupFeatureReadRequestProvider = DS4Parser()
-    #expect(
-      provider.hidStartupFeatureReadRequests(transport: "Bluetooth").map(\.reportID) == [2, 5]
-    )
+    #expect(provider.hidStartupFeatureReadRequests(transport: "Bluetooth").map(\.reportID) == [5])
     #expect(provider.hidStartupFeatureReadRequests(transport: "USB").map(\.reportID) == [2])
+  }
+
+  @Test
+  func ds4BluetoothStartupEnablesFullInputWithoutChangingTheLight() {
+    let provider = DS4Parser(prefersBluetooth: true)
+    let reports = provider.hidStartupReports(transport: "Bluetooth")
+    let report = reports.first
+
+    #expect(provider.hidStartupOutputPrecedesFeatureReads)
+    #expect(reports.count == 1)
+    #expect(report?.reportID == 0x11)
+    #expect(report?.bytes.count == 78)
+    #expect(report?.bytes[1] == 0xC4)
+    #expect(report?.bytes[3] == 0x01)
+    #expect(report?.bytes[6...10].allSatisfy { $0 == 0 } == true)
+    #expect(report.map { Array($0.bytes[74...77]) } == [0x37, 0x89, 0xFE, 0x89])
+    #expect(DS4Parser().hidStartupReports(transport: "USB").isEmpty)
   }
 }

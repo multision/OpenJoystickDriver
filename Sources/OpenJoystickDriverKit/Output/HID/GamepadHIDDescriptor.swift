@@ -5,15 +5,17 @@ import Foundation
 /// This descriptor is intentionally generic (HID Usage Page: Generic Desktop, Usage: GamePad).
 /// Do not assume consumers will apply device-specific parsing based on VID/PID.
 ///
-/// Report layout (15 bytes total):
-///   Bytes 0–1  : Button bitmask, buttons 1–16 (LSB = button 1)
-///   Bytes 2–3  : Left Stick X  (Int16 LE, –32767...32767) — Usage: X  (0x30)
-///   Bytes 4–5  : Left Stick Y  (Int16 LE, –32767...32767) — Usage: Y  (0x31)
-///   Bytes 6–7  : Left Trigger  (Int16 LE, 0...32767)      — Usage: Z  (0x32)
-///   Bytes 8–9  : Right Stick X (Int16 LE, –32767...32767) — Usage: Rx (0x33)
-///   Bytes 10–11: Right Stick Y (Int16 LE, –32767...32767) — Usage: Ry (0x34)
-///   Bytes 12–13: Right Trigger (Int16 LE, 0...32767)      — Usage: Rz (0x35)
-///   Byte  14   : Hat switch (low nibble, 1–8 = direction, 0 = neutral) + 4-bit pad
+/// Report layout (14 bytes total):
+///   Bytes 0–1: Button usages 1–6 and 9–18
+///   Bytes 2–3: Left Stick X  (Int16 LE, –32767...32767) — Usage: X  (0x30)
+///   Bytes 4–5: Left Stick Y  (Int16 LE, –32767...32767) — Usage: Y  (0x31)
+///   Bytes 6–7: Right Stick X (Int16 LE, –32767...32767) — Usage: Z  (0x32)
+///   Bytes 8–9: Right Stick Y (Int16 LE, –32767...32767) — Usage: Rx (0x33)
+///   Bytes 10–11: Left Trigger  (Int16 LE, 0...32767) — Usage: Ry (0x34)
+///   Bytes 12–13: Right Trigger (Int16 LE, 0...32767) — Usage: Rz (0x35)
+///
+/// This layout is the published contract for OJD VID/PID `4F4A:4449`. An incompatible
+/// descriptor or report-layout change must use a new product ID.
 public enum GamepadHIDDescriptor {
   // MARK: - Report descriptor bytes
 
@@ -29,86 +31,45 @@ public enum GamepadHIDDescriptor {
     // Collection: Physical
     0xA1, 0x00,
 
-    // --- 16 digital buttons (Xbox One S BT order, Button page, usages 1–16) ---
-    // b0=A, b1=B, b2=X, b3=Y, b4=LB, b5=RB, b6=L3, b7=R3,
-    // b8=Menu, b9=View, b10=Guide, b11=DUp, b12=DDn, b13=DLt, b14=DRt,
-    // b15=Share/Capture.
+    // --- Button usages 1–6 and 9–18; omit Blink trigger slots B6/B7 ---
     0x05, 0x09,  // Usage Page: Button
     0x19, 0x01,  // Usage Minimum: 1
-    0x29, 0x10,  // Usage Maximum: 16
+    0x29, 0x06,  // Usage Maximum: 6
     0x15, 0x00,  // Logical Minimum: 0
     0x25, 0x01,  // Logical Maximum: 1
     0x75, 0x01,  // Report Size: 1
-    0x95, 0x10,  // Report Count: 16
+    0x95, 0x06,  // Report Count: 6
     0x81, 0x02,  // Input: Data, Variable, Absolute
 
-    // --- All 6 axes on Generic Desktop page ---
-    // macOS sorts HID elements by (usage_page, usage_id), so all axes
-    // must share one page to preserve index order for SDL/Chrome mapping.
-    // Order: LSX(X), LSY(Y), LT(Z), RSX(Rx), RSY(Ry), RT(Rz)
+    0x19, 0x09,  // Usage Minimum: 9
+    0x29, 0x12,  // Usage Maximum: 18
+    0x95, 0x0A,  // Report Count: 10
+    0x81, 0x02,  // Input: Data, Variable, Absolute
+
+    // --- Six axes on the Generic Desktop page ---
+    // Blink indexes raw macOS HID axes by usage: X, Y, Z, Rx, Ry, Rz.
     0x05, 0x01,  // Usage Page: Generic Desktop
 
-    // Left stick: X(0x30), Y(0x31) — signed
+    // LSX=X, LSY=Y, RSX=Z, RSY=Rx, LT=Ry, RT=Rz.
     0x09, 0x30,  // Usage: X  (left stick X)
     0x09, 0x31,  // Usage: Y  (left stick Y)
-    0x16, 0x01, 0x80,  // Logical Minimum: -32767
-    0x26, 0xFF, 0x7F,  // Logical Maximum:  32767
-    0x75, 0x10,  // Report Size: 16
-    0x95, 0x02,  // Report Count: 2
-    0x81, 0x02,  // Input: Data, Variable, Absolute
-
-    // Left trigger: Z(0x32) — positive half of a signed axis.
-    // Chromium normalizes HID axes from their declared logical range. Declaring
-    // 0...32767 makes a released trigger appear as -1; the signed range keeps
-    // the OJD zero-idle report at browser axis 0 while preserving 0...1 travel.
-    0x09, 0x32,  // Usage: Z  (left trigger)
-    0x16, 0x01, 0x80,  // Logical Minimum: -32767
-    0x26, 0xFF, 0x7F,  // Logical Maximum: 32767
-    0x75, 0x10,  // Report Size: 16
-    0x95, 0x01,  // Report Count: 1
-    0x81, 0x02,  // Input: Data, Variable, Absolute
-
-    // Right stick: Rx(0x33), Ry(0x34) — signed
-    0x09, 0x33,  // Usage: Rx (right stick X)
-    0x09, 0x34,  // Usage: Ry (right stick Y)
-    0x16, 0x01, 0x80,  // Logical Minimum: -32767
-    0x26, 0xFF, 0x7F,  // Logical Maximum:  32767
-    0x75, 0x10,  // Report Size: 16
-    0x95, 0x02,  // Report Count: 2
-    0x81, 0x02,  // Input: Data, Variable, Absolute
-
-    // Right trigger: Rz(0x35) — positive half of a signed axis.
+    0x09, 0x32,  // Usage: Z  (right stick X)
+    0x09, 0x33,  // Usage: Rx (right stick Y)
+    0x09, 0x34,  // Usage: Ry (left trigger)
     0x09, 0x35,  // Usage: Rz (right trigger)
     0x16, 0x01, 0x80,  // Logical Minimum: -32767
-    0x26, 0xFF, 0x7F,  // Logical Maximum: 32767
+    0x26, 0xFF, 0x7F,  // Logical Maximum:  32767
     0x75, 0x10,  // Report Size: 16
-    0x95, 0x01,  // Report Count: 1
+    0x95, 0x06,  // Report Count: 6
     0x81, 0x02,  // Input: Data, Variable, Absolute
 
-    // --- Hat switch (D-pad, 4-bit nibble, Null State, 1-based) ---
-    0x05, 0x01,  // Usage Page: Generic Desktop
-    0x09, 0x39,  // Usage: Hat Switch
-    0x15, 0x01,  // Logical Minimum: 1
-    0x25, 0x08,  // Logical Maximum: 8
-    0x35, 0x00,  // Physical Minimum: 0
-    0x46, 0x3B, 0x01,  // Physical Maximum: 315
-    0x66, 0x14, 0x00,  // Unit: English Rotation (degrees)
-    0x75, 0x04,  // Report Size: 4
-    0x95, 0x01,  // Report Count: 1
-    0x81, 0x42,  // Input: Data, Variable, Absolute, Null State
-
-    // --- 4-bit pad to byte-align the hat nibble ---
-    0x75, 0x04,  // Report Size: 4
-    0x95, 0x01,  // Report Count: 1
-    0x81, 0x03,  // Input: Constant
-
-    // --- 15-byte output report (consumer -> virtual HID backend) ---
-    // Mirrors the input layout for application-originated output.
-    0x09, 0x01,  // Usage: Pointer (generic output usage)
-    0x15, 0x00,  // Logical Minimum: 0
+    // --- 7-byte vendor output report for rumble delivery ---
+    // marker 0x4F, left, right, left-trigger, right-trigger, duration LE.
+    0x06, 0x00, 0xFF,  // Usage Page: Vendor-defined
+    0x09, 0x01, 0x15, 0x00,  // Logical Minimum: 0
     0x26, 0xFF, 0x00,  // Logical Maximum: 255
     0x75, 0x08,  // Report Size: 8
-    0x95, 0x0F,  // Report Count: 15
+    0x95, 0x07,  // Report Count: 7
     0x91, 0x02,  // Output: Data, Variable, Absolute
 
     0xC0,  // End Collection (Physical)
@@ -118,12 +79,12 @@ public enum GamepadHIDDescriptor {
   // MARK: - Report size
 
   /// Total byte length of one input report.
-  public static let reportSize = 15
+  public static let reportSize = 14
+  public static let maxOutputReportPayloadSize = 7
 
   // MARK: - Hat switch values
 
-  /// Raw hat-switch nibble values (stored in the low 4 bits of byte 14).
-  /// 1-based directions, 0 = neutral (null state).
+  /// Normalized D-pad directions shared by virtual report formats.
   public enum Hat: UInt8, Sendable {
     /// Null / neutral — no direction pressed. Value below Logical Minimum,
     /// which the HID system interprets as the null state.

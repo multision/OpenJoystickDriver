@@ -40,7 +40,7 @@ struct UserSpaceInputReportStateTests {
 
   @Test
   func genericCompatibilityTriggersReturnToTheirExactPreActuationReport() {
-    let format = OJDSDLGamepadFormat()
+    let format = OJDGenericGamepadFormat()
     let firstSession = UserSpaceInputReportState(format: format)
     let neutral = firstSession.currentReport()
 
@@ -57,8 +57,7 @@ struct UserSpaceInputReportStateTests {
     #expect(actuated != neutral)
     #expect(released == neutral)
     #expect(recreatedSession.currentReport() == neutral)
-    #expect(Array(neutral[6...7]) == [0, 0])
-    #expect(Array(neutral[12...13]) == [0, 0])
+    #expect((neutral[0] & 0xC0) == 0)
   }
 
   @Test

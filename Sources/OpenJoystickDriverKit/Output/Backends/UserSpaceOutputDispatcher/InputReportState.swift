@@ -31,6 +31,16 @@ final class UserSpaceInputReportState: @unchecked Sendable {
 
   func currentReport() -> [UInt8] { lock.withLock { report } }
 
+  func reset() -> [UInt8] {
+    lock.withLock {
+      state = VirtualGamepadState()
+      remapped = false
+      pendingNintendoMotion.removeAll(keepingCapacity: true)
+      report = format.buildInputReport(from: state)
+      return report
+    }
+  }
+
   func updateMotion(_ motion: RemappingVirtualMotionState?) -> [UInt8]? {
     lock.withLock {
       remapped = true

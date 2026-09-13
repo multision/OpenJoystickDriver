@@ -227,7 +227,8 @@ public actor IOUSBHostTransportProvider: USBTransportProvider {
   static func transportError(_ code: IOReturn) -> USBTransportError {
     switch code {
     case kIOReturnTimeout, kIOReturnAborted: return .timeout
-    case kIOReturnNoDevice, kIOReturnNotAttached, kIOReturnNotOpen: return .disconnected
+    case kIOReturnNoDevice, kIOReturnNotAttached, kIOReturnNotOpen, kIOReturnNotResponding:
+      return .disconnected
     case kIOReturnNotPermitted, kIOReturnExclusiveAccess, kIOReturnNotPrivileged:
       return .accessDenied
     case kIOReturnNotFound: return .notFound
@@ -263,21 +264,25 @@ private actor IOUSBHostTransportSession: USBTransportSession {
 
   func writeInterruptPacket(endpoint: UInt8, data: [UInt8], timeout: UInt32) async throws -> Int {
     guard !isClosed else { throw USBTransportError.disconnected }
-    let buffer = try interface.ioData(withCapacity: data.count)
-    data.withUnsafeBytes { source in
-      guard let baseAddress = source.baseAddress else { return }
-      buffer.mutableBytes.copyMemory(from: baseAddress, byteCount: source.count)
-    }
-    let (_, count) = try await transfer(endpoint: endpoint, buffer: buffer)
-    return count
+    do {
+      let buffer = try interface.ioData(withCapacity: data.count)
+      data.withUnsafeBytes { source in
+        guard let baseAddress = source.baseAddress else { return }
+        buffer.mutableBytes.copyMemory(from: baseAddress, byteCount: source.count)
+      }
+      let (_, count) = try await transfer(endpoint: endpoint, buffer: buffer)
+      return count
+    } catch { throw closeIfDisconnected(error) }
   }
 
   func readInterruptPacket(endpoint: UInt8, length: Int, timeout: UInt32) async throws -> [UInt8] {
     guard !isClosed else { throw USBTransportError.disconnected }
     guard length > 0 else { throw USBTransportError.notSupported }
-    let buffer = try interface.ioData(withCapacity: length)
-    let (_, count) = try await transfer(endpoint: endpoint, buffer: buffer)
-    return Array(Data(bytes: buffer.bytes, count: min(count, buffer.length)))
+    do {
+      let buffer = try interface.ioData(withCapacity: length)
+      let (_, count) = try await transfer(endpoint: endpoint, buffer: buffer)
+      return Array(Data(bytes: buffer.bytes, count: min(count, buffer.length)))
+    } catch { throw closeIfDisconnected(error) }
   }
 
   func close() {
@@ -300,6 +305,13 @@ private actor IOUSBHostTransportSession: USBTransportSession {
     } catch let error as USBTransportError { throw error } catch {
       throw IOUSBHostTransportProvider.transportError(error)
     }
+  }
+
+  private func closeIfDisconnected(_ error: Error) -> USBTransportError {
+    let transportError =
+      error as? USBTransportError ?? IOUSBHostTransportProvider.transportError(error)
+    if transportError.isDisconnected { close() }
+    return transportError
   }
 
   private func pipe(for endpoint: UInt8) throws -> IOUSBHostPipeBox {

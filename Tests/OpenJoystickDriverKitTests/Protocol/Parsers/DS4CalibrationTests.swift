@@ -26,7 +26,7 @@ struct DS4CalibrationTests {
   func factoryCalibrationUsesTransportLayout(bluetooth: Bool) throws {
     let parser = DS4Parser(prefersBluetooth: bluetooth)
     let requests = parser.hidStartupFeatureReadRequests()
-    #expect(requests.map(\.reportID) == (bluetooth ? [2, 5] : [2]))
+    #expect(requests.map(\.reportID) == (bluetooth ? [5] : [2]))
     let request = try #require(requests.last)
     let data = factory(bluetooth: bluetooth)
     #expect(parser.consumeHIDFeatureReport(data, request: request, transport: nil))
@@ -47,9 +47,9 @@ struct DS4CalibrationTests {
   func bluetoothModeReplyCannotInstallUSBLayout() throws {
     let parser = DS4Parser()
     let requests = parser.hidStartupFeatureReadRequests(transport: "Bluetooth")
-    #expect(requests.map(\.reportID) == [2, 5])
+    #expect(requests.map(\.reportID) == [5])
     #expect(
-      parser.consumeHIDFeatureReport(
+      !parser.consumeHIDFeatureReport(
         factory(bluetooth: false),
         request: requests[0],
         transport: "Bluetooth"
@@ -59,7 +59,7 @@ struct DS4CalibrationTests {
     var corrupted = factory(bluetooth: true)
     corrupted[40] ^= 1
     #expect(
-      !parser.consumeHIDFeatureReport(corrupted, request: requests[1], transport: "Bluetooth")
+      !parser.consumeHIDFeatureReport(corrupted, request: requests[0], transport: "Bluetooth")
     )
     #expect(try motion(parser).physicalReading?.calibrationSource == .nominalDeviceScale)
   }

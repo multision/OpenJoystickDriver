@@ -49,6 +49,8 @@ struct PhysicalOutputOwnership {
   private var mappingClaims: [DeviceIdentifier: [PhysicalOutputChannel: [UUID: Claim]]] = [:]
   private var manualOverrides:
     [DeviceIdentifier: [PhysicalOutputChannel: RemappingPhysicalOutput]] = [:]
+  private var temporaryColorPreviews: [DeviceIdentifier: [UUID: Claim]] = [:]
+  private var profileBaselines: [DeviceIdentifier: RemappingPhysicalOutput] = [:]
 
   var mappingClaimCount: Int {
     mappingClaims.values.reduce(0) { deviceTotal, channels in
@@ -97,6 +99,33 @@ struct PhysicalOutputOwnership {
     return channel
   }
 
+  mutating func setManualColor(_ output: RemappingPhysicalOutput, for identifier: DeviceIdentifier)
+  { manualOverrides[identifier, default: [:]][.color] = output }
+
+  mutating func setTemporaryColor(
+    _ output: RemappingPhysicalOutput,
+    token: UUID,
+    for identifier: DeviceIdentifier
+  ) {
+    nextSequence &+= 1
+    temporaryColorPreviews[identifier, default: [:]][token] = Claim(
+      output: output,
+      sequence: nextSequence
+    )
+  }
+
+  mutating func releaseTemporaryColor(token: UUID, for identifier: DeviceIdentifier) {
+    temporaryColorPreviews[identifier]?[token] = nil
+    if temporaryColorPreviews[identifier]?.isEmpty == true {
+      temporaryColorPreviews[identifier] = nil
+    }
+  }
+
+  mutating func setProfileColor(
+    _ output: RemappingPhysicalOutput?,
+    for identifier: DeviceIdentifier
+  ) { profileBaselines[identifier] = output }
+
   mutating func releaseManualRumble(for identifier: DeviceIdentifier) -> Set<PhysicalOutputChannel>
   {
     let existingChannels = manualOverrides[identifier].map { Array($0.keys) } ?? []
@@ -115,19 +144,33 @@ struct PhysicalOutputOwnership {
     for channel: PhysicalOutputChannel,
     device identifier: DeviceIdentifier
   ) -> RemappingPhysicalOutput? {
+    if channel == .color,
+      let preview = temporaryColorPreviews[identifier]?.values.max(by: { $0.sequence < $1.sequence }
+      )
+    {
+      return preview.output
+    }
     if let manual = manualOverrides[identifier]?[channel] { return manual }
-    return mappingClaims[identifier]?[channel]?.values.max { lhs, rhs in lhs.sequence < rhs.sequence
-    }?.output
+    if let mapping = mappingClaims[identifier]?[channel]?.values.max(by: { lhs, rhs in
+      lhs.sequence < rhs.sequence
+    })?.output {
+      return mapping
+    }
+    return channel == .color ? profileBaselines[identifier] : nil
   }
 
   mutating func removeDevice(_ identifier: DeviceIdentifier) {
     mappingClaims[identifier] = nil
     manualOverrides[identifier] = nil
+    temporaryColorPreviews[identifier] = nil
+    profileBaselines[identifier] = nil
   }
 
   mutating func removeAll() {
     mappingClaims.removeAll()
     manualOverrides.removeAll()
+    temporaryColorPreviews.removeAll()
+    profileBaselines.removeAll()
   }
 
   private mutating func removeEmptyMappingStorage(

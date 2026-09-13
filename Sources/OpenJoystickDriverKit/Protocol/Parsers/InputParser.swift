@@ -36,6 +36,9 @@ public protocol HIDStartupOutputReportProvider: AnyObject, Sendable {
 
   /// Minimum interval between startup reports for the selected transport.
   func hidStartupReportIntervalNanoseconds(transport: String?) -> UInt64
+
+  /// Whether startup output must be delivered before startup feature reads.
+  var hidStartupOutputPrecedesFeatureReads: Bool { get }
 }
 
 extension HIDStartupOutputReportProvider {
@@ -45,6 +48,8 @@ extension HIDStartupOutputReportProvider {
   }
 
   public func hidStartupReportIntervalNanoseconds(transport _: String?) -> UInt64 { 0 }
+
+  public var hidStartupOutputPrecedesFeatureReads: Bool { false }
 }
 
 /// Bounded follow-up reads for startup protocols whose replies arrive through the input stream.
@@ -118,8 +123,16 @@ public protocol HIDFeatureReportConsumer: AnyObject, Sendable {
 
 /// Optional semantic input path for descriptor-defined HID gamepads.
 public protocol HIDElementValueParser: AnyObject, Sendable {
+  /// Whether the parser maps this descriptor element into controller input.
+  func acceptsElement(usagePage: UInt32, usage: UInt32) -> Bool
+
   /// Converts one IOKit-decoded HID element value into controller events.
   func parse(elementValue: HIDElementValue) -> [ControllerEvent]
+}
+
+/// Optional parser state exposed to diagnostics without entering the controller event stream.
+public protocol ControllerBatteryTelemetryProvider: AnyObject, Sendable {
+  var batteryTelemetry: ControllerBatteryTelemetry? { get }
 }
 
 public protocol InputParser: AnyObject, Sendable {

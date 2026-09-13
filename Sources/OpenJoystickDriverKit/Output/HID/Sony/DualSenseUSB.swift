@@ -48,9 +48,9 @@ public struct DualSenseUSBHIDReportFormat: VirtualGamepadReportFormat {
     var report = [UInt8](repeating: 0, count: DualSenseUSBHIDDescriptor.inputReportLength)
     report[0] = DualSenseUSBHIDDescriptor.reportID
     report[1] = SonyHIDAxis.uint8(state.leftStickX)
-    report[2] = SonyHIDAxis.uint8Inverted(state.leftStickY)
+    report[2] = SonyHIDAxis.uint8(state.leftStickY)
     report[3] = SonyHIDAxis.uint8(state.rightStickX)
-    report[4] = SonyHIDAxis.uint8Inverted(state.rightStickY)
+    report[4] = SonyHIDAxis.uint8(state.rightStickY)
     report[5] = SonyHIDAxis.triggerByte(state.effectiveLeftTrigger)
     report[6] = SonyHIDAxis.triggerByte(state.effectiveRightTrigger)
     report[8] = SonyHIDAxis.ds4Hat(state.hat) | SonyHIDAxis.ds4Face(state.buttons)
@@ -76,6 +76,9 @@ public struct DualSenseUSBHIDReportFormat: VirtualGamepadReportFormat {
     // Only the touchpad button is modeled; both touch contacts are inactive.
     report[33] = 0x80
     report[37] = 0x80
+    // Wired, fully charged until normalized battery telemetry is modeled.
+    report[53] = 0x2A
+    report[54] = 0x08
     return report
   }
 }

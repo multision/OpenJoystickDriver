@@ -13,7 +13,8 @@ private func makeDS4Report(
   buttons1: UInt8 = 0,
   buttons2: UInt8 = 0,
   leftTrigger: UInt8 = 0,
-  rightTrigger: UInt8 = 0
+  rightTrigger: UInt8 = 0,
+  status: UInt8 = 0
 ) -> Data {
   var report = [UInt8](repeating: 0, count: includesReportID ? 64 : 63)
   let base = includesReportID ? 1 : 0
@@ -27,6 +28,7 @@ private func makeDS4Report(
   report[base + 6] = buttons2
   report[base + 7] = leftTrigger
   report[base + 8] = rightTrigger
+  report[base + 29] = status
   return Data(report)
 }
 
@@ -41,7 +43,8 @@ private func makeDS4BluetoothReport(
   buttons1: UInt8 = 0,
   buttons2: UInt8 = 0,
   leftTrigger: UInt8 = 0,
-  rightTrigger: UInt8 = 0
+  rightTrigger: UInt8 = 0,
+  status: UInt8 = 0
 ) -> Data {
   var report: [UInt8] = []
   if includesHIDTransaction { report.append(0xA1) }
@@ -52,6 +55,8 @@ private func makeDS4BluetoothReport(
     rightTrigger,
   ])
   report.append(contentsOf: [UInt8](repeating: 0, count: 64))
+  let commonOffset = (includesHIDTransaction ? 1 : 0) + (includesReportID ? 1 : 0) + 2
+  report[commonOffset + 29] = status
   report.append(contentsOf: [0x7D, 0x0A, 0x5D, 0x0B])
   return Data(report)
 }
@@ -61,6 +66,120 @@ private func containsEvent(_ events: [ControllerEvent], _ expected: ControllerEv
 }
 
 struct DS4ParserTests {
+  @Test
+  func testUSBReportsBatteryBucketsAndCableStates() throws {
+    let parser = DS4Parser()
+
+    _ = try parser.parse(data: makeDS4Report(includesReportID: true, status: 0x00))
+    #expect(
+      parser.batteryTelemetry
+        == ControllerBatteryTelemetry(
+          percentage: 5,
+          percentageRange: 0...9,
+          chargingState: .discharging,
+          cableState: .disconnected
+        )
+    )
+
+    _ = try parser.parse(data: makeDS4Report(includesReportID: true, status: 0x13))
+    #expect(
+      parser.batteryTelemetry
+        == ControllerBatteryTelemetry(
+          percentage: 35,
+          percentageRange: 30...39,
+          chargingState: .charging,
+          cableState: .connected
+        )
+    )
+
+    _ = try parser.parse(data: makeDS4Report(includesReportID: true, status: 0x1B))
+    #expect(
+      parser.batteryTelemetry
+        == ControllerBatteryTelemetry(percentage: 100, chargingState: .full, cableState: .connected)
+    )
+  }
+
+  @Test(arguments: Array(UInt8(0)...UInt8(9)))
+  func testEveryBatteryBucketPreservesItsReportedRange(_ level: UInt8) throws {
+    let parser = DS4Parser()
+
+    _ = try parser.parse(data: makeDS4Report(status: level))
+
+    #expect(parser.batteryTelemetry?.percentage == Int(level) * 10 + 5)
+    #expect(parser.batteryTelemetry?.percentageRange == Int(level) * 10...(Int(level) * 10 + 9))
+    #expect(
+      parser.batteryTelemetry?.percentageDescription == "\(Int(level) * 10)–\(Int(level) * 10 + 9)%"
+    )
+  }
+
+  @Test
+  func testBluetoothReportParsesBatteryTelemetry() throws {
+    let parser = DS4Parser(prefersBluetooth: true)
+
+    _ = try parser.parse(data: makeDS4BluetoothReport(status: 0x1A))
+
+    #expect(
+      parser.batteryTelemetry
+        == ControllerBatteryTelemetry(
+          percentage: 100,
+          chargingState: .charging,
+          cableState: .connected
+        )
+    )
+  }
+
+  @Test
+  func testLevelTenRetainsTheObservedConnectionState() throws {
+    let parser = DS4Parser()
+    _ = try parser.parse(data: makeDS4Report(status: 0x0A))
+    #expect(
+      parser.batteryTelemetry
+        == ControllerBatteryTelemetry(
+          percentage: 100,
+          chargingState: .discharging,
+          cableState: .disconnected
+        )
+    )
+
+    _ = try parser.parse(data: makeDS4Report(status: 0x1A))
+    #expect(
+      parser.batteryTelemetry
+        == ControllerBatteryTelemetry(
+          percentage: 100,
+          chargingState: .charging,
+          cableState: .connected
+        )
+    )
+  }
+
+  @Test
+  func testInvalidAndMinimalBatteryTelemetryRemainUnknown() throws {
+    let wired = DS4Parser()
+    _ = try wired.parse(data: makeDS4Report(status: 0x0F))
+    #expect(
+      wired.batteryTelemetry
+        == ControllerBatteryTelemetry(
+          percentage: nil,
+          chargingState: .unknown,
+          cableState: .disconnected
+        )
+    )
+
+    _ = try wired.parse(data: makeDS4Report(status: 0x1E))
+    #expect(
+      wired.batteryTelemetry
+        == ControllerBatteryTelemetry(
+          percentage: nil,
+          chargingState: .unknown,
+          cableState: .connected
+        )
+    )
+
+    let minimal = DS4Parser(prefersBluetooth: true)
+    _ = try minimal.parse(data: Data([0x01, 128, 128, 128, 128, 0x08, 0, 0, 0, 0]))
+    #expect(minimal.batteryTelemetry == nil)
+  }
+
   @Test
   func testWiredIOHIDReportWithoutReportIDParsesFaceButtons() throws {
     let parser = DS4Parser()
@@ -107,8 +226,8 @@ struct DS4ParserTests {
       )
     )
 
-    #expect(containsEvent(events, .leftStickChanged(x: 127.0 / 128.0, y: 1.0)))
-    #expect(containsEvent(events, .rightStickChanged(x: -1.0, y: -127.0 / 128.0)))
+    #expect(containsEvent(events, .leftStickChanged(x: 127.0 / 128.0, y: -1.0)))
+    #expect(containsEvent(events, .rightStickChanged(x: -1.0, y: 127.0 / 128.0)))
     #expect(containsEvent(events, .leftTriggerChanged(1.0)))
     #expect(containsEvent(events, .rightTriggerChanged(128.0 / 255.0)))
     #expect(containsEvent(events, .buttonPressed(.share)))
@@ -177,8 +296,8 @@ struct DS4ParserTests {
       )
     )
 
-    let expectedLeftStick = ControllerEvent.leftStickChanged(x: 127.0 / 128.0, y: 1.0)
-    let expectedRightStick = ControllerEvent.rightStickChanged(x: -1.0, y: -127.0 / 128.0)
+    let expectedLeftStick = ControllerEvent.leftStickChanged(x: 127.0 / 128.0, y: -1.0)
+    let expectedRightStick = ControllerEvent.rightStickChanged(x: -1.0, y: 127.0 / 128.0)
     let expectedLeftTrigger = ControllerEvent.leftTriggerChanged(1.0)
     let expectedRightTrigger = ControllerEvent.rightTriggerChanged(128.0 / 255.0)
 
@@ -236,11 +355,26 @@ struct DS4ParserTests {
       data: makeDS4Report(leftStickX: 254, leftStickY: 2, rightStickX: 2, rightStickY: 254)
     )
 
-    let expectedLeftStick = ControllerEvent.leftStickChanged(x: 126.0 / 128.0, y: 126.0 / 128.0)
-    let expectedRightStick = ControllerEvent.rightStickChanged(x: -126.0 / 128.0, y: -126.0 / 128.0)
+    let expectedLeftStick = ControllerEvent.leftStickChanged(x: 126.0 / 128.0, y: -126.0 / 128.0)
+    let expectedRightStick = ControllerEvent.rightStickChanged(x: -126.0 / 128.0, y: 126.0 / 128.0)
 
     #expect(containsEvent(events, expectedLeftStick))
     #expect(containsEvent(events, expectedRightStick))
+  }
+  @Test
+  func testBothStickYAxesReportUpCenterAndDown() throws {
+    let parser = DS4Parser()
+
+    let up = try parser.parse(data: makeDS4Report(leftStickY: 0, rightStickY: 0))
+    let center = try parser.parse(data: makeDS4Report(leftStickY: 128, rightStickY: 128))
+    let down = try parser.parse(data: makeDS4Report(leftStickY: 255, rightStickY: 255))
+
+    #expect(containsEvent(up, .leftStickChanged(x: 0, y: -1)))
+    #expect(containsEvent(up, .rightStickChanged(x: 0, y: -1)))
+    #expect(containsEvent(center, .leftStickChanged(x: 0, y: 0)))
+    #expect(containsEvent(center, .rightStickChanged(x: 0, y: 0)))
+    #expect(containsEvent(down, .leftStickChanged(x: 0, y: 127.0 / 128.0)))
+    #expect(containsEvent(down, .rightStickChanged(x: 0, y: 127.0 / 128.0)))
   }
   @Test
   func testObservedDS4RightStickYShortfallRemainsVisible() throws {
@@ -248,7 +382,7 @@ struct DS4ParserTests {
     _ = try parser.parse(data: makeDS4Report())
 
     let events = try parser.parse(data: makeDS4Report(rightStickY: 8))
-    let expectedRightStick = ControllerEvent.rightStickChanged(x: 0, y: 120.0 / 128.0)
+    let expectedRightStick = ControllerEvent.rightStickChanged(x: 0, y: -120.0 / 128.0)
 
     #expect(containsEvent(events, expectedRightStick))
   }
@@ -277,6 +411,25 @@ struct DS4ParserTests {
     #expect(pipeline.inputState().pressedButtons.isEmpty)
   }
   @Test
+  func testPipelineSnapshotsBatteryWithoutDispatchingItAsInput() async throws {
+    let dispatcher = CapturingOutputDispatcher()
+    let pipeline = DevicePipeline(
+      identifier: DeviceIdentifier(vendorID: 1356, productID: 2508),
+      transport: .hid(locationID: 1),
+      parser: DS4Parser(),
+      dispatcher: dispatcher
+    )
+    await pipeline.start()
+
+    await pipeline.feedHIDData(makeDS4Report(status: 0x1B))
+
+    #expect(
+      pipeline.batteryTelemetry()
+        == ControllerBatteryTelemetry(percentage: 100, chargingState: .full, cableState: .connected)
+    )
+    #expect(dispatcher.events.count == 1)
+  }
+  @Test
   func testRegistryMapsDS4V2IdentityToDS4Parser() {
     let registry = ParserRegistry()
     let identifier = DeviceIdentifier(vendorID: 1356, productID: 2508)
@@ -289,6 +442,9 @@ struct DS4ParserTests {
 
 private final class CapturingOutputDispatcher: OutputDispatcher, @unchecked Sendable {
   var suppressOutput = false
+  private(set) var events: [[ControllerEvent]] = []
 
-  func dispatch(events: [ControllerEvent], from identifier: DeviceIdentifier) {}
+  func dispatch(events: [ControllerEvent], from identifier: DeviceIdentifier) {
+    self.events.append(events)
+  }
 }

@@ -73,7 +73,7 @@ public final class UserSpaceOutputDispatcher: CompatibilityUserSpaceOutputDispat
 
   @available(macOS, introduced: 10.15, obsoleted: 15.0)
   private final class IOHIDBackend: VirtualDeviceBackend, @unchecked Sendable {
-    let device: IOHIDUserDevice
+    private var device: IOHIDUserDevice?
     let queue: DispatchQueue
     private let lock = NSLock()
     private var isClosed = false
@@ -86,24 +86,27 @@ public final class UserSpaceOutputDispatcher: CompatibilityUserSpaceOutputDispat
     deinit { close() }
 
     func send(_ report: [UInt8]) throws {
-      guard !lock.withLock({ isClosed }) else { throw CancellationError() }
+      guard let device = lock.withLock({ isClosed ? nil : device }) else {
+        throw CancellationError()
+      }
       try UserSpaceOutputDispatcher.publishIOKitInputReport(device, report: report)
     }
 
     func close() {
-      let shouldClose = lock.withLock { () -> Bool in
-        guard !isClosed else { return false }
+      let device = lock.withLock { () -> IOHIDUserDevice? in
+        guard !isClosed else { return nil }
         isClosed = true
-        return true
+        defer { self.device = nil }
+        return self.device
       }
-      if shouldClose { IOHIDUserDeviceCancel(device) }
+      if let device { IOHIDUserDeviceCancel(device) }
     }
   }
 
   @available(macOS 15, *)
   private final class CoreHIDBackend: VirtualDeviceBackend, @unchecked Sendable {
-    let device: HIDVirtualDevice
-    let delegateOwner: CoreHIDDelegate
+    private var device: HIDVirtualDevice?
+    private var delegateOwner: CoreHIDDelegate?
     private let lock = NSLock()
     private var isClosed = false
 
@@ -113,7 +116,9 @@ public final class UserSpaceOutputDispatcher: CompatibilityUserSpaceOutputDispat
     }
 
     func send(_ report: [UInt8]) async throws {
-      guard !lock.withLock({ isClosed }) else { throw CancellationError() }
+      guard let device = lock.withLock({ isClosed ? nil : device }) else {
+        throw CancellationError()
+      }
       // CoreHID GetReport is the delegate. HIDAPI `hid_read` is IOKit interrupt IN
       // via HandleReport. dispatchInputReport alone can leave that queue idle.
       if #available(macOS 26, *), let userDevice = device.hidDevice {
@@ -122,7 +127,18 @@ public final class UserSpaceOutputDispatcher: CompatibilityUserSpaceOutputDispat
       try await device.dispatchInputReport(data: Data(report), timestamp: SuspendingClock.now)
     }
 
-    func close() { lock.withLock { isClosed = true } }
+    func close() {
+      let device = lock.withLock { () -> HIDVirtualDevice? in
+        guard !isClosed else { return nil }
+        isClosed = true
+        delegateOwner = nil
+        defer { self.device = nil }
+        return self.device
+      }
+      if #available(macOS 26, *), let userDevice = device?.hidDevice {
+        IOHIDUserDeviceCancel(userDevice)
+      }
+    }
   }
 
   private let profile: VirtualDeviceProfile
@@ -153,11 +169,17 @@ public final class UserSpaceOutputDispatcher: CompatibilityUserSpaceOutputDispat
 
   public var status: String { registryLock.withLock { _status } }
   public func setOutputSuppressed(_ suppressed: Bool) async {
-    let senders = registryLock.withLock {
+    let suppression: (entries: [Entry], shouldNeutralize: Bool) = registryLock.withLock {
+      let changed = !_suppressOutput && suppressed
       _suppressOutput = suppressed
-      return entries.values.map(\.sender)
+      return (Array(entries.values), changed)
     }
-    for sender in senders { _ = await sender.submit { [] }.result }
+    for entry in suppression.entries {
+      _ = await entry.sender.submit {
+        suppression.shouldNeutralize && !entry.inputReportState.isRemapped
+          ? [entry.inputReportState.reset()] : []
+      }.result
+    }
   }
   public func setRemappingOutputSuppressed(_ suppressed: Bool) async {
     let senders = registryLock.withLock {
@@ -312,7 +334,8 @@ public final class UserSpaceOutputDispatcher: CompatibilityUserSpaceOutputDispat
   ) async throws {
     let neutralizing = remappedState == .neutral || motionUpdate == .some(nil)
     let remapped = remappedState != nil || motionUpdate != nil
-    guard lifecycle.isOpen, !isOutputSuppressed(remapped: remapped) || neutralizing else {
+    let outputSuppressed = isOutputSuppressed(remapped: remapped)
+    guard lifecycle.isOpen, !outputSuppressed || neutralizing || !remapped else {
       throw CancellationError()
     }
     let activeEntry: Entry
@@ -328,6 +351,7 @@ public final class UserSpaceOutputDispatcher: CompatibilityUserSpaceOutputDispat
       throw error
     }
     guard lifecycle.isOpen else { throw CancellationError() }
+    if outputSuppressed && !neutralizing { return }
     let stickTransfer =
       remappedState == nil
       ? Self.stickTransfer(for: identifier) : StickTransfer(deadzone: 0, rescalesDeadzone: false)

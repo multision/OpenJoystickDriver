@@ -43,6 +43,7 @@ public final class DualSenseParser: InputParser, HIDStartupFeatureReadRequestPro
   HIDFeatureReportConsumer, PhysicalHIDRumbleOutput, PhysicalHIDPlayerIndicatorOutput,
   PhysicalHIDColorOutput, PhysicalHIDAdaptiveTriggerOutput, @unchecked Sendable
 {
+  public var physicalDefaultColor: (red: UInt8, green: UInt8, blue: UInt8) { (0, 0, 255) }
 
   public var physicalInputCapabilities: PhysicalControllerInputCapabilities {
     PhysicalControllerInputCapabilities(

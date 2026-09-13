@@ -174,6 +174,15 @@ extension DeviceManager {
     if !pipeline.requiresInputConnectionBeforeOutput() {
       await dispatcher.dispatch(events: [], from: identifier)
     }
+    let outputPrecedesFeatureReads =
+      (parser as? any HIDStartupOutputReportProvider)?.hidStartupOutputPrecedesFeatureReads == true
+    if outputPrecedesFeatureReads {
+      await sendHIDStartupOutputReportsIfNeeded(
+        pipeline: pipeline,
+        locationID: locationID,
+        transport: transport
+      )
+    }
     await sendHIDStartupFeatureReadRequestsIfNeeded(
       pipeline: pipeline,
       parser: parser,
@@ -187,11 +196,13 @@ extension DeviceManager {
         transport: transport
       )
     }
-    await sendHIDStartupOutputReportsIfNeeded(
-      pipeline: pipeline,
-      locationID: locationID,
-      transport: transport
-    )
+    if !outputPrecedesFeatureReads {
+      await sendHIDStartupOutputReportsIfNeeded(
+        pipeline: pipeline,
+        locationID: locationID,
+        transport: transport
+      )
+    }
     await requestHIDInputConnectionStatusIfNeeded(parser: parser, locationID: locationID)
   }
 

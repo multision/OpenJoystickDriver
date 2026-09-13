@@ -36,6 +36,7 @@ private let defaultIdleMonitorIntervalNanoseconds: UInt64 = 1_000_000_000
 private final class DevicePipelineSnapshots: @unchecked Sendable {
   private let lock = NSLock()
   private var inputState: DeviceInputState
+  private var batteryTelemetry: ControllerBatteryTelemetry?
   private let packetLog: PacketLogBuffer
 
   init(inputState: DeviceInputState, maxPacketLogEntries: Int) {
@@ -46,6 +47,14 @@ private final class DevicePipelineSnapshots: @unchecked Sendable {
   func updateInputState(_ state: DeviceInputState) { lock.withLock { inputState = state } }
 
   func currentInputState() -> DeviceInputState { lock.withLock { inputState } }
+
+  func updateBatteryTelemetry(_ telemetry: ControllerBatteryTelemetry?) {
+    lock.withLock { batteryTelemetry = telemetry }
+  }
+
+  func currentBatteryTelemetry() -> ControllerBatteryTelemetry? {
+    lock.withLock { batteryTelemetry }
+  }
 
   func appendPacket(bytes: [UInt8], direction: String) {
     packetLog.append(bytes: bytes, direction: direction)
@@ -144,14 +153,13 @@ actor DevicePipeline {
     idleMonitorTask?.cancel()
     idleMonitorTask = nil
     if case .usb = transport { await reportUSBInputOwnership(.unknown) }
+    let handle = usbHandle
+    usbHandle = nil
     await neutralizeOutput()
     if let listener = dispatcher as? any ControllerLifecycleListener {
       await listener.controllerDidStop(identifier)
     }
-    if let handle = usbHandle {
-      await handle.close()
-      usbHandle = nil
-    }
+    await handle?.close()
     print("[DevicePipeline] Stopped: \(identifier)")
   }
 
@@ -163,6 +171,7 @@ actor DevicePipeline {
     do {
       let receivedAt = DispatchTime.now().uptimeNanoseconds
       let events = try parser.parse(data: data, receivedAtNanoseconds: receivedAt)
+      snapshotBatteryTelemetry()
       let featureReports = await handleInputConnectionStateChangeIfNeeded()
       guard inputConnectionActive else { return featureReports }
       await handleParsedEvents(events, now: receivedAt)
@@ -255,6 +264,9 @@ actor DevicePipeline {
   // MARK: - Input state and packet log
 
   nonisolated func inputState() -> DeviceInputState { snapshots.currentInputState() }
+  nonisolated func batteryTelemetry() -> ControllerBatteryTelemetry? {
+    snapshots.currentBatteryTelemetry()
+  }
   nonisolated func getPacketLog() -> [PacketLogEntry] { snapshots.currentPacketLog() }
 
   func setExternalOutputAllowed(_ allowed: Bool) async {
@@ -289,6 +301,11 @@ actor DevicePipeline {
   func updateObservedInputState(from events: [ControllerEvent]) {
     currentInputState.apply(events: events)
     snapshots.updateInputState(currentInputState)
+  }
+
+  func snapshotBatteryTelemetry() {
+    guard let provider = parser as? any ControllerBatteryTelemetryProvider else { return }
+    snapshots.updateBatteryTelemetry(provider.batteryTelemetry)
   }
 
   private func resetObservedInputState() {
@@ -368,9 +385,20 @@ actor DevicePipeline {
       )
       return true
     } catch {
+      if let error = error as? USBTransportError, error.isDisconnected {
+        await invalidateUSBHandle(handle)
+      }
       print("[DevicePipeline] Rumble send failed for \(identifier): \(error)")
       return false
     }
+  }
+
+  func invalidateUSBHandle(_ handle: any USBTransportSession) async {
+    guard let current = usbHandle, ObjectIdentifier(current) == ObjectIdentifier(handle) else {
+      return
+    }
+    usbHandle = nil
+    await handle.close()
   }
 
   func hidFeatureHapticReports(
@@ -399,6 +427,10 @@ actor DevicePipeline {
 
   func hidColorReport(red: UInt8, green: UInt8, blue: UInt8) -> PhysicalHIDOutputReport? {
     (parser as? PhysicalHIDColorOutput)?.physicalColorReport(red: red, green: green, blue: blue)
+  }
+
+  nonisolated func physicalDefaultColor() -> (red: UInt8, green: UInt8, blue: UInt8)? {
+    (parser as? PhysicalHIDColorOutput)?.physicalDefaultColor
   }
 
   func hidBrightnessReport(_ brightness: UInt8) -> PhysicalHIDOutputReport? {

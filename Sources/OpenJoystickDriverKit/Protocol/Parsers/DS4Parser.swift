@@ -15,7 +15,7 @@ private let ds4BluetoothOutputReportLength = 78
 private let ds4OutputValidFlagMotor: UInt8 = 0x01
 private let ds4OutputValidFlagColor: UInt8 = 0x02
 private let ds4BluetoothOutputHIDAndCRCFlag: UInt8 = 0xC0
-private let ds4BluetoothOutputEnableFlags: UInt8 = 0x0F
+private let ds4BluetoothOutputPollInterval: UInt8 = 0x04
 
 private enum DS4ConnectionMode {
   case usb
@@ -30,8 +30,10 @@ private enum DS4ConnectionMode {
 /// Bluetooth input report `0x11` carries the same controller state after its
 /// transport/control prefix.
 public final class DS4Parser: InputParser, PhysicalHIDRumbleOutput, PhysicalHIDColorOutput,
-  HIDStartupFeatureReadRequestProvider, HIDFeatureReportConsumer, @unchecked Sendable
+  HIDStartupOutputReportProvider, HIDStartupFeatureReadRequestProvider, HIDFeatureReportConsumer,
+  ControllerBatteryTelemetryProvider, @unchecked Sendable
 {
+  public var physicalDefaultColor: (red: UInt8, green: UInt8, blue: UInt8) { (0, 0, 64) }
 
   public var physicalInputCapabilities: PhysicalControllerInputCapabilities {
     PhysicalControllerInputCapabilities(
@@ -67,6 +69,7 @@ public final class DS4Parser: InputParser, PhysicalHIDRumbleOutput, PhysicalHIDC
   private var prevRSX = UInt8(ds4AxisCenter)
   private var prevRSY = UInt8(ds4AxisCenter)
   private var connectionMode: DS4ConnectionMode = .usb
+  public private(set) var batteryTelemetry: ControllerBatteryTelemetry?
 
   /// Creates a new DS4Parser.
   public init(prefersBluetooth: Bool = false) {
@@ -83,12 +86,19 @@ public final class DS4Parser: InputParser, PhysicalHIDRumbleOutput, PhysicalHIDC
   }
 
   public func hidStartupFeatureReadRequests(transport: String?) -> [PhysicalHIDFeatureReadRequest] {
-    let modeRequest = PhysicalHIDFeatureReadRequest(reportID: 2, length: 37)
     if transport == "Bluetooth" || connectionMode == .bluetooth {
-      // Reading report 2 enables the full Bluetooth input report before calibration report 5.
-      return [modeRequest, PhysicalHIDFeatureReadRequest(reportID: 5, length: 41)]
+      return [PhysicalHIDFeatureReadRequest(reportID: 5, length: 41)]
     }
-    return [modeRequest]
+    return [PhysicalHIDFeatureReadRequest(reportID: 2, length: 37)]
+  }
+
+  public var hidStartupOutputPrecedesFeatureReads: Bool { true }
+
+  public func hidStartupReports() -> [PhysicalHIDOutputReport] { [] }
+
+  public func hidStartupReports(transport: String?) -> [PhysicalHIDOutputReport] {
+    guard transport == "Bluetooth" || connectionMode == .bluetooth else { return [] }
+    return [makeOutputReport(validFlags: ds4OutputValidFlagMotor)]
   }
 
   public func consumeHIDFeatureReport(
@@ -98,10 +108,6 @@ public final class DS4Parser: InputParser, PhysicalHIDRumbleOutput, PhysicalHIDC
   ) -> Bool {
     let bluetooth = transport == "Bluetooth" || connectionMode == .bluetooth
     guard request.length == data.count, data.first == request.reportID else { return false }
-    if bluetooth, request.reportID == 2 {
-      // This response only acknowledges the advanced-mode read; its calibration layout is unused.
-      return data.count == 37
-    }
     let bytes = Array(data)
     guard bytes.count == (bluetooth ? 41 : 37), request.reportID == (bluetooth ? 5 : 2) else {
       return false
@@ -124,6 +130,7 @@ public final class DS4Parser: InputParser, PhysicalHIDRumbleOutput, PhysicalHIDC
   public func parse(data: Data) throws -> [ControllerEvent] {
     let bytes = reportPayload(from: data)
     guard bytes.count >= 9 else { return [] }
+    updateBatteryTelemetry(from: bytes)
     var events: [ControllerEvent] = []
 
     let stickEvents = parseSticks(bytes: bytes)
@@ -178,55 +185,47 @@ public final class DS4Parser: InputParser, PhysicalHIDRumbleOutput, PhysicalHIDC
     lt _: UInt8,
     rt _: UInt8
   ) -> PhysicalHIDOutputReport {
-    switch connectionMode {
-    case .usb:
-      var report = [UInt8](repeating: 0, count: ds4USBOutputReportLength)
-      report[0] = ds4USBOutputReportID
-      report[1] = ds4OutputValidFlagMotor
-      report[4] = right
-      report[5] = left
-      return PhysicalHIDOutputReport(reportID: ds4USBOutputReportID, bytes: report)
-    case .bluetooth:
-      var report = [UInt8](repeating: 0, count: ds4BluetoothOutputReportLength)
-      report[0] = ds4BluetoothOutputReportID
-      report[1] = ds4BluetoothOutputHIDAndCRCFlag
-      report[3] = ds4BluetoothOutputEnableFlags
-      report[6] = right
-      report[7] = left
-      let crc = ds4BluetoothCRC32(report: report)
-      report[74] = UInt8(truncatingIfNeeded: crc)
-      report[75] = UInt8(truncatingIfNeeded: crc >> 8)
-      report[76] = UInt8(truncatingIfNeeded: crc >> 16)
-      report[77] = UInt8(truncatingIfNeeded: crc >> 24)
-      return PhysicalHIDOutputReport(reportID: ds4BluetoothOutputReportID, bytes: report)
-    }
+    makeOutputReport(validFlags: ds4OutputValidFlagMotor, leftMotor: left, rightMotor: right)
   }
 
   public func physicalColorReport(red: UInt8, green: UInt8, blue: UInt8) -> PhysicalHIDOutputReport
-  {
+  { makeOutputReport(validFlags: ds4OutputValidFlagColor, red: red, green: green, blue: blue) }
+
+  private func makeOutputReport(
+    validFlags: UInt8,
+    leftMotor: UInt8 = 0,
+    rightMotor: UInt8 = 0,
+    red: UInt8 = 0,
+    green: UInt8 = 0,
+    blue: UInt8 = 0
+  ) -> PhysicalHIDOutputReport {
     switch connectionMode {
     case .usb:
-      var report = [UInt8](repeating: 0, count: ds4USBOutputReportLength)
-      report[0] = ds4USBOutputReportID
-      report[1] = ds4OutputValidFlagColor
-      report[6] = red
-      report[7] = green
-      report[8] = blue
-      return PhysicalHIDOutputReport(reportID: ds4USBOutputReportID, bytes: report)
+      var bytes = [UInt8](repeating: 0, count: ds4USBOutputReportLength)
+      bytes[0] = ds4USBOutputReportID
+      bytes[1] = validFlags
+      bytes[4] = rightMotor
+      bytes[5] = leftMotor
+      bytes[6] = red
+      bytes[7] = green
+      bytes[8] = blue
+      return PhysicalHIDOutputReport(reportID: ds4USBOutputReportID, bytes: bytes)
     case .bluetooth:
-      var report = [UInt8](repeating: 0, count: ds4BluetoothOutputReportLength)
-      report[0] = ds4BluetoothOutputReportID
-      report[1] = ds4BluetoothOutputHIDAndCRCFlag
-      report[3] = ds4OutputValidFlagColor
-      report[8] = red
-      report[9] = green
-      report[10] = blue
-      let crc = ds4BluetoothCRC32(report: report)
-      report[74] = UInt8(truncatingIfNeeded: crc)
-      report[75] = UInt8(truncatingIfNeeded: crc >> 8)
-      report[76] = UInt8(truncatingIfNeeded: crc >> 16)
-      report[77] = UInt8(truncatingIfNeeded: crc >> 24)
-      return PhysicalHIDOutputReport(reportID: ds4BluetoothOutputReportID, bytes: report)
+      var bytes = [UInt8](repeating: 0, count: ds4BluetoothOutputReportLength)
+      bytes[0] = ds4BluetoothOutputReportID
+      bytes[1] = ds4BluetoothOutputHIDAndCRCFlag | ds4BluetoothOutputPollInterval
+      bytes[3] = validFlags
+      bytes[6] = rightMotor
+      bytes[7] = leftMotor
+      bytes[8] = red
+      bytes[9] = green
+      bytes[10] = blue
+      let crc = ds4BluetoothCRC32(report: bytes)
+      bytes[74] = UInt8(truncatingIfNeeded: crc)
+      bytes[75] = UInt8(truncatingIfNeeded: crc >> 8)
+      bytes[76] = UInt8(truncatingIfNeeded: crc >> 16)
+      bytes[77] = UInt8(truncatingIfNeeded: crc >> 24)
+      return PhysicalHIDOutputReport(reportID: ds4BluetoothOutputReportID, bytes: bytes)
     }
   }
 
@@ -259,6 +258,59 @@ public final class DS4Parser: InputParser, PhysicalHIDRumbleOutput, PhysicalHIDC
     return bytes
   }
 
+  private func updateBatteryTelemetry(from bytes: [UInt8]) {
+    guard bytes.count > 29 else { return }
+    let status = bytes[29]
+    let level = status & 0x0F
+    let cableConnected = status & 0x10 != 0
+
+    if cableConnected {
+      switch level {
+      case 0..<10:
+        batteryTelemetry = ControllerBatteryTelemetry(
+          percentage: Int(level) * 10 + 5,
+          percentageRange: Int(level) * 10...(Int(level) * 10 + 9),
+          chargingState: .charging,
+          cableState: .connected
+        )
+      case 10:
+        batteryTelemetry = ControllerBatteryTelemetry(
+          percentage: 100,
+          chargingState: .charging,
+          cableState: .connected
+        )
+      case 11:
+        batteryTelemetry = ControllerBatteryTelemetry(
+          percentage: 100,
+          chargingState: .full,
+          cableState: .connected
+        )
+      default:
+        batteryTelemetry = ControllerBatteryTelemetry(
+          percentage: nil,
+          chargingState: .unknown,
+          cableState: .connected
+        )
+      }
+      return
+    }
+
+    if level < 10 {
+      batteryTelemetry = ControllerBatteryTelemetry(
+        percentage: Int(level) * 10 + 5,
+        percentageRange: Int(level) * 10...(Int(level) * 10 + 9),
+        chargingState: .discharging,
+        cableState: .disconnected
+      )
+    } else {
+      batteryTelemetry = ControllerBatteryTelemetry(
+        percentage: level == 10 ? 100 : nil,
+        chargingState: level == 10 ? .discharging : .unknown,
+        cableState: .disconnected
+      )
+    }
+  }
+
   private func parseSticks(
     bytes: [UInt8]
   ) -> (events: [ControllerEvent], raws: (UInt8, UInt8, UInt8, UInt8)) {
@@ -269,12 +321,12 @@ public final class DS4Parser: InputParser, PhysicalHIDRumbleOutput, PhysicalHIDC
     var events: [ControllerEvent] = []
     if lsxRaw != prevLSX || lsyRaw != prevLSY {
       let lx = normalizeHID(lsxRaw)
-      let ly = -normalizeHID(lsyRaw)
+      let ly = normalizeHID(lsyRaw)
       events.append(.leftStickChanged(x: lx, y: ly))
     }
     if rsxRaw != prevRSX || rsyRaw != prevRSY {
       let rx = normalizeHID(rsxRaw)
-      let ry = -normalizeHID(rsyRaw)
+      let ry = normalizeHID(rsyRaw)
       events.append(.rightStickChanged(x: rx, y: ry))
     }
     return (events, (lsxRaw, lsyRaw, rsxRaw, rsyRaw))

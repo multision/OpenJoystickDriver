@@ -271,6 +271,44 @@
 				},
 				"physicalOutputCapabilities": {
 					"$ref": "#/$defs/physicalOutputCapabilities"
+				},
+				"battery": {
+					"$ref": "#/$defs/controllerBattery"
+				}
+			}
+		},
+		"controllerBattery": {
+			"type": "object",
+			"required": ["chargingState", "cableState"],
+			"additionalProperties": false,
+			"properties": {
+				"percentage": {
+					"type": "integer",
+					"minimum": 0,
+					"maximum": 100
+				},
+				"percentageRange": {
+					"type": "array",
+					"prefixItems": [
+						{
+							"type": "integer",
+							"minimum": 0,
+							"maximum": 100
+						},
+						{
+							"type": "integer",
+							"minimum": 0,
+							"maximum": 100
+						}
+					],
+					"items": false,
+					"minItems": 2
+				},
+				"chargingState": {
+					"enum": ["discharging", "charging", "full", "unknown"]
+				},
+				"cableState": {
+					"enum": ["connected", "disconnected", "unknown"]
 				}
 			}
 		},

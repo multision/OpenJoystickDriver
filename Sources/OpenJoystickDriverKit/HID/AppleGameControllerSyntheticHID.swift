@@ -23,11 +23,6 @@ public enum AppleGameControllerSyntheticHID: Sendable {
   /// IOHIDManager / IOService matching fragment that excludes synthetics before create/open.
   public static var ioHIDMatchingExclusion: [String: Any] { [propertyKey: kCFBooleanFalse as Any] }
 
-  /// CoreHID `DeviceMatchingCriteria.extraProperties` equivalent of ``ioHIDMatchingExclusion``.
-  public static var ioHIDMatchingExclusionObjects: [String: any AnyObject] {
-    [propertyKey: kCFBooleanFalse]
-  }
-
   /// Replacement for `IOHIDManagerSetDeviceMatching(nil)` that still skips Apple synthetics.
   public static var allHIDDevicesExcludingSynthetics: [String: Any] {
     ioHIDMatchingExcludingSynthetics([kIOProviderClassKey as String: kIOHIDDeviceKey as String])
@@ -47,8 +42,7 @@ public enum AppleGameControllerSyntheticHID: Sendable {
     HIDDeviceManager.DeviceMatchingCriteria(
       primaryUsage: primaryUsage,
       vendorID: vendorID,
-      productID: productID,
-      extraProperties: ioHIDMatchingExclusionObjects
+      productID: productID
     )
   }
 

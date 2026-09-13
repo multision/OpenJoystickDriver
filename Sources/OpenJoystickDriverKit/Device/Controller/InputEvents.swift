@@ -32,6 +32,47 @@ public enum ControllerEvent: Sendable, Equatable {
   case touchSample(ControllerTouchSample)
 }
 
+/// Latest battery state reported by a physical controller.
+public struct ControllerBatteryTelemetry: Codable, Sendable, Equatable {
+  public enum ChargingState: String, Codable, Sendable {
+    case discharging
+    case charging
+    case full
+    case unknown
+  }
+
+  public enum CableState: String, Codable, Sendable {
+    case connected
+    case disconnected
+    case unknown
+  }
+
+  /// Estimated charge percentage retained for wire and API compatibility.
+  public let percentage: Int?
+  /// The charge interval reported by protocols that expose a bucket rather than an exact value.
+  public let percentageRange: ClosedRange<Int>?
+  public let chargingState: ChargingState
+  public let cableState: CableState
+
+  public init(
+    percentage: Int?,
+    percentageRange: ClosedRange<Int>? = nil,
+    chargingState: ChargingState,
+    cableState: CableState
+  ) {
+    self.percentage = percentage
+    self.percentageRange = percentageRange
+    self.chargingState = chargingState
+    self.cableState = cableState
+  }
+
+  /// A truthful, locale-independent charge value for diagnostics and presentation layers.
+  public var percentageDescription: String? {
+    if let percentageRange { return "\(percentageRange.lowerBound)–\(percentageRange.upperBound)%" }
+    return percentage.map { "\($0)%" }
+  }
+}
+
 /// A named button on a game controller.
 ///
 /// Xbox-style names are the canonical identifiers. PlayStation names are aliases

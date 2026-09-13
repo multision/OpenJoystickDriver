@@ -29,4 +29,16 @@ final class RemappingPhysicalOutputBridge: RemappingPhysicalOutputSink, @uncheck
       throw RemappingEventEngineError.sinkUnavailable
     }
   }
+
+  func setProfileColor(
+    _ color: RemappingPhysicalColor?,
+    for identifier: DeviceIdentifier
+  ) async throws {
+    guard let manager = lock.withLock({ manager }) else {
+      throw RemappingEventEngineError.sinkUnavailable
+    }
+    guard await manager.setProfilePhysicalColor(color, for: identifier) else {
+      throw RemappingEventEngineError.sinkUnavailable
+    }
+  }
 }

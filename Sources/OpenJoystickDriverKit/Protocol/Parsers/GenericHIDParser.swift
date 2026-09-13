@@ -49,6 +49,20 @@ public final class GenericHIDParser: InputParser, HIDElementValueParser, @unchec
   /// Raw reports are handled through IOKit's descriptor-decoded element callback.
   public func parse(data _: Data) throws -> [ControllerEvent] { [] }
 
+  public func acceptsElement(usagePage: UInt32, usage: UInt32) -> Bool {
+    switch usagePage {
+    case Self.buttonUsagePage: button(for: usage) != nil
+    case Self.genericDesktopUsagePage:
+      [
+        Self.usageX, Self.usageY, Self.usageZ, Self.usageRx, Self.usageRy, Self.usageRz,
+        Self.usageHatSwitch,
+      ].contains(usage)
+    case Self.simulationControlsUsagePage:
+      axisLayout == .wr007 && [Self.usageAccelerator, Self.usageBrake].contains(usage)
+    default: false
+    }
+  }
+
   /// Maps standard HID usages while preserving paired stick coordinates.
   public func parse(elementValue value: HIDElementValue) -> [ControllerEvent] {
     stateLock.withLock {

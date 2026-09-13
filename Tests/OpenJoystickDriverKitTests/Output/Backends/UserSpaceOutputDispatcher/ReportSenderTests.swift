@@ -1,4 +1,5 @@
 import Foundation
+import CoreHID
 import Testing
 
 @testable import OpenJoystickDriverKit
@@ -57,6 +58,32 @@ private final class OrderedReportBackend: UserSpaceOutputDispatcher.VirtualDevic
   }
 }
 
+private actor CancellableSendState {
+  private var entered = false
+  private var waiters: [CheckedContinuation<Void, Never>] = []
+
+  func markEntered() {
+    entered = true
+    waiters.forEach { $0.resume() }
+    waiters.removeAll()
+  }
+
+  func waitForEntry() async { if !entered { await withCheckedContinuation { waiters.append($0) } } }
+}
+
+private final class CancellableReportBackend: UserSpaceOutputDispatcher.VirtualDeviceBackend,
+  @unchecked Sendable
+{
+  let state = CancellableSendState()
+
+  func send(_ report: [UInt8]) async throws {
+    await state.markEntered()
+    try await Task.sleep(nanoseconds: .max)
+  }
+
+  func close() {}
+}
+
 private actor KeepaliveClock {
   private var ticks = 0
   private var cancelled = false
@@ -99,6 +126,37 @@ private final class KeepaliveActivity: @unchecked Sendable {
 }
 
 struct ReportSenderTests {
+  @available(macOS 15, *)
+  @Test(.timeLimit(.minutes(1)))
+  func coreHIDNintendoSetReportReturnsAfterOrderedEnqueue() async throws {
+    let gate = ReportSendGate()
+    let backend = OrderedReportBackend(gate: gate)
+    let input = UserSpaceInputReportState(format: SwitchProUSBHIDReportFormat())
+    let entry = UserSpaceOutputDispatcher.Entry(backend: backend, inputReportState: input)
+    let isOpen: @Sendable () -> Bool = { true }
+    let handler = UserSpaceHostReportHandler(
+      identifier: DeviceIdentifier(vendorID: 1, productID: 2),
+      input: input,
+      sender: entry.sender,
+      isOpen: isOpen,
+      onRumble: nil
+    ) { _ in }
+    let delegate = UserSpaceOutputDispatcher.CoreHIDDelegate(handler: handler)
+    let first = [1, 0] + [UInt8](repeating: 0, count: 8) + [2]
+    let second = [1, 0] + [UInt8](repeating: 0, count: 8) + [3, 0x30]
+
+    try delegate.enqueueSetReport(type: .output, id: HIDReportID(rawValue: 1), data: Data(first))
+    try delegate.enqueueSetReport(type: .output, id: HIDReportID(rawValue: 1), data: Data(second))
+    await gate.waitForEntry()
+    await gate.open()
+    try await entry.sender.submit { [] }.value
+
+    let reports = backend.snapshot().reports
+    #expect(reports.count == 2)
+    #expect(reports.map { $0[14] } == [2, 3])
+    await entry.close()
+  }
+
   @Test(.timeLimit(.minutes(1)))
   func suppressionBetweenReportsSkipsTheRemainingReportAndCanResume() async throws {
     let gate = ReportSendGate()
@@ -161,7 +219,7 @@ struct ReportSenderTests {
   }
 
   @Test(.timeLimit(.minutes(1)))
-  func closeRejectsQueuedWorkAndDrainsCurrentSend() async throws {
+  func closeRejectsQueuedWorkAndClosesBackendBeforeDrainingCurrentSend() async throws {
     let gate = ReportSendGate()
     let backend = OrderedReportBackend(gate: gate)
     let sender = UserSpaceReportSender()
@@ -171,7 +229,7 @@ struct ReportSenderTests {
     let queued = sender.submit { [[2]] }
     let close = sender.beginClose()
     let repeatedClose = sender.beginClose()
-    #expect(backend.snapshot().closes == 0)
+    #expect(backend.snapshot().closes == 1)
     await #expect(throws: CancellationError.self) { try await sender.submit { [[3]] }.value }
     await gate.open()
     try await first.value
@@ -180,6 +238,17 @@ struct ReportSenderTests {
     await repeatedClose.value
     #expect(backend.snapshot().reports == [[1]])
     #expect(backend.snapshot().closes == 1)
+  }
+
+  @Test(.timeLimit(.minutes(1)))
+  func closeCancelsAStalledCurrentSend() async {
+    let backend = CancellableReportBackend()
+    let sender = UserSpaceReportSender()
+    sender.attach(backend)
+    _ = sender.submit { [[1]] }
+    await backend.state.waitForEntry()
+
+    await sender.beginClose().value
   }
 
   @Test(.timeLimit(.minutes(1)))

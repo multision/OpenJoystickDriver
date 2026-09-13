@@ -99,18 +99,17 @@ public struct OJDGenericGamepadFormat: VirtualGamepadReportFormat {
   public let descriptor: [UInt8] = GamepadHIDDescriptor.descriptor
   public let inputReportPayloadSize: Int = GamepadHIDDescriptor.reportSize
   public let inputReportID: UInt8? = nil
-  public let outputReportPayloadSize: Int? = GamepadHIDDescriptor.reportSize
+  public let outputReportPayloadSize: Int? = GamepadHIDDescriptor.maxOutputReportPayloadSize
   public let outputReportID: UInt8? = nil
-  private let includesDpadButtonBits: Bool
 
-  public init(includesDpadButtonBits: Bool = true) {
-    self.includesDpadButtonBits = includesDpadButtonBits
-  }
+  public init() {}
 
   public func buildInputReport(from state: VirtualGamepadState) -> [UInt8] {
     var r = [UInt8](repeating: 0, count: GamepadHIDDescriptor.reportSize)
-    let dpadMask: UInt32 = 0xF << 11
-    let buttons = includesDpadButtonBits ? state.buttons : (state.buttons & ~dpadMask)
+    var buttons: UInt32 = 0
+    let sourceBits = [0, 1, 2, 3, 4, 5, 9, 8, 6, 7, 11, 12, 13, 14, 10, 15]
+    for (destination, source) in sourceBits.enumerated()
+    where state.buttons & (1 << UInt32(source)) != 0 { buttons |= 1 << UInt32(destination) }
     r[0] = UInt8(buttons & 0xFF)
     r[1] = UInt8((buttons >> 8) & 0xFF)
     let lsxB = state.leftStickX.littleEndianBytes
@@ -119,57 +118,15 @@ public struct OJDGenericGamepadFormat: VirtualGamepadReportFormat {
     let lsyB = state.leftStickY.littleEndianBytes
     r[4] = lsyB.0
     r[5] = lsyB.1
-    let ltB = state.effectiveLeftTrigger.littleEndianBytes
-    r[6] = ltB.0
-    r[7] = ltB.1
     let rsxB = state.rightStickX.littleEndianBytes
-    r[8] = rsxB.0
-    r[9] = rsxB.1
+    r[6] = rsxB.0
+    r[7] = rsxB.1
     let rsyB = state.rightStickY.littleEndianBytes
-    r[10] = rsyB.0
-    r[11] = rsyB.1
-    let rtB = state.effectiveRightTrigger.littleEndianBytes
-    r[12] = rtB.0
-    r[13] = rtB.1
-    r[14] = state.hat.rawValue & 0x0F
-    return r
-  }
-}
-
-/// SDL-focused HID GamePad format.
-///
-/// This keeps the stable OJD button/axis order but deliberately omits the hat
-/// switch so SDL does not expose D-pad as an extra axis. D-pad directions are
-/// exposed only as buttons 12-15, and triggers are unsigned zero-idle axes so
-/// SDL2/SDL3 gamepad trigger axes are neutral at rest.
-public struct OJDSDLGamepadFormat: VirtualGamepadReportFormat {
-  public let descriptor: [UInt8] = SDLGamepadHIDDescriptor.descriptor
-  public let inputReportPayloadSize: Int = SDLGamepadHIDDescriptor.reportSize
-  public let inputReportID: UInt8? = nil
-  public let outputReportPayloadSize: Int? = SDLGamepadHIDDescriptor.maxOutputReportPayloadSize
-  public let outputReportID: UInt8? = nil
-
-  public init() {}
-
-  public func buildInputReport(from state: VirtualGamepadState) -> [UInt8] {
-    var r = [UInt8](repeating: 0, count: SDLGamepadHIDDescriptor.reportSize)
-    r[0] = UInt8(state.buttons & 0xFF)
-    r[1] = UInt8((state.buttons >> 8) & 0xFF)
-    let lsxB = state.leftStickX.littleEndianBytes
-    r[2] = lsxB.0
-    r[3] = lsxB.1
-    let lsyB = state.leftStickY.littleEndianBytes
-    r[4] = lsyB.0
-    r[5] = lsyB.1
+    r[8] = rsyB.0
+    r[9] = rsyB.1
     let ltB = state.effectiveLeftTrigger.littleEndianBytes
-    r[6] = ltB.0
-    r[7] = ltB.1
-    let rsxB = state.rightStickX.littleEndianBytes
-    r[8] = rsxB.0
-    r[9] = rsxB.1
-    let rsyB = state.rightStickY.littleEndianBytes
-    r[10] = rsyB.0
-    r[11] = rsyB.1
+    r[10] = ltB.0
+    r[11] = ltB.1
     let rtB = state.effectiveRightTrigger.littleEndianBytes
     r[12] = rtB.0
     r[13] = rtB.1

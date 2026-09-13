@@ -1,3 +1,4 @@
+import Foundation
 import IOKit
 import OpenJoystickDriverKit
 import Testing
@@ -94,6 +95,16 @@ struct TransportFacadeTests {
   func mapsUnsupportedAndBadArgumentToEquivalentUnsupportedTransportErrors() {
     #expect(IOUSBHostTransportProvider.transportError(kIOReturnUnsupported) == .notSupported)
     #expect(IOUSBHostTransportProvider.transportError(kIOReturnBadArgument) == .notSupported)
+  }
+
+  @Test
+  func mapsNotRespondingToDisconnectedSession() {
+    #expect(IOUSBHostTransportProvider.transportError(kIOReturnNotResponding) == .disconnected)
+    #expect(
+      IOUSBHostTransportProvider.transportError(
+        NSError(domain: NSMachErrorDomain, code: Int(kIOReturnNotResponding))
+      ) == .disconnected
+    )
   }
 
   @Test

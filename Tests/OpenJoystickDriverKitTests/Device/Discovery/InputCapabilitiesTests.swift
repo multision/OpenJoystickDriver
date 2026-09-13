@@ -57,6 +57,47 @@ struct InputCapabilitiesTests {
       from: JSONSerialization.data(withJSONObject: object)
     )
     #expect(decoded.physicalInputCapabilities == .none)
+    #expect(decoded.battery == nil)
+  }
+
+  @Test
+  func devicePayloadRoundTripsBatteryTelemetry() throws {
+    let battery = ControllerBatteryTelemetry(
+      percentage: 95,
+      percentageRange: 90...99,
+      chargingState: .charging,
+      cableState: .connected
+    )
+    let description = ApplicationServiceDeviceDescription(
+      name: "DualShock 4",
+      vendorID: 0x054C,
+      productID: 0x09CC,
+      parser: "DS4",
+      connection: "USB",
+      serialNumber: nil,
+      battery: battery
+    )
+
+    let encoded = try JSONEncoder().encode(description)
+    let decoded = try JSONDecoder().decode(ApplicationServiceDeviceDescription.self, from: encoded)
+
+    #expect(decoded.battery == battery)
+    #expect(decoded.battery?.percentageDescription == "90–99%")
+    let object = try #require(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
+    let encodedBattery = try #require(object["battery"] as? [String: Any])
+    let encodedRange = try #require(encodedBattery["percentageRange"] as? [Int])
+    #expect(encodedRange == [90, 99])
+  }
+
+  @Test
+  func olderBatteryPayloadDecodesWithoutARange() throws {
+    let data = Data(#"{"percentage":100,"chargingState":"full","cableState":"connected"}"#.utf8)
+
+    let decoded = try JSONDecoder().decode(ControllerBatteryTelemetry.self, from: data)
+
+    #expect(decoded.percentage == 100)
+    #expect(decoded.percentageRange == nil)
+    #expect(decoded.percentageDescription == "100%")
   }
 
   @Test

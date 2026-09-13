@@ -41,9 +41,9 @@ public struct DualShock4USBHIDReportFormat: VirtualGamepadReportFormat {
     var report = [UInt8](repeating: 0, count: DualShock4USBHIDDescriptor.inputReportLength)
     report[0] = DualShock4USBHIDDescriptor.reportID
     report[1] = SonyHIDAxis.uint8(state.leftStickX)
-    report[2] = SonyHIDAxis.uint8Inverted(state.leftStickY)
+    report[2] = SonyHIDAxis.uint8(state.leftStickY)
     report[3] = SonyHIDAxis.uint8(state.rightStickX)
-    report[4] = SonyHIDAxis.uint8Inverted(state.rightStickY)
+    report[4] = SonyHIDAxis.uint8(state.rightStickY)
     report[5] = SonyHIDAxis.ds4Hat(state.hat) | SonyHIDAxis.ds4Face(state.buttons)
     report[6] = SonyHIDAxis.ds4Shoulders(
       state.buttons,
@@ -68,16 +68,14 @@ public struct DualShock4USBHIDReportFormat: VirtualGamepadReportFormat {
     )
     VirtualMotionEncoding.writeUnsigned(counter, into: &report, at: 10)
     VirtualMotionEncoding.writeSonyMotion(state, into: &report, at: 13)
+    // Wired, fully charged (battery level 10 plus USB/full status bits).
+    report[30] = 0x1B
     return report
   }
 }
 
 enum SonyHIDAxis {
   static func uint8(_ value: Int16) -> UInt8 { UInt8((Int(value) &+ 32_768) / 256) }
-
-  static func uint8Inverted(_ value: Int16) -> UInt8 {
-    uint8(value == Int16.min ? Int16.max : -value)
-  }
 
   static func triggerByte(_ value: Int16) -> UInt8 {
     let clamped = max(0, min(32_767, Int(value)))

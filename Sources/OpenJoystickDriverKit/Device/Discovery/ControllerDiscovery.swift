@@ -280,10 +280,59 @@ public actor DeviceManager {
       pipeline.physicalOutputCapabilities().lightingFeatures.contains(.programmableColor)
     else { return false }
     let previousOwnership = physicalOutputOwnership
-    _ = physicalOutputOwnership.setManual(.color(red: red, green: green, blue: blue), for: key)
+    physicalOutputOwnership.setManualColor(.color(red: red, green: green, blue: blue), for: key)
     let delivered = await applyPhysicalChannel(.color, for: key, pipeline: pipeline)
     if !delivered { physicalOutputOwnership = previousOwnership }
     return delivered
+  }
+
+  public func previewPhysicalColor(
+    for identifier: DeviceIdentifier,
+    runtimeIdentifier: String? = nil,
+    token: UUID,
+    red: UInt8,
+    green: UInt8,
+    blue: UInt8
+  ) async -> Bool {
+    guard let key = connectedIdentifier(matching: identifier, runtimeIdentifier: runtimeIdentifier),
+      let pipeline = pipelines[key],
+      pipeline.physicalOutputCapabilities().lightingFeatures.contains(.programmableColor)
+    else { return false }
+    let previousOwnership = physicalOutputOwnership
+    physicalOutputOwnership.setTemporaryColor(
+      .color(red: red, green: green, blue: blue),
+      token: token,
+      for: key
+    )
+    let delivered = await applyPhysicalChannel(.color, for: key, pipeline: pipeline)
+    if !delivered { physicalOutputOwnership = previousOwnership }
+    return delivered
+  }
+
+  public func releasePhysicalColorPreview(
+    for identifier: DeviceIdentifier,
+    runtimeIdentifier: String? = nil,
+    token: UUID
+  ) async -> Bool {
+    guard let key = connectedIdentifier(matching: identifier, runtimeIdentifier: runtimeIdentifier)
+    else { return true }
+    physicalOutputOwnership.releaseTemporaryColor(token: token, for: key)
+    guard let pipeline = pipelines[key] else { return true }
+    return await applyPhysicalChannel(.color, for: key, pipeline: pipeline)
+  }
+
+  public func setProfilePhysicalColor(
+    _ color: RemappingPhysicalColor?,
+    for identifier: DeviceIdentifier
+  ) async -> Bool {
+    let output = color.map {
+      RemappingPhysicalOutput.color(red: $0.red, green: $0.green, blue: $0.blue)
+    }
+    physicalOutputOwnership.setProfileColor(output, for: identifier)
+    guard let pipeline = pipelines[identifier],
+      pipeline.physicalOutputCapabilities().lightingFeatures.contains(.programmableColor)
+    else { return true }
+    return await applyPhysicalChannel(.color, for: identifier, pipeline: pipeline)
   }
 
   /// Sets scalar physical LED brightness when the active protocol supports it.
@@ -409,8 +458,10 @@ public actor DeviceManager {
       let components: (UInt8, UInt8, UInt8)
       if case .color(let red, let green, let blue) = value {
         components = (red, green, blue)
+      } else if let defaultColor = pipeline.physicalDefaultColor() {
+        components = defaultColor
       } else {
-        components = (0, 0, 0)
+        return false
       }
       guard let locationID = identifier.locationID,
         let report = await pipeline.hidColorReport(
@@ -500,7 +551,10 @@ public actor DeviceManager {
     rumbleStopTokens.remove(identifier)
     physicalOutputOwnership.removeDevice(identifier)
     let capabilities = pipeline.physicalOutputCapabilities()
-    var channels = Set(capabilities.rumbleMotors.map(PhysicalOutputChannel.rumble))
+    if !capabilities.rumbleMotors.isEmpty {
+      _ = await sendEffectiveRumble(for: identifier, pipeline: pipeline, durationMs: 0)
+    }
+    var channels = Set<PhysicalOutputChannel>()
     if capabilities.lightingFeatures.contains(.playerIndicator) {
       channels.insert(.playerIndicator)
     }
@@ -512,6 +566,12 @@ public actor DeviceManager {
     for channel in channels.sorted(by: { $0.sortKey < $1.sortKey }) {
       _ = await applyPhysicalChannel(channel, for: identifier, pipeline: pipeline)
     }
+  }
+
+  func discardPhysicalOutputs(for identifier: DeviceIdentifier) {
+    rumbleStopTasks.removeValue(forKey: identifier)?.cancel()
+    rumbleStopTokens.remove(identifier)
+    physicalOutputOwnership.removeDevice(identifier)
   }
 
   private func connectedIdentifier(
@@ -603,6 +663,7 @@ public actor DeviceManager {
         preferredBackends: profile.preferredBackends.map(\.rawValue),
         physicalOutputCapabilities: pipelines[id]?.physicalOutputCapabilities() ?? .none,
         physicalInputCapabilities: pipelines[id]?.physicalInputCapabilities() ?? .none,
+        battery: pipelines[id]?.batteryTelemetry(),
         runtimeIdentifier: id.runtimeIdentifier
       )
     }

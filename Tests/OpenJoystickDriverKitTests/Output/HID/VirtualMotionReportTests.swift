@@ -49,7 +49,6 @@ struct VirtualMotionReportTests {
     #expect(DualSenseUSBHIDReportFormat().supportsMotion)
     #expect(SwitchProUSBHIDReportFormat().supportsMotion)
     #expect(!OJDGenericGamepadFormat().supportsMotion)
-    #expect(!OJDSDLGamepadFormat().supportsMotion)
     #expect(!Xbox360MacHIDReportFormat().supportsMotion)
   }
 

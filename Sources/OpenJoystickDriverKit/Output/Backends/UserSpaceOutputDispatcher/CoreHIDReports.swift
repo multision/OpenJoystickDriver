@@ -14,14 +14,24 @@ extension UserSpaceOutputDispatcher {
       id: HIDReportID?,
       data: Data
     ) async throws {
-      do {
-        let task = try handler.setReport(
-          type: Self.reportType(type),
-          reportID: UInt32(id?.rawValue ?? 0),
-          bytes: Array(data)
-        )
-        try await task.value
-      } catch { throw UserSpaceHostReportHandler.coreHIDError(error) }
+      do { try enqueueSetReport(type: type, id: id, data: data) } catch {
+        throw UserSpaceHostReportHandler.coreHIDError(error)
+      }
+      await Task.yield()
+    }
+
+    func enqueueSetReport(type: HIDReportType, id: HIDReportID?, data: Data) throws {
+      let reportID = UInt32(id?.rawValue ?? 0)
+      let task = try handler.setReport(
+        type: Self.reportType(type),
+        reportID: reportID,
+        bytes: Array(data)
+      )
+      Task { [handler] in
+        do { try await task.value } catch {
+          handler.reportAsynchronousFailure(error, reportID: reportID)
+        }
+      }
     }
 
     func hidVirtualDevice(

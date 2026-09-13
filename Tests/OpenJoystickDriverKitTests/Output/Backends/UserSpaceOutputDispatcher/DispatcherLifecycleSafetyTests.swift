@@ -66,6 +66,51 @@ private final class UserSpaceDispatcherTestBackend: UserSpaceOutputDispatcher.Vi
 
 struct UserSpaceOutputDispatcherLifecycleTests {
   @Test
+  func compatibilitySuppressionPublishesDeviceWithoutForwardingInput() async {
+    let backend = UserSpaceDispatcherTestBackend()
+    let creations = LockedCounter()
+    let dispatcher = UserSpaceOutputDispatcher { _ in
+      _ = creations.next()
+      return backend
+    }
+    let identifier = DeviceIdentifier(vendorID: 1, productID: 2)
+    await dispatcher.setOutputSuppressed(true)
+
+    await dispatcher.dispatch(events: [.buttonPressed(.a)], from: identifier)
+
+    #expect(creations.current() == 1)
+    #expect(backend.publishedReports().isEmpty)
+    #expect(backend.counts().close == 0)
+    await dispatcher.close()
+  }
+
+  @Test
+  func compatibilitySuppressionNeutralizesWithoutRetiringDevice() async throws {
+    let backend = UserSpaceDispatcherTestBackend()
+    let dispatcher = UserSpaceOutputDispatcher { _ in backend }
+    let identifier = DeviceIdentifier(vendorID: 1, productID: 2)
+    await dispatcher.dispatch(events: [.buttonPressed(.a)], from: identifier)
+
+    await dispatcher.setOutputSuppressed(true)
+
+    #expect(
+      backend.publishedReports().last
+        == OJDGenericGamepadFormat().buildInputReport(from: VirtualGamepadState())
+    )
+    #expect(backend.counts().close == 0)
+
+    await dispatcher.setOutputSuppressed(false)
+    await dispatcher.dispatch(events: [.buttonPressed(.b)], from: identifier)
+    var expected = VirtualGamepadState()
+    expected.buttons = 1 << GamepadHIDDescriptor.ButtonBit.b.rawValue
+    #expect(
+      backend.publishedReports().last == OJDGenericGamepadFormat().buildInputReport(from: expected)
+    )
+    #expect(backend.counts().close == 0)
+    await dispatcher.close()
+  }
+
+  @Test
   func neutralRetryAfterRetirementDoesNotCreateAnotherDevice() async throws {
     let creations = LockedCounter()
     let dispatcher = UserSpaceOutputDispatcher { _ in
@@ -271,7 +316,7 @@ struct UserSpaceOutputDispatcherLifecycleTests {
   }
 
   @Test
-  func closeDrainsCapturedDispatchBeforeReleasingBackend() async throws {
+  func closeCancelsBackendBeforeDrainingCapturedDispatch() async throws {
     let sendGate = UserSpaceDispatcherTestGate()
     let backend = UserSpaceDispatcherTestBackend(sendGate: sendGate)
     let dispatcher = UserSpaceOutputDispatcher { _ in backend }
@@ -285,13 +330,13 @@ struct UserSpaceOutputDispatcherLifecycleTests {
     await sendGate.waitUntilWaiting()
 
     let close = dispatcher.beginClose()
-    #expect(backend.counts().close == 0)
+    #expect(backend.counts().close == 1)
     await sendGate.open()
     await dispatchTask.value
     await close.value
 
     let counts = backend.counts()
-    #expect(counts.send == 1)
+    #expect(counts.send == 0)
     #expect(counts.close == 1)
     #expect(dispatcher.status == "off")
   }

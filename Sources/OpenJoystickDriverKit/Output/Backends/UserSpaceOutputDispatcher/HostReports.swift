@@ -69,6 +69,13 @@ final class UserSpaceHostReportHandler: @unchecked Sendable {
     )
   }
 
+  func reportAsynchronousFailure(_ error: any Error, reportID: UInt32) {
+    guard !(error is CancellationError) else { return }
+    let status = "error: app report id=\(reportID): \(error.localizedDescription)"
+    onRumbleStatus(status)
+    print("[UserSpaceOutputDispatcher] \(identifier) \(status)")
+  }
+
   static func reportType(_ type: IOHIDReportType) throws -> VirtualHostReportType {
     switch type {
     case kIOHIDReportTypeInput: .input

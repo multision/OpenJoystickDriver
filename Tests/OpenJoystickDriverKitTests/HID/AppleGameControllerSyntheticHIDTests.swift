@@ -81,7 +81,7 @@ struct AppleGameControllerSyntheticHIDTests {
 
   @available(macOS 15, *)
   @Test
-  func coreHIDMatchingCriteriaCarrySyntheticExclusion() {
+  func coreHIDMatchingCriteriaDoNotRequireSyntheticMetadata() {
     let criteria = AppleGameControllerSyntheticHID.coreHIDMatchingCriteria(
       primaryUsage: .genericDesktop(.gamepad)
     )

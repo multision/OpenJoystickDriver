@@ -105,6 +105,66 @@ struct VirtualIdentityPresentationTests {
 
 struct SonyUSBHIDReportFormatTests {
   @Test
+  func sonyUSBReportsDeclareWiredFullBatteryStatus() {
+    let states = [
+      VirtualGamepadState(),
+      VirtualGamepadState(
+        buttons: 1 << GamepadHIDDescriptor.ButtonBit.a.rawValue,
+        leftTrigger: 32_767,
+        rightTrigger: 16_384
+      ),
+    ]
+
+    for state in states {
+      let dualShock4 = DualShock4USBHIDReportFormat().buildInputReport(from: state)
+      let dualSense = DualSenseUSBHIDReportFormat().buildInputReport(from: state)
+      #expect(dualShock4[30] == 0x1B)
+      #expect(dualSense[53] == 0x2A)
+      #expect(dualSense[54] == 0x08)
+    }
+  }
+
+  @Test
+  func dualShock4USBReportPreservesRawYDirection() {
+    // Arrange
+    let format = DualShock4USBHIDReportFormat()
+
+    // Act
+    let up = format.buildInputReport(
+      from: VirtualGamepadState(leftStickY: -32_767, rightStickY: -32_767)
+    )
+    let down = format.buildInputReport(
+      from: VirtualGamepadState(leftStickY: 32_767, rightStickY: 32_767)
+    )
+
+    // Assert
+    #expect(up[2] <= 1)
+    #expect(up[4] <= 1)
+    #expect(down[2] >= 254)
+    #expect(down[4] >= 254)
+  }
+
+  @Test
+  func dualSenseUSBReportPreservesRawYDirection() {
+    // Arrange
+    let format = DualSenseUSBHIDReportFormat()
+
+    // Act
+    let up = format.buildInputReport(
+      from: VirtualGamepadState(leftStickY: -32_767, rightStickY: -32_767)
+    )
+    let down = format.buildInputReport(
+      from: VirtualGamepadState(leftStickY: 32_767, rightStickY: 32_767)
+    )
+
+    // Assert
+    #expect(up[2] <= 1)
+    #expect(up[4] <= 1)
+    #expect(down[2] >= 254)
+    #expect(down[4] >= 254)
+  }
+
+  @Test
   func dualShock4USBReportParsesThroughDS4Parser() throws {
     var state = VirtualGamepadState()
     state.buttons =
@@ -112,6 +172,8 @@ struct SonyUSBHIDReportFormatTests {
       | (1 << GamepadHIDDescriptor.ButtonBit.leftBumper.rawValue)
       | (1 << GamepadHIDDescriptor.ButtonBit.guide.rawValue)
     state.leftStickX = 16_383
+    state.leftStickY = -16_384
+    state.rightStickY = 16_384
     state.leftTrigger = 16_383
     let report = DualShock4USBHIDReportFormat().buildInputReport(from: state)
     #expect(report.count == 64)
@@ -122,6 +184,18 @@ struct SonyUSBHIDReportFormatTests {
     #expect(events.contains(.buttonPressed(.cross)))
     #expect(events.contains(.buttonPressed(.l1)))
     #expect(events.contains(.buttonPressed(.ps)))
+    #expect(
+      events.contains { event in
+        guard case .leftStickChanged(_, let y) = event else { return false }
+        return y < 0
+      }
+    )
+    #expect(
+      events.contains { event in
+        guard case .rightStickChanged(_, let y) = event else { return false }
+        return y > 0
+      }
+    )
   }
 
   @Test

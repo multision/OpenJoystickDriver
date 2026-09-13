@@ -2,6 +2,68 @@ import CoreHID
 import Foundation
 
 @available(macOS 15, *)
+enum CoreHIDInputSubscriptionPlan {
+  case rawReports
+  case elements(any HIDElementValueParser)
+
+  enum NotificationKind {
+    case rawReport
+    case elementUpdates
+  }
+
+  static func resolve(
+    for identifier: DeviceIdentifier,
+    registry: ParserRegistry = ParserRegistry()
+  ) -> Self {
+    guard let parser = registry.parser(for: identifier) as? any HIDElementValueParser else {
+      return .rawReports
+    }
+    return .elements(parser)
+  }
+
+  var monitorsRawReports: Bool {
+    if case .rawReports = self { return true }
+    return false
+  }
+
+  func subscribesToElement(usagePage: UInt32, usage: UInt32) -> Bool {
+    switch self {
+    case .rawReports: false
+    case .elements(let parser): parser.acceptsElement(usagePage: usagePage, usage: usage)
+    }
+  }
+
+  func forwards(_ notification: NotificationKind) -> Bool {
+    switch (self, notification) {
+    case (.rawReports, .rawReport), (.elements, .elementUpdates): true
+    case (.rawReports, .elementUpdates), (.elements, .rawReport): false
+    }
+  }
+}
+
+@available(macOS 15, *)
+enum CoreHIDInputReport {
+  static func normalizedBytes(reportID: HIDReportID?, data: Data) -> [UInt8] {
+    var bytes = [UInt8](data)
+    if let reportID, bytes.first != reportID.rawValue { bytes.insert(reportID.rawValue, at: 0) }
+    return bytes
+  }
+}
+
+@available(macOS 15, *)
+enum CoreHIDPhysicalReportRequest {
+  static let timeout: Duration = .seconds(2)
+
+  static func perform(_ operation: (Duration) async throws -> Void) async -> Result<Void, any Error>
+  {
+    do {
+      try await operation(timeout)
+      return .success(())
+    } catch { return .failure(error) }
+  }
+}
+
+@available(macOS 15, *)
 actor CoreHIDAccessBackend: HIDAccessBackend {
   private struct ClientRecord {
     let client: HIDDeviceClient
@@ -56,7 +118,7 @@ actor CoreHIDAccessBackend: HIDAccessBackend {
   }
 
   func setOutputReport(locationID: UInt32, report: PhysicalHIDOutputReport) async -> Bool {
-    await setReport(locationID: locationID, report: report, type: .output)
+    return await setReport(locationID: locationID, report: report, type: .output)
   }
 
   func setFeatureReport(locationID: UInt32, report: PhysicalHIDOutputReport) async -> Bool {
@@ -88,14 +150,22 @@ actor CoreHIDAccessBackend: HIDAccessBackend {
   ) async -> Bool {
     guard eventAdapter.acceptsFeedback(locationID: locationID) else { return false }
     for client in clients(at: locationID) {
-      do {
+      let result = await CoreHIDPhysicalReportRequest.perform { timeout in
         try await client.dispatchSetReportRequest(
           type: type,
           id: HIDReportID(rawValue: report.reportID),
-          data: Data(report.bytes)
+          data: Data(report.bytes),
+          timeout: timeout
         )
-        return true
-      } catch { continue }
+      }
+      switch result {
+      case .success: return true
+      case .failure(let error):
+        print(
+          "[CoreHIDAccessBackend] Set-report failed at \(locationID) "
+            + "type=\(type) id=\(report.reportID): \(error)"
+        )
+      }
     }
     return false
   }
@@ -248,31 +318,42 @@ actor CoreHIDAccessBackend: HIDAccessBackend {
     sessionID: UUID
   ) async -> Bool {
     guard eventAdapter.isTracked(deviceID: deviceID) else { return false }
-    let inputElements = await client.elements.filter { $0.type == .input }
+    let identifier = DeviceIdentifier(
+      vendorID: UInt16(truncatingIfNeeded: await client.vendorID),
+      productID: UInt16(truncatingIfNeeded: await client.productID)
+    )
+    let subscriptionPlan = CoreHIDInputSubscriptionPlan.resolve(for: identifier)
+    let reportIDsToMonitor = subscriptionPlan.monitorsRawReports ? [HIDReportID.allReports] : []
+    let elementsToMonitor = await client.elements.filter {
+      $0.type == .input
+        && subscriptionPlan.subscribesToElement(
+          usagePage: UInt32($0.usage.page),
+          usage: UInt32($0.usage.usage ?? 0)
+        )
+    }
     guard self.sessionID == sessionID, !Task.isCancelled else { return false }
     let notifications = await client.monitorNotifications(
-      reportIDsToMonitor: [HIDReportID.allReports],
-      elementsToMonitor: inputElements
+      reportIDsToMonitor: reportIDsToMonitor,
+      elementsToMonitor: elementsToMonitor
     )
     do {
       for try await notification in notifications {
         if Task.isCancelled || self.sessionID != sessionID { break }
         switch notification {
         case .inputReport(let reportID, let data, _):
-          guard eventAdapter.acceptsInput(deviceID: deviceID) else { continue }
-          var bytes = [UInt8](data)
-          if let reportID, bytes.first != reportID.rawValue {
-            bytes.insert(reportID.rawValue, at: 0)
-          }
+          guard subscriptionPlan.forwards(.rawReport), eventAdapter.acceptsInput(deviceID: deviceID)
+          else { continue }
           continuation.yield(
             .inputReport(
               locationID: locationID,
               reportID: reportID?.rawValue ?? 0,
-              data: Data(bytes)
+              data: Data(CoreHIDInputReport.normalizedBytes(reportID: reportID, data: data))
             )
           )
         case .elementUpdates(let values):
-          guard eventAdapter.acceptsInput(deviceID: deviceID) else { continue }
+          guard subscriptionPlan.forwards(.elementUpdates),
+            eventAdapter.acceptsInput(deviceID: deviceID)
+          else { continue }
           for value in values {
             let element = value.element
             continuation.yield(

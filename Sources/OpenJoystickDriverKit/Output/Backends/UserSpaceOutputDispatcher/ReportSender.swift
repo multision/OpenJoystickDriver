@@ -1,7 +1,7 @@
 import Foundation
 
 /// One ordered stream for event reports, keepalives, and host-protocol replies.
-/// Closing rejects queued work and waits for the current native send before releasing its backend.
+/// Closing rejects queued work and detaches the backend before draining the current send.
 final class UserSpaceReportSender: @unchecked Sendable {
   private let lock = NSLock()
   private var backend: (any UserSpaceOutputDispatcher.VirtualDeviceBackend)?
@@ -28,7 +28,14 @@ final class UserSpaceReportSender: @unchecked Sendable {
       guard !closed else { return Task { throw CancellationError() } }
       let previous = tail
       let task = Task { [self] in
-        if let previous { _ = await previous.result }
+        if let previous {
+          await withTaskCancellationHandler {
+            _ = await previous.result
+          } onCancel: {
+            previous.cancel()
+          }
+        }
+        try Task.checkCancellation()
         let backend = try lock.withLock {
           guard !closed, let backend = self.backend else { throw CancellationError() }
           return backend
@@ -50,22 +57,20 @@ final class UserSpaceReportSender: @unchecked Sendable {
 
   @discardableResult
   func beginClose() -> Task<Void, Never> {
-    lock.withLock {
-      if let closeTask { return closeTask }
+    let result = lock.withLock {
+      () -> (Task<Void, Never>, (any UserSpaceOutputDispatcher.VirtualDeviceBackend)?) in
+      if let closeTask { return (closeTask, nil) }
       closed = true
       let pending = tail
-      let task = Task { [self] in
-        if let pending { _ = await pending.result }
-        let backend = lock.withLock {
-          let value = self.backend
-          self.backend = nil
-          tail = nil
-          return value
-        }
-        backend?.close()
-      }
+      pending?.cancel()
+      let backend = backend
+      self.backend = nil
+      tail = nil
+      let task = Task { if let pending { _ = await pending.result } }
       closeTask = task
-      return task
+      return (task, backend)
     }
+    result.1?.close()
+    return result.0
   }
 }

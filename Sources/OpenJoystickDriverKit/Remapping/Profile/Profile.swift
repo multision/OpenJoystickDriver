@@ -222,6 +222,18 @@ public struct RemappingBinding: Codable, Equatable, Hashable, Identifiable, Send
 }
 
 /// A versioned, locally persisted controller-to-system-input mapping profile.
+public struct RemappingPhysicalColor: Codable, Equatable, Sendable {
+  public let red: UInt8
+  public let green: UInt8
+  public let blue: UInt8
+
+  public init(red: UInt8, green: UInt8, blue: UInt8) {
+    self.red = red
+    self.green = green
+    self.blue = blue
+  }
+}
+
 public struct RemappingProfile: Codable, Equatable, Identifiable, Sendable {
   public static let currentSchemaVersion = 3
   public static let maximumBindingCount = 512
@@ -236,6 +248,7 @@ public struct RemappingProfile: Codable, Equatable, Identifiable, Sendable {
   public let device: RemappingDeviceScope
   public let applicationScope: RemappingApplicationScope
   public let outputPolicy: RemappingOutputPolicy
+  public let physicalColor: RemappingPhysicalColor?
   public let motionTuning: RemappingMotionTuning
   public let gyroOutput: RemappingGyroOutput
   public let joyConPair: RemappingJoyConPairSettings?
@@ -254,6 +267,7 @@ public struct RemappingProfile: Codable, Equatable, Identifiable, Sendable {
     device: RemappingDeviceScope,
     applicationScope: RemappingApplicationScope,
     outputPolicy: RemappingOutputPolicy = .systemInput,
+    physicalColor: RemappingPhysicalColor? = nil,
     motionTuning: RemappingMotionTuning = .default,
     gyroOutput: RemappingGyroOutput = .default,
     joyConPair: RemappingJoyConPairSettings? = nil,
@@ -271,6 +285,7 @@ public struct RemappingProfile: Codable, Equatable, Identifiable, Sendable {
     self.device = device
     self.applicationScope = applicationScope
     self.outputPolicy = outputPolicy
+    self.physicalColor = physicalColor
     self.motionTuning = motionTuning
     self.gyroOutput = gyroOutput
     self.joyConPair = joyConPair
@@ -290,6 +305,7 @@ public struct RemappingProfile: Codable, Equatable, Identifiable, Sendable {
     case device
     case applicationScope = "application_scope"
     case outputPolicy = "output_policy"
+    case physicalColor = "physical_color"
     case motionTuning = "motion_tuning"
     case gyroOutput = "gyro_output"
     case joyConPair = "joy_con_pair"
@@ -318,6 +334,10 @@ public struct RemappingProfile: Codable, Equatable, Identifiable, Sendable {
     outputPolicy =
       try container.decodeIfPresent(RemappingOutputPolicy.self, forKey: .outputPolicy)
       ?? .systemInput
+    physicalColor = try container.decodeIfPresent(
+      RemappingPhysicalColor.self,
+      forKey: .physicalColor
+    )
     motionTuning =
       try container.decodeIfPresent(RemappingMotionTuning.self, forKey: .motionTuning) ?? .default
     gyroOutput =
@@ -346,6 +366,7 @@ public struct RemappingProfile: Codable, Equatable, Identifiable, Sendable {
     try container.encode(device, forKey: .device)
     try container.encode(applicationScope, forKey: .applicationScope)
     try container.encode(outputPolicy, forKey: .outputPolicy)
+    try container.encodeIfPresent(physicalColor, forKey: .physicalColor)
     if motionTuning != .default { try container.encode(motionTuning, forKey: .motionTuning) }
     if gyroOutput != .default { try container.encode(gyroOutput, forKey: .gyroOutput) }
     try container.encodeIfPresent(joyConPair, forKey: .joyConPair)

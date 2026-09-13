@@ -51,3 +51,31 @@ public enum XboxOneBluetoothHIDDescriptor {
     0x95, 0x01, 0x81, 0x02, 0xC0,
   ]
 }
+
+/// Xbox Series report layout adjusted only for Firefox's native 045E:02E0 remapper.
+public struct XboxGeckoHIDReportFormat: VirtualGamepadReportFormat {
+  private let base: HIDDescriptorReportFormat
+
+  public var descriptor: [UInt8] { base.descriptor }
+  public var inputReportPayloadSize: Int { base.inputReportPayloadSize }
+  public var inputReportID: UInt8? { base.inputReportID }
+  public var outputReportPayloadSize: Int? { base.outputReportPayloadSize }
+  public var outputReportID: UInt8? { base.outputReportID }
+
+  public init() throws {
+    base = try HIDDescriptorReportFormat(
+      descriptor: XboxOneBluetoothHIDDescriptor.seriesDescriptor,
+      outputReportID: VirtualRumbleOutputReportParser.xboxOneReportID,
+      outputReportPayloadSize: VirtualRumbleOutputReportParser.xboxOneReportPayloadSize,
+      buttonUsageMap: XboxOneBluetoothHIDDescriptor.buttonUsageMap
+    )
+  }
+
+  public func buildInputReport(from state: VirtualGamepadState) -> [UInt8] {
+    var state = state
+    let unavailableButtons: UInt32 =
+      (0xF << 11) | (1 << UInt32(GamepadHIDDescriptor.ButtonBit.share.rawValue))
+    state.buttons &= ~unavailableButtons
+    return base.buildInputReport(from: state)
+  }
+}

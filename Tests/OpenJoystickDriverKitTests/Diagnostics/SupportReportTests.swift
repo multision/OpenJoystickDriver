@@ -41,6 +41,11 @@ struct SupportReportTests {
           physicalOutputCapabilities: PhysicalControllerOutputCapabilities(rumbleMotors: [
             .leftMain, .rightMain, .leftTrigger, .rightTrigger,
           ]),
+          battery: ControllerBatteryTelemetry(
+            percentage: 100,
+            chargingState: .full,
+            cableState: .connected
+          )
         )
       ],
       userSpaceVirtualDeviceEnabled: true,
@@ -126,6 +131,8 @@ struct SupportReportTests {
     #expect(report.data.privacy.includesHIDLocationIDs == false)
     #expect(report.data.controllers.first?.serialNumberPresent == true)
     #expect(report.data.controllers.first?.physicalOutputCapabilities.supportsTriggerRumble == true)
+    #expect(report.data.controllers.first?.battery?.percentage == 100)
+    #expect(report.data.controllers.first?.battery?.chargingState == .full)
     #expect(report.data.hidGamepads.first?.product == "Test Controller")
     let object = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
     #expect(object["specversion"] as? String == "1.0")

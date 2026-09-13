@@ -355,10 +355,10 @@ struct PhysicalRumbleOutputTests {
       blue: 56
     )
     #expect(bluetooth.reportID == 0x11)
-    #expect(bluetooth.bytes[1] == 0xC0)
+    #expect(bluetooth.bytes[1] == 0xC4)
     #expect(bluetooth.bytes[3] == 0x02)
     #expect(Array(bluetooth.bytes[8...10]) == [12, 34, 56])
-    #expect(Array(bluetooth.bytes[74...77]) == [0x6D, 0x86, 0xC4, 0x4D])
+    #expect(Array(bluetooth.bytes[74...77]) == [0xD7, 0xFA, 0x17, 0x24])
   }
 
   @Test
@@ -408,8 +408,8 @@ struct PhysicalRumbleOutputTests {
     #expect(report.reportID == 0x11)
     #expect(report.bytes.count == 78)
     #expect(report.bytes[0] == 0x11)
-    #expect(report.bytes[1] == 0xC0)
-    #expect(report.bytes[3] == 0x0F)
+    #expect(report.bytes[1] == 0xC4)
+    #expect(report.bytes[3] == 0x01)
     #expect(report.bytes[6] == 90)
     #expect(report.bytes[7] == 180)
     #expect(report.bytes[74...77].contains { $0 != 0 })

@@ -399,8 +399,8 @@ public enum CompatibilityOutputCompositionFactory {
     let profile = CompatibilityOutputProfileCatalog.profile(for: identity)
     let format: any VirtualGamepadReportFormat
     switch identity {
-    case .automatic: format = OJDSDLGamepadFormat()
-    case .genericHID: format = OJDSDLGamepadFormat()
+    case .automatic: format = OJDGenericGamepadFormat()
+    case .genericHID: format = OJDGenericGamepadFormat()
     case .sdl2_3: format = Xbox360MacHIDReportFormat()
     case .appleGameController:
       format = try HIDDescriptorReportFormat(

@@ -219,6 +219,7 @@ public protocol PhysicalHIDFeatureHapticOutput: AnyObject, Sendable {
 /// Optional RGB lightbar support delivered through a HID output report.
 public protocol PhysicalHIDColorOutput: AnyObject, Sendable {
   var physicalLightingFeatures: [PhysicalLightingFeature] { get }
+  var physicalDefaultColor: (red: UInt8, green: UInt8, blue: UInt8) { get }
   func physicalColorReport(red: UInt8, green: UInt8, blue: UInt8) -> PhysicalHIDOutputReport
 }
 

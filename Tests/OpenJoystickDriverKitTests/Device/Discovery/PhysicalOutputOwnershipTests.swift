@@ -81,4 +81,46 @@ struct PhysicalOutputOwnershipTests {
         == .color(red: 4, green: 5, blue: 6)
     )
   }
+
+  @Test
+  func colorPrecedenceRestoresMappingThenProfileAndTreatsBlackAsSelected() {
+    var ownership = PhysicalOutputOwnership()
+    let identifier = DeviceIdentifier(vendorID: 1, productID: 2, locationID: 3)
+    let mappingOwner = UUID()
+    let previewToken = UUID()
+
+    ownership.setProfileColor(.color(red: 1, green: 2, blue: 3), for: identifier)
+    ownership.setMapping(
+      .color(red: 4, green: 5, blue: 6),
+      active: true,
+      owner: mappingOwner,
+      for: identifier
+    )
+    ownership.setTemporaryColor(
+      .color(red: 0, green: 0, blue: 0),
+      token: previewToken,
+      for: identifier
+    )
+    #expect(
+      ownership.effectiveOutput(for: .color, device: identifier)
+        == .color(red: 0, green: 0, blue: 0)
+    )
+
+    ownership.releaseTemporaryColor(token: previewToken, for: identifier)
+    #expect(
+      ownership.effectiveOutput(for: .color, device: identifier)
+        == .color(red: 4, green: 5, blue: 6)
+    )
+
+    ownership.setMapping(
+      .color(red: 4, green: 5, blue: 6),
+      active: false,
+      owner: mappingOwner,
+      for: identifier
+    )
+    #expect(
+      ownership.effectiveOutput(for: .color, device: identifier)
+        == .color(red: 1, green: 2, blue: 3)
+    )
+  }
 }
