@@ -147,6 +147,13 @@
 "controllers.emptyMessage" = "Bir kontrolcü bağla, ardından “Yenile”’i seç.";
 "controllers.label" = "Kontrolcü";
 "controllers.notReported" = "Bildirilmedi";
+"controllers.battery" = "Pil";
+"controllers.chargingState" = "Şarj durumu";
+"controllers.cableState" = "Kablo durumu";
+"controllers.discharging" = "Boşalıyor";
+"controllers.charging" = "Şarj oluyor";
+"controllers.batteryFull" = "Dolu";
+"controllers.batteryAccessibilityDetails" = "Pil: %@. Şarj durumu: %@. Kablo durumu: %@.";
 "controllers.activeProfile" = "Etkin profil";
 "controllers.profileChecking" = "Denetleniyor…";
 "controllers.profileNone" = "Yok";
@@ -906,6 +913,9 @@
 "inputTest.start" = "Start Input Test";
 "inputTest.starting" = "Starting…";
 "inputTest.status" = "Input test status";
+"inputTest.tabInput" = "Canlı giriş";
+"inputTest.tabMotion" = "Motion";
+"inputTest.tabOutput" = "Output";
 "inputTest.steamButton" = "Steam düğmesi";
 "inputTest.summary" = "Test buttons, sticks, triggers, rumble, and controller lighting.";
 "inputTest.testRumble" = "Test Rumble";
@@ -988,6 +998,9 @@
 "profiles.virtualMapped" = "Yalnızca yeniden eşlenen kontroller";
 "profiles.virtualPassthrough" = "Yeniden eşlenmeyen kontrolleri dahil et";
 "profiles.exclusiveInput" = "Fiziksel girdiye özel erişim gerektir";
+"profiles.actions" = "Profile actions";
+"profiles.editorSection" = "Profile editor section";
+"profiles.combinations" = "Combinations";
 "cli.mapping.output_policy_invalid" = "--virtual-gamepad: disabled|mapped|passthrough\n--physical-input: shared|exclusive";
 
 "profiles.tapOnPress" = "Basınca dokun";

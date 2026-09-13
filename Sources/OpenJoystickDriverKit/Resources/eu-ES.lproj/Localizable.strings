@@ -147,6 +147,13 @@
 "controllers.emptyMessage" = "Konektatu aginte bat, eta aukeratu Freskatu.";
 "controllers.label" = "Agintea";
 "controllers.notReported" = "Ez da jakinarazi";
+"controllers.battery" = "Bateria";
+"controllers.chargingState" = "Kargatze-egoera";
+"controllers.cableState" = "Kablearen egoera";
+"controllers.discharging" = "Deskargatzen";
+"controllers.charging" = "Kargatzen";
+"controllers.batteryFull" = "Beteta";
+"controllers.batteryAccessibilityDetails" = "Bateria: %@. Kargatze-egoera: %@. Kablearen egoera: %@.";
 "controllers.activeProfile" = "Profil aktiboa";
 "controllers.profileChecking" = "Egiaztatzen…";
 "controllers.profileNone" = "Bat ere ez";
@@ -906,6 +913,9 @@
 "inputTest.start" = "Start Input Test";
 "inputTest.starting" = "Starting…";
 "inputTest.status" = "Input test status";
+"inputTest.tabInput" = "Zuzeneko sarrera";
+"inputTest.tabMotion" = "Motion";
+"inputTest.tabOutput" = "Output";
 "inputTest.steamButton" = "Steam botoia";
 "inputTest.summary" = "Test buttons, sticks, triggers, rumble, and controller lighting.";
 "inputTest.testRumble" = "Test Rumble";
@@ -988,6 +998,9 @@
 "profiles.virtualMapped" = "Berriz esleitutako kontrolak soilik";
 "profiles.virtualPassthrough" = "Sartu berriz esleitu gabeko kontrolak";
 "profiles.exclusiveInput" = "Eskatu sarrera fisikorako sarbide esklusiboa";
+"profiles.actions" = "Profile actions";
+"profiles.editorSection" = "Profile editor section";
+"profiles.combinations" = "Combinations";
 "cli.mapping.output_policy_invalid" = "--virtual-gamepad: disabled|mapped|passthrough\n--physical-input: shared|exclusive";
 
 "profiles.tapOnPress" = "Ukitu sakatzean";

@@ -147,6 +147,13 @@
 "controllers.emptyMessage" = "Tilslut en controller, og vælg derefter “Opdater”.";
 "controllers.label" = "Controller";
 "controllers.notReported" = "Ikke rapporteret";
+"controllers.battery" = "Batteri";
+"controllers.chargingState" = "Opladningstilstand";
+"controllers.cableState" = "Kabeltilstand";
+"controllers.discharging" = "Aflader";
+"controllers.charging" = "Oplader";
+"controllers.batteryFull" = "Fuldt opladet";
+"controllers.batteryAccessibilityDetails" = "Batteri: %@. Opladningstilstand: %@. Kabeltilstand: %@.";
 "controllers.activeProfile" = "Aktiv profil";
 "controllers.profileChecking" = "Tjekker…";
 "controllers.profileNone" = "Ingen";
@@ -906,6 +913,9 @@
 "inputTest.start" = "Start Input Test";
 "inputTest.starting" = "Starting…";
 "inputTest.status" = "Input test status";
+"inputTest.tabInput" = "Live-input";
+"inputTest.tabMotion" = "Motion";
+"inputTest.tabOutput" = "Output";
 "inputTest.steamButton" = "Steam-knap";
 "inputTest.summary" = "Test buttons, sticks, triggers, rumble, and controller lighting.";
 "inputTest.testRumble" = "Test Rumble";
@@ -988,6 +998,9 @@
 "profiles.virtualMapped" = "Kun omfordelte kontroller";
 "profiles.virtualPassthrough" = "Medtag kontroller uden omfordeling";
 "profiles.exclusiveInput" = "Kræv eksklusiv adgang til fysisk input";
+"profiles.actions" = "Profile actions";
+"profiles.editorSection" = "Profile editor section";
+"profiles.combinations" = "Combinations";
 "cli.mapping.output_policy_invalid" = "--virtual-gamepad: disabled|mapped|passthrough\n--physical-input: shared|exclusive";
 
 "profiles.tapOnPress" = "Tryk ved nedtrykning";

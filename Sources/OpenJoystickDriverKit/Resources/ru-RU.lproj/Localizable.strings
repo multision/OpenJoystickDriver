@@ -147,6 +147,13 @@
 "controllers.emptyMessage" = "Подключите контроллер, затем выберите «Обновить».";
 "controllers.label" = "Контроллер";
 "controllers.notReported" = "Не указано";
+"controllers.battery" = "Батарея";
+"controllers.chargingState" = "Состояние зарядки";
+"controllers.cableState" = "Состояние кабеля";
+"controllers.discharging" = "Разряжается";
+"controllers.charging" = "Заряжается";
+"controllers.batteryFull" = "Полный заряд";
+"controllers.batteryAccessibilityDetails" = "Батарея: %@. Состояние зарядки: %@. Состояние кабеля: %@.";
 "controllers.activeProfile" = "Активный профиль";
 "controllers.profileChecking" = "Проверка…";
 "controllers.profileNone" = "Нет";
@@ -906,6 +913,9 @@
 "inputTest.start" = "Запустить тест ввода";
 "inputTest.starting" = "Запуск…";
 "inputTest.status" = "Состояние теста ввода";
+"inputTest.tabInput" = "Ввод в реальном времени";
+"inputTest.tabMotion" = "Motion";
+"inputTest.tabOutput" = "Вывод";
 "inputTest.steamButton" = "Кнопка Steam";
 "inputTest.summary" = "Проверьте кнопки, стики, триггеры, вибрацию и подсветку контроллера.";
 "inputTest.testRumble" = "Проверить вибрацию";
@@ -988,6 +998,9 @@
 "profiles.virtualMapped" = "Только переназначенные элементы управления";
 "profiles.virtualPassthrough" = "Включать непереназначенные элементы";
 "profiles.exclusiveInput" = "Требовать исключительный доступ к физическому вводу";
+"profiles.actions" = "Profile actions";
+"profiles.editorSection" = "Profile editor section";
+"profiles.combinations" = "Combinations";
 "cli.mapping.output_policy_invalid" = "--virtual-gamepad: disabled|mapped|passthrough\n--physical-input: shared|exclusive";
 
 "profiles.tapOnPress" = "Короткое нажатие при нажатии";

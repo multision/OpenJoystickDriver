@@ -147,6 +147,13 @@
 "controllers.emptyMessage" = "Verbinde einen Controller und wähle dann „Aktualisieren“.";
 "controllers.label" = "Controller";
 "controllers.notReported" = "Nicht gemeldet";
+"controllers.battery" = "Batterie";
+"controllers.chargingState" = "Ladezustand";
+"controllers.cableState" = "Kabelstatus";
+"controllers.discharging" = "Wird entladen";
+"controllers.charging" = "Wird geladen";
+"controllers.batteryFull" = "Voll";
+"controllers.batteryAccessibilityDetails" = "Batterie: %@. Ladezustand: %@. Kabelstatus: %@.";
 "controllers.activeProfile" = "Aktives Profil";
 "controllers.profileChecking" = "Prüfen…";
 "controllers.profileNone" = "Keine";
@@ -906,6 +913,9 @@
 "inputTest.start" = "Eingabetest starten";
 "inputTest.starting" = "Starten…";
 "inputTest.status" = "Status des Eingabetests";
+"inputTest.tabInput" = "Live-Eingabe";
+"inputTest.tabMotion" = "Motion";
+"inputTest.tabOutput" = "Ausgabe";
 "inputTest.steamButton" = "Steam-Taste";
 "inputTest.summary" = "Teste Tasten, Sticks, Trigger, Vibration und Controllerbeleuchtung.";
 "inputTest.testRumble" = "Vibration testen";
@@ -988,6 +998,9 @@
 "profiles.virtualMapped" = "Nur neu zugewiesene Bedienelemente";
 "profiles.virtualPassthrough" = "Nicht neu zugewiesene Bedienelemente einbeziehen";
 "profiles.exclusiveInput" = "Exklusiven Zugriff auf physische Eingaben verlangen";
+"profiles.actions" = "Profile actions";
+"profiles.editorSection" = "Profile editor section";
+"profiles.combinations" = "Combinations";
 "cli.mapping.output_policy_invalid" = "--virtual-gamepad: disabled|mapped|passthrough\n--physical-input: shared|exclusive";
 
 "profiles.tapOnPress" = "Tippen beim Drücken";

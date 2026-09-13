@@ -147,6 +147,13 @@
 "controllers.emptyMessage" = "Pripojte ovládač a potom zvoľte „Obnoviť“.";
 "controllers.label" = "Ovládač";
 "controllers.notReported" = "Nie je nahlásené";
+"controllers.battery" = "Batéria";
+"controllers.chargingState" = "Stav nabíjania";
+"controllers.cableState" = "Stav kábla";
+"controllers.discharging" = "Vybíjanie";
+"controllers.charging" = "Nabíjanie";
+"controllers.batteryFull" = "Plná";
+"controllers.batteryAccessibilityDetails" = "Batéria: %@. Stav nabíjania: %@. Stav kábla: %@.";
 "controllers.activeProfile" = "Aktívny profil";
 "controllers.profileChecking" = "Kontrola…";
 "controllers.profileNone" = "Žiadny";
@@ -906,6 +913,9 @@
 "inputTest.start" = "Start Input Test";
 "inputTest.starting" = "Starting…";
 "inputTest.status" = "Input test status";
+"inputTest.tabInput" = "Živý vstup";
+"inputTest.tabMotion" = "Motion";
+"inputTest.tabOutput" = "Output";
 "inputTest.steamButton" = "Tlačidlo Steam";
 "inputTest.summary" = "Test buttons, sticks, triggers, rumble, and controller lighting.";
 "inputTest.testRumble" = "Test Rumble";
@@ -988,6 +998,9 @@
 "profiles.virtualMapped" = "Iba premapované ovládacie prvky";
 "profiles.virtualPassthrough" = "Zahrnúť nepremapované ovládacie prvky";
 "profiles.exclusiveInput" = "Vyžadovať výhradný prístup k fyzickému vstupu";
+"profiles.actions" = "Profile actions";
+"profiles.editorSection" = "Profile editor section";
+"profiles.combinations" = "Combinations";
 "cli.mapping.output_policy_invalid" = "--virtual-gamepad: disabled|mapped|passthrough\n--physical-input: shared|exclusive";
 
 "profiles.tapOnPress" = "Ťuknutie pri stlačení";

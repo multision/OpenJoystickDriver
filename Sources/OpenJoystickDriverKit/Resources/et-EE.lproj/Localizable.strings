@@ -147,6 +147,13 @@
 "controllers.emptyMessage" = "Ühenda kontroller ja vali seejärel „Värskenda“.";
 "controllers.label" = "Kontroller";
 "controllers.notReported" = "Pole teatatud";
+"controllers.battery" = "Aku";
+"controllers.chargingState" = "Laadimisolek";
+"controllers.cableState" = "Kaabli olek";
+"controllers.discharging" = "Tühjenemine";
+"controllers.charging" = "Laadimine";
+"controllers.batteryFull" = "Täis";
+"controllers.batteryAccessibilityDetails" = "Aku: %@. Laadimisolek: %@. Kaabli olek: %@.";
 "controllers.activeProfile" = "Aktiivne profiil";
 "controllers.profileChecking" = "Kontrollimine…";
 "controllers.profileNone" = "Puudub";
@@ -906,6 +913,9 @@
 "inputTest.start" = "Alusta sisenditesti";
 "inputTest.starting" = "Käivitamine…";
 "inputTest.status" = "Sisenditesti olek";
+"inputTest.tabInput" = "Reaalajas sisend";
+"inputTest.tabMotion" = "Motion";
+"inputTest.tabOutput" = "Väljund";
 "inputTest.steamButton" = "Steam-nupp";
 "inputTest.summary" = "Testi nuppe, pulki, päästikuid, vibratsiooni ja kontrolleri valgustust.";
 "inputTest.testRumble" = "Testi vibratsiooni";
@@ -988,6 +998,9 @@
 "profiles.virtualMapped" = "Ainult ümbermääratud juhtelemendid";
 "profiles.virtualPassthrough" = "Kaasa ümbermääramata juhtelemendid";
 "profiles.exclusiveInput" = "Nõua füüsilise sisendi ainukasutust";
+"profiles.actions" = "Profiili toimingud";
+"profiles.editorSection" = "Profiiliredaktori jaotis";
+"profiles.combinations" = "Kombinatsioonid";
 "cli.mapping.output_policy_invalid" = "--virtual-gamepad: disabled|mapped|passthrough\n--physical-input: shared|exclusive";
 
 "profiles.tapOnPress" = "Lühivajutus vajutamisel";

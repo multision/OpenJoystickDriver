@@ -147,6 +147,13 @@
 "controllers.emptyMessage" = "Connectez une manette, puis choisissez « Actualiser ».";
 "controllers.label" = "Manette";
 "controllers.notReported" = "Non communiqué";
+"controllers.battery" = "Batterie";
+"controllers.chargingState" = "État de charge";
+"controllers.cableState" = "État du câble";
+"controllers.discharging" = "Décharge en cours";
+"controllers.charging" = "Charge en cours";
+"controllers.batteryFull" = "Pleine";
+"controllers.batteryAccessibilityDetails" = "Batterie : %@. État de charge : %@. État du câble : %@.";
 "controllers.activeProfile" = "Profil actif";
 "controllers.profileChecking" = "Vérification…";
 "controllers.profileNone" = "Aucun";
@@ -906,6 +913,9 @@
 "inputTest.start" = "Démarrer le test d’entrée";
 "inputTest.starting" = "Démarrage…";
 "inputTest.status" = "État du test d’entrée";
+"inputTest.tabInput" = "Entrée en direct";
+"inputTest.tabMotion" = "Motion";
+"inputTest.tabOutput" = "Sortie";
 "inputTest.steamButton" = "Bouton Steam";
 "inputTest.summary" = "Testez boutons, sticks, gâchettes, vibration et éclairage de la manette.";
 "inputTest.testRumble" = "Tester la vibration";
@@ -988,6 +998,9 @@
 "profiles.virtualMapped" = "Commandes réaffectées uniquement";
 "profiles.virtualPassthrough" = "Inclure les commandes non réaffectées";
 "profiles.exclusiveInput" = "Exiger un accès exclusif à l’entrée physique";
+"profiles.actions" = "Actions du profil";
+"profiles.editorSection" = "Section de l’éditeur de profil";
+"profiles.combinations" = "Combinaisons";
 "cli.mapping.output_policy_invalid" = "--virtual-gamepad: disabled|mapped|passthrough\n--physical-input: shared|exclusive";
 
 "profiles.tapOnPress" = "Appui bref à la pression";

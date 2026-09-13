@@ -147,6 +147,13 @@
 "controllers.emptyMessage" = "Tengdu stýringu og veldu síðan „Uppfæra“.";
 "controllers.label" = "Stýring";
 "controllers.notReported" = "Ekki tilkynnt";
+"controllers.battery" = "Rafhlaða";
+"controllers.chargingState" = "Hleðsluástand";
+"controllers.cableState" = "Kapalástand";
+"controllers.discharging" = "Afhleðst";
+"controllers.charging" = "Hleðst";
+"controllers.batteryFull" = "Fullhlaðin";
+"controllers.batteryAccessibilityDetails" = "Rafhlaða: %@. Hleðsluástand: %@. Kapalástand: %@.";
 "controllers.activeProfile" = "Virkt snið";
 "controllers.profileChecking" = "Athugar…";
 "controllers.profileNone" = "Ekkert";
@@ -906,6 +913,9 @@
 "inputTest.start" = "Start Input Test";
 "inputTest.starting" = "Starting…";
 "inputTest.status" = "Input test status";
+"inputTest.tabInput" = "Rauntímainntak";
+"inputTest.tabMotion" = "Motion";
+"inputTest.tabOutput" = "Output";
 "inputTest.steamButton" = "Steam-hnappur";
 "inputTest.summary" = "Test buttons, sticks, triggers, rumble, and controller lighting.";
 "inputTest.testRumble" = "Test Rumble";
@@ -988,6 +998,9 @@
 "profiles.virtualMapped" = "Aðeins endurúthlutaðir stjórnhnappar";
 "profiles.virtualPassthrough" = "Taka með stjórnhnappa án endurúthlutunar";
 "profiles.exclusiveInput" = "Krefjast einkaaðgangs að líkamlegu inntaki";
+"profiles.actions" = "Profile actions";
+"profiles.editorSection" = "Profile editor section";
+"profiles.combinations" = "Combinations";
 "cli.mapping.output_policy_invalid" = "--virtual-gamepad: disabled|mapped|passthrough\n--physical-input: shared|exclusive";
 
 "profiles.tapOnPress" = "Smellur við að ýta";

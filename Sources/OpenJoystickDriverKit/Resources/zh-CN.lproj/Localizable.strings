@@ -147,6 +147,13 @@
 "controllers.emptyMessage" = "连接控制器，然后选择“刷新”。";
 "controllers.label" = "控制器";
 "controllers.notReported" = "未报告";
+"controllers.battery" = "电池";
+"controllers.chargingState" = "充电状态";
+"controllers.cableState" = "连接线状态";
+"controllers.discharging" = "正在放电";
+"controllers.charging" = "正在充电";
+"controllers.batteryFull" = "已充满";
+"controllers.batteryAccessibilityDetails" = "电池：%@。充电状态：%@。连接线状态：%@。";
 "controllers.activeProfile" = "活跃配置文件";
 "controllers.profileChecking" = "正在检查…";
 "controllers.profileNone" = "无";
@@ -906,6 +913,9 @@
 "inputTest.start" = "开始输入测试";
 "inputTest.starting" = "正在启动…";
 "inputTest.status" = "输入测试状态";
+"inputTest.tabInput" = "实时输入";
+"inputTest.tabMotion" = "Motion";
+"inputTest.tabOutput" = "输出";
 "inputTest.steamButton" = "Steam 按钮";
 "inputTest.summary" = "测试按钮、摇杆、扳机、振动和控制器灯光。";
 "inputTest.testRumble" = "测试振动";
@@ -988,6 +998,9 @@
 "profiles.virtualMapped" = "仅重新映射的控件";
 "profiles.virtualPassthrough" = "包含未重新映射的控件";
 "profiles.exclusiveInput" = "要求独占访问物理输入";
+"profiles.actions" = "配置文件操作";
+"profiles.editorSection" = "配置文件编辑部分";
+"profiles.combinations" = "组合";
 "cli.mapping.output_policy_invalid" = "--virtual-gamepad: disabled|mapped|passthrough\n--physical-input: shared|exclusive";
 
 "profiles.tapOnPress" = "按下时轻点";

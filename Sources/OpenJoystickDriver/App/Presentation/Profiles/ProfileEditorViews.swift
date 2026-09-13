@@ -13,6 +13,8 @@
     var viewModel: RuntimeViewModel
     let isActive: Bool
     let isEditingBlocked: Bool
+    @Binding
+    var selectedSection: ProfileEditorSection
     let onDelete: () -> Void
     let onExport: (RemappingProfile) -> Void
     let onEditingStateChanged: (Bool) -> Void
@@ -39,6 +41,7 @@
       viewModel: RuntimeViewModel,
       isActive: Bool,
       isEditingBlocked: Bool,
+      selectedSection: Binding<ProfileEditorSection>,
       onDelete: @escaping () -> Void,
       onExport: @escaping (RemappingProfile) -> Void,
       onEditingStateChanged: @escaping (Bool) -> Void,
@@ -49,6 +52,7 @@
       self.viewModel = viewModel
       self.isActive = isActive
       self.isEditingBlocked = isEditingBlocked
+      _selectedSection = selectedSection
       self.onDelete = onDelete
       self.onExport = onExport
       self.onEditingStateChanged = onEditingStateChanged
@@ -59,12 +63,16 @@
     }
 
     var body: some View {
-      VStack(alignment: .leading, spacing: 0) {
-        editorHeader
-        Divider()
-        assignmentContent
-        Divider()
-        editorFooter
+      GeometryReader { proxy in
+        VStack(alignment: .leading, spacing: 0) {
+          editorHeader(width: proxy.size.width)
+          Divider()
+          sectionNavigation(width: proxy.size.width)
+          Divider()
+          editorContent(width: proxy.size.width)
+          Divider()
+          editorFooter
+        }
       }.disabled(isEditingDisabled).sheet(item: $activeSheet) { sheet in
         Group {
           switch sheet {
@@ -178,103 +186,25 @@
       }
     }
 
-    private var editorHeader: some View {
+    private func editorHeader(width: CGFloat) -> some View {
       VStack(alignment: .leading, spacing: 10) {
-        TextField(
-          OJDLocalized.string("common.profileName", fallback: "Profile name"),
-          text: nameBinding
-        ).font(.headline.weight(.semibold)).textFieldStyle(PlainTextFieldStyle()).frame(
-          maxWidth: .infinity,
-          alignment: .leading
-        ).ojdAccessibilityLabel(OJDLocalized.string("common.profileName", fallback: "Profile name"))
-        HStack(alignment: .firstTextBaseline, spacing: 8) {
-          Button(OJDLocalized.string("common.duplicate", fallback: "Duplicate")) {
-            duplicateProfile()
-          }.disabled(isMutationActive)
-          Button(OJDLocalized.string("profiles.export", fallback: "Export")) {
-            do { onExport(try draft.validatedProfile()) } catch {
-              localError = RuntimePresentation.userFacingError(error)
-            }
-          }.disabled(isMutationActive)
-          Button(OJDLocalized.string("profiles.details", fallback: "Details")) {
-            activeSheet = .metadata
-          }.disabled(isMutationActive)
-          Button(OJDLocalized.string("profiles.motion.title", fallback: "Motion tuning")) {
-            activeSheet = .motion
-          }.disabled(isMutationActive)
-          Button(OJDLocalized.string("profiles.stick.title", fallback: "Stick modes")) {
-            activeSheet = .sticks
-          }.disabled(isMutationActive)
-          Button(OJDLocalized.string("profiles.trigger.title", fallback: "Trigger stages")) {
-            activeSheet = .triggers
-          }.disabled(isMutationActive)
-          Button(OJDLocalized.string("profiles.touch.title", fallback: "Touch mappings")) {
-            activeSheet = .touch
-          }.disabled(isMutationActive)
-          if profile.joyConPair != nil {
-            Text(
-              OJDLocalized.string(
-                "profiles.joyConExplicitSession",
-                fallback: "Started with an explicit pair session"
-              )
-            ).font(.caption).foregroundColor(Color(NSColor.secondaryLabelColor))
-          } else if isActive {
-            Button(OJDLocalized.string("common.deactivate", fallback: "Deactivate")) {
-              guard !isMutationActive else { return }
-              let request = RuntimeMutationRequest(operation: .deactivate(profileID: profile.id))
-              guard onMutationStarted(request) else { return }
-              Task { @MainActor in
-                let result = await viewModel.deactivateRemappingProfile(
-                  profileID: profile.id,
-                  request: request
-                )
-                onMutationResult(result)
-              }
-            }.disabled(isMutationActive)
-            Button(OJDLocalized.string("profiles.deactivateController", fallback: "Deactivate all"))
-            {
-              guard !isMutationActive else { return }
-              let request = RuntimeMutationRequest(operation: .deactivate(profileID: nil))
-              guard onMutationStarted(request) else { return }
-              Task { @MainActor in
-                let result = await viewModel.deactivateRemappingProfile(
-                  vendorID: profile.device.vendorID,
-                  productID: profile.device.productID,
-                  request: request
-                )
-                onMutationResult(result)
-              }
-            }.disabled(isMutationActive)
-          } else {
-            Button(OJDLocalized.string("common.setActive", fallback: "Set active")) {
-              guard !isMutationActive else { return }
-              let request = RuntimeMutationRequest(operation: .activate(profileID: profile.id))
-              guard onMutationStarted(request) else { return }
-              Task { @MainActor in
-                let result = await viewModel.activateRemappingProfile(
-                  id: profile.id,
-                  request: request
-                )
-                onMutationResult(result)
-              }
-            }.disabled(isMutationActive)
-          }
-          Spacer(minLength: 0)
+        HStack(alignment: .center, spacing: 10) {
+          TextField(
+            OJDLocalized.string("common.profileName", fallback: "Profile name"),
+            text: nameBinding
+          ).font(.headline.weight(.semibold)).textFieldStyle(PlainTextFieldStyle()).frame(
+            maxWidth: .infinity,
+            alignment: .leading
+          ).ojdAccessibilityLabel(
+            OJDLocalized.string("common.profileName", fallback: "Profile name")
+          )
+          primaryActivationAction
+          profileActionMenu
         }
-        HStack(spacing: 12) {
-          Text(RuntimePresentation.profileScopeLabel(draft.profile.applicationScope))
-            .foregroundColor(Color(NSColor.secondaryLabelColor))
-          Text("·").foregroundColor(Color(NSColor.tertiaryLabelColor))
-          Text(
-            profile.joyConPair != nil
-              ? OJDLocalized.string("profiles.joyConSessionState", fallback: "Explicit pairing")
-              : isActive
-                ? OJDLocalized.string("profiles.active", fallback: "Active")
-                : OJDLocalized.string("profiles.notActive", fallback: "Not active")
-          ).foregroundColor(Color(NSColor.secondaryLabelColor))
-        }
-        ProfileOutputPolicyView(policy: draft.profile.outputPolicy) { policy in
-          applyDraftChange { try draft.settingOutputPolicy(policy) }
+        if width < ProfilePresentationPolicy.compactNavigationWidth {
+          VStack(alignment: .leading, spacing: 4) { profileFacts }
+        } else {
+          HStack(spacing: 10) { profileFacts }
         }
         if showingConflict {
           ConflictBanner(
@@ -295,60 +225,152 @@
             keepEditing: { showingConflict = false }
           )
         }
-      }.padding(28)
+      }.padding(.horizontal, 28).padding(.vertical, 18)
     }
 
-    private var assignmentContent: some View {
+    @ViewBuilder
+    private var profileFacts: some View {
+      Text(RuntimePresentation.profileScopeLabel(draft.profile.applicationScope)).foregroundColor(
+        Color(NSColor.secondaryLabelColor)
+      )
+      Text(assignmentCountLabel(draft.profile.bindings.count)).foregroundColor(
+        Color(NSColor.secondaryLabelColor)
+      )
+      Text(activationLabel).foregroundColor(Color(NSColor.secondaryLabelColor))
+      saveStatusView
+    }
+
+    @ViewBuilder
+    private var primaryActivationAction: some View {
+      if profile.joyConPair == nil {
+        Button(
+          OJDLocalized.string(
+            isActive ? "common.deactivate" : "common.setActive",
+            fallback: isActive ? "Deactivate" : "Set active"
+          )
+        ) { isActive ? deactivateProfile() : activateProfile() }.disabled(isMutationActive)
+      }
+    }
+
+    private var profileActionMenu: some View {
+      Picker(
+        OJDLocalized.string("profiles.actions", fallback: "Profile actions"),
+        selection: Binding<ProfileEditorMenuAction?>(
+          get: { nil },
+          set: { action in if let action { performMenuAction(action) } }
+        )
+      ) {
+        Text(OJDLocalized.string("profiles.actions", fallback: "Profile actions")).tag(
+          Optional<ProfileEditorMenuAction>.none
+        )
+        ForEach(menuActions, id: \.self) { action in Text(action.title).tag(Optional(action)) }
+      }.pickerStyle(PopUpButtonPickerStyle()).labelsHidden().frame(width: 132)
+        .ojdAccessibilityLabel(OJDLocalized.string("profiles.actions", fallback: "Profile actions"))
+        .disabled(isMutationActive)
+    }
+
+    private func sectionNavigation(width: CGFloat) -> some View {
+      Group {
+        if ProfilePresentationPolicy.navigationStyle(for: width) == .segmented {
+          Picker(
+            OJDLocalized.string("profiles.editorSection", fallback: "Profile editor section"),
+            selection: $selectedSection
+          ) {
+            ForEach(ProfilePresentationPolicy.sectionOrder) { section in
+              Text(section.title).tag(section)
+            }
+          }.pickerStyle(SegmentedPickerStyle()).labelsHidden()
+        } else {
+          HStack {
+            Text(OJDLocalized.string("profiles.editorSection", fallback: "Section"))
+              .foregroundColor(Color(NSColor.secondaryLabelColor))
+            Picker("", selection: $selectedSection) {
+              ForEach(ProfilePresentationPolicy.sectionOrder) { section in
+                Text(section.title).tag(section)
+              }
+            }.labelsHidden().pickerStyle(PopUpButtonPickerStyle()).frame(maxWidth: .infinity)
+          }
+        }
+      }.padding(.horizontal, 28).padding(.vertical, 10).ojdAccessibilityLabel(
+        OJDLocalized.string("profiles.editorSection", fallback: "Profile editor section")
+      ).ojdAccessibilityValue(selectedSection.title)
+    }
+
+    private func editorContent(width: CGFloat) -> some View {
       ScrollView {
-        VStack(alignment: .leading, spacing: 18) {
-          HStack(alignment: .firstTextBaseline) {
-            Text(OJDLocalized.string("common.assignments", fallback: "Assignments")).font(.headline)
-            Spacer()
-            Button(OJDLocalized.string("common.addAssignment", fallback: "Add assignment")) {
-              activeSheet = .capture
-            }
+        sectionContent(assignmentLayout: ProfilePresentationPolicy.assignmentRowLayout(for: width))
+          .padding(28).frame(maxWidth: .infinity, alignment: .leading)
+      }
+    }
+
+    @ViewBuilder
+    private func sectionContent(assignmentLayout: ProfileAssignmentRowLayout) -> some View {
+      switch selectedSection {
+      case .assignments: assignmentsSection(rowLayout: assignmentLayout)
+      case .combinations:
+        ProfileCombinationsSection(
+          profile: draft.profile,
+          openSheet: { activeSheet = $0 },
+          removeChord: removeChord,
+          removeSequence: removeSequence
+        )
+      case .layers:
+        ProfileLayersSection(
+          profile: draft.profile,
+          openSheet: { activeSheet = $0 },
+          removeLayer: removeLayer,
+          removeBinding: removeLayerBinding
+        )
+      case .controller:
+        ProfileControllerSection(
+          profile: draft.profile,
+          openSheet: { activeSheet = $0 },
+          updateOutputPolicy: { policy in applyDraftChange { try draft.settingOutputPolicy(policy) }
+          },
+          updatePhysicalColor: { color in applyDraftChange { try draft.settingPhysicalColor(color) }
           }
-          if draft.profile.bindings.isEmpty {
-            EmptyStateView(
-              symbol: "plus.circle",
-              title: OJDLocalized.string("profiles.noAssignments", fallback: "No assignments yet"),
-              message: OJDLocalized.string(
-                "profiles.assignmentInstructions",
-                fallback:
-                  "Add a controller control, then choose its keyboard or pointer destination."
-              )
+        )
+      }
+    }
+
+    private func assignmentsSection(rowLayout: ProfileAssignmentRowLayout) -> some View {
+      VStack(alignment: .leading, spacing: 18) {
+        HStack(alignment: .firstTextBaseline) {
+          Text(OJDLocalized.string("common.assignments", fallback: "Assignments")).font(.headline)
+          Spacer()
+          Button(OJDLocalized.string("common.addAssignment", fallback: "Add assignment")) {
+            activeSheet = .capture
+          }
+        }
+        if draft.profile.bindings.isEmpty {
+          EmptyStateView(
+            symbol: "plus.circle",
+            title: OJDLocalized.string("profiles.noAssignments", fallback: "No assignments yet"),
+            message: OJDLocalized.string(
+              "profiles.assignmentInstructions",
+              fallback: "Add a controller control, then choose its keyboard or pointer destination."
             )
-          } else {
-            ForEach(bindingGroups, id: \.title) { group in
-              AssignmentGroupView(
-                title: group.title,
-                bindings: group.bindings,
-                draft: $draft,
-                isEditingDisabled: isEditingDisabled,
-                onRemove: removeBinding,
-                onError: { localError = $0 },
-                onAdjust: { activeSheet = .adjustment($0) },
-                onBehavior: { activeSheet = .behavior($0) },
-                onEditingStateChanged: {
-                  localError = nil
-                  saveError = nil
-                  reportEditingState()
-                }
-              )
-            }
-          }
-          if let error = draftError {
-            Text(error).foregroundColor(Color(NSColor.systemRed)).fixedSize(
-              horizontal: false,
-              vertical: true
-            ).ojdAccessibilityLabel(
-              OJDLocalized.string("profiles.assignmentError", fallback: "Assignment error")
+          )
+        } else {
+          ForEach(bindingGroups, id: \.title) { group in
+            AssignmentGroupView(
+              title: group.title,
+              bindings: group.bindings,
+              draft: $draft,
+              isEditingDisabled: isEditingDisabled,
+              onRemove: removeBinding,
+              onError: { localError = $0 },
+              onAdjust: { activeSheet = .adjustment($0) },
+              onBehavior: { activeSheet = .behavior($0) },
+              onEditingStateChanged: {
+                localError = nil
+                saveError = nil
+                reportEditingState()
+              },
+              rowLayout: rowLayout
             )
           }
-          chordSection
-          sequenceSection
-          layerSection
-        }.padding(28)
+        }
       }
     }
 
@@ -404,14 +426,12 @@
         get: { draft.profile.name },
         set: { newValue in
           guard !isEditingDisabled else { return }
-          draft = replacingName(newValue)
+          draft = draft.settingName(newValue)
           saveError = nil
           reportEditingState()
         }
       )
     }
-
-    private var draftError: String? { localError }
 
     private var bindingGroups: [BindingGroup] {
       let grouped = Dictionary(grouping: draft.profile.bindings) { profileSourceGroup($0.source) }
@@ -419,27 +439,6 @@
         guard let bindings = grouped[order.title], !bindings.isEmpty else { return nil }
         return BindingGroup(title: order.title, bindings: bindings)
       }
-    }
-
-    private func replacingName(_ name: String) -> RuntimeProfileDraft {
-      let value = RemappingProfile(
-        id: draft.profile.id,
-        name: name,
-        device: draft.profile.device,
-        applicationScope: draft.profile.applicationScope,
-        outputPolicy: draft.profile.outputPolicy,
-        motionTuning: draft.profile.motionTuning,
-        gyroOutput: draft.profile.gyroOutput,
-        joyConPair: draft.profile.joyConPair,
-        stickMappings: draft.profile.stickMappings,
-        triggerMappings: draft.profile.triggerMappings,
-        touchMappings: draft.profile.touchMappings,
-        bindings: draft.profile.bindings,
-        chords: draft.profile.chords,
-        sequences: draft.profile.sequences,
-        layers: draft.profile.layers
-      )
-      return RuntimeProfileDraft(profile: value)
     }
 
     private func addBinding(source: RemappingSource, destination: RemappingDestination) {
@@ -476,6 +475,75 @@
       localError = nil
       saveError = nil
       reportEditingState()
+    }
+
+    private var activationLabel: String {
+      if profile.joyConPair != nil {
+        return OJDLocalized.string("profiles.joyConSessionState", fallback: "Explicit pairing")
+      }
+      return OJDLocalized.string(
+        isActive ? "profiles.active" : "profiles.notActive",
+        fallback: isActive ? "Active" : "Not active"
+      )
+    }
+
+    private func assignmentCountLabel(_ count: Int) -> String {
+      OJDLocalized.plural("profiles.assignments", count: count, fallback: "%d assignments")
+    }
+
+    private var menuActions: [ProfileEditorMenuAction] {
+      var actions: [ProfileEditorMenuAction] = [.duplicate, .export, .details]
+      if isActive, profile.joyConPair == nil { actions.append(.deactivateAll) }
+      return actions
+    }
+
+    private func performMenuAction(_ action: ProfileEditorMenuAction) {
+      switch action {
+      case .duplicate: duplicateProfile()
+      case .export:
+        do { onExport(try draft.validatedProfile()) } catch {
+          localError = RuntimePresentation.userFacingError(error)
+        }
+      case .details: activeSheet = .metadata
+      case .deactivateAll: deactivateAllProfiles()
+      }
+    }
+
+    private func activateProfile() {
+      guard !isMutationActive else { return }
+      let request = RuntimeMutationRequest(operation: .activate(profileID: profile.id))
+      guard onMutationStarted(request) else { return }
+      Task { @MainActor in
+        let result = await viewModel.activateRemappingProfile(id: profile.id, request: request)
+        onMutationResult(result)
+      }
+    }
+
+    private func deactivateProfile() {
+      guard !isMutationActive else { return }
+      let request = RuntimeMutationRequest(operation: .deactivate(profileID: profile.id))
+      guard onMutationStarted(request) else { return }
+      Task { @MainActor in
+        let result = await viewModel.deactivateRemappingProfile(
+          profileID: profile.id,
+          request: request
+        )
+        onMutationResult(result)
+      }
+    }
+
+    private func deactivateAllProfiles() {
+      guard !isMutationActive else { return }
+      let request = RuntimeMutationRequest(operation: .deactivate(profileID: nil))
+      guard onMutationStarted(request) else { return }
+      Task { @MainActor in
+        let result = await viewModel.deactivateRemappingProfile(
+          vendorID: profile.device.vendorID,
+          productID: profile.device.productID,
+          request: request
+        )
+        onMutationResult(result)
+      }
     }
 
     private func addChord(
@@ -553,139 +621,6 @@
         saveError = nil
         reportEditingState()
       } catch { localError = RuntimePresentation.userFacingError(error) }
-    }
-
-    private var chordSection: some View {
-      VStack(alignment: .leading, spacing: 10) {
-        Divider()
-        HStack {
-          Text(OJDLocalized.string("profiles.chords", fallback: "Chords")).font(.headline)
-          Spacer()
-          Button(OJDLocalized.string("profiles.addChord", fallback: "Add chord")) {
-            activeSheet = .chord
-          }
-        }
-        if draft.profile.chords.isEmpty {
-          Text(OJDLocalized.string("profiles.noChords", fallback: "No chords configured."))
-            .foregroundColor(Color(NSColor.secondaryLabelColor))
-        } else {
-          ForEach(draft.profile.chords) { chord in
-            HStack {
-              Text(
-                chord.sources.map(RuntimePresentation.sourceLabel).sorted().joined(separator: " + ")
-              )
-              OJDSystemSymbol(name: "arrow.right", fallback: "->")
-              KeyboardDestinationLabel(destination: chord.destination)
-              Spacer()
-              removeButton { removeChord(chord.id) }
-            }
-          }
-        }
-      }
-    }
-
-    private var sequenceSection: some View {
-      VStack(alignment: .leading, spacing: 10) {
-        Divider()
-        HStack {
-          Text(OJDLocalized.string("profiles.sequences", fallback: "Sequences")).font(.headline)
-          Spacer()
-          Button(OJDLocalized.string("profiles.addSequence", fallback: "Add sequence")) {
-            activeSheet = .sequence
-          }
-        }
-        if draft.profile.sequences.isEmpty {
-          Text(OJDLocalized.string("profiles.noSequences", fallback: "No sequences configured."))
-            .foregroundColor(Color(NSColor.secondaryLabelColor))
-        } else {
-          ForEach(draft.profile.sequences) { sequence in
-            HStack {
-              Text(sequence.sources.map(RuntimePresentation.sourceLabel).joined(separator: " -> "))
-              Text(String(format: "(%.0f ms)", sequence.windowMs)).foregroundColor(
-                Color(NSColor.secondaryLabelColor)
-              )
-              OJDSystemSymbol(name: "arrow.right", fallback: "->")
-              KeyboardDestinationLabel(destination: sequence.destination)
-              Spacer()
-              removeButton { removeSequence(sequence.id) }
-            }
-          }
-        }
-      }
-    }
-
-    private var layerSection: some View {
-      VStack(alignment: .leading, spacing: 10) {
-        Divider()
-        HStack {
-          Text(OJDLocalized.string("profiles.layers", fallback: "Layers")).font(.headline)
-          Spacer()
-          Button(OJDLocalized.string("profiles.addLayer", fallback: "Add layer")) {
-            activeSheet = .layer
-          }
-        }
-        if draft.profile.layers.isEmpty {
-          Text(OJDLocalized.string("profiles.noLayers", fallback: "No layers configured."))
-            .foregroundColor(Color(NSColor.secondaryLabelColor))
-        } else {
-          ForEach(draft.profile.layers) { layer in
-            GroupBox {
-              VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                  VStack(alignment: .leading, spacing: 2) {
-                    Text(layer.name).font(.subheadline.weight(.semibold))
-                    Text(layerDescription(layer)).font(.caption).foregroundColor(
-                      Color(NSColor.secondaryLabelColor)
-                    )
-                  }
-                  Spacer()
-                  Button(OJDLocalized.string("common.addAssignment", fallback: "Add assignment")) {
-                    activeSheet = .layerBinding(layer)
-                  }
-                  Button(OJDLocalized.string("profiles.motion.title", fallback: "Motion tuning")) {
-                    activeSheet = .layerMotion(layer)
-                  }
-                  removeButton { removeLayer(layer.id) }
-                }
-                ForEach(layer.bindings) { binding in
-                  HStack {
-                    Text(RuntimePresentation.sourceLabel(binding.source))
-                    OJDSystemSymbol(name: "arrow.right", fallback: "->")
-                    KeyboardDestinationLabel(destination: binding.destination)
-                    Spacer()
-                    if binding.axisTuning != nil {
-                      Button(OJDLocalized.string("common.adjust", fallback: "Adjust...")) {
-                        activeSheet = .layerAdjustment(layer.id, binding)
-                      }
-                    }
-                    Button(OJDLocalized.string("profiles.behavior", fallback: "Behavior...")) {
-                      activeSheet = .layerBehavior(layer.id, binding)
-                    }
-                    removeButton { removeLayerBinding(layerID: layer.id, bindingID: binding.id) }
-                  }
-                }
-              }.padding(4)
-            }
-          }
-        }
-      }
-    }
-
-    private func layerDescription(_ layer: RemappingLayer) -> String {
-      let mode =
-        layer.activationMode == .hold
-        ? OJDLocalized.string("profiles.hold", fallback: "Hold")
-        : OJDLocalized.string("profiles.toggle", fallback: "Toggle")
-      return "\(mode): \(RuntimePresentation.sourceLabel(layer.activator))"
-    }
-
-    private func removeButton(action: @escaping () -> Void) -> some View {
-      Button(action: action) {
-        OJDSystemSymbol(name: "minus.circle", fallback: "Remove").frame(minWidth: 28, minHeight: 28)
-          .contentShape(Rectangle())
-      }.buttonStyle(BorderlessButtonStyle()).ojdAccessibilityLabel(
-        OJDLocalized.string("common.remove", fallback: "Remove")
-      )
     }
 
     private func save() {
@@ -794,6 +729,23 @@
     private var pendingUpdateOperation: RuntimeMutationOperation? { saveState.operation }
 
     private var pendingUpdateMutationID: UUID? { saveState.mutationID }
+  }
+
+  private enum ProfileEditorMenuAction: Hashable {
+    case duplicate
+    case export
+    case details
+    case deactivateAll
+
+    var title: String {
+      switch self {
+      case .duplicate: return OJDLocalized.string("common.duplicate", fallback: "Duplicate")
+      case .export: return OJDLocalized.string("profiles.export", fallback: "Export")
+      case .details: return OJDLocalized.string("profiles.details", fallback: "Details")
+      case .deactivateAll:
+        return OJDLocalized.string("profiles.deactivateController", fallback: "Deactivate all")
+      }
+    }
   }
 
 #endif

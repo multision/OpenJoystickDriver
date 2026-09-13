@@ -147,6 +147,13 @@
 "controllers.emptyMessage" = "Συνδέστε ένα χειριστήριο και έπειτα επιλέξτε «Ανανέωση».";
 "controllers.label" = "Χειριστήριο";
 "controllers.notReported" = "Δεν αναφέρθηκε";
+"controllers.battery" = "Μπαταρία";
+"controllers.chargingState" = "Κατάσταση φόρτισης";
+"controllers.cableState" = "Κατάσταση καλωδίου";
+"controllers.discharging" = "Εκφόρτιση";
+"controllers.charging" = "Φόρτιση";
+"controllers.batteryFull" = "Πλήρης";
+"controllers.batteryAccessibilityDetails" = "Μπαταρία: %@. Κατάσταση φόρτισης: %@. Κατάσταση καλωδίου: %@.";
 "controllers.activeProfile" = "Ενεργό προφίλ";
 "controllers.profileChecking" = "Έλεγχος…";
 "controllers.profileNone" = "Κανένα";
@@ -906,6 +913,9 @@
 "inputTest.start" = "Start Input Test";
 "inputTest.starting" = "Starting…";
 "inputTest.status" = "Input test status";
+"inputTest.tabInput" = "Ζωντανή είσοδος";
+"inputTest.tabMotion" = "Motion";
+"inputTest.tabOutput" = "Output";
 "inputTest.steamButton" = "Κουμπί Steam";
 "inputTest.summary" = "Test buttons, sticks, triggers, rumble, and controller lighting.";
 "inputTest.testRumble" = "Test Rumble";
@@ -988,6 +998,9 @@
 "profiles.virtualMapped" = "Μόνο επανααντιστοιχισμένα στοιχεία ελέγχου";
 "profiles.virtualPassthrough" = "Συμπερίληψη μη επανααντιστοιχισμένων στοιχείων";
 "profiles.exclusiveInput" = "Απαίτηση αποκλειστικής πρόσβασης στη φυσική είσοδο";
+"profiles.actions" = "Profile actions";
+"profiles.editorSection" = "Profile editor section";
+"profiles.combinations" = "Combinations";
 "cli.mapping.output_policy_invalid" = "--virtual-gamepad: disabled|mapped|passthrough\n--physical-input: shared|exclusive";
 
 "profiles.tapOnPress" = "Σύντομο πάτημα κατά την πίεση";

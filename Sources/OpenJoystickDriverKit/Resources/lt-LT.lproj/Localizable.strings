@@ -147,6 +147,13 @@
 "controllers.emptyMessage" = "Prijunkite valdiklį, tada pasirinkite Atnaujinti.";
 "controllers.label" = "Valdiklis";
 "controllers.notReported" = "Nepranešta";
+"controllers.battery" = "Baterija";
+"controllers.chargingState" = "Įkrovimo būsena";
+"controllers.cableState" = "Kabelio būsena";
+"controllers.discharging" = "Išsikrauna";
+"controllers.charging" = "Įkraunama";
+"controllers.batteryFull" = "Pilna";
+"controllers.batteryAccessibilityDetails" = "Baterija: %@. Įkrovimo būsena: %@. Kabelio būsena: %@.";
 "controllers.activeProfile" = "Aktyvus profilis";
 "controllers.profileChecking" = "Tikrinama…";
 "controllers.profileNone" = "Nėra";
@@ -906,6 +913,9 @@
 "inputTest.start" = "Start Input Test";
 "inputTest.starting" = "Starting…";
 "inputTest.status" = "Input test status";
+"inputTest.tabInput" = "Tiesioginė įvestis";
+"inputTest.tabMotion" = "Motion";
+"inputTest.tabOutput" = "Output";
 "inputTest.steamButton" = "Steam mygtukas";
 "inputTest.summary" = "Test buttons, sticks, triggers, rumble, and controller lighting.";
 "inputTest.testRumble" = "Test Rumble";
@@ -988,6 +998,9 @@
 "profiles.virtualMapped" = "Tik iš naujo priskirti valdikliai";
 "profiles.virtualPassthrough" = "Įtraukti nepriskirtus valdiklius";
 "profiles.exclusiveInput" = "Reikalauti išskirtinės prieigos prie fizinės įvesties";
+"profiles.actions" = "Profile actions";
+"profiles.editorSection" = "Profile editor section";
+"profiles.combinations" = "Combinations";
 "cli.mapping.output_policy_invalid" = "--virtual-gamepad: disabled|mapped|passthrough\n--physical-input: shared|exclusive";
 
 "profiles.tapOnPress" = "Trumpas paspaudimas nuspaudus";

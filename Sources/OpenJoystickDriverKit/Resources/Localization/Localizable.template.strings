@@ -149,6 +149,13 @@
 "controllers.emptyMessage" = "Connect a controller, then choose Refresh.";
 "controllers.label" = "Controller";
 "controllers.notReported" = "Not reported";
+"controllers.battery" = "Battery";
+"controllers.chargingState" = "Charging state";
+"controllers.cableState" = "Cable state";
+"controllers.discharging" = "Discharging";
+"controllers.charging" = "Charging";
+"controllers.batteryFull" = "Full";
+"controllers.batteryAccessibilityDetails" = "Battery: %@. Charging state: %@. Cable state: %@.";
 "controllers.activeProfile" = "Active profile";
 "controllers.profileChecking" = "Checking...";
 "controllers.profileNone" = "None";
@@ -908,6 +915,9 @@
 "inputTest.start" = "Start Input Test";
 "inputTest.starting" = "Starting...";
 "inputTest.status" = "Input test status";
+"inputTest.tabInput" = "Input";
+"inputTest.tabMotion" = "Motion";
+"inputTest.tabOutput" = "Output";
 "inputTest.steamButton" = "Steam button";
 "inputTest.summary" = "Test buttons, sticks, triggers, rumble, and controller lighting.";
 "inputTest.testRumble" = "Test Rumble";
@@ -991,6 +1001,9 @@
 "profiles.virtualMapped" = "Mapped controls only";
 "profiles.virtualPassthrough" = "Include unmapped controls";
 "profiles.exclusiveInput" = "Require exclusive physical input";
+"profiles.actions" = "Profile actions";
+"profiles.editorSection" = "Profile editor section";
+"profiles.combinations" = "Combinations";
 "cli.mapping.output_policy_invalid" = "--virtual-gamepad: disabled|mapped|passthrough\n--physical-input: shared|exclusive";
 
 "profiles.tapOnPress" = "Tap on press";

@@ -147,6 +147,13 @@
 "controllers.emptyMessage" = "Anslut en kontroll och välj sedan “Uppdatera”.";
 "controllers.label" = "Kontroll";
 "controllers.notReported" = "Inte rapporterad";
+"controllers.battery" = "Batteri";
+"controllers.chargingState" = "Laddningsstatus";
+"controllers.cableState" = "Kabelstatus";
+"controllers.discharging" = "Laddas ur";
+"controllers.charging" = "Laddar";
+"controllers.batteryFull" = "Fulladdat";
+"controllers.batteryAccessibilityDetails" = "Batteri: %@. Laddningsstatus: %@. Kabelstatus: %@.";
 "controllers.activeProfile" = "Aktiv profil";
 "controllers.profileChecking" = "Kontrollerar…";
 "controllers.profileNone" = "Ingen";
@@ -906,6 +913,9 @@
 "inputTest.start" = "Start Input Test";
 "inputTest.starting" = "Starting…";
 "inputTest.status" = "Input test status";
+"inputTest.tabInput" = "Liveinmatning";
+"inputTest.tabMotion" = "Motion";
+"inputTest.tabOutput" = "Output";
 "inputTest.steamButton" = "Steam-knapp";
 "inputTest.summary" = "Test buttons, sticks, triggers, rumble, and controller lighting.";
 "inputTest.testRumble" = "Test Rumble";
@@ -988,6 +998,9 @@
 "profiles.virtualMapped" = "Endast ommappade kontroller";
 "profiles.virtualPassthrough" = "Inkludera kontroller utan ommappning";
 "profiles.exclusiveInput" = "Kräv exklusiv åtkomst till fysisk inmatning";
+"profiles.actions" = "Profile actions";
+"profiles.editorSection" = "Profile editor section";
+"profiles.combinations" = "Combinations";
 "cli.mapping.output_policy_invalid" = "--virtual-gamepad: disabled|mapped|passthrough\n--physical-input: shared|exclusive";
 
 "profiles.tapOnPress" = "Tryck vid nedtryckning";

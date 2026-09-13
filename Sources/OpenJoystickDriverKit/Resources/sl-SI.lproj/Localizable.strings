@@ -147,6 +147,13 @@
 "controllers.emptyMessage" = "Priključite krmilnik, nato izberite „Osveži“.";
 "controllers.label" = "Krmilnik";
 "controllers.notReported" = "Ni sporočeno";
+"controllers.battery" = "Baterija";
+"controllers.chargingState" = "Stanje polnjenja";
+"controllers.cableState" = "Stanje kabla";
+"controllers.discharging" = "Praznjenje";
+"controllers.charging" = "Polnjenje";
+"controllers.batteryFull" = "Polna";
+"controllers.batteryAccessibilityDetails" = "Baterija: %@. Stanje polnjenja: %@. Stanje kabla: %@.";
 "controllers.activeProfile" = "Aktivni profil";
 "controllers.profileChecking" = "Preverjanje…";
 "controllers.profileNone" = "Brez";
@@ -906,6 +913,9 @@
 "inputTest.start" = "Start Input Test";
 "inputTest.starting" = "Starting…";
 "inputTest.status" = "Input test status";
+"inputTest.tabInput" = "Vhod v živo";
+"inputTest.tabMotion" = "Motion";
+"inputTest.tabOutput" = "Output";
 "inputTest.steamButton" = "Gumb Steam";
 "inputTest.summary" = "Test buttons, sticks, triggers, rumble, and controller lighting.";
 "inputTest.testRumble" = "Test Rumble";
@@ -988,6 +998,9 @@
 "profiles.virtualMapped" = "Samo preslikani kontrolniki";
 "profiles.virtualPassthrough" = "Vključi nepreslikane kontrolnike";
 "profiles.exclusiveInput" = "Zahtevaj izključni dostop do fizičnega vnosa";
+"profiles.actions" = "Profile actions";
+"profiles.editorSection" = "Profile editor section";
+"profiles.combinations" = "Combinations";
 "cli.mapping.output_policy_invalid" = "--virtual-gamepad: disabled|mapped|passthrough\n--physical-input: shared|exclusive";
 
 "profiles.tapOnPress" = "Kratek pritisk ob pritisku";

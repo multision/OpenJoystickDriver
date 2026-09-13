@@ -147,6 +147,13 @@
 "controllers.emptyMessage" = "Удирдлага холбоод Сэргээхийг сонгоно уу.";
 "controllers.label" = "Удирдлага";
 "controllers.notReported" = "Мэдээлээгүй";
+"controllers.battery" = "Батарей";
+"controllers.chargingState" = "Цэнэглэх төлөв";
+"controllers.cableState" = "Кабелийн төлөв";
+"controllers.discharging" = "Цэнэг дуусаж байна";
+"controllers.charging" = "Цэнэглэж байна";
+"controllers.batteryFull" = "Дүүрэн";
+"controllers.batteryAccessibilityDetails" = "Батарей: %@. Цэнэглэх төлөв: %@. Кабелийн төлөв: %@.";
 "controllers.activeProfile" = "Идэвхтэй профайл";
 "controllers.profileChecking" = "Шалгаж байна…";
 "controllers.profileNone" = "Байхгүй";
@@ -906,6 +913,9 @@
 "inputTest.start" = "Start Input Test";
 "inputTest.starting" = "Starting…";
 "inputTest.status" = "Input test status";
+"inputTest.tabInput" = "Шууд оролт";
+"inputTest.tabMotion" = "Motion";
+"inputTest.tabOutput" = "Output";
 "inputTest.steamButton" = "Steam товч";
 "inputTest.summary" = "Test buttons, sticks, triggers, rumble, and controller lighting.";
 "inputTest.testRumble" = "Test Rumble";
@@ -988,6 +998,9 @@
 "profiles.virtualMapped" = "Зөвхөн дахин оноосон удирдлагууд";
 "profiles.virtualPassthrough" = "Дахин оноогоогүй удирдлагуудыг оруулах";
 "profiles.exclusiveInput" = "Физик оролтод онцгой хандалт шаардах";
+"profiles.actions" = "Profile actions";
+"profiles.editorSection" = "Profile editor section";
+"profiles.combinations" = "Combinations";
 "cli.mapping.output_policy_invalid" = "--virtual-gamepad: disabled|mapped|passthrough\n--physical-input: shared|exclusive";
 
 "profiles.tapOnPress" = "Дарах үед товших";

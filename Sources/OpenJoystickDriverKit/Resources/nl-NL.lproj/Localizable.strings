@@ -147,6 +147,13 @@
 "controllers.emptyMessage" = "Sluit een controller aan en kies daarna “Vernieuwen”.";
 "controllers.label" = "Controller";
 "controllers.notReported" = "Niet gemeld";
+"controllers.battery" = "Batterij";
+"controllers.chargingState" = "Oplaadstatus";
+"controllers.cableState" = "Kabelstatus";
+"controllers.discharging" = "Wordt ontladen";
+"controllers.charging" = "Wordt opgeladen";
+"controllers.batteryFull" = "Vol";
+"controllers.batteryAccessibilityDetails" = "Batterij: %@. Oplaadstatus: %@. Kabelstatus: %@.";
 "controllers.activeProfile" = "Actief profiel";
 "controllers.profileChecking" = "Controleren…";
 "controllers.profileNone" = "Geen";
@@ -906,6 +913,9 @@
 "inputTest.start" = "Start invoertest";
 "inputTest.starting" = "Starting…";
 "inputTest.status" = "Input test status";
+"inputTest.tabInput" = "Live-invoer";
+"inputTest.tabMotion" = "Motion";
+"inputTest.tabOutput" = "Output";
 "inputTest.steamButton" = "Steam-knop";
 "inputTest.summary" = "Test knoppen, sticks, triggers, rumble en controllerverlichting.";
 "inputTest.testRumble" = "Test Rumble";
@@ -988,6 +998,9 @@
 "profiles.virtualMapped" = "Alleen opnieuw toegewezen bedieningselementen";
 "profiles.virtualPassthrough" = "Niet opnieuw toegewezen bedieningselementen opnemen";
 "profiles.exclusiveInput" = "Exclusieve toegang tot fysieke invoer vereisen";
+"profiles.actions" = "Profile actions";
+"profiles.editorSection" = "Profile editor section";
+"profiles.combinations" = "Combinations";
 "cli.mapping.output_policy_invalid" = "--virtual-gamepad: disabled|mapped|passthrough\n--physical-input: shared|exclusive";
 
 "profiles.tapOnPress" = "Tikken bij indrukken";

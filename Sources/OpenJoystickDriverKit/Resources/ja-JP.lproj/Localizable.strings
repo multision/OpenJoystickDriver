@@ -147,6 +147,13 @@
 "controllers.emptyMessage" = "コントローラを接続してから「更新」を選択してください。";
 "controllers.label" = "コントローラ";
 "controllers.notReported" = "未報告";
+"controllers.battery" = "バッテリー";
+"controllers.chargingState" = "充電状態";
+"controllers.cableState" = "ケーブルの状態";
+"controllers.discharging" = "放電中";
+"controllers.charging" = "充電中";
+"controllers.batteryFull" = "満充電";
+"controllers.batteryAccessibilityDetails" = "バッテリー：%@。充電状態：%@。ケーブルの状態：%@。";
 "controllers.activeProfile" = "アクティブなプロファイル";
 "controllers.profileChecking" = "確認中…";
 "controllers.profileNone" = "なし";
@@ -906,6 +913,9 @@
 "inputTest.start" = "入力テストを開始";
 "inputTest.starting" = "開始中…";
 "inputTest.status" = "入力テストの状態";
+"inputTest.tabInput" = "ライブ入力";
+"inputTest.tabMotion" = "Motion";
+"inputTest.tabOutput" = "出力";
 "inputTest.steamButton" = "Steamボタン";
 "inputTest.summary" = "ボタン、スティック、トリガー、振動、コントローラのライティングをテストします。";
 "inputTest.testRumble" = "振動をテスト";
@@ -988,6 +998,9 @@
 "profiles.virtualMapped" = "再割り当てした操作のみ";
 "profiles.virtualPassthrough" = "再割り当てしていない操作を含める";
 "profiles.exclusiveInput" = "物理入力への排他的アクセスを必須にする";
+"profiles.actions" = "プロファイルの操作";
+"profiles.editorSection" = "プロファイル編集セクション";
+"profiles.combinations" = "組み合わせ";
 "cli.mapping.output_policy_invalid" = "--virtual-gamepad: disabled|mapped|passthrough\n--physical-input: shared|exclusive";
 
 "profiles.tapOnPress" = "押したときにタップ";

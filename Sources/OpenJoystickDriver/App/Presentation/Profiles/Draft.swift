@@ -151,6 +151,7 @@ struct RuntimeProfileDraft: Sendable, Equatable {
       device: profile.device,
       applicationScope: profile.applicationScope,
       outputPolicy: outputPolicy,
+      physicalColor: profile.physicalColor,
       motionTuning: profile.motionTuning,
       gyroOutput: profile.gyroOutput,
       joyConPair: profile.joyConPair,
@@ -163,6 +164,51 @@ struct RuntimeProfileDraft: Sendable, Equatable {
       layers: profile.layers
     )
     return Self(profile: try Self.validate(candidate))
+  }
+
+  func settingPhysicalColor(_ physicalColor: RemappingPhysicalColor?) throws -> Self {
+    let candidate = RemappingProfile(
+      id: profile.id,
+      name: profile.name,
+      device: profile.device,
+      applicationScope: profile.applicationScope,
+      outputPolicy: profile.outputPolicy,
+      physicalColor: physicalColor,
+      motionTuning: profile.motionTuning,
+      gyroOutput: profile.gyroOutput,
+      joyConPair: profile.joyConPair,
+      stickMappings: profile.stickMappings,
+      triggerMappings: profile.triggerMappings,
+      touchMappings: profile.touchMappings,
+      bindings: profile.bindings,
+      chords: profile.chords,
+      sequences: profile.sequences,
+      layers: profile.layers
+    )
+    return Self(profile: try Self.validate(candidate))
+  }
+
+  func settingName(_ name: String) -> Self {
+    Self(
+      profile: RemappingProfile(
+        id: profile.id,
+        name: name,
+        device: profile.device,
+        applicationScope: profile.applicationScope,
+        outputPolicy: profile.outputPolicy,
+        physicalColor: profile.physicalColor,
+        motionTuning: profile.motionTuning,
+        gyroOutput: profile.gyroOutput,
+        joyConPair: profile.joyConPair,
+        stickMappings: profile.stickMappings,
+        triggerMappings: profile.triggerMappings,
+        touchMappings: profile.touchMappings,
+        bindings: profile.bindings,
+        chords: profile.chords,
+        sequences: profile.sequences,
+        layers: profile.layers
+      )
+    )
   }
 
   func settingLayerMotionTuning(_ tuning: RemappingMotionTuning?, for layerID: UUID) throws -> Self
@@ -188,6 +234,7 @@ struct RuntimeProfileDraft: Sendable, Equatable {
       device: profile.device,
       applicationScope: profile.applicationScope,
       outputPolicy: profile.outputPolicy,
+      physicalColor: profile.physicalColor,
       motionTuning: profile.motionTuning,
       gyroOutput: profile.gyroOutput,
       joyConPair: profile.joyConPair,
@@ -209,6 +256,7 @@ struct RuntimeProfileDraft: Sendable, Equatable {
       device: profile.device,
       applicationScope: profile.applicationScope,
       outputPolicy: profile.outputPolicy,
+      physicalColor: profile.physicalColor,
       motionTuning: profile.motionTuning,
       gyroOutput: profile.gyroOutput,
       joyConPair: profile.joyConPair,
@@ -230,6 +278,7 @@ struct RuntimeProfileDraft: Sendable, Equatable {
       device: profile.device,
       applicationScope: profile.applicationScope,
       outputPolicy: profile.outputPolicy,
+      physicalColor: profile.physicalColor,
       motionTuning: profile.motionTuning,
       gyroOutput: profile.gyroOutput,
       joyConPair: profile.joyConPair,
@@ -251,6 +300,7 @@ struct RuntimeProfileDraft: Sendable, Equatable {
       device: profile.device,
       applicationScope: profile.applicationScope,
       outputPolicy: profile.outputPolicy,
+      physicalColor: profile.physicalColor,
       motionTuning: profile.motionTuning,
       gyroOutput: profile.gyroOutput,
       joyConPair: profile.joyConPair,
@@ -275,6 +325,7 @@ struct RuntimeProfileDraft: Sendable, Equatable {
       device: profile.device,
       applicationScope: profile.applicationScope,
       outputPolicy: profile.outputPolicy,
+      physicalColor: profile.physicalColor,
       motionTuning: tuning,
       gyroOutput: gyroOutput ?? profile.gyroOutput,
       joyConPair: profile.joyConPair,
@@ -403,6 +454,7 @@ struct RuntimeProfileDraft: Sendable, Equatable {
       device: profile.device,
       applicationScope: profile.applicationScope,
       outputPolicy: profile.outputPolicy,
+      physicalColor: profile.physicalColor,
       motionTuning: profile.motionTuning,
       gyroOutput: profile.gyroOutput,
       joyConPair: profile.joyConPair,
@@ -428,6 +480,7 @@ struct RuntimeProfileDraft: Sendable, Equatable {
       device: profile.device,
       applicationScope: profile.applicationScope,
       outputPolicy: profile.outputPolicy,
+      physicalColor: profile.physicalColor,
       motionTuning: profile.motionTuning,
       gyroOutput: profile.gyroOutput,
       joyConPair: profile.joyConPair,
@@ -653,6 +706,7 @@ struct RuntimeProfileDraft: Sendable, Equatable {
       device: profile.device,
       applicationScope: profile.applicationScope,
       outputPolicy: profile.outputPolicy,
+      physicalColor: profile.physicalColor,
       motionTuning: profile.motionTuning,
       gyroOutput: profile.gyroOutput,
       joyConPair: profile.joyConPair,
@@ -682,6 +736,7 @@ struct RuntimeProfileDraft: Sendable, Equatable {
       device: device ?? profile.device,
       applicationScope: applicationScope ?? profile.applicationScope,
       outputPolicy: profile.outputPolicy,
+      physicalColor: profile.physicalColor,
       motionTuning: profile.motionTuning,
       gyroOutput: profile.gyroOutput,
       joyConPair: profile.joyConPair,

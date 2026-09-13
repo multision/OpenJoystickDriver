@@ -147,6 +147,13 @@
 "controllers.emptyMessage" = "컨트롤러를 연결한 다음 “새로 고침”을 선택하십시오.";
 "controllers.label" = "컨트롤러";
 "controllers.notReported" = "보고되지 않음";
+"controllers.battery" = "배터리";
+"controllers.chargingState" = "충전 상태";
+"controllers.cableState" = "케이블 상태";
+"controllers.discharging" = "방전 중";
+"controllers.charging" = "충전 중";
+"controllers.batteryFull" = "완충";
+"controllers.batteryAccessibilityDetails" = "배터리: %@. 충전 상태: %@. 케이블 상태: %@.";
 "controllers.activeProfile" = "활성 프로파일";
 "controllers.profileChecking" = "확인 중…";
 "controllers.profileNone" = "없음";
@@ -906,6 +913,9 @@
 "inputTest.start" = "입력 테스트 시작";
 "inputTest.starting" = "Starting…";
 "inputTest.status" = "Input test status";
+"inputTest.tabInput" = "실시간 입력";
+"inputTest.tabMotion" = "Motion";
+"inputTest.tabOutput" = "Output";
 "inputTest.steamButton" = "Steam 버튼";
 "inputTest.summary" = "버튼, 스틱, 트리거, 진동 및 컨트롤러 조명을 테스트합니다.";
 "inputTest.testRumble" = "Test Rumble";
@@ -988,6 +998,9 @@
 "profiles.virtualMapped" = "재할당된 컨트롤만";
 "profiles.virtualPassthrough" = "재할당되지 않은 컨트롤 포함";
 "profiles.exclusiveInput" = "물리적 입력에 대한 독점 접근 요구";
+"profiles.actions" = "Profile actions";
+"profiles.editorSection" = "Profile editor section";
+"profiles.combinations" = "Combinations";
 "cli.mapping.output_policy_invalid" = "--virtual-gamepad: disabled|mapped|passthrough\n--physical-input: shared|exclusive";
 
 "profiles.tapOnPress" = "누를 때 탭";

@@ -147,6 +147,13 @@
 "controllers.emptyMessage" = "Підключіть контролер, затем виберіть «Оновити».";
 "controllers.label" = "Контролер";
 "controllers.notReported" = "Не указано";
+"controllers.battery" = "Акумулятор";
+"controllers.chargingState" = "Стан заряджання";
+"controllers.cableState" = "Стан кабелю";
+"controllers.discharging" = "Розряджається";
+"controllers.charging" = "Заряджається";
+"controllers.batteryFull" = "Повний заряд";
+"controllers.batteryAccessibilityDetails" = "Акумулятор: %@. Стан заряджання: %@. Стан кабелю: %@.";
 "controllers.activeProfile" = "Активний профіль";
 "controllers.profileChecking" = "Перевірка…";
 "controllers.profileNone" = "Немає";
@@ -906,6 +913,9 @@
 "inputTest.start" = "Start Input Test";
 "inputTest.starting" = "Starting…";
 "inputTest.status" = "Input test status";
+"inputTest.tabInput" = "Ввод у реальному часі";
+"inputTest.tabMotion" = "Motion";
+"inputTest.tabOutput" = "Output";
 "inputTest.steamButton" = "Кнопка Steam";
 "inputTest.summary" = "Test buttons, sticks, triggers, rumble, and controller lighting.";
 "inputTest.testRumble" = "Test Rumble";
@@ -988,6 +998,9 @@
 "profiles.virtualMapped" = "Лише перепризначені елементи керування";
 "profiles.virtualPassthrough" = "Включати неперепризначені елементи";
 "profiles.exclusiveInput" = "Вимагати виключний доступ до фізичного введення";
+"profiles.actions" = "Profile actions";
+"profiles.editorSection" = "Profile editor section";
+"profiles.combinations" = "Combinations";
 "cli.mapping.output_policy_invalid" = "--virtual-gamepad: disabled|mapped|passthrough\n--physical-input: shared|exclusive";
 
 "profiles.tapOnPress" = "Коротке натискання під час натискання";

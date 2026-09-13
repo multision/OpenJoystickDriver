@@ -147,6 +147,13 @@
 "controllers.emptyMessage" = "कंट्रोलर कनेक्ट करें, फिर “रीफ़्रेश करें” चुनें।";
 "controllers.label" = "कंट्रोलर";
 "controllers.notReported" = "रिपोर्ट नहीं किया गया";
+"controllers.battery" = "बैटरी";
+"controllers.chargingState" = "चार्जिंग स्थिति";
+"controllers.cableState" = "केबल स्थिति";
+"controllers.discharging" = "डिस्चार्ज हो रही है";
+"controllers.charging" = "चार्ज हो रही है";
+"controllers.batteryFull" = "पूरी तरह चार्ज";
+"controllers.batteryAccessibilityDetails" = "बैटरी: %@। चार्जिंग स्थिति: %@। केबल स्थिति: %@।";
 "controllers.activeProfile" = "सक्रिय प्रोफ़ाइल";
 "controllers.profileChecking" = "जाँच हो रही है…";
 "controllers.profileNone" = "कोई नहीं";
@@ -906,6 +913,9 @@
 "inputTest.start" = "Start Input Test";
 "inputTest.starting" = "Starting…";
 "inputTest.status" = "Input test status";
+"inputTest.tabInput" = "लाइव इनपुट";
+"inputTest.tabMotion" = "Motion";
+"inputTest.tabOutput" = "Output";
 "inputTest.steamButton" = "Steam बटन";
 "inputTest.summary" = "Test buttons, sticks, triggers, rumble, and controller lighting.";
 "inputTest.testRumble" = "Test Rumble";
@@ -988,6 +998,9 @@
 "profiles.virtualMapped" = "केवल दोबारा मैप किए गए नियंत्रण";
 "profiles.virtualPassthrough" = "बिना दोबारा मैप किए गए नियंत्रण शामिल करें";
 "profiles.exclusiveInput" = "भौतिक इनपुट तक विशेष पहुँच आवश्यक करें";
+"profiles.actions" = "Profile actions";
+"profiles.editorSection" = "Profile editor section";
+"profiles.combinations" = "Combinations";
 "cli.mapping.output_policy_invalid" = "--virtual-gamepad: disabled|mapped|passthrough\n--physical-input: shared|exclusive";
 
 "profiles.tapOnPress" = "दबाने पर टैप";

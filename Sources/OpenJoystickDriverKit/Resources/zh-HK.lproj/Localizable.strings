@@ -147,6 +147,13 @@
 "controllers.emptyMessage" = "連接控制器，然後選擇「重新整理」。";
 "controllers.label" = "控制器";
 "controllers.notReported" = "未回報";
+"controllers.battery" = "電池";
+"controllers.chargingState" = "充電狀態";
+"controllers.cableState" = "連接線狀態";
+"controllers.discharging" = "正在放電";
+"controllers.charging" = "正在充電";
+"controllers.batteryFull" = "已充滿";
+"controllers.batteryAccessibilityDetails" = "電池：%@。充電狀態：%@。連接線狀態：%@。";
 "controllers.activeProfile" = "使用中的設定檔";
 "controllers.profileChecking" = "正在檢查…";
 "controllers.profileNone" = "無";
@@ -906,6 +913,9 @@
 "inputTest.start" = "開始輸入測試";
 "inputTest.starting" = "正在啟動…";
 "inputTest.status" = "輸入測試狀態";
+"inputTest.tabInput" = "即時輸入";
+"inputTest.tabMotion" = "Motion";
+"inputTest.tabOutput" = "輸出";
 "inputTest.steamButton" = "Steam 按鈕";
 "inputTest.summary" = "測試按鈕、搖桿、扳機、震動和控制器燈光。";
 "inputTest.testRumble" = "測試震動";
@@ -988,6 +998,9 @@
 "profiles.virtualMapped" = "僅重新對應的控制項";
 "profiles.virtualPassthrough" = "包含未重新對應的控制項";
 "profiles.exclusiveInput" = "要求獨佔存取實體輸入";
+"profiles.actions" = "Profile actions";
+"profiles.editorSection" = "Profile editor section";
+"profiles.combinations" = "Combinations";
 "cli.mapping.output_policy_invalid" = "--virtual-gamepad: disabled|mapped|passthrough\n--physical-input: shared|exclusive";
 
 "profiles.tapOnPress" = "按下時輕點";

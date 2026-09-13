@@ -147,6 +147,13 @@
 "controllers.emptyMessage" = "Контроллер қосып, Жаңарту пәрменін таңдаңыз.";
 "controllers.label" = "Контроллер";
 "controllers.notReported" = "Хабарланбаған";
+"controllers.battery" = "Батарея";
+"controllers.chargingState" = "Зарядтау күйі";
+"controllers.cableState" = "Кабель күйі";
+"controllers.discharging" = "Заряды таусылуда";
+"controllers.charging" = "Зарядталуда";
+"controllers.batteryFull" = "Толық зарядталған";
+"controllers.batteryAccessibilityDetails" = "Батарея: %@. Зарядтау күйі: %@. Кабель күйі: %@.";
 "controllers.activeProfile" = "Белсенді профиль";
 "controllers.profileChecking" = "Тексерілуде…";
 "controllers.profileNone" = "Жоқ";
@@ -906,6 +913,9 @@
 "inputTest.start" = "Start Input Test";
 "inputTest.starting" = "Starting…";
 "inputTest.status" = "Input test status";
+"inputTest.tabInput" = "Тікелей енгізу";
+"inputTest.tabMotion" = "Motion";
+"inputTest.tabOutput" = "Output";
 "inputTest.steamButton" = "Steam түймесі";
 "inputTest.summary" = "Test buttons, sticks, triggers, rumble, and controller lighting.";
 "inputTest.testRumble" = "Test Rumble";
@@ -988,6 +998,9 @@
 "profiles.virtualMapped" = "Тек қайта тағайындалған басқару элементтері";
 "profiles.virtualPassthrough" = "Қайта тағайындалмаған басқару элементтерін қосу";
 "profiles.exclusiveInput" = "Физикалық енгізуге айрықша қол жеткізуді талап ету";
+"profiles.actions" = "Profile actions";
+"profiles.editorSection" = "Profile editor section";
+"profiles.combinations" = "Combinations";
 "cli.mapping.output_policy_invalid" = "--virtual-gamepad: disabled|mapped|passthrough\n--physical-input: shared|exclusive";
 
 "profiles.tapOnPress" = "Басқанда қысқа басу";

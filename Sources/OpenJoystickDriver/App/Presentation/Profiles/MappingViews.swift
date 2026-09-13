@@ -31,6 +31,8 @@
     private var profileEditorGeneration = 0
     @State
     private var pairingProfile: RemappingProfile?
+    @State
+    private var selectedEditorSection = ProfilePresentationPolicy.defaultSection
 
     var body: some View {
       VStack(alignment: .leading, spacing: 0) {
@@ -38,13 +40,21 @@
           ProfileActionErrorBanner(message: profileActionError) { self.profileActionError = nil }
         }
         GeometryReader { proxy in
-          HStack(spacing: 0) {
-            profileList.frame(width: profileListWidth(for: proxy.size.width)).frame(
-              maxHeight: .infinity,
-              alignment: .topLeading
-            )
-            Divider()
-            profileDetail.frame(maxWidth: .infinity, maxHeight: .infinity)
+          if proxy.size.width < 620 {
+            VStack(spacing: 0) {
+              profileList.frame(height: min(200, proxy.size.height * 0.34))
+              Divider()
+              profileDetail.frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+          } else {
+            HStack(spacing: 0) {
+              profileList.frame(width: profileListWidth(for: proxy.size.width)).frame(
+                maxHeight: .infinity,
+                alignment: .topLeading
+              )
+              Divider()
+              profileDetail.frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
           }
         }
       }.sheet(isPresented: $isCreatingProfile) {
@@ -211,11 +221,12 @@
               action: { selectProfile(profile.id) },
               label: {
                 HStack(spacing: 8) {
-                  OJDSystemSymbol(
-                    name: isActive(profile) ? "checkmark.circle.fill" : "circle",
-                    fallback: isActive(profile)
-                      ? OJDLocalized.string("profiles.active", fallback: "Active") : "○"
-                  ).foregroundColor(Color(NSColor.controlAccentColor))
+                  OJDListGlyphSlot {
+                    OJDSystemSymbol(
+                      name: isActive(profile) ? "checkmark.circle.fill" : "circle",
+                      fallback: isActive(profile) ? "✓" : "○"
+                    ).foregroundColor(Color(NSColor.controlAccentColor))
+                  }
                   VStack(alignment: .leading, spacing: 2) {
                     Text(profile.name).lineLimit(1)
                     Text(assignmentCountLabel(profile.bindings.count)).font(.caption)
@@ -244,6 +255,7 @@
             viewModel: viewModel,
             isActive: isActive(selectedProfile),
             isEditingBlocked: profileEditorTransition.isEditingBlocked,
+            selectedSection: $selectedEditorSection,
             onDelete: { activeAlert = .delete(selectedProfile.id) },
             onExport: { exportProfile($0) },
             onEditingStateChanged: { setEditorDirty($0) },

@@ -147,6 +147,13 @@
 "controllers.emptyMessage" = "Միացրեք կարգավորիչ, ապա ընտրեք Թարմացնել։";
 "controllers.label" = "Կարգավորիչ";
 "controllers.notReported" = "Չի հաղորդվել";
+"controllers.battery" = "Մարտկոց";
+"controllers.chargingState" = "Լիցքավորման վիճակ";
+"controllers.cableState" = "Մալուխի վիճակ";
+"controllers.discharging" = "Լիցքաթափում";
+"controllers.charging" = "Լիցքավորում";
+"controllers.batteryFull" = "Լրիվ";
+"controllers.batteryAccessibilityDetails" = "Մարտկոց՝ %@։ Լիցքավորման վիճակ՝ %@։ Մալուխի վիճակ՝ %@։";
 "controllers.activeProfile" = "Ակտիվ պրոֆիլ";
 "controllers.profileChecking" = "Ստուգում…";
 "controllers.profileNone" = "Չկա";
@@ -906,6 +913,9 @@
 "inputTest.start" = "Start Input Test";
 "inputTest.starting" = "Starting…";
 "inputTest.status" = "Input test status";
+"inputTest.tabInput" = "Ուղիղ մուտք";
+"inputTest.tabMotion" = "Motion";
+"inputTest.tabOutput" = "Output";
 "inputTest.steamButton" = "Steam կոճակ";
 "inputTest.summary" = "Test buttons, sticks, triggers, rumble, and controller lighting.";
 "inputTest.testRumble" = "Test Rumble";
@@ -988,6 +998,9 @@
 "profiles.virtualMapped" = "Միայն վերանշանակված կառավարիչները";
 "profiles.virtualPassthrough" = "Ներառել չվերանշանակված կառավարիչները";
 "profiles.exclusiveInput" = "Պահանջել ֆիզիկական մուտքի բացառիկ հասանելիություն";
+"profiles.actions" = "Profile actions";
+"profiles.editorSection" = "Profile editor section";
+"profiles.combinations" = "Combinations";
 "cli.mapping.output_policy_invalid" = "--virtual-gamepad: disabled|mapped|passthrough\n--physical-input: shared|exclusive";
 
 "profiles.tapOnPress" = "Կարճ սեղմում՝ սեղմելիս";

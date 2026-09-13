@@ -6,6 +6,7 @@ func duplicatedProfile(_ source: RemappingProfile) -> RemappingProfile {
     device: source.device,
     applicationScope: source.applicationScope,
     outputPolicy: source.outputPolicy,
+    physicalColor: source.physicalColor,
     motionTuning: source.motionTuning,
     gyroOutput: source.gyroOutput,
     joyConPair: source.joyConPair,

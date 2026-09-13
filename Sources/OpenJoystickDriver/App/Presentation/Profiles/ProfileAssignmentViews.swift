@@ -79,6 +79,7 @@
     let onAdjust: (RemappingBinding) -> Void
     let onBehavior: (RemappingBinding) -> Void
     let onEditingStateChanged: () -> Void
+    let rowLayout: ProfileAssignmentRowLayout
 
     var body: some View {
       GroupBox {
@@ -93,7 +94,8 @@
               onError: onError,
               onAdjust: onAdjust,
               onBehavior: onBehavior,
-              onEditingStateChanged: onEditingStateChanged
+              onEditingStateChanged: onEditingStateChanged,
+              layout: rowLayout
             )
             if binding.id != bindings.last?.id { Divider().padding(.leading, 2) }
           }
@@ -112,42 +114,22 @@
     let onAdjust: (RemappingBinding) -> Void
     let onBehavior: (RemappingBinding) -> Void
     let onEditingStateChanged: () -> Void
+    let layout: ProfileAssignmentRowLayout
 
-    // Keep source and destination controls in separate full-width fields.  The profile detail
-    // column is only about 500 points wide at the supported minimum once the profile list and
-    // editor insets are accounted for; a two-picker row cannot safely fit there with Adjust... and
-    // Remove controls, especially with larger text.
     var body: some View {
       VStack(alignment: .leading, spacing: 7) {
-        Text(OJDLocalized.string("capture.controllerControl", fallback: "Controller control")).font(
-          .caption
-        ).foregroundColor(Color(NSColor.secondaryLabelColor))
-        Picker("", selection: sourceBinding) {
-          ForEach(SourceOption.options(including: binding.source), id: \.source) { option in
-            Text(option.title).tag(option.source)
+        if layout == .inline {
+          HStack(alignment: .top, spacing: 12) {
+            sourceField
+            OJDSystemSymbol(name: "arrow.right", fallback: "->").foregroundColor(
+              Color(NSColor.secondaryLabelColor)
+            ).padding(.top, 25).ojdAccessibilityHidden(true)
+            destinationField
           }
-        }.labelsHidden().frame(maxWidth: .infinity, alignment: .leading).ojdAccessibilityLabel(
-          OJDLocalized.string("capture.controllerControl", fallback: "Controller control")
-        ).ojdAccessibilityValue(RuntimePresentation.sourceLabel(binding.source))
-
-        HStack(alignment: .firstTextBaseline, spacing: 7) {
-          OJDSystemSymbol(name: "arrow.right", fallback: "->").foregroundColor(
-            Color(NSColor.secondaryLabelColor)
-          )
-          Text(OJDLocalized.string("common.destination", fallback: "Destination")).font(.caption)
-            .foregroundColor(Color(NSColor.secondaryLabelColor))
+        } else {
+          sourceField
+          destinationField
         }
-        Picker("", selection: destinationBinding) {
-          ForEach(
-            DestinationOption.options(for: binding.source, including: binding.destination),
-            id: \.destination
-          ) { option in
-            KeyboardDestinationLabel(destination: option.destination).tag(option.destination)
-          }
-        }.labelsHidden().frame(maxWidth: .infinity, alignment: .leading).ojdAccessibilityLabel(
-          OJDLocalized.string("common.destination", fallback: "Destination")
-        ).ojdAccessibilityValue(RuntimePresentation.destinationLabel(binding.destination))
-        PhysicalOutputDestinationFields(destination: destinationBinding)
 
         HStack(spacing: 8) {
           if binding.axisTuning != nil {
@@ -180,6 +162,39 @@
         7
       ).ojdAccessibilityLabel(OJDLocalized.string("common.assignment", fallback: "Assignment"))
         .ojdAccessibilityValue(assignmentAccessibilityValue)
+    }
+
+    private var sourceField: some View {
+      VStack(alignment: .leading, spacing: 4) {
+        Text(OJDLocalized.string("capture.controllerControl", fallback: "Controller control")).font(
+          .caption
+        ).foregroundColor(Color(NSColor.secondaryLabelColor))
+        Picker("", selection: sourceBinding) {
+          ForEach(SourceOption.options(including: binding.source), id: \.source) { option in
+            Text(option.title).tag(option.source)
+          }
+        }.labelsHidden().frame(maxWidth: .infinity, alignment: .leading).ojdAccessibilityLabel(
+          OJDLocalized.string("capture.controllerControl", fallback: "Controller control")
+        ).ojdAccessibilityValue(RuntimePresentation.sourceLabel(binding.source))
+      }.frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var destinationField: some View {
+      VStack(alignment: .leading, spacing: 4) {
+        Text(OJDLocalized.string("common.destination", fallback: "Destination")).font(.caption)
+          .foregroundColor(Color(NSColor.secondaryLabelColor))
+        Picker("", selection: destinationBinding) {
+          ForEach(
+            DestinationOption.options(for: binding.source, including: binding.destination),
+            id: \.destination
+          ) { option in
+            KeyboardDestinationLabel(destination: option.destination).tag(option.destination)
+          }
+        }.labelsHidden().frame(maxWidth: .infinity, alignment: .leading).ojdAccessibilityLabel(
+          OJDLocalized.string("common.destination", fallback: "Destination")
+        ).ojdAccessibilityValue(RuntimePresentation.destinationLabel(binding.destination))
+        PhysicalOutputDestinationFields(destination: destinationBinding)
+      }.frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var assignmentAccessibilityValue: String {
