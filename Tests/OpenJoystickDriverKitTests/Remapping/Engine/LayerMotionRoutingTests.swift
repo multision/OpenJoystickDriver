@@ -2,7 +2,8 @@ import Testing
 @testable import OpenJoystickDriverKit
 
 struct LayerMotionRoutingTests {
-  @Test func latestActivatedOverrideWinsAndReleaseRestoresPrevious() {
+  @Test
+  func latestActivatedOverrideWinsAndReleaseRestoresPrevious() {
     let base = RemappingMotionTuning(yawSensitivity: 1)
     let first = RemappingMotionTuning(yawSensitivity: 2)
     let second = RemappingMotionTuning(yawSensitivity: 3)
@@ -14,12 +15,17 @@ struct LayerMotionRoutingTests {
       bindings: [],
       layers: [
         RemappingLayer(
-          name: "First", activationMode: .hold, activator: .button(.south), motionTuning: first
+          name: "First",
+          activationMode: .hold,
+          activator: .button(.south),
+          motionTuning: first
         ),
         RemappingLayer(
-          name: "Second", activationMode: .toggle, activator: .button(.east), motionTuning: second
-        ),
-        RemappingLayer(name: "Bindings only", activationMode: .hold, activator: .button(.west))
+          name: "Second",
+          activationMode: .toggle,
+          activator: .button(.east),
+          motionTuning: second
+        ), RemappingLayer(name: "Bindings only", activationMode: .hold, activator: .button(.west)),
       ]
     )
     let identifier = DeviceIdentifier(vendorID: 1, productID: 2)

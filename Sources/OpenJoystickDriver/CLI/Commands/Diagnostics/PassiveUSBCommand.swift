@@ -44,15 +44,16 @@
   private struct DeterministicPassiveUSBSource: PassiveUSBRegistrySource {
     let failure: String
 
-    func matchingServices(className: String, numericProperties: [String: UInt64]) throws
-      -> [PassiveUSBRegistryNode]
-    {
+    func matchingServices(
+      className: String,
+      numericProperties: [String: UInt64]
+    ) throws -> [PassiveUSBRegistryNode] {
       switch failure {
       case "zero": return []
       case "multiple":
         return [
           PassiveUSBRegistryNode(serviceClass: className, properties: [:]),
-          PassiveUSBRegistryNode(serviceClass: className, properties: [:])
+          PassiveUSBRegistryNode(serviceClass: className, properties: [:]),
         ]
       case "matching-failure": throw PassiveUSBDescriptorProbeError.matchingFailed(-536_870_181)
       default: throw PassiveUSBDescriptorProbeError.matchingFailed(-1)

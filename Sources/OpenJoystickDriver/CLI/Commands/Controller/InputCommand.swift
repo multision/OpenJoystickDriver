@@ -38,9 +38,10 @@ struct InputCommand {
     }
   }
 
-  private func execute(_ options: Options, service: ControllerInputDiagnosticService) async
-    -> String?
-  {
+  private func execute(
+    _ options: Options,
+    service: ControllerInputDiagnosticService
+  ) async -> String? {
     do {
       let device = try await resolveDevice(options, service: service)
       switch options.action {
@@ -68,9 +69,10 @@ struct InputCommand {
     } catch { return error.localizedDescription }
   }
 
-  private func resolveDevice(_ options: Options, service: ControllerInputDiagnosticService)
-    async throws -> ApplicationServiceDeviceDescription
-  {
+  private func resolveDevice(
+    _ options: Options,
+    service: ControllerInputDiagnosticService
+  ) async throws -> ApplicationServiceDeviceDescription {
     let devices = try await service.connectedDevices()
     return try ConnectedControllerSelection.resolve(
       devices: devices,

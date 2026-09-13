@@ -3,7 +3,8 @@ import Testing
 @testable import OpenJoystickDriverKit
 
 struct StickProfileTests {
-  @Test func profilesPersistMappingsAndRequireSystemInput() throws {
+  @Test
+  func profilesPersistMappingsAndRequireSystemInput() throws {
     let profile = makeProfile([RemappingStickMapping(source: .right, mode: .flick)])
     try profile.validate()
     #expect(profile.requiresSystemInputAccess)
@@ -11,7 +12,8 @@ struct StickProfileTests {
     #expect(try JSONDecoder().decode(RemappingProfile.self, from: data) == profile)
   }
 
-  @Test func rejectsDuplicateSourcesInvalidMappingsAndOlderSchemas() {
+  @Test
+  func rejectsDuplicateSourcesInvalidMappingsAndOlderSchemas() {
     let mapping = RemappingStickMapping(source: .left)
     #expect(throws: RemappingValidationError.duplicateStickMapping(.left)) {
       try makeProfile([mapping, mapping]).validate()
@@ -25,7 +27,8 @@ struct StickProfileTests {
   }
 
   private func makeProfile(
-    _ mappings: [RemappingStickMapping], version: Int = 3
+    _ mappings: [RemappingStickMapping],
+    version: Int = 3
   ) -> RemappingProfile {
     RemappingProfile(
       schemaVersion: version,

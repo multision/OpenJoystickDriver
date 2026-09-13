@@ -4,7 +4,8 @@ import Testing
 @testable import OpenJoystickDriverKit
 
 struct ReceiptTimeTests {
-  @Test func hidAndUSBParsingDeliverReceiptTimeToTheProtocolHook() async throws {
+  @Test
+  func hidAndUSBParsingDeliverReceiptTimeToTheProtocolHook() async throws {
     let parser = ReceiptTimeParser()
     let pipeline = DevicePipeline(
       identifier: DeviceIdentifier(vendorID: 1, productID: 2),

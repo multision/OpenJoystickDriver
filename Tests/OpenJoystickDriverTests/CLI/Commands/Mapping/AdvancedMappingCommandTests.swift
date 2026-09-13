@@ -4,17 +4,17 @@ import Testing
 @testable import OpenJoystickDriver
 
 struct AdvancedMappingCommandTests {
-  @Test func advancedStickTriggerAndLeanOptionsReachCreateAndRendering() async throws {
+  @Test
+  func advancedStickTriggerAndLeanOptionsReachCreateAndRendering() async throws {
     let creator = MockMappingClient(snapshotValue: snapshot([]))
     _ = try await MappingInvocation(arguments: [
-      "create", "Driving", "--vid", "1", "--pid", "2", "--global",
-      "--virtual-gamepad", "mapped", "--stick-source", "left", "--stick-mode", "steering",
-      "--stick-steering-degrees-at-full-scale", "270",
-      "--stick-steering-return-degrees-per-second", "180", "--stick-passthrough", "true",
-      "--trigger-source", "right", "--trigger-mode", "prefer_full_combined",
-      "--trigger-soft-threshold", "0.2", "--trigger-full-threshold", "0.8",
-      "--trigger-skip-window-ms", "125", "--motion-lean", "true",
-      "--motion-lean-threshold-degrees", "20", "--motion-lean-hysteresis-degrees", "3",
+      "create", "Driving", "--vid", "1", "--pid", "2", "--global", "--virtual-gamepad", "mapped",
+      "--stick-source", "left", "--stick-mode", "steering",
+      "--stick-steering-degrees-at-full-scale", "270", "--stick-steering-return-degrees-per-second",
+      "180", "--stick-passthrough", "true", "--trigger-source", "right", "--trigger-mode",
+      "prefer_full_combined", "--trigger-soft-threshold", "0.2", "--trigger-full-threshold", "0.8",
+      "--trigger-skip-window-ms", "125", "--motion-lean", "true", "--motion-lean-threshold-degrees",
+      "20", "--motion-lean-hysteresis-degrees", "3",
     ]).execute(client: creator)
     let profile = try #require(await creator.submittedProfile)
     #expect(profile.stickMappings.first?.mode == .steering)
@@ -22,9 +22,9 @@ struct AdvancedMappingCommandTests {
     #expect(profile.stickMappings.first?.passthrough == true)
     #expect(profile.triggerMappings.first?.mode == .preferFullCombined)
     #expect(profile.triggerMappings.first?.skipWindowMs == 125)
-    #expect(profile.motionTuning.lean == RemappingMotionLean(
-      thresholdDegrees: 20, hysteresisDegrees: 3
-    ))
+    #expect(
+      profile.motionTuning.lean == RemappingMotionLean(thresholdDegrees: 20, hysteresisDegrees: 3)
+    )
 
     let binder = MockMappingClient(snapshotValue: snapshot([profile]))
     _ = try await MappingInvocation(arguments: [

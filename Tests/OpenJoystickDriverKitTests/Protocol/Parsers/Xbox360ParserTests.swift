@@ -40,38 +40,44 @@ private func makeXbox360ReportLE(
 }
 
 struct Xbox360ParserTests {
-  @Test func testIgnoresNonInputReportType() throws {
+  @Test
+  func testIgnoresNonInputReportType() throws {
     let parser = Xbox360Parser()
     // Type 0x08 = device connected notification on the wireless receiver
     let packet = Data([0x08, 0x14] + [UInt8](repeating: 0, count: 18))
     let events = try parser.parse(data: packet)
     #expect(events.isEmpty)
   }
-  @Test func testEmptyDataReturnsEmpty() throws {
+  @Test
+  func testEmptyDataReturnsEmpty() throws {
     let parser = Xbox360Parser()
     let events = try parser.parse(data: Data())
     #expect(events.isEmpty)
   }
-  @Test func testShortReportReturnsEmpty() throws {
+  @Test
+  func testShortReportReturnsEmpty() throws {
     let parser = Xbox360Parser()
     let packet = Data([0x00, 0x14, 0x00, 0x00, 0x00])
     let events = try parser.parse(data: packet)
     #expect(events.isEmpty)
   }
-  @Test func testInvalidLengthByteReturnsEmpty() throws {
+  @Test
+  func testInvalidLengthByteReturnsEmpty() throws {
     let parser = Xbox360Parser()
     var packet = [UInt8](makeXbox360ReportLE(buttons: 1 << 8))
     packet[1] = 0x0E
     let events = try parser.parse(data: Data(packet))
     #expect(events.isEmpty)
   }
-  @Test func testAllZeroReportReturnsNoSyntheticEvents() throws {
+  @Test
+  func testAllZeroReportReturnsNoSyntheticEvents() throws {
     let parser = Xbox360Parser()
     let packet = makeXbox360ReportLE()
     let events = try parser.parse(data: packet)
     #expect(events.isEmpty)
   }
-  @Test func testAButtonPressRelease() throws {
+  @Test
+  func testAButtonPressRelease() throws {
     let parser = Xbox360Parser()
     // Bit 12 = A (Linux xpad data[3] & BIT(4))
     let press = makeXbox360ReportLE(buttons: 1 << 12)
@@ -81,7 +87,8 @@ struct Xbox360ParserTests {
     let releaseEvents = try parser.parse(data: release)
     #expect(releaseEvents.contains(.buttonReleased(.a)))
   }
-  @Test func testBxyButtons() throws {
+  @Test
+  func testBxyButtons() throws {
     let parser = Xbox360Parser()
     let packet = makeXbox360ReportLE(buttons: (1 << 13) | (1 << 14) | (1 << 15))
     let events = try parser.parse(data: packet)
@@ -89,7 +96,8 @@ struct Xbox360ParserTests {
     #expect(events.contains(.buttonPressed(.x)))
     #expect(events.contains(.buttonPressed(.y)))
   }
-  @Test func testShoulderAndStickClicks() throws {
+  @Test
+  func testShoulderAndStickClicks() throws {
     let parser = Xbox360Parser()
     // LB=bit8, RB=bit9, L3=bit6, R3=bit7
     let packet = makeXbox360ReportLE(buttons: (1 << 8) | (1 << 9) | (1 << 6) | (1 << 7))
@@ -99,7 +107,8 @@ struct Xbox360ParserTests {
     #expect(events.contains(.buttonPressed(.leftStick)))
     #expect(events.contains(.buttonPressed(.rightStick)))
   }
-  @Test func testStartBackButtons() throws {
+  @Test
+  func testStartBackButtons() throws {
     let parser = Xbox360Parser()
     // START=bit4, BACK=bit5
     let packet = makeXbox360ReportLE(buttons: (1 << 4) | (1 << 5))
@@ -107,14 +116,16 @@ struct Xbox360ParserTests {
     #expect(events.contains(.buttonPressed(.start)))
     #expect(events.contains(.buttonPressed(.back)))
   }
-  @Test func testGuideButton() throws {
+  @Test
+  func testGuideButton() throws {
     let parser = Xbox360Parser()
     // GUIDE=bit10 (Linux xpad data[3] & BIT(2))
     let packet = makeXbox360ReportLE(buttons: 1 << 10)
     let events = try parser.parse(data: packet)
     #expect(events.contains(.buttonPressed(.guide)))
   }
-  @Test func testDpadDirections() throws {
+  @Test
+  func testDpadDirections() throws {
     let parser = Xbox360Parser()
     // up=bit0, down=bit1, left=bit2, right=bit3
     func dpadEvent(bits: UInt16) throws -> ControllerEvent? {
@@ -153,7 +164,8 @@ struct Xbox360ParserTests {
     }
     #expect(ne == .northEast)
   }
-  @Test func testDpadBitsNotFaceButtons() throws {
+  @Test
+  func testDpadBitsNotFaceButtons() throws {
     let parser = Xbox360Parser()
     let packet = makeXbox360ReportLE(buttons: 0x000F)  // all four dpad bits set
     let events = try parser.parse(data: packet)
@@ -162,7 +174,8 @@ struct Xbox360ParserTests {
     #expect(!events.contains(.buttonPressed(.x)))
     #expect(!events.contains(.buttonPressed(.y)))
   }
-  @Test func testTriggerNormalization() throws {
+  @Test
+  func testTriggerNormalization() throws {
     let parser = Xbox360Parser()
     let packet = makeXbox360ReportLE(lt: 255, rt: 255)
     let events = try parser.parse(data: packet)
@@ -185,7 +198,8 @@ struct Xbox360ParserTests {
     #expect(abs(ltVal - 1.0) < 0.01)
     #expect(abs(rtVal - 1.0) < 0.01)
   }
-  @Test func testTriggerHalfPress() throws {
+  @Test
+  func testTriggerHalfPress() throws {
     let parser = Xbox360Parser()
     let packet = makeXbox360ReportLE(lt: 128, rt: 128)
     let events = try parser.parse(data: packet)
@@ -199,7 +213,8 @@ struct Xbox360ParserTests {
     }
     #expect(abs(ltVal - (128.0 / 255.0)) < 0.01)
   }
-  @Test func testLeftStickFullRight() throws {
+  @Test
+  func testLeftStickFullRight() throws {
     let parser = Xbox360Parser()
     let packet = makeXbox360ReportLE(lsx: Int16.max)
     let events = try parser.parse(data: packet)
@@ -213,7 +228,8 @@ struct Xbox360ParserTests {
     }
     #expect(abs(lx - 1.0) < 0.01)
   }
-  @Test func testLeftStickFullUp() throws {
+  @Test
+  func testLeftStickFullUp() throws {
     let parser = Xbox360Parser()
     // Raw negative LSY = stick pushed up; normalized output should be positive Y
     let packet = makeXbox360ReportLE(lsy: Int16.min)
@@ -228,7 +244,8 @@ struct Xbox360ParserTests {
     }
     #expect(ly == 1.0)
   }
-  @Test func testRightStickNormalization() throws {
+  @Test
+  func testRightStickNormalization() throws {
     let parser = Xbox360Parser()
     let packet = makeXbox360ReportLE(rsx: Int16.min, rsy: Int16.max)
     let events = try parser.parse(data: packet)
@@ -244,7 +261,8 @@ struct Xbox360ParserTests {
     // RSY raw positive = stick down -> normalized output negative
     #expect(ry < -0.99)
   }
-  @Test func testChangeDetectionButtons() throws {
+  @Test
+  func testChangeDetectionButtons() throws {
     let parser = Xbox360Parser()
     let press = makeXbox360ReportLE(buttons: 1 << 12)  // A
     _ = try parser.parse(data: press)
@@ -252,7 +270,8 @@ struct Xbox360ParserTests {
     #expect(!events2.contains(.buttonPressed(.a)))
     #expect(!events2.contains(.buttonReleased(.a)))
   }
-  @Test func testChangeDetectionTriggers() throws {
+  @Test
+  func testChangeDetectionTriggers() throws {
     let parser = Xbox360Parser()
     let first = makeXbox360ReportLE(lt: 200)
     _ = try parser.parse(data: first)
@@ -263,7 +282,8 @@ struct Xbox360ParserTests {
     }
     #expect(!hasLT)
   }
-  @Test func testChangeDetectionSticks() throws {
+  @Test
+  func testChangeDetectionSticks() throws {
     let parser = Xbox360Parser()
     let first = makeXbox360ReportLE(lsx: 10_000)
     _ = try parser.parse(data: first)
@@ -274,7 +294,8 @@ struct Xbox360ParserTests {
     }
     #expect(!hasLS)
   }
-  @Test func testMultipleSimultaneousButtons() throws {
+  @Test
+  func testMultipleSimultaneousButtons() throws {
     let parser = Xbox360Parser()
     let packet = makeXbox360ReportLE(buttons: (1 << 12) | (1 << 13) | (1 << 8))
     let events = try parser.parse(data: packet)
@@ -282,7 +303,8 @@ struct Xbox360ParserTests {
     #expect(events.contains(.buttonPressed(.b)))
     #expect(events.contains(.buttonPressed(.leftBumper)))
   }
-  @Test func testIgnoresConnectionReport() throws {
+  @Test
+  func testIgnoresConnectionReport() throws {
     let parser = Xbox360Parser()
     var bytes = [UInt8](repeating: 0, count: 20)
     bytes[0] = 0x08  // connection notification
@@ -290,7 +312,8 @@ struct Xbox360ParserTests {
     #expect(events.isEmpty)
   }
 
-  @Test func testWirelessReceiverLifecycleAndWrappedInput() throws {
+  @Test
+  func testWirelessReceiverLifecycleAndWrappedInput() throws {
     let parser = Xbox360Parser(isWirelessReceiver: true)
 
     #expect(parser.requiresInputConnectionBeforeOutput)
@@ -311,17 +334,18 @@ struct Xbox360ParserTests {
     #expect(parser.consumeInputConnectionStateChange() == .disconnected)
   }
 
-  @Test func testWirelessReceiverSourceBackedOutputPackets() {
+  @Test
+  func testWirelessReceiverSourceBackedOutputPackets() {
     let parser = Xbox360Parser(isWirelessReceiver: true)
 
     #expect(
       parser.rumblePacket(left: 0x40, right: 0x20) == [
-        0x00, 0x01, 0x0F, 0xC0, 0x00, 0x40, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00
+        0x00, 0x01, 0x0F, 0xC0, 0x00, 0x40, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00,
       ]
     )
     #expect(
       parser.ledPacket(pattern: .player1On) == [
-        0x00, 0x00, 0x08, 0x46, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+        0x00, 0x00, 0x08, 0x46, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
       ]
     )
     #expect(
@@ -332,7 +356,8 @@ struct Xbox360ParserTests {
     #expect(parser.usbInputConnectionOutputPackets(for: .disconnected).isEmpty)
   }
 
-  @Test func testStartupLEDReportSetsPlayerOneSolidOnlyForXbox360Parser() {
+  @Test
+  func testStartupLEDReportSetsPlayerOneSolidOnlyForXbox360Parser() {
     let parser = Xbox360Parser()
 
     #expect(parser.usbStartupOutputPackets() == [[0x01, 0x03, 0x06]])

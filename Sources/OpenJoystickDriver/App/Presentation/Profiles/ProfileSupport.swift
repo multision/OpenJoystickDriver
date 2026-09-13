@@ -27,7 +27,8 @@
       self.label = label
     }
 
-    @ViewBuilder var body: some View {
+    @ViewBuilder
+    var body: some View {
       if #available(macOS 12.0, *) {
         Button(role: .destructive, action: action, label: label).foregroundColor(
           Color(NSColor.systemRed)
@@ -40,7 +41,8 @@
 
   extension View {
     /// SwiftUI's tooltip modifier was introduced after the app's minimum deployment target.
-    @ViewBuilder func ojdHelp(_ message: String) -> some View {
+    @ViewBuilder
+    func ojdHelp(_ message: String) -> some View {
       if #available(macOS 11.0, *) { help(message) } else { self }
     }
   }
@@ -252,7 +254,8 @@
       restoreDirtyAfterMutationFailure = false
     }
 
-    @discardableResult mutating func beginMutation(
+    @discardableResult
+    mutating func beginMutation(
       _ request: RuntimeMutationRequest,
       restoresDirtyOnFailure: Bool = false
     ) -> ProfileEditorMutationStart {
@@ -280,9 +283,9 @@
       return true
     }
 
-    mutating func reconcileRuntimeMutation(_ request: RuntimeMutationRequest)
-      -> ProfileEditorMutationReconciliation
-    {
+    mutating func reconcileRuntimeMutation(
+      _ request: RuntimeMutationRequest
+    ) -> ProfileEditorMutationReconciliation {
       if activeMutationRequest == nil {
         guard beginMutation(request) == .acquired else { return .rejected }
         guard bindRuntimeMutation(request) else { return .rejected }
@@ -299,7 +302,8 @@
       return .replaced
     }
 
-    @discardableResult mutating func finishMutationIfOwned(
+    @discardableResult
+    mutating func finishMutationIfOwned(
       _ request: RuntimeMutationRequest,
       succeeded: Bool = true
     ) -> ProfileEditorMutationFinish {
@@ -311,10 +315,9 @@
       return .released(shouldRefreshEditor: succeeded && !isDirty)
     }
 
-    @discardableResult mutating func finishMutation(
-      _ request: RuntimeMutationRequest,
-      succeeded: Bool = true
-    ) -> Bool { finishMutationIfOwned(request, succeeded: succeeded).shouldRefreshEditor }
+    @discardableResult
+    mutating func finishMutation(_ request: RuntimeMutationRequest, succeeded: Bool = true) -> Bool
+    { finishMutationIfOwned(request, succeeded: succeeded).shouldRefreshEditor }
   }
 
 #endif

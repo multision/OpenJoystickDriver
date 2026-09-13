@@ -4,7 +4,8 @@ import Testing
 @testable import OpenJoystickDriverKit
 
 struct MotionStickRoutingTests {
-  @Test func gravityLeanDrivesIndependentDigitalAndVirtualOutputsThenTimesOut() {
+  @Test
+  func gravityLeanDrivesIndependentDigitalAndVirtualOutputsThenTimesOut() {
     var engine = RemappingEngineState()
     let device = DeviceIdentifier(vendorID: 1, productID: 2)
     let profile = RemappingProfile(
@@ -16,13 +17,17 @@ struct MotionStickRoutingTests {
         automaticBias: false,
         lean: RemappingMotionLean(thresholdDegrees: 10, hysteresisDegrees: 2),
         steering: RemappingMotionSteering(
-          deadzoneDegrees: 5, fullScaleDegrees: 45, responseExponent: 1
+          deadzoneDegrees: 5,
+          fullScaleDegrees: 45,
+          responseExponent: 1
         )
       ),
-      bindings: [RemappingBinding(
-        source: .motionLean(.right),
-        destination: .keyboard(key: .d, modifiers: [])
-      )]
+      bindings: [
+        RemappingBinding(
+          source: .motionLean(.right),
+          destination: .keyboard(key: .d, modifiers: [])
+        )
+      ]
     )
     #expect(
       engine.process(
@@ -45,13 +50,12 @@ struct MotionStickRoutingTests {
     }
     #expect(abs(state.value(for: .leftStickX) - 0.625) < 0.000_001)
     #expect(active[1] == .system(.keyDown(.d)))
-    #expect(engine.tick(at: 110_000_000) == [
-      .gamepad(.neutral, device), .system(.keyUp(.d)),
-    ])
+    #expect(engine.tick(at: 110_000_000) == [.gamepad(.neutral, device), .system(.keyUp(.d))])
     #expect(!engine.hasScheduledOutput)
   }
 
-  @Test func profileReplacementReleasesMotionStickOwnershipImmediately() {
+  @Test
+  func profileReplacementReleasesMotionStickOwnershipImmediately() {
     var engine = RemappingEngineState()
     let device = DeviceIdentifier(vendorID: 1, productID: 2)
     let profile = RemappingProfile(
@@ -62,10 +66,12 @@ struct MotionStickRoutingTests {
         automaticBias: false,
         lean: RemappingMotionLean(thresholdDegrees: 10)
       ),
-      bindings: [RemappingBinding(
-        source: .motionLean(.right),
-        destination: .keyboard(key: .d, modifiers: [])
-      )]
+      bindings: [
+        RemappingBinding(
+          source: .motionLean(.right),
+          destination: .keyboard(key: .d, modifiers: [])
+        )
+      ]
     )
     _ = engine.process(
       events: [.motionSample(sample(0, time: 0)), .motionSample(sample(1, time: 1))],

@@ -5,7 +5,8 @@ import Testing
 @testable import OpenJoystickDriver
 
 struct VirtualDeviceDiagnosticsTests {
-  @Test func overlayCopiesGameControllerSupportFromMatchingOJDProbe() {
+  @Test
+  func overlayCopiesGameControllerSupportFromMatchingOJDProbe() {
     let core = snapshot(vendorID: 0x054C, productID: 0x09CC, locationID: 1, supported: nil)
     let probe = snapshot(vendorID: 0x054C, productID: 0x09CC, locationID: 1, supported: true)
     let attached = HIDGameControllerSupport.attaching([core], from: [probe])
@@ -13,14 +14,16 @@ struct VirtualDeviceDiagnosticsTests {
     #expect(attached[0].isGameControllerSupported == true)
   }
 
-  @Test func overlayDoesNotCopySupportFromADifferentIdentity() {
+  @Test
+  func overlayDoesNotCopySupportFromADifferentIdentity() {
     let core = snapshot(vendorID: 0x054C, productID: 0x09CC, locationID: 1, supported: nil)
     let probe = snapshot(vendorID: 0x057E, productID: 0x2009, locationID: 1, supported: true)
     let attached = HIDGameControllerSupport.attaching([core], from: [probe])
     #expect(attached[0].isGameControllerSupported == nil)
   }
 
-  @Test func overlayLeavesSupportNilWhenTheSameIdentityIsAmbiguous() {
+  @Test
+  func overlayLeavesSupportNilWhenTheSameIdentityIsAmbiguous() {
     let core = snapshot(vendorID: 0x054C, productID: 0x0CE6, locationID: nil, supported: nil)
     let first = snapshot(vendorID: 0x054C, productID: 0x0CE6, locationID: 1, supported: true)
     let second = snapshot(vendorID: 0x054C, productID: 0x0CE6, locationID: 2, supported: false)

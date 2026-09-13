@@ -31,26 +31,32 @@ struct NintendoSensorSamplesTests {
     }
   }
 
-  @Test func threeRawSamplesRetainOrderAndUseExplicitHostEstimates() throws {
+  @Test
+  func threeRawSamplesRetainOrderAndUseExplicitHostEstimates() throws {
     let parser: any InputParser = SwitchProParser()
     let first = samples(try parser.parse(data: report(), receivedAtNanoseconds: 100_000_000))
     #expect(first.map(\.rawAccelerometer.x) == [1, 2, 3])
-    #expect(first.allSatisfy {
-      $0.rawGyroscope == ControllerRawSensorVector(x: -32_768, y: 32_767, z: -1)
-    })
+    #expect(
+      first.allSatisfy {
+        $0.rawGyroscope == ControllerRawSensorVector(x: -32_768, y: 32_767, z: -1)
+      }
+    )
     #expect(first.map(\.timestamp.elapsedNanoseconds) == [0, 5_000_000, 10_000_000])
     #expect(first.map(\.timestamp.sequenceIndex) == [0, 1, 2])
-    #expect(first.allSatisfy {
-      $0.timestamp.basis == .hostEstimate && $0.timestamp.rawCounter == 255
-        && $0.timestamp.tickNanosecondsNumerator == nil
-        && $0.timestamp.tickNanosecondsDenominator == nil
-    })
+    #expect(
+      first.allSatisfy {
+        $0.timestamp.basis == .hostEstimate && $0.timestamp.rawCounter == 255
+          && $0.timestamp.tickNanosecondsNumerator == nil
+          && $0.timestamp.tickNanosecondsDenominator == nil
+      }
+    )
     let second = samples(try parser.parse(data: report(), receivedAtNanoseconds: 115_000_000))
     #expect(second.map(\.timestamp.elapsedNanoseconds) == [15_000_000, 20_000_000, 25_000_000])
     #expect(second.map(\.timestamp.sequenceIndex) == [3, 4, 5])
   }
 
-  @Test func backwardReceiptDoesNotReverseTimeAndLongGapDoesNotStretchSamples() throws {
+  @Test
+  func backwardReceiptDoesNotReverseTimeAndLongGapDoesNotStretchSamples() throws {
     let parser = SwitchProParser()
     _ = try parser.parse(data: report(), receivedAtNanoseconds: 100_000_000)
     let backward = samples(try parser.parse(data: report(), receivedAtNanoseconds: 90_000_000))
@@ -61,7 +67,8 @@ struct NintendoSensorSamplesTests {
     )
   }
 
-  @Test func shortReportCannotAdvanceSensorClock() throws {
+  @Test
+  func shortReportCannotAdvanceSensorClock() throws {
     let parser = SwitchProParser()
     let short = try parser.parse(data: report().prefix(12), receivedAtNanoseconds: 1)
     #expect(samples(short).isEmpty)

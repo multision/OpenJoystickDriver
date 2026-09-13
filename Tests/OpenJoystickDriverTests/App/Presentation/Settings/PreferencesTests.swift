@@ -4,8 +4,11 @@ import Testing
 
 @testable import OpenJoystickDriver
 
-@Suite struct PreferencesTests {
-  @Test @MainActor func startAtLoginReflectsTheNativeControllerResult() {
+@Suite
+struct PreferencesTests {
+  @Test
+  @MainActor
+  func startAtLoginReflectsTheNativeControllerResult() {
     let launch = LaunchAtLoginStub(isEnabled: false)
     let model = SettingsPreferencesModel(
       defaults: .standard,
@@ -19,7 +22,9 @@ import Testing
     #expect(launch.setValues == [true])
   }
 
-  @Test @MainActor func enablingNotificationsRequestsNativeAuthorization() async throws {
+  @Test
+  @MainActor
+  func enablingNotificationsRequestsNativeAuthorization() async throws {
     let suiteName = "PreferencesTests.\(UUID().uuidString)"
     let defaults = try #require(UserDefaults(suiteName: suiteName))
     defer { defaults.removePersistentDomain(forName: suiteName) }
@@ -38,7 +43,9 @@ import Testing
     #expect(model.notificationAuthorization == .allowed)
   }
 
-  @Test @MainActor func disablingNotificationsPersistsImmediately() throws {
+  @Test
+  @MainActor
+  func disablingNotificationsPersistsImmediately() throws {
     let suiteName = "PreferencesTests.\(UUID().uuidString)"
     let defaults = try #require(UserDefaults(suiteName: suiteName))
     defer { defaults.removePersistentDomain(forName: suiteName) }
@@ -55,7 +62,9 @@ import Testing
     #expect(!defaults.bool(forKey: ApplicationPreferenceKeys.controllerNotifications))
   }
 
-  @Test @MainActor func notificationEventsAndSoundPersistIndependently() async throws {
+  @Test
+  @MainActor
+  func notificationEventsAndSoundPersistIndependently() async throws {
     let suiteName = "PreferencesTests.\(UUID().uuidString)"
     let defaults = try #require(UserDefaults(suiteName: suiteName))
     defer { defaults.removePersistentDomain(forName: suiteName) }
@@ -77,7 +86,9 @@ import Testing
     #expect(!defaults.bool(forKey: ApplicationPreferenceKeys.notificationSounds))
   }
 
-  @Test @MainActor func testNotificationUsesNativeAuthorizationAndSoundPreference() async throws {
+  @Test
+  @MainActor
+  func testNotificationUsesNativeAuthorizationAndSoundPreference() async throws {
     let suiteName = "PreferencesTests.\(UUID().uuidString)"
     let defaults = try #require(UserDefaults(suiteName: suiteName))
     defer { defaults.removePersistentDomain(forName: suiteName) }
@@ -99,7 +110,9 @@ import Testing
     #expect(delivery.lastSound == false)
   }
 
-  @Test @MainActor func refreshPublishesAuthorizationGrantedOutsideTheApp() async {
+  @Test
+  @MainActor
+  func refreshPublishesAuthorizationGrantedOutsideTheApp() async {
     let authorization = NotificationAuthorizationStub(state: .denied)
     let model = SettingsPreferencesModel(
       defaults: .standard,
@@ -114,7 +127,9 @@ import Testing
     #expect(model.notificationAuthorization == .allowed)
   }
 
-  @Test @MainActor func startAtLoginReportsWhenNativeApprovalIsStillRequired() {
+  @Test
+  @MainActor
+  func startAtLoginReportsWhenNativeApprovalIsStillRequired() {
     let launch = LaunchAtLoginStub(isEnabled: false, acceptsChanges: false)
     let model = SettingsPreferencesModel(
       defaults: .standard,
@@ -128,7 +143,9 @@ import Testing
     #expect(model.errorMessage != nil)
   }
 
-  @Test @MainActor func prereleaseChoiceAndUpdateCheckShareTheCLIUpdateEngine() async throws {
+  @Test
+  @MainActor
+  func prereleaseChoiceAndUpdateCheckShareTheCLIUpdateEngine() async throws {
     let suiteName = "PreferencesTests.\(UUID().uuidString)"
     let defaults = try #require(UserDefaults(suiteName: suiteName))
     defer { defaults.removePersistentDomain(forName: suiteName) }
@@ -148,7 +165,9 @@ import Testing
     #expect(await checker.includePrereleaseArguments == [true])
   }
 
-  @Test @MainActor func developerToolsChoicePersists() throws {
+  @Test
+  @MainActor
+  func developerToolsChoicePersists() throws {
     let suiteName = "PreferencesTests.\(UUID().uuidString)"
     let defaults = try #require(UserDefaults(suiteName: suiteName))
     defer { defaults.removePersistentDomain(forName: suiteName) }
@@ -164,7 +183,8 @@ import Testing
     #expect(defaults.bool(forKey: ApplicationPreferenceKeys.developerTools))
   }
 
-  @MainActor private func waitUntil(_ condition: @escaping @MainActor () -> Bool) async {
+  @MainActor
+  private func waitUntil(_ condition: @escaping @MainActor () -> Bool) async {
     for _ in 0..<100 where !condition() { await Task.yield() }
   }
 }
@@ -206,7 +226,8 @@ private final class NotificationAuthorizationStub: NotificationAuthorizationCont
     completion(.allowed, nil)
   }
 
-  @MainActor func openSystemSettings() {}
+  @MainActor
+  func openSystemSettings() {}
 }
 
 private actor UpdateCheckerStub: ApplicationUpdateChecking {

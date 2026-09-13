@@ -4,7 +4,8 @@ import Testing
 @testable import OpenJoystickDriverKit
 
 struct MotionCalibrationActorTests {
-  @Test func calibrationHonorsAdmissionAndReleaseWithoutEmittingOutput() async throws {
+  @Test
+  func calibrationHonorsAdmissionAndReleaseWithoutEmittingOutput() async throws {
     let sink = RemappingTestSink()
     let engine = RemappingEventEngine(sink: sink)
     let identifier = DeviceIdentifier(vendorID: 1, productID: 2, locationID: 3)
@@ -39,7 +40,10 @@ struct MotionCalibrationActorTests {
       )
     )
     try await engine.process(
-      events: [.motionSample(sample)], from: identifier, using: profile, at: 0
+      events: [.motionSample(sample)],
+      from: identifier,
+      using: profile,
+      at: 0
     )
     let started = try await engine.calibrateMotion(.start, for: identifier)
     #expect(started.hasMotionBaseline && started.isCollecting)
@@ -63,19 +67,28 @@ struct MotionCalibrationActorTests {
     try await engine.releaseAll(for: identifier)
     #expect(await engine.motionCalibrationStatus(for: identifier) == nil)
     try await engine.process(
-      events: [.motionSample(sample)], from: identifier, using: profile, at: 0
+      events: [.motionSample(sample)],
+      from: identifier,
+      using: profile,
+      at: 0
     )
     let currentSession = try #require(await engine.motionSessionIdentifier(for: identifier))
     #expect(currentSession != previousSession)
     let currentPermit = try #require(engine.emissionBarrier.currentPermit())
     await #expect(throws: RemappingMotionCalibrationError.controllerUnavailable) {
       try await engine.calibrateMotion(
-        .reset, for: identifier, requiring: currentPermit, expectedSessionID: previousSession
+        .reset,
+        for: identifier,
+        requiring: currentPermit,
+        expectedSessionID: previousSession
       )
     }
     #expect(await engine.motionCalibrationStatus(for: identifier)?.hasMotionBaseline == true)
     let freshReset = try await engine.calibrateMotion(
-      .reset, for: identifier, requiring: currentPermit, expectedSessionID: currentSession
+      .reset,
+      for: identifier,
+      requiring: currentPermit,
+      expectedSessionID: currentSession
     )
     #expect(!freshReset.hasMotionBaseline)
     #expect(sink.actions().isEmpty)

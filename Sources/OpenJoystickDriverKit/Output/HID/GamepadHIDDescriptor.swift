@@ -112,7 +112,7 @@ public enum GamepadHIDDescriptor {
     0x91, 0x02,  // Output: Data, Variable, Absolute
 
     0xC0,  // End Collection (Physical)
-    0xC0  // End Collection (Application)
+    0xC0,  // End Collection (Application)
   ]
 
   // MARK: - Report size

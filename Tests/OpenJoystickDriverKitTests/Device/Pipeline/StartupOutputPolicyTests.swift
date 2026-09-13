@@ -4,7 +4,8 @@ import Testing
 @testable import OpenJoystickDriverKit
 
 struct USBStartupOutputPolicyTests {
-  @Test func defersVirtualOutputUntilThePhysicalUSBSessionOpens() async {
+  @Test
+  func defersVirtualOutputUntilThePhysicalUSBSessionOpens() async {
     let identifier = DeviceIdentifier(vendorID: 0x3537, productID: 0x1010)
     let provider = ScriptedUSBTransportProvider(failuresBeforeSuccess: .max)
     let dispatcher = StartupRecordingOutputDispatcher()
@@ -28,7 +29,8 @@ struct USBStartupOutputPolicyTests {
     await startTask.value
   }
 
-  @Test func publishesVirtualOutputAfterARecoveredPhysicalUSBHandshake() async {
+  @Test
+  func publishesVirtualOutputAfterARecoveredPhysicalUSBHandshake() async {
     let identifier = DeviceIdentifier(vendorID: 0x3537, productID: 0x1010)
     let provider = ScriptedUSBTransportProvider(failuresBeforeSuccess: 3)
     let dispatcher = StartupRecordingOutputDispatcher()
@@ -53,7 +55,8 @@ struct USBStartupOutputPolicyTests {
     #expect(dispatcher.ownershipStates.last == .unknown)
   }
 
-  @Test func recoveryBackoffIsBounded() {
+  @Test
+  func recoveryBackoffIsBounded() {
     let policy = USBPipelineRecoveryPolicy(
       openRetryDelays: [1],
       reconnectBaseDelayNanoseconds: 10,
@@ -68,7 +71,8 @@ struct USBStartupOutputPolicyTests {
     #expect(policy.accessContentionDelayNanoseconds == 80)
   }
 
-  @Test func accessContentionSkipsWastefulImmediateOpenRetries() async {
+  @Test
+  func accessContentionSkipsWastefulImmediateOpenRetries() async {
     let provider = ScriptedUSBTransportProvider(failuresBeforeSuccess: .max)
     let pipeline = DevicePipeline(
       identifier: DeviceIdentifier(vendorID: 0x3537, productID: 0x1010),
@@ -93,7 +97,8 @@ struct USBStartupOutputPolicyTests {
     #expect(await provider.openAttempts() == 1)
   }
 
-  @Test func stopWhileOpenIsSuspendedCannotPublishOrOrphanVirtualOutput() async {
+  @Test
+  func stopWhileOpenIsSuspendedCannotPublishOrOrphanVirtualOutput() async {
     let session = ClosingUSBTransportSession()
     let provider = SuspendedSuccessfulUSBTransportProvider(session: session)
     let dispatcher = StartupRecordingOutputDispatcher()
@@ -118,7 +123,8 @@ struct USBStartupOutputPolicyTests {
     #expect(!dispatcher.ownershipStates.contains(.exclusive))
   }
 
-  @Test func ignoresIOErrorForXbox360RingLED() {
+  @Test
+  func ignoresIOErrorForXbox360RingLED() {
     let parser = Xbox360Parser()
     let error = USBTransportError.inputOutput
 
@@ -127,7 +133,8 @@ struct USBStartupOutputPolicyTests {
     )
   }
 
-  @Test func ignoresUnsupportedErrorForXbox360RingLED() {
+  @Test
+  func ignoresUnsupportedErrorForXbox360RingLED() {
     let parser = Xbox360Parser()
 
     #expect(
@@ -139,18 +146,24 @@ struct USBStartupOutputPolicyTests {
     )
   }
 
-  @Test func ignoresNotFoundErrorForXbox360RingLED() {
+  @Test
+  func ignoresNotFoundErrorForXbox360RingLED() {
     let parser = Xbox360Parser()
 
     #expect(
-      isIgnorableUSBStartupOutputError(parser: parser, packet: [0x01, 0x03, 0x06], error: .notFound)
+      isIgnorableUSBStartupOutputError(
+        parser: parser,
+        packet: [0x01, 0x03, 0x06],
+        error: .notFound
+      )
     )
   }
 
-  @Test func preservesOtherXbox360StartupOutputFailures() {
+  @Test
+  func preservesOtherXbox360StartupOutputFailures() {
     let parser = Xbox360Parser()
     let errors: [USBTransportError] = [
-      .disconnected, .accessDenied, .timeout, .platform(code: 1, message: "unexpected")
+      .disconnected, .accessDenied, .timeout, .platform(code: 1, message: "unexpected"),
     ]
 
     for error in errors {
@@ -160,7 +173,8 @@ struct USBStartupOutputPolicyTests {
     }
   }
 
-  @Test func preservesNotFoundForOtherStartupPacketsAndParsers() {
+  @Test
+  func preservesNotFoundForOtherStartupPacketsAndParsers() {
     let parser = Xbox360Parser()
     let genericParser = GenericHIDParser(identifier: DeviceIdentifier(vendorID: 1, productID: 2))
 
@@ -176,7 +190,8 @@ struct USBStartupOutputPolicyTests {
     )
   }
 
-  @Test func preservesIOErrorForOtherStartupPacketsAndParsers() {
+  @Test
+  func preservesIOErrorForOtherStartupPacketsAndParsers() {
     let parser = Xbox360Parser()
     let genericParser = GenericHIDParser(identifier: DeviceIdentifier(vendorID: 1, productID: 2))
     let error = USBTransportError.inputOutput
@@ -233,9 +248,10 @@ private actor ScriptedUSBTransportProvider: USBTransportProvider {
 
   func devices() throws -> [USBTransportDevice] { [] }
 
-  func open(_ device: USBTransportDevice, options: USBTransportOpenOptions) throws
-    -> any USBTransportSession
-  {
+  func open(
+    _ device: USBTransportDevice,
+    options: USBTransportOpenOptions
+  ) throws -> any USBTransportSession {
     attempts += 1
     if attempts <= failuresBeforeSuccess { throw USBTransportError.accessDenied }
     return StartupUSBTransportSession()
@@ -264,9 +280,10 @@ private actor SuspendedSuccessfulUSBTransportProvider: USBTransportProvider {
 
   func devices() throws -> [USBTransportDevice] { [] }
 
-  func open(_ device: USBTransportDevice, options: USBTransportOpenOptions) async throws
-    -> any USBTransportSession
-  {
+  func open(
+    _ device: USBTransportDevice,
+    options: USBTransportOpenOptions
+  ) async throws -> any USBTransportSession {
     startedOpen = true
     await withCheckedContinuation { continuation = $0 }
     return session
@@ -311,10 +328,9 @@ private final class StartupRecordingOutputDispatcher: OutputDispatcher,
   var ownershipAtDispatch: [HIDInputOwnership] { lock.withLock { dispatchedOwnership } }
 
   func controllerInputOwnershipChanged(
-    _ ownership: HIDInputOwnership, for identifier: DeviceIdentifier
-  ) {
-    lock.withLock { recordedOwnership.append(ownership) }
-  }
+    _ ownership: HIDInputOwnership,
+    for identifier: DeviceIdentifier
+  ) { lock.withLock { recordedOwnership.append(ownership) } }
 
   var batches: [[ControllerEvent]] { lock.withLock { recordedBatches } }
   var dispatchCount: Int { lock.withLock { recordedBatches.count } }

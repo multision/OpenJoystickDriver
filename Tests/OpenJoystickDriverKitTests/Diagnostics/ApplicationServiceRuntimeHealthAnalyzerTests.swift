@@ -5,7 +5,8 @@ import Testing
 struct ApplicationServiceRuntimeHealthAnalyzerTests {
   private let mib: UInt64 = 1_024 * 1_024
 
-  @Test func stableWindowAllowsNoiseAndTransientPeaks() throws {
+  @Test
+  func stableWindowAllowsNoiseAndTransientPeaks() throws {
     let summary = try #require(
       ApplicationServiceRuntimeHealthAnalyzer.summarize(
         samples(residentMiB: [100, 150, 101, 99, 101], cpuMilliseconds: [0, 10, 20, 30, 40])
@@ -19,7 +20,8 @@ struct ApplicationServiceRuntimeHealthAnalyzerTests {
     #expect(summary.soakVerdict == .insufficientData)
   }
 
-  @Test func significantMostlyMonotonicGrowthIsFlagged() throws {
+  @Test
+  func significantMostlyMonotonicGrowthIsFlagged() throws {
     let summary = try #require(
       ApplicationServiceRuntimeHealthAnalyzer.summarize(
         samples(
@@ -39,7 +41,8 @@ struct ApplicationServiceRuntimeHealthAnalyzerTests {
     #expect(summary.residentGrowthBytesPerHour > Double(1_200 * mib))
   }
 
-  @Test func stableLongSoakProducesStableVerdictAndResourceRanges() throws {
+  @Test
+  func stableLongSoakProducesStableVerdictAndResourceRanges() throws {
     let summary = try #require(
       ApplicationServiceRuntimeHealthAnalyzer.summarize(
         samples(
@@ -61,7 +64,8 @@ struct ApplicationServiceRuntimeHealthAnalyzerTests {
     #expect(abs(summary.residentGrowthBytesPerHour) < Double(mib))
   }
 
-  @Test func descriptorOrThreadGrowthIsAResourceFinding() throws {
+  @Test
+  func descriptorOrThreadGrowthIsAResourceFinding() throws {
     let summary = try #require(
       ApplicationServiceRuntimeHealthAnalyzer.summarize(
         samples(
@@ -78,7 +82,8 @@ struct ApplicationServiceRuntimeHealthAnalyzerTests {
     #expect(summary.soakVerdict == .resourceGrowthObserved)
   }
 
-  @Test func configuredResidentHighWaterLimitTakesPriority() throws {
+  @Test
+  func configuredResidentHighWaterLimitTakesPriority() throws {
     let summary = try #require(
       ApplicationServiceRuntimeHealthAnalyzer.summarize(
         samples(residentMiB: [100, 110, 120, 130, 140], cpuMilliseconds: [0, 10, 20, 30, 40]),
@@ -91,7 +96,8 @@ struct ApplicationServiceRuntimeHealthAnalyzerTests {
     #expect(summary.soakVerdict == .residentLimitExceeded)
   }
 
-  @Test func defaultPhysicalFootprintLimitFlagsCompressedOrDirtyAllocatorGrowth() throws {
+  @Test
+  func defaultPhysicalFootprintLimitFlagsCompressedOrDirtyAllocatorGrowth() throws {
     let summary = try #require(
       ApplicationServiceRuntimeHealthAnalyzer.summarize(
         samples(
@@ -106,7 +112,8 @@ struct ApplicationServiceRuntimeHealthAnalyzerTests {
     #expect(summary.soakVerdict == .physicalFootprintLimitExceeded)
   }
 
-  @Test func tooFewSamplesRemainInconclusive() throws {
+  @Test
+  func tooFewSamplesRemainInconclusive() throws {
     let summary = try #require(
       ApplicationServiceRuntimeHealthAnalyzer.summarize(
         samples(residentMiB: [100, 120, 140, 160], cpuMilliseconds: [0, 5, 10, 15])
@@ -117,7 +124,8 @@ struct ApplicationServiceRuntimeHealthAnalyzerTests {
     #expect(summary.soakVerdict == .insufficientData)
   }
 
-  @Test func emptyInputProducesNoSummary() {
+  @Test
+  func emptyInputProducesNoSummary() {
     #expect(ApplicationServiceRuntimeHealthAnalyzer.summarize([]) == nil)
   }
 

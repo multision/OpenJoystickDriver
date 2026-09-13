@@ -2,9 +2,9 @@ import Foundation
 
 extension RemappingDeviceState {
   /// Rebuilds the unmapped contribution using the same aggregate as explicit destinations.
-  mutating func updatePassthrough(replayingAxis: (RemappingAxis, Float)? = nil)
-    -> [RemappingEngineAction]
-  {
+  mutating func updatePassthrough(
+    replayingAxis: (RemappingAxis, Float)? = nil
+  ) -> [RemappingEngineAction] {
     guard profile.outputPolicy.virtualGamepad == .passthrough else { return [] }
     let reserved = reservedPassthroughSources
     var buttons: Set<RemappingButton> = []
@@ -15,7 +15,8 @@ extension RemappingDeviceState {
       case .button(let button): buttons.insert(button)
       case .dpad(let direction): directions.insert(direction)
       case .axis, .axisDirection, .triggerStage, .motionLean, .touchContact, .touchGrid,
-        .touchSwipe: break
+        .touchSwipe:
+        break
       }
     }
     var axes: [RemappingAxis: Double] = [:]
@@ -23,7 +24,7 @@ extension RemappingDeviceState {
     if let (axis, value) = replayingAxis { physicalValues[axis] = value }
     for (axis, value) in physicalValues {
       let sources: [RemappingSource] = [
-        .axis(axis), .axisDirection(axis, .negative), .axisDirection(axis, .positive)
+        .axis(axis), .axisDirection(axis, .negative), .axisDirection(axis, .positive),
       ]
       guard sources.allSatisfy({ !reserved.contains($0) && binding(for: $0) == nil }) else {
         continue
@@ -39,8 +40,8 @@ extension RemappingDeviceState {
   private var reservedPassthroughSources: Set<RemappingSource> {
     var sources = Set(profile.layers.map(\.activator))
     for mapping in profile.stickMappings where !mapping.passthrough {
-      let axes: [RemappingAxis] = mapping.source == .left
-        ? [.leftStickX, .leftStickY] : [.rightStickX, .rightStickY]
+      let axes: [RemappingAxis] =
+        mapping.source == .left ? [.leftStickX, .leftStickY] : [.rightStickX, .rightStickY]
       sources.formUnion(axes.map(RemappingSource.axis))
     }
     for mapping in profile.triggerMappings where !mapping.passthrough {

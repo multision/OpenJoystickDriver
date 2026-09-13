@@ -3,7 +3,8 @@ import Testing
 @testable import OpenJoystickDriverKit
 
 struct RumbleStopTokenTests {
-  @Test func replacingTokenInvalidatesPreviousDelayedStop() {
+  @Test
+  func replacingTokenInvalidatesPreviousDelayedStop() {
     let identifier = DeviceIdentifier(vendorID: 1, productID: 2, locationID: 3)
     var registry = RumbleStopTokenRegistry()
 
@@ -14,7 +15,8 @@ struct RumbleStopTokenTests {
     #expect(registry.isCurrent(current, for: identifier))
   }
 
-  @Test func tokensAreIndependentPerPhysicalController() {
+  @Test
+  func tokensAreIndependentPerPhysicalController() {
     let first = DeviceIdentifier(vendorID: 1, productID: 2, locationID: 3)
     let second = DeviceIdentifier(vendorID: 1, productID: 2, locationID: 4)
     var registry = RumbleStopTokenRegistry()
@@ -27,7 +29,8 @@ struct RumbleStopTokenTests {
     #expect(registry.isCurrent(secondToken, for: second))
   }
 
-  @Test func removingTokenPreventsDelayedStop() {
+  @Test
+  func removingTokenPreventsDelayedStop() {
     let identifier = DeviceIdentifier(vendorID: 1, productID: 2, locationID: 3)
     var registry = RumbleStopTokenRegistry()
     let token = registry.replace(for: identifier)

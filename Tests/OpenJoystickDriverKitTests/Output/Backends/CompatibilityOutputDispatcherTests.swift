@@ -4,7 +4,8 @@ import Testing
 @testable import OpenJoystickDriverKit
 
 struct CompatibilityOutputDispatcherTests {
-  @Test func dispatchesOnlyToCurrentCompatibilityBackend() async {
+  @Test
+  func dispatchesOnlyToCurrentCompatibilityBackend() async {
     let previous = RecordingCompatibilityDispatcher()
     let current = RecordingCompatibilityDispatcher()
     let dispatcher = CompatibilityOutputDispatcher()
@@ -18,7 +19,8 @@ struct CompatibilityOutputDispatcherTests {
     #expect(current.batches == [[.buttonPressed(.a)]])
   }
 
-  @Test func explicitSuppressionStopsCompatibilityDispatch() async {
+  @Test
+  func explicitSuppressionStopsCompatibilityDispatch() async {
     let backend = RecordingCompatibilityDispatcher()
     let dispatcher = CompatibilityOutputDispatcher()
     dispatcher.setBackend(backend)

@@ -19,16 +19,13 @@ public enum VirtualHIDProvisioningHost: Sendable {
 
   public static func currentAuthorization(bundle: Bundle = .main) -> Authorization {
     guard let url = bundle.url(forResource: "embedded", withExtension: "provisionprofile"),
-      let data = try? Data(contentsOf: url),
-      let plist = cmsPlist(from: data)
+      let data = try? Data(contentsOf: url), let plist = cmsPlist(from: data)
     else { return .unavailable }
     return authorization(profilePlist: plist, hostIDs: hostIdentifiers())
   }
 
-  public static func authorization(
-    profilePlist: [String: Any],
-    hostIDs: [String]
-  ) -> Authorization {
+  public static func authorization(profilePlist: [String: Any], hostIDs: [String]) -> Authorization
+  {
     if profilePlist["ProvisionsAllDevices"] as? Bool == true { return .unrestricted }
     guard let devices = profilePlist["ProvisionedDevices"] as? [String] else {
       return .unrestricted
@@ -53,8 +50,7 @@ public enum VirtualHIDProvisioningHost: Sendable {
         "IOPlatformUUID" as CFString,
         kCFAllocatorDefault,
         0
-      )?.takeRetainedValue() as? String,
-      !uuid.isEmpty
+      )?.takeRetainedValue() as? String, !uuid.isEmpty
     else { return nil }
     return uuid
   }
@@ -71,8 +67,7 @@ public enum VirtualHIDProvisioningHost: Sendable {
     let chosen = IORegistryEntryFromPath(kIOMasterPortDefault, "IODeviceTree:/chosen")
     guard chosen != 0 else { return nil }
     defer { IOObjectRelease(chosen) }
-    guard
-      let chipID = littleEndianUInt32(dataProperty(chosen, "chip-id")),
+    guard let chipID = littleEndianUInt32(dataProperty(chosen, "chip-id")),
       let uniqueChipID = littleEndianUInt64(dataProperty(chosen, "unique-chip-id"))
     else { return nil }
     return "\(paddedHex(UInt64(chipID), width: 8))-\(paddedHex(uniqueChipID, width: 16))"
@@ -101,12 +96,8 @@ public enum VirtualHIDProvisioningHost: Sendable {
   }
 
   private static func dataProperty(_ entry: io_registry_entry_t, _ key: String) -> Data? {
-    IORegistryEntryCreateCFProperty(
-      entry,
-      key as CFString,
-      kCFAllocatorDefault,
-      0
-    )?.takeRetainedValue() as? Data
+    IORegistryEntryCreateCFProperty(entry, key as CFString, kCFAllocatorDefault, 0)?
+      .takeRetainedValue() as? Data
   }
 
   private static func littleEndianUInt32(_ data: Data?) -> UInt32? {

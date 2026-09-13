@@ -5,9 +5,11 @@ import Testing
 @testable import OpenJoystickDriver
 
 struct RuntimeMotionProfileTests {
-  @Test func motionEditValidatesWithoutChangingBindings() throws {
+  @Test
+  func motionEditValidatesWithoutChangingBindings() throws {
     let binding = RemappingBinding(
-      source: .button(.south), destination: .keyboard(key: .space, modifiers: [])
+      source: .button(.south),
+      destination: .keyboard(key: .space, modifiers: [])
     )
     let original = RemappingProfile(
       name: "Current",
@@ -31,7 +33,8 @@ struct RuntimeMotionProfileTests {
     #expect(try edited.settingMotionTuning(.default).profile.motionTuning == .default)
   }
 
-  @Test func bindingAndMetadataEditsPreserveMotionTuning() throws {
+  @Test
+  func bindingAndMetadataEditsPreserveMotionTuning() throws {
     let tuning = RemappingMotionTuning(space: .world, yawSensitivity: 3, invertPitch: true)
     let destination = RemappingDestination.keyboard(key: .space, modifiers: [])
     let binding = RemappingBinding(source: .button(.south), destination: destination)
@@ -44,7 +47,9 @@ struct RuntimeMotionProfileTests {
     )
     let draft = RuntimeProfileDraft(profile: profile)
     let renamed = try draft.settingMetadata(
-      name: "Renamed", device: profile.device, applicationScope: .global
+      name: "Renamed",
+      device: profile.device,
+      applicationScope: .global
     )
     #expect(renamed.profile.motionTuning == tuning)
     #expect(try draft.settingOutputPolicy(.systemInput).profile.motionTuning == tuning)
@@ -55,9 +60,11 @@ struct RuntimeMotionProfileTests {
     #expect(cliEdited.motionTuning == tuning)
   }
 
-  @Test func gyroEditsPreserveOtherSettingsAndRejectIncompatibleOutput() throws {
+  @Test
+  func gyroEditsPreserveOtherSettingsAndRejectIncompatibleOutput() throws {
     let binding = RemappingBinding(
-      source: .button(.south), destination: .keyboard(key: .space, modifiers: [])
+      source: .button(.south),
+      destination: .keyboard(key: .space, modifiers: [])
     )
     let original = RemappingProfile(
       name: "Gyro",
@@ -79,7 +86,9 @@ struct RuntimeMotionProfileTests {
     #expect(edited.profile.bindings == original.bindings)
     #expect(edited.profile.id == original.id)
     let renamed = try edited.settingMetadata(
-      name: "Renamed", device: original.device, applicationScope: .global
+      name: "Renamed",
+      device: original.device,
+      applicationScope: .global
     )
     #expect(renamed.profile.gyroOutput == gyro)
     #expect(try edited.settingMotionTuning(.default).profile.gyroOutput == gyro)

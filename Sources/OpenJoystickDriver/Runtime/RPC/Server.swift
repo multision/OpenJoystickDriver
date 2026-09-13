@@ -16,7 +16,8 @@ struct SendableReply<T>: @unchecked Sendable { let call: (T) -> Void }
 ///   actor-isolated DeviceManager/PermissionManager handle
 ///   their own synchronization; reply blocks are dispatched
 ///   by the local RPC bridge.
-@objc public final class ApplicationServiceServer: NSObject, @unchecked Sendable {
+@objc
+public final class ApplicationServiceServer: NSObject, @unchecked Sendable {
   let deviceManager: DeviceManager
   let permissionManager: PermissionManager
   let dispatcher: CompatibilityOutputDispatcher
@@ -407,9 +408,9 @@ struct SendableReply<T>: @unchecked Sendable { let call: (T) -> Void }
     }
   }
 
-  static func loadCompatibilityRetrySnapshot(defaults: UserDefaults = .standard)
-    -> CompatibilityRetrySnapshot?
-  {
+  static func loadCompatibilityRetrySnapshot(
+    defaults: UserDefaults = .standard
+  ) -> CompatibilityRetrySnapshot? {
     guard let data = defaults.data(forKey: compatibilityRetrySnapshotDefaultsKey) else {
       return nil
     }

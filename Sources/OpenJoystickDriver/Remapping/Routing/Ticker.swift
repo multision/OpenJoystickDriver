@@ -132,9 +132,10 @@ extension RemappingOutputRouter {
     }
   }
 
-  func updateControls(outputSuppressed: Bool? = nil, compatibilityOutputAllowed: Bool? = nil)
-    -> RemappingRoutingControls
-  {
+  func updateControls(
+    outputSuppressed: Bool? = nil,
+    compatibilityOutputAllowed: Bool? = nil
+  ) -> RemappingRoutingControls {
     lock.withLock {
       controls = RemappingRoutingControls(
         outputSuppressed: outputSuppressed ?? controls.outputSuppressed,

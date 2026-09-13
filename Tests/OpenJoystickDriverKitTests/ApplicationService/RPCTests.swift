@@ -4,12 +4,15 @@ import Testing
 
 @testable import OpenJoystickDriverKit
 
-private func waitForSemaphore(_ semaphore: DispatchSemaphore, timeout: DispatchTime)
-  -> DispatchTimeoutResult
-{ semaphore.wait(timeout: timeout) }
+private func waitForSemaphore(
+  _ semaphore: DispatchSemaphore,
+  timeout: DispatchTime
+) -> DispatchTimeoutResult { semaphore.wait(timeout: timeout) }
 
-@Suite(.serialized) struct LocalServiceRPCTests {
-  @Test func roundTripUsesPrivateSocketAndBoundedJSONFrame() async throws {
+@Suite(.serialized)
+struct LocalServiceRPCTests {
+  @Test
+  func roundTripUsesPrivateSocketAndBoundedJSONFrame() async throws {
     let socketPath = temporarySocketPath()
     let server = LocalServiceRPCServer(
       socketPath: socketPath,
@@ -35,7 +38,8 @@ private func waitForSemaphore(_ semaphore: DispatchSemaphore, timeout: DispatchT
     #expect(attributes[.posixPermissions] as? Int == 0o600)
   }
 
-  @Test func rejectedPeerIsReportedAsAuthenticationFailure() async throws {
+  @Test
+  func rejectedPeerIsReportedAsAuthenticationFailure() async throws {
     let socketPath = temporarySocketPath()
     let handlerCalled = DispatchSemaphore(value: 0)
     let server = LocalServiceRPCServer(
@@ -60,7 +64,8 @@ private func waitForSemaphore(_ semaphore: DispatchSemaphore, timeout: DispatchT
     #expect(waitForSemaphore(handlerCalled, timeout: .now()) == .timedOut)
   }
 
-  @Test func secondServerCannotDisplaceLiveSocketOwner() throws {
+  @Test
+  func secondServerCannotDisplaceLiveSocketOwner() throws {
     let socketPath = temporarySocketPath()
     let first = LocalServiceRPCServer(
       socketPath: socketPath,
@@ -84,7 +89,8 @@ private func waitForSemaphore(_ semaphore: DispatchSemaphore, timeout: DispatchT
     } catch { Issue.record("Unexpected second-server error: \(error)") }
   }
 
-  @Test func oversizedFrameIsRejectedBeforeWrite() throws {
+  @Test
+  func oversizedFrameIsRejectedBeforeWrite() throws {
     let descriptor = socket(AF_UNIX, SOCK_STREAM, 0)
     try #require(descriptor >= 0)
     defer { Darwin.close(descriptor) }
@@ -95,7 +101,8 @@ private func waitForSemaphore(_ semaphore: DispatchSemaphore, timeout: DispatchT
     }
   }
 
-  @Test func responseWithoutErrorCodeStillDecodes() throws {
+  @Test
+  func responseWithoutErrorCodeStillDecodes() throws {
     let response = try JSONDecoder().decode(
       LocalServiceRPCResponse.self,
       from: Data(#"{"result":null,"error":"peer-error"}"#.utf8)
@@ -106,7 +113,8 @@ private func waitForSemaphore(_ semaphore: DispatchSemaphore, timeout: DispatchT
     #expect(response.errorCode == nil)
   }
 
-  @Test func partialFrameRemainsInvalidInsteadOfLookingLikePeerRejection() throws {
+  @Test
+  func partialFrameRemainsInvalidInsteadOfLookingLikePeerRejection() throws {
     var descriptors = [Int32](repeating: -1, count: 2)
     try #require(socketpair(AF_UNIX, SOCK_STREAM, 0, &descriptors) == 0)
     defer {
@@ -126,7 +134,8 @@ private func waitForSemaphore(_ semaphore: DispatchSemaphore, timeout: DispatchT
     }
   }
 
-  @Test func typedPermissionRequestRoundTripsThroughClient() async throws {
+  @Test
+  func typedPermissionRequestRoundTripsThroughClient() async throws {
     let socketPath = temporarySocketPath()
     let server = LocalServiceRPCServer(
       socketPath: socketPath,
@@ -163,7 +172,8 @@ private func waitForSemaphore(_ semaphore: DispatchSemaphore, timeout: DispatchT
     )
   }
 
-  @Test func cancellingHeldRequestClosesConnectionBeforeTimeoutAndNextCallWorks() async throws {
+  @Test
+  func cancellingHeldRequestClosesConnectionBeforeTimeoutAndNextCallWorks() async throws {
     let socketPath = temporarySocketPath()
     let requestReceived = DispatchSemaphore(value: 0)
     let releaseHeldRequest = DispatchSemaphore(value: 0)
@@ -211,7 +221,8 @@ private func waitForSemaphore(_ semaphore: DispatchSemaphore, timeout: DispatchT
     releaseHeldRequest.signal()
   }
 
-  @Test func guiHostWaitsForTheLocalServerInsteadOfSpawning() {
+  @Test
+  func guiHostWaitsForTheLocalServerInsteadOfSpawning() {
     #expect(
       ApplicationServiceClient.launchPolicy(
         commandLineArguments: [
@@ -222,21 +233,21 @@ private func waitForSemaphore(_ semaphore: DispatchSemaphore, timeout: DispatchT
     )
   }
 
-  @Test func cliProbeSpawnsTheBundleExecutableWhenTheSocketIsMissing() {
+  @Test
+  func cliProbeSpawnsTheBundleExecutableWhenTheSocketIsMissing() {
     #expect(
       ApplicationServiceClient.launchPolicy(
         commandLineArguments: [
-          "/Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver",
-          "--headless",
-          "app",
-          "ready",
+          "/Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver", "--headless",
+          "app", "ready",
         ],
         bundlePathExtension: "app"
       ) == .spawnBundleExecutable
     )
   }
 
-  @Test func unpackagedProcessDoesNotSpawnABundle() {
+  @Test
+  func unpackagedProcessDoesNotSpawnABundle() {
     #expect(
       ApplicationServiceClient.launchPolicy(
         commandLineArguments: ["openjoystickdriver", "--headless", "app", "ready"],

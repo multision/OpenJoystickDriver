@@ -3,7 +3,8 @@ import Testing
 @testable import OpenJoystickDriverKit
 
 struct StickTransformTests {
-  @Test func radialCalibrationPreservesDirectionAndBoundsDiagonalSpeed() throws {
+  @Test
+  func radialCalibrationPreservesDirectionAndBoundsDiagonalSpeed() throws {
     let tuning = RemappingStickTuning(innerDeadzone: 0.2, outerDeadzone: 0.2)
     #expect(RemappingStickTransform.value(x: 0.1, y: 0.1, tuning: tuning) == .zero)
     let middle = try #require(RemappingStickTransform.value(x: 0.5, y: 0, tuning: tuning))
@@ -13,13 +14,22 @@ struct StickTransformTests {
     #expect(diagonal.x == diagonal.y)
   }
 
-  @Test func rejectsInvalidCalibrationAndInput() {
+  @Test
+  func rejectsInvalidCalibrationAndInput() {
     #expect(RemappingStickTransform.value(x: .nan, y: 0, tuning: .default) == nil)
-    #expect(RemappingStickTransform.value(
-      x: 1, y: 0, tuning: RemappingStickTuning(innerDeadzone: 0.5, outerDeadzone: 0.5)
-    ) == nil)
-    #expect(RemappingStickTransform.value(
-      x: 1, y: 0, tuning: RemappingStickTuning(responseExponent: .infinity)
-    ) == nil)
+    #expect(
+      RemappingStickTransform.value(
+        x: 1,
+        y: 0,
+        tuning: RemappingStickTuning(innerDeadzone: 0.5, outerDeadzone: 0.5)
+      ) == nil
+    )
+    #expect(
+      RemappingStickTransform.value(
+        x: 1,
+        y: 0,
+        tuning: RemappingStickTuning(responseExponent: .infinity)
+      ) == nil
+    )
   }
 }

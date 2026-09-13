@@ -5,8 +5,10 @@
 
   @testable import OpenJoystickDriver
 
-  @MainActor struct MotionCalibrationStateTests {
-    @Test func unavailableMotionClearsBusyStateAndProvidesRecoveryGuidance() async {
+  @MainActor
+  struct MotionCalibrationStateTests {
+    @Test
+    func unavailableMotionClearsBusyStateAndProvidesRecoveryGuidance() async {
       let gateway = DelayedMotionCalibrationGateway()
       let model = MotionCalibrationViewModel(gateway: gateway)
       model.select(RuntimeDeviceSelector(vendorID: 1, productID: 2, runtimeIdentifier: "first"))
@@ -16,14 +18,18 @@
       await request.value
       #expect(model.status == nil)
       #expect(!model.isBusy)
-      #expect(model.errorMessage == OJDLocalized.string(
-        "motion.calibration.motionUnavailable",
-        fallback: "Enable a remapping profile for this controller "
-          + "and check that motion is available."
-      ))
+      #expect(
+        model.errorMessage
+          == OJDLocalized.string(
+            "motion.calibration.motionUnavailable",
+            fallback: "Enable a remapping profile for this controller "
+              + "and check that motion is available."
+          )
+      )
     }
 
-    @Test func discardedSelectionIgnoresLateCalibrationResult() async throws {
+    @Test
+    func discardedSelectionIgnoresLateCalibrationResult() async throws {
       let gateway = DelayedMotionCalibrationGateway()
       let model = MotionCalibrationViewModel(gateway: gateway)
       model.select(RuntimeDeviceSelector(vendorID: 1, productID: 2, runtimeIdentifier: "first"))
@@ -38,7 +44,8 @@
       #expect(!model.isBusy)
     }
 
-    @Test func selectedControllerReceivesCalibrationStatus() async throws {
+    @Test
+    func selectedControllerReceivesCalibrationStatus() async throws {
       let gateway = DelayedMotionCalibrationGateway()
       let model = MotionCalibrationViewModel(gateway: gateway)
       let selector = RuntimeDeviceSelector(vendorID: 1, productID: 2, runtimeIdentifier: "second")

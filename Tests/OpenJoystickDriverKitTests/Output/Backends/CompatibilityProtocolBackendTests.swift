@@ -3,7 +3,8 @@ import Testing
 @testable import OpenJoystickDriverKit
 
 struct CompatibilityProtocolBackendTests {
-  @Test func xbox360CloneSpoofsFirstPartyWiredPad() {
+  @Test
+  func xbox360CloneSpoofsFirstPartyWiredPad() {
     let route = CompatibilityProtocolBackendCatalog.route(for: .xusb)
     #expect(route?.canPublish == true)
     #expect(route?.selectableIdentity == .sdl2_3)
@@ -13,7 +14,8 @@ struct CompatibilityProtocolBackendTests {
     #expect(route?.containsExplicit(vendorID: 0x413D, productID: 0x2104) == false)
   }
 
-  @Test func gipCloneSpoofsFirstPartyXboxSeries() {
+  @Test
+  func gipCloneSpoofsFirstPartyXboxSeries() {
     let route = CompatibilityProtocolBackendCatalog.route(for: .gip)
     #expect(route?.canPublish == true)
     #expect(route?.selectableIdentity == .appleGameController)
@@ -21,15 +23,17 @@ struct CompatibilityProtocolBackendTests {
     #expect(route?.containsExplicit(vendorID: 0x3537, productID: 0x1010) == false)
   }
 
-  @Test func hidDialectIdentitiesAreAutomaticForMatchingPhysicalDevices() {
+  @Test
+  func hidDialectIdentitiesAreAutomaticForMatchingPhysicalDevices() {
     #expect(CompatibilityProtocolBackendCatalog.route(for: .hid) == nil)
     #expect(CompatibilityProtocolBackendCatalog.canSelect(.dualShock4, for: .hid) == true)
     #expect(CompatibilityProtocolBackendCatalog.canSelect(.dualSense, for: .hid) == true)
     #expect(CompatibilityProtocolBackendCatalog.canSelect(.switchPro, for: .hid) == true)
     #expect(CompatibilityProtocolBackendCatalog.canSelect(.dualShock4, for: .gip) == false)
     #expect(
-      CompatibilityProtocolBackendCatalog.hidDialectRoutes.map(\.selectableIdentity)
-        == [.dualShock4, .dualSense, .switchPro]
+      CompatibilityProtocolBackendCatalog.hidDialectRoutes.map(\.selectableIdentity) == [
+        .dualShock4, .dualSense, .switchPro,
+      ]
     )
     let ds4 = ApplicationServiceDeviceDescription(
       name: "DualShock 4",
@@ -56,7 +60,8 @@ struct CompatibilityProtocolBackendTests {
     #expect(CompatibilityProtocolBackendCatalog.hidDialectRoute(for: generic) == nil)
   }
 
-  @Test func catalogHasOneRoutePerWireFamily() {
+  @Test
+  func catalogHasOneRoutePerWireFamily() {
     let families = Set(CompatibilityProtocolBackendCatalog.routes.map(\.subfamily))
     #expect(families == Set(PhysicalProtocolSubfamily.allCases))
     #expect(

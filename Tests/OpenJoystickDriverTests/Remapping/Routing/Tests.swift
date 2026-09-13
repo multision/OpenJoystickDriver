@@ -5,7 +5,8 @@ import Testing
 @testable import OpenJoystickDriver
 
 struct RemappingOutputRouterTests {
-  @Test func calibrationRejectsUnknownControllersAndIneligibleRoutes() async throws {
+  @Test
+  func calibrationRejectsUnknownControllersAndIneligibleRoutes() async throws {
     let harness = try await RemappingRouterHarness.make(profile: remappingRouterProfile())
     defer { harness.removeFiles() }
     let device = remappingRouterDevice(1)
@@ -66,7 +67,8 @@ struct RemappingOutputRouterTests {
     try await harness.router.shutdown()
   }
 
-  @Test func shutdownRetiresVirtualBackendEvenWhenNeutralDeliveryFails() async throws {
+  @Test
+  func shutdownRetiresVirtualBackendEvenWhenNeutralDeliveryFails() async throws {
     let original = remappingRouterProfile()
     let profile = RemappingProfile(
       name: original.name,
@@ -82,15 +84,13 @@ struct RemappingOutputRouterTests {
     try await harness.router.dispatchCausally(events: [.buttonPressed(.a)], from: device)
     harness.recorder.removeAll()
     harness.compatibility.rejectNeutral = true
-    await #expect(throws: RemappingOutputRoutingError.self) {
-      try await harness.router.shutdown()
-    }
+    await #expect(throws: RemappingOutputRoutingError.self) { try await harness.router.shutdown() }
     #expect(harness.recorder.snapshot() == [.compatibilityStop(device)])
     harness.compatibility.rejectNeutral = false
     try await harness.router.shutdown()
-    #expect(harness.recorder.snapshot() == [
-      .compatibilityStop(device), .gamepad(.neutral, device)
-    ])
+    #expect(
+      harness.recorder.snapshot() == [.compatibilityStop(device), .gamepad(.neutral, device)]
+    )
   }
 
   @Test(arguments: [false, true])
@@ -111,9 +111,9 @@ struct RemappingOutputRouterTests {
     harness.recorder.removeAll()
     if transaction {
       let pending = try await harness.router.beginProfileTransaction()
-      #expect(harness.recorder.snapshot() == [
-        .gamepad(.neutral, device), .compatibilityStop(device)
-      ])
+      #expect(
+        harness.recorder.snapshot() == [.gamepad(.neutral, device), .compatibilityStop(device)]
+      )
       try await harness.router.stopController(device)
       try await harness.router.rollBackProfileTransaction(pending)
       #expect(await harness.router.statuses().isEmpty)
@@ -121,12 +121,13 @@ struct RemappingOutputRouterTests {
       try await harness.router.shutdown()
       try await harness.router.shutdown()
     }
-    #expect(harness.recorder.snapshot() == [
-      .gamepad(.neutral, device), .compatibilityStop(device)
-    ])
+    #expect(
+      harness.recorder.snapshot() == [.gamepad(.neutral, device), .compatibilityStop(device)]
+    )
   }
 
-  @Test func compatibilityGateDoesNotSuppressRemappedGamepad() async throws {
+  @Test
+  func compatibilityGateDoesNotSuppressRemappedGamepad() async throws {
     let original = remappingRouterProfile()
     let profile = RemappingProfile(
       name: original.name,
@@ -155,7 +156,8 @@ struct RemappingOutputRouterTests {
     try await harness.router.stopController(device)
   }
 
-  @Test func virtualOnlyProfileDoesNotRequireSystemInputPostingAccess() async throws {
+  @Test
+  func virtualOnlyProfileDoesNotRequireSystemInputPostingAccess() async throws {
     let original = remappingRouterProfile()
     let profile = RemappingProfile(
       name: original.name,
@@ -177,7 +179,8 @@ struct RemappingOutputRouterTests {
     #expect(harness.recorder.snapshot().isEmpty)
   }
 
-  @Test func exclusiveProfileWaitsForOwnershipAndReleasesOnLoss() async throws {
+  @Test
+  func exclusiveProfileWaitsForOwnershipAndReleasesOnLoss() async throws {
     let original = remappingRouterProfile()
     let profile = RemappingProfile(
       name: original.name,
@@ -206,7 +209,8 @@ struct RemappingOutputRouterTests {
     #expect(await harness.router.status(for: device)?.eligibility == .physicalInputNotExclusive)
   }
 
-  @Test func ownershipOfSameModelDoesNotAuthorizeAnotherController() async throws {
+  @Test
+  func ownershipOfSameModelDoesNotAuthorizeAnotherController() async throws {
     let original = remappingRouterProfile()
     let profile = RemappingProfile(
       name: original.name,
@@ -231,7 +235,8 @@ struct RemappingOutputRouterTests {
     #expect(await harness.router.status(for: first)?.eligibility == .physicalInputNotExclusive)
   }
 
-  @Test func activeProfileExclusivelyReplacesCompatibilityOutput() async throws {
+  @Test
+  func activeProfileExclusivelyReplacesCompatibilityOutput() async throws {
     let profile = remappingRouterProfile()
     let harness = try await RemappingRouterHarness.make(profile: profile)
     defer { harness.removeFiles() }
@@ -243,7 +248,7 @@ struct RemappingOutputRouterTests {
 
     #expect(
       harness.recorder.snapshot() == [
-        .system(.keyDown(.space)), .compatibility([.buttonPressed(.b)], compatibility)
+        .system(.keyDown(.space)), .compatibility([.buttonPressed(.b)], compatibility),
       ]
     )
     #expect(
@@ -252,7 +257,8 @@ struct RemappingOutputRouterTests {
     #expect(await harness.router.status(for: compatibility)?.selection == .compatibility)
   }
 
-  @Test func routeTransitionsNeutralizeBeforeTheNewRouteEmits() async throws {
+  @Test
+  func routeTransitionsNeutralizeBeforeTheNewRouteEmits() async throws {
     let harness = try await RemappingRouterHarness.make()
     defer { harness.removeFiles() }
     let device = remappingRouterDevice(1)
@@ -271,12 +277,13 @@ struct RemappingOutputRouterTests {
       harness.recorder.snapshot() == [
         .compatibility([.buttonPressed(.b)], device), .compatibilityStop(device),
         .system(.keyDown(.space)), .system(.keyUp(.space)),
-        .compatibility([.buttonPressed(.x)], device)
+        .compatibility([.buttonPressed(.x)], device),
       ]
     )
   }
 
-  @Test func sameModelControllersRetainExactIdentityAndAggregateHeldOutputs() async throws {
+  @Test
+  func sameModelControllersRetainExactIdentityAndAggregateHeldOutputs() async throws {
     let harness = try await RemappingRouterHarness.make(profile: remappingRouterProfile())
     defer { harness.removeFiles() }
     let first = remappingRouterDevice(1)
@@ -292,7 +299,8 @@ struct RemappingOutputRouterTests {
     #expect(await harness.router.status(for: second) == nil)
   }
 
-  @Test func compatibilityGateDoesNotSuppressRemappingRoute() async throws {
+  @Test
+  func compatibilityGateDoesNotSuppressRemappingRoute() async throws {
     let harness = try await RemappingRouterHarness.make(profile: remappingRouterProfile())
     defer { harness.removeFiles() }
     let mapped = remappingRouterDevice(1)
@@ -309,7 +317,8 @@ struct RemappingOutputRouterTests {
     )
   }
 
-  @Test func compatibilityGateTearsDownTrackedRoutesBeforeReturning() async throws {
+  @Test
+  func compatibilityGateTearsDownTrackedRoutesBeforeReturning() async throws {
     let harness = try await RemappingRouterHarness.make(profile: remappingRouterProfile())
     defer { harness.removeFiles() }
     let compatibility = remappingRouterDevice(2, vendorID: 1356, productID: 2508)
@@ -323,7 +332,7 @@ struct RemappingOutputRouterTests {
     #expect(
       harness.recorder.snapshot() == [
         .compatibility([.buttonPressed(.b)], compatibility), .compatibilityStop(compatibility),
-        .system(.keyDown(.space))
+        .system(.keyDown(.space)),
       ]
     )
     #expect(
@@ -331,7 +340,8 @@ struct RemappingOutputRouterTests {
     )
   }
 
-  @Test func targetApplicationLossReleasesAndNeverFallsBack() async throws {
+  @Test
+  func targetApplicationLossReleasesAndNeverFallsBack() async throws {
     let harness = try await RemappingRouterHarness.make(profile: remappingRouterProfile())
     defer { harness.removeFiles() }
     let device = remappingRouterDevice(1)
@@ -345,13 +355,14 @@ struct RemappingOutputRouterTests {
 
     #expect(
       harness.recorder.snapshot() == [
-        .system(.keyDown(.space)), .system(.keyUp(.space)), .system(.keyDown(.space))
+        .system(.keyDown(.space)), .system(.keyUp(.space)), .system(.keyDown(.space)),
       ]
     )
     #expect(await harness.router.status(for: device)?.eligibility == .eligible)
   }
 
-  @Test func productionForegroundCallbackCausallyReleasesOnSameCompatibilityValue() async throws {
+  @Test
+  func productionForegroundCallbackCausallyReleasesOnSameCompatibilityValue() async throws {
     let harness = try await RemappingRouterHarness.make(profile: remappingRouterProfile())
     defer { harness.removeFiles() }
     let device = remappingRouterDevice(1)
@@ -371,7 +382,8 @@ struct RemappingOutputRouterTests {
     #expect(harness.recorder.snapshot() == [.system(.keyDown(.space)), .system(.keyUp(.space))])
   }
 
-  @Test func foregroundCallbackPreservesPermissionAndSuppressionPrecedence() async throws {
+  @Test
+  func foregroundCallbackPreservesPermissionAndSuppressionPrecedence() async throws {
     let harness = try await RemappingRouterHarness.make(profile: remappingRouterProfile())
     defer { harness.removeFiles() }
     let device = remappingRouterDevice(1)
@@ -388,7 +400,8 @@ struct RemappingOutputRouterTests {
     #expect(harness.recorder.snapshot() == [.system(.keyDown(.space)), .system(.keyUp(.space))])
   }
 
-  @Test func statusReportsTheSameProviderSampleUsedForEligibility() async throws {
+  @Test
+  func statusReportsTheSameProviderSampleUsedForEligibility() async throws {
     let harness = try await RemappingRouterHarness.make(profile: remappingRouterProfile())
     defer { harness.removeFiles() }
     let device = remappingRouterDevice(1)
@@ -407,7 +420,8 @@ struct RemappingOutputRouterTests {
     #expect(harness.access.readCount == 1)
   }
 
-  @Test func permissionLossReleasesAndReportsTruthfulState() async throws {
+  @Test
+  func permissionLossReleasesAndReportsTruthfulState() async throws {
     let harness = try await RemappingRouterHarness.make(profile: remappingRouterProfile())
     defer { harness.removeFiles() }
     let device = remappingRouterDevice(1)
@@ -432,12 +446,13 @@ struct RemappingOutputRouterTests {
     #expect(restoredStatus.postEventAccessState == .granted)
     #expect(
       harness.recorder.snapshot() == [
-        .system(.keyDown(.space)), .system(.keyUp(.space)), .system(.keyDown(.space))
+        .system(.keyDown(.space)), .system(.keyUp(.space)), .system(.keyDown(.space)),
       ]
     )
   }
 
-  @Test func activeProfileUpdateAndSwitchReleaseOldStateImmediately() async throws {
+  @Test
+  func activeProfileUpdateAndSwitchReleaseOldStateImmediately() async throws {
     let original = remappingRouterProfile()
     let harness = try await RemappingRouterHarness.make(profile: original)
     defer { harness.removeFiles() }
@@ -461,7 +476,7 @@ struct RemappingOutputRouterTests {
     #expect(
       harness.recorder.snapshot() == [
         .system(.keyDown(.space)), .system(.keyUp(.space)), .system(.keyDown(.returnKey)),
-        .system(.keyUp(.returnKey))
+        .system(.keyUp(.returnKey)),
       ]
     )
     #expect(
@@ -469,7 +484,8 @@ struct RemappingOutputRouterTests {
     )
   }
 
-  @Test func causalSuppressionReleasesMappingAndIsIdempotent() async throws {
+  @Test
+  func causalSuppressionReleasesMappingAndIsIdempotent() async throws {
     let harness = try await RemappingRouterHarness.make(profile: remappingRouterProfile())
     defer { harness.removeFiles() }
     let device = remappingRouterDevice(1)
@@ -484,13 +500,14 @@ struct RemappingOutputRouterTests {
     #expect(
       harness.recorder.snapshot() == [
         .system(.keyDown(.space)), .compatibility([.buttonPressed(.b)], compatibility),
-        .compatibilityStop(compatibility), .system(.keyUp(.space))
+        .compatibilityStop(compatibility), .system(.keyUp(.space)),
       ]
     )
     #expect(await harness.router.status(for: device)?.selection != .compatibility)
   }
 
-  @Test func synchronousSuppressionPropertyPreventsNewOutputUntilCausalDrain() async throws {
+  @Test
+  func synchronousSuppressionPropertyPreventsNewOutputUntilCausalDrain() async throws {
     let harness = try await RemappingRouterHarness.make(profile: remappingRouterProfile())
     defer { harness.removeFiles() }
     let device = remappingRouterDevice(1)
@@ -504,7 +521,8 @@ struct RemappingOutputRouterTests {
     #expect(harness.router.suppressOutput)
   }
 
-  @Test func corruptLibraryFailsClosedAndPropagatesTypedStatus() async throws {
+  @Test
+  func corruptLibraryFailsClosedAndPropagatesTypedStatus() async throws {
     let harness = try await RemappingRouterHarness.make()
     defer { harness.removeFiles() }
     try Data("not json".utf8).write(to: harness.fileURL)
@@ -519,7 +537,8 @@ struct RemappingOutputRouterTests {
     #expect(harness.recorder.snapshot().isEmpty)
   }
 
-  @Test func ticksAdvanceOnlyEligibleRemappingRoutes() async throws {
+  @Test
+  func ticksAdvanceOnlyEligibleRemappingRoutes() async throws {
     let profile = remappingRouterProfile(turbo: RemappingTurbo(repeatRateHz: 10, dutyCycle: 0.25))
     let harness = try await RemappingRouterHarness.make(profile: profile)
     defer { harness.removeFiles() }
@@ -534,7 +553,8 @@ struct RemappingOutputRouterTests {
     #expect(await harness.router.status(for: device)?.eligibility == .targetApplicationNotFrontmost)
   }
 
-  @Test func continuousTicksStopAtFocusLossAndDoNotResumeWithoutInput() async throws {
+  @Test
+  func continuousTicksStopAtFocusLossAndDoNotResumeWithoutInput() async throws {
     let profile = RemappingProfile(
       name: "Pointer",
       device: RemappingDeviceScope(vendorID: 1118, productID: 654),
@@ -562,12 +582,13 @@ struct RemappingOutputRouterTests {
 
     #expect(
       harness.recorder.snapshot() == [
-        .system(.mouseMoved(axis: .x, amount: 0.75)), .system(.mouseMoved(axis: .x, amount: 0))
+        .system(.mouseMoved(axis: .x, amount: 0.75)), .system(.mouseMoved(axis: .x, amount: 0)),
       ]
     )
   }
 
-  @Test func controllerStopAndShutdownDrainRoutesIdempotently() async throws {
+  @Test
+  func controllerStopAndShutdownDrainRoutesIdempotently() async throws {
     let profile = remappingRouterProfile(applicationScope: .global)
     let harness = try await RemappingRouterHarness.make(profile: profile)
     defer { harness.removeFiles() }
@@ -582,7 +603,7 @@ struct RemappingOutputRouterTests {
     #expect(
       harness.recorder.snapshot() == [
         .system(.keyDown(.space)), .compatibility([.buttonPressed(.b)], compatibility),
-        .system(.keyUp(.space)), .compatibilityStop(compatibility)
+        .system(.keyUp(.space)), .compatibilityStop(compatibility),
       ]
     )
     #expect(await harness.router.statuses().isEmpty)

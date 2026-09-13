@@ -20,7 +20,10 @@ struct ProfileTrackballDraft {
     guard let value = ProfileMotionDraft.numericValue(decay, decimalSeparator: decimalSeparator)
     else { throw RemappingGyroOutputError.invalidField("trackball.decay_halvings_per_second") }
     let settings = RemappingGyroTrackball(
-      source: source, axes: axes, decayHalvingsPerSecond: value, consumesSource: consumesSource
+      source: source,
+      axes: axes,
+      decayHalvingsPerSecond: value,
+      consumesSource: consumesSource
     )
     try settings.validate()
     return settings

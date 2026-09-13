@@ -8,20 +8,28 @@ struct RemappingChordSequenceTests {
   func replayPreservesPhysicalSequenceOrder(secondPressTime: UInt64) {
     var state = RemappingEngineState()
     let profile = profile(sequence: [.button(.south), .button(.north)])
-    #expect(state.process(
-      events: [.buttonPressed(.a)], from: identifier, profile: profile, at: 0
-    ).isEmpty)
-    #expect(state.process(
-      events: [.buttonPressed(.y)], from: identifier, profile: profile, at: secondPressTime
-    ).isEmpty)
-    #expect(state.nextScheduledTick(after: secondPressTime, continuousIntervalNanoseconds: 1)
-      == 500_000_001)
+    #expect(
+      state.process(events: [.buttonPressed(.a)], from: identifier, profile: profile, at: 0).isEmpty
+    )
+    #expect(
+      state.process(
+        events: [.buttonPressed(.y)],
+        from: identifier,
+        profile: profile,
+        at: secondPressTime
+      ).isEmpty
+    )
+    #expect(
+      state.nextScheduledTick(after: secondPressTime, continuousIntervalNanoseconds: 1)
+        == 500_000_001
+    )
     #expect(state.tick(at: 500_000_001) == [.system(.keyDown(.d)), .system(.keyUp(.d))])
     #expect(state.tick(at: 600_000_000).isEmpty)
     #expect(!state.hasScheduledOutput)
   }
 
-  @Test func delayedReplayDoesNotReverseSequenceOrder() {
+  @Test
+  func delayedReplayDoesNotReverseSequenceOrder() {
     var state = RemappingEngineState()
     let profile = profile(sequence: [.button(.north), .button(.south)])
     _ = state.process(events: [.buttonPressed(.a)], from: identifier, profile: profile, at: 0)
@@ -29,29 +37,37 @@ struct RemappingChordSequenceTests {
     #expect(state.tick(at: 500_000_001).isEmpty)
   }
 
-  @Test func consumedPressCannotCompleteSequence() {
+  @Test
+  func consumedPressCannotCompleteSequence() {
     var state = RemappingEngineState()
     let profile = profile(sequence: [.button(.south), .button(.north)])
     _ = state.process(events: [.buttonPressed(.a)], from: identifier, profile: profile, at: 0)
     _ = state.process(events: [.buttonPressed(.y)], from: identifier, profile: profile, at: 1)
-    #expect(state.process(
-      events: [.buttonPressed(.b)], from: identifier, profile: profile, at: 2
-    ) == [.system(.keyDown(.c))])
+    #expect(
+      state.process(events: [.buttonPressed(.b)], from: identifier, profile: profile, at: 2) == [
+        .system(.keyDown(.c))
+      ]
+    )
     #expect(state.tick(at: 500_000_001).isEmpty)
     #expect(state.releaseController(identifier) == [.system(.keyUp(.c))])
   }
 
-  @Test func originalSequenceWindowStillRejectsSlowInput() {
+  @Test
+  func originalSequenceWindowStillRejectsSlowInput() {
     var state = RemappingEngineState()
     let profile = profile(sequence: [.button(.south), .button(.north)])
     _ = state.process(events: [.buttonPressed(.a)], from: identifier, profile: profile, at: 0)
     _ = state.process(
-      events: [.buttonPressed(.y)], from: identifier, profile: profile, at: 300_000_000
+      events: [.buttonPressed(.y)],
+      from: identifier,
+      profile: profile,
+      at: 300_000_000
     )
     #expect(state.tick(at: 500_000_001).isEmpty)
   }
 
-  @Test func unresolvedChordDoesNotAllowUnboundedSequenceHistory() {
+  @Test
+  func unresolvedChordDoesNotAllowUnboundedSequenceHistory() {
     var state = RemappingEngineState()
     let profile = profile(sequence: [.button(.south), .button(.north)])
     _ = state.process(events: [.buttonPressed(.a)], from: identifier, profile: profile, at: 0)
@@ -69,22 +85,26 @@ struct RemappingChordSequenceTests {
     #expect(!state.hasScheduledOutput)
   }
 
-  @Test func completedPrefixSurvivesLaterUnrelatedInput() {
+  @Test
+  func completedPrefixSurvivesLaterUnrelatedInput() {
     var state = RemappingEngineState()
     let profile = profile(sequence: [.button(.south), .button(.north)])
-    #expect(state.process(
-      events: [.buttonPressed(.a), .buttonPressed(.y), .buttonPressed(.x)],
-      from: identifier,
-      profile: profile,
-      at: 0
-    ).isEmpty)
+    #expect(
+      state.process(
+        events: [.buttonPressed(.a), .buttonPressed(.y), .buttonPressed(.x)],
+        from: identifier,
+        profile: profile,
+        at: 0
+      ).isEmpty
+    )
     #expect(state.devices[identifier]?.deferredSequences.count == 1)
     #expect(state.tick(at: 500_000_001) == [.system(.keyDown(.d)), .system(.keyUp(.d))])
     #expect(state.devices[identifier]?.deferredSequences.isEmpty == true)
     #expect(state.tick(at: 600_000_000).isEmpty)
   }
 
-  @Test func chordConsumptionCancelsCompletedPrefixAfterLaterInput() {
+  @Test
+  func chordConsumptionCancelsCompletedPrefixAfterLaterInput() {
     var state = RemappingEngineState()
     let profile = profile(sequence: [.button(.south), .button(.north)])
     _ = state.process(
@@ -93,14 +113,17 @@ struct RemappingChordSequenceTests {
       profile: profile,
       at: 0
     )
-    #expect(state.process(
-      events: [.buttonPressed(.b)], from: identifier, profile: profile, at: 1
-    ) == [.system(.keyDown(.c))])
+    #expect(
+      state.process(events: [.buttonPressed(.b)], from: identifier, profile: profile, at: 1) == [
+        .system(.keyDown(.c))
+      ]
+    )
     #expect(state.devices[identifier]?.deferredSequences.isEmpty == true)
     #expect(state.tick(at: 500_000_001).isEmpty)
   }
 
-  @Test func deferredCompletionDoesNotDuplicateWhileWaiting() {
+  @Test
+  func deferredCompletionDoesNotDuplicateWhileWaiting() {
     var state = RemappingEngineState()
     let profile = profile(sequence: [.button(.south), .button(.north)])
     _ = state.process(
@@ -109,20 +132,19 @@ struct RemappingChordSequenceTests {
       profile: profile,
       at: 0
     )
-    for time in 1...100 {
-      #expect(state.tick(at: UInt64(time)).isEmpty)
-    }
+    for time in 1...100 { #expect(state.tick(at: UInt64(time)).isEmpty) }
     #expect(state.devices[identifier]?.deferredSequences.count == 1)
     #expect(state.tick(at: 500_000_001) == [.system(.keyDown(.d)), .system(.keyUp(.d))])
   }
 
-  @Test func layerTransitionCancelsDeferredCompletion() {
+  @Test
+  func layerTransitionCancelsDeferredCompletion() {
     var state = RemappingEngineState()
     let profile = profile(
       sequence: [.button(.south), .button(.north)],
-      layers: [RemappingLayer(
-        name: "Alternate", activationMode: .hold, activator: .button(.leftShoulder)
-      )]
+      layers: [
+        RemappingLayer(name: "Alternate", activationMode: .hold, activator: .button(.leftShoulder))
+      ]
     )
     _ = state.process(
       events: [.buttonPressed(.a), .buttonPressed(.y)],
@@ -130,9 +152,14 @@ struct RemappingChordSequenceTests {
       profile: profile,
       at: 0
     )
-    #expect(state.process(
-      events: [.buttonPressed(.leftBumper)], from: identifier, profile: profile, at: 1
-    ).isEmpty)
+    #expect(
+      state.process(
+        events: [.buttonPressed(.leftBumper)],
+        from: identifier,
+        profile: profile,
+        at: 1
+      ).isEmpty
+    )
     #expect(state.devices[identifier]?.deferredSequences.isEmpty == true)
     #expect(state.tick(at: 500_000_001).isEmpty)
     #expect(!state.hasScheduledOutput)
@@ -140,23 +167,30 @@ struct RemappingChordSequenceTests {
 
   private let identifier = DeviceIdentifier(vendorID: 1, productID: 2, locationID: 1)
 
-  private func profile(sequence: [RemappingSource], layers: [RemappingLayer] = [])
-    -> RemappingProfile
-  {
+  private func profile(
+    sequence: [RemappingSource],
+    layers: [RemappingLayer] = []
+  ) -> RemappingProfile {
     RemappingProfile(
       name: "Chord sequence",
       device: RemappingDeviceScope(vendorID: 1, productID: 2),
       applicationScope: .global,
       bindings: [],
-      chords: [RemappingChord(
-        sources: [.button(.south), .button(.east)],
-        destination: .keyboard(key: .c, modifiers: []),
-        mode: .simultaneous,
-        windowMs: 500
-      )],
-      sequences: [RemappingSequence(
-        sources: sequence, windowMs: 200, destination: .keyboard(key: .d, modifiers: [])
-      )],
+      chords: [
+        RemappingChord(
+          sources: [.button(.south), .button(.east)],
+          destination: .keyboard(key: .c, modifiers: []),
+          mode: .simultaneous,
+          windowMs: 500
+        )
+      ],
+      sequences: [
+        RemappingSequence(
+          sources: sequence,
+          windowMs: 200,
+          destination: .keyboard(key: .d, modifiers: [])
+        )
+      ],
       layers: layers
     )
   }

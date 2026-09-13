@@ -75,9 +75,9 @@ extension Button {
     case .options: "ellipsis.circle"
     case .ps: "logo.playstation"
     case .touchpad: "rectangle.roundedtop"
-    case .leftGrip, .rightGrip, .leftPadClick, .rightPadClick,
-      .leftSL, .leftSR, .rightSL, .rightSR,
-      .leftFunction, .rightFunction, .leftPaddle, .rightPaddle: "circle"
+    case .leftGrip, .rightGrip, .leftPadClick, .rightPadClick, .leftSL, .leftSR, .rightSL, .rightSR,
+      .leftFunction, .rightFunction, .leftPaddle, .rightPaddle:
+      "circle"
     case .mute: "mic.slash.circle"
     }
   }

@@ -3,7 +3,8 @@ import Testing
 @testable import OpenJoystickDriverKit
 
 struct RemappingFailureTests {
-  @Test func successfulKeyReleaseIsNotRepeatedWhenLaterModifierReleaseFails() async throws {
+  @Test
+  func successfulKeyReleaseIsNotRepeatedWhenLaterModifierReleaseFails() async throws {
     let sink = RemappingTestSink(failingCalls: [4])
     let engine = RemappingEventEngine(sink: sink)
     let profile = chordProfile()
@@ -17,7 +18,8 @@ struct RemappingFailureTests {
     )
   }
 
-  @Test func earlierNeutralOutputIsNotReleasedAfterALaterActionFails() async throws {
+  @Test
+  func earlierNeutralOutputIsNotReleasedAfterALaterActionFails() async throws {
     let sink = RemappingTestSink(failingCalls: [3])
     let engine = RemappingEventEngine(sink: sink)
     let profile = RemappingProfile(
@@ -26,7 +28,7 @@ struct RemappingFailureTests {
       applicationScope: .global,
       bindings: [
         RemappingBinding(source: .button(.south), destination: .keyboard(key: .a, modifiers: [])),
-        RemappingBinding(source: .button(.east), destination: .keyboard(key: .b, modifiers: []))
+        RemappingBinding(source: .button(.east), destination: .keyboard(key: .b, modifiers: [])),
       ]
     )
 
@@ -42,7 +44,8 @@ struct RemappingFailureTests {
     #expect(sink.actions() == [.keyDown(.a), .keyUp(.a), .keyUp(.b)])
   }
 
-  @Test func failedPressIsConservativelyReleased() async throws {
+  @Test
+  func failedPressIsConservativelyReleased() async throws {
     let sink = RemappingTestSink(failingCalls: [1])
     let engine = RemappingEventEngine(sink: sink)
     let profile = RemappingProfile(
@@ -61,7 +64,8 @@ struct RemappingFailureTests {
     #expect(sink.actions() == [.keyUp(.a)])
   }
 
-  @Test func recoveryRetriesOnlyTheExactRemainingOutput() async throws {
+  @Test
+  func recoveryRetriesOnlyTheExactRemainingOutput() async throws {
     let sink = RemappingTestSink(failingCalls: [4, 5])
     let engine = RemappingEventEngine(sink: sink)
 
@@ -79,7 +83,8 @@ struct RemappingFailureTests {
     )
   }
 
-  @Test func terminalDrainRetriesOnlyTheExactRemainingOutput() async throws {
+  @Test
+  func terminalDrainRetriesOnlyTheExactRemainingOutput() async throws {
     let sink = RemappingTestSink(failingCalls: [4, 5])
     let barrier = RemappingEmissionBarrier()
     let engine = RemappingEventEngine(sink: sink, emissionBarrier: barrier)
@@ -100,7 +105,8 @@ struct RemappingFailureTests {
     )
   }
 
-  @Test func sinkFailureNeutralizesPotentialOutputsAndFaultsUntilRecovery() async throws {
+  @Test
+  func sinkFailureNeutralizesPotentialOutputsAndFaultsUntilRecovery() async throws {
     let sink = RemappingTestSink(failingCalls: [2, 3])
     let engine = RemappingEventEngine(sink: sink)
     let profile = RemappingProfile(
@@ -144,7 +150,7 @@ struct RemappingFailureTests {
     #expect(
       sink.actions() == [
         .modifierDown(.shift), .keyUp(.a), .modifierUp(.shift), .modifierDown(.shift), .keyDown(.a),
-        .keyUp(.a), .modifierUp(.shift)
+        .keyUp(.a), .modifierUp(.shift),
       ]
     )
   }

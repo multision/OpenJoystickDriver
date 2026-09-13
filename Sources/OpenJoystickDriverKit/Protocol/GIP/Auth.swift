@@ -14,7 +14,7 @@ final class GIPAuthHandler: @unchecked Sendable {
   private static let responseMap: [GIPAuthState: GIPAuthState] = [
     .devInit: .hostInit, .devCertificate: .hostResponse1, .devIntermediate: .hostResponse2,
     .devData1: .hostResponse3, .devData2: .hostResponse4, .devFinal: .hostResponse5,
-    .devComplete: .hostComplete
+    .devComplete: .hostComplete,
   ]
 
   /// Handle an incoming CMD 0x06 auth message from the device.
@@ -75,7 +75,7 @@ final class GIPAuthHandler: @unchecked Sendable {
     guard let size = state.expectedPayloadSize else { return [] }
     var response: [UInt8] = [
       GIPAuthType.host, GIPAuthType.version, state.rawValue, 0x00, UInt8((size >> 8) & 0xFF),
-      UInt8(size & 0xFF)
+      UInt8(size & 0xFF),
     ]
     response += [UInt8](repeating: 0, count: size)
     return response

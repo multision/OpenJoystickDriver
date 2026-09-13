@@ -150,9 +150,7 @@ final class ApplicationServiceRuntime: @unchecked Sendable {
       guard let runtimeIdentifier = selector.runtimeIdentifier else {
         throw RemappingMotionCalibrationError.controllerUnavailable
       }
-      return try await remappingRouter.motionCalibration(
-        for: runtimeIdentifier, command: command
-      )
+      return try await remappingRouter.motionCalibration(for: runtimeIdentifier, command: command)
     }
   }
 
@@ -185,9 +183,10 @@ final class ApplicationServiceRuntime: @unchecked Sendable {
       )
     }
 
-    func setPlayerIndicator(for selector: RuntimeDeviceSelector, indicator: PhysicalPlayerIndicator)
-      async throws -> Bool
-    {
+    func setPlayerIndicator(
+      for selector: RuntimeDeviceSelector,
+      indicator: PhysicalPlayerIndicator
+    ) async throws -> Bool {
       let identifier = DeviceIdentifier(vendorID: selector.vendorID, productID: selector.productID)
       return await manager.sendPlayerIndicator(
         for: identifier,
@@ -196,9 +195,12 @@ final class ApplicationServiceRuntime: @unchecked Sendable {
       )
     }
 
-    func setColor(for selector: RuntimeDeviceSelector, red: UInt8, green: UInt8, blue: UInt8)
-      async throws -> Bool
-    {
+    func setColor(
+      for selector: RuntimeDeviceSelector,
+      red: UInt8,
+      green: UInt8,
+      blue: UInt8
+    ) async throws -> Bool {
       let identifier = DeviceIdentifier(vendorID: selector.vendorID, productID: selector.productID)
       return await manager.setPhysicalColor(
         for: identifier,

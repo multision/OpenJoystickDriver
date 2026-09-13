@@ -3,9 +3,13 @@ import Testing
 @testable import OpenJoystickDriver
 
 struct ProfileTrackballDraftTests {
-  @Test func gyroSheetPreservesTrackballAndAcceptsLocaleDecay() throws {
+  @Test
+  func gyroSheetPreservesTrackballAndAcceptsLocaleDecay() throws {
     let settings = RemappingGyroTrackball(
-      source: .button(.west), axes: .pitch, decayHalvingsPerSecond: 2, consumesSource: false
+      source: .button(.west),
+      axes: .pitch,
+      decayHalvingsPerSecond: 2,
+      consumesSource: false
     )
     let output = RemappingGyroOutput(mode: .mouse, trackball: settings)
     var draft = ProfileGyroDraft(output)

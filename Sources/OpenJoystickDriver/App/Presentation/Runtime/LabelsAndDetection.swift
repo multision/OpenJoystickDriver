@@ -158,8 +158,7 @@ enum RuntimePresentation {
         fallback: "Scroll %@",
         humanized(axis.rawValue)
       )
-    case .physical(let output):
-      return physicalOutputLabel(output)
+    case .physical(let output): return physicalOutputLabel(output)
     }
   }
 

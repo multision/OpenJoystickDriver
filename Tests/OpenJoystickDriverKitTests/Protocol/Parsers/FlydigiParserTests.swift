@@ -7,7 +7,7 @@ import Testing
 /// firmware 6.9.5.5, on macOS 26.5.
 private enum CapturedReport {
   static let neutral: [UInt8] = [
-    0x01, 0xFF, 0xFF, 0xFF, 0xFF, 0, 0, 0, 0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+    0x01, 0xFF, 0xFF, 0xFF, 0xFF, 0, 0, 0, 0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   ]
 
   static func with(
@@ -41,7 +41,8 @@ private func settled(_ parser: FlydigiParser) {
   _ = try? parser.parse(data: Data(CapturedReport.neutral))
 }
 
-@Suite struct FlydigiParserTests {
+@Suite
+struct FlydigiParserTests {
 
   @Test(arguments: [0, 1, 2])
   func malformedReportsPreserveState(kind: Int) throws {
@@ -59,62 +60,77 @@ private func settled(_ parser: FlydigiParser) {
     #expect(try parser.parse(data: Data(CapturedReport.neutral)).contains(.buttonReleased(.a)))
   }
 
-  @Test func testNeutralReportEmitsNoEvents() throws {
+  @Test
+  func testNeutralReportEmitsNoEvents() throws {
     let parser = FlydigiParser()
     settled(parser)
     #expect(try parser.parse(data: Data(CapturedReport.neutral)).isEmpty)
   }
 
-  @Test func testShortReportIsIgnored() throws {
+  @Test
+  func testShortReportIsIgnored() throws {
     let parser = FlydigiParser()
     #expect(try parser.parse(data: Data([0x01, 0xFF, 0xFF])).isEmpty)
   }
 
   /// The hardware reports 0x80 when the stick is pushed fully up, so the
   /// normalized value stays negative and is not flipped.
-  @Test func testLeftStickUpIsNegativeY() throws {
+  @Test
+  func testLeftStickUpIsNegativeY() throws {
     let parser = FlydigiParser()
     settled(parser)
     let events = try parser.parse(data: CapturedReport.with(leftStickY: 0x80))
-    #expect(events.contains { event in
-      if case .leftStickChanged(_, let y) = event { return y < -0.9 }
-      return false
-    })
+    #expect(
+      events.contains { event in
+        if case .leftStickChanged(_, let y) = event { return y < -0.9 }
+        return false
+      }
+    )
   }
 
-  @Test func testLeftStickRightIsPositiveX() throws {
+  @Test
+  func testLeftStickRightIsPositiveX() throws {
     let parser = FlydigiParser()
     settled(parser)
     let events = try parser.parse(data: CapturedReport.with(leftStickX: 0x7F))
-    #expect(events.contains { event in
-      if case .leftStickChanged(let x, _) = event { return x > 0.9 }
-      return false
-    })
+    #expect(
+      events.contains { event in
+        if case .leftStickChanged(let x, _) = event { return x > 0.9 }
+        return false
+      }
+    )
   }
 
   /// Bytes 3 and 4 are the right stick, not the triggers the descriptor implies.
-  @Test func testRightStickUsesZAndRzBytes() throws {
+  @Test
+  func testRightStickUsesZAndRzBytes() throws {
     let parser = FlydigiParser()
     settled(parser)
     let events = try parser.parse(data: CapturedReport.with(rightStickX: 0x7F, rightStickY: 0x80))
-    #expect(events.contains { event in
-      if case .rightStickChanged(let x, let y) = event { return x > 0.9 && y < -0.9 }
-      return false
-    })
+    #expect(
+      events.contains { event in
+        if case .rightStickChanged(let x, let y) = event { return x > 0.9 && y < -0.9 }
+        return false
+      }
+    )
   }
 
-  @Test func testRightStickDeflectionEmitsNoTriggerEvent() throws {
+  @Test
+  func testRightStickDeflectionEmitsNoTriggerEvent() throws {
     let parser = FlydigiParser()
     settled(parser)
     let events = try parser.parse(data: CapturedReport.with(rightStickX: 0x7F))
-    #expect(!events.contains { event in
-      if case .leftTriggerChanged = event { return true }
-      if case .rightTriggerChanged = event { return true }
-      return false
-    })
+    #expect(
+      !events.contains { event in
+        if case .leftTriggerChanged = event { return true }
+        if case .rightTriggerChanged = event { return true }
+        return false
+      }
+    )
   }
 
-  @Test func testAnalogTriggersUseSimulationBytes() throws {
+  @Test
+  func testAnalogTriggersUseSimulationBytes() throws {
     let parser = FlydigiParser()
     settled(parser)
     let left = try parser.parse(data: CapturedReport.with(shoulders: 0x04, leftTrigger: 0xFF))
@@ -127,14 +143,16 @@ private func settled(_ parser: FlydigiParser) {
 
   /// The digital trigger bit accompanies the analog value and must not be
   /// reported as a stick click.
-  @Test func testDigitalTriggerBitIsNotAStickClick() throws {
+  @Test
+  func testDigitalTriggerBitIsNotAStickClick() throws {
     let parser = FlydigiParser()
     settled(parser)
     let events = try parser.parse(data: CapturedReport.with(shoulders: 0x04, leftTrigger: 0xFF))
     #expect(!events.contains { $0 == .buttonPressed(.leftStick) })
   }
 
-  @Test func testFaceButtonsUseHighNibble() throws {
+  @Test
+  func testFaceButtonsUseHighNibble() throws {
     let cases: [(UInt8, Button)] = [(0x10, .a), (0x20, .b), (0x40, .x), (0x80, .y)]
     for (mask, button) in cases {
       let parser = FlydigiParser()
@@ -144,10 +162,11 @@ private func settled(_ parser: FlydigiParser) {
     }
   }
 
-  @Test func testShoulderByteButtons() throws {
+  @Test
+  func testShoulderByteButtons() throws {
     let cases: [(UInt8, Button)] = [
-      (0x01, .leftBumper), (0x02, .rightBumper), (0x10, .back), (0x20, .start),
-      (0x40, .leftStick), (0x80, .rightStick)
+      (0x01, .leftBumper), (0x02, .rightBumper), (0x10, .back), (0x20, .start), (0x40, .leftStick),
+      (0x80, .rightStick),
     ]
     for (mask, button) in cases {
       let parser = FlydigiParser()
@@ -157,7 +176,8 @@ private func settled(_ parser: FlydigiParser) {
     }
   }
 
-  @Test func testGuideUsesSystemByte() throws {
+  @Test
+  func testGuideUsesSystemByte() throws {
     let parser = FlydigiParser()
     settled(parser)
     let events = try parser.parse(data: CapturedReport.with(system: 0x80))
@@ -165,9 +185,10 @@ private func settled(_ parser: FlydigiParser) {
   }
 
   /// The D-pad is a 4-bit hat in the low nibble, clockwise from 1 = up.
-  @Test func testHatDirections() throws {
+  @Test
+  func testHatDirections() throws {
     let cases: [(UInt8, DpadDirection)] = [
-      (1, .north), (3, .east), (5, .south), (7, .west), (0, .neutral)
+      (1, .north), (3, .east), (5, .south), (7, .west), (0, .neutral),
     ]
     for (value, direction) in cases {
       let parser = FlydigiParser()
@@ -179,7 +200,8 @@ private func settled(_ parser: FlydigiParser) {
 
   /// The hat shares its byte with the face buttons, so one must not disturb
   /// the other.
-  @Test func testHatAndFaceButtonCoexist() throws {
+  @Test
+  func testHatAndFaceButtonCoexist() throws {
     let parser = FlydigiParser()
     settled(parser)
     let events = try parser.parse(data: CapturedReport.with(hatAndFace: 0x10 | 3))
@@ -187,7 +209,8 @@ private func settled(_ parser: FlydigiParser) {
     #expect(events.contains { $0 == .dpadChanged(.east) })
   }
 
-  @Test func testButtonReleaseEmitsReleaseEvent() throws {
+  @Test
+  func testButtonReleaseEmitsReleaseEvent() throws {
     let parser = FlydigiParser()
     settled(parser)
     _ = try parser.parse(data: CapturedReport.with(hatAndFace: 0x10))
@@ -195,14 +218,16 @@ private func settled(_ parser: FlydigiParser) {
     #expect(events.contains { $0 == .buttonReleased(.a) })
   }
 
-  @Test func testRepeatedReportEmitsNoDuplicateEvents() throws {
+  @Test
+  func testRepeatedReportEmitsNoDuplicateEvents() throws {
     let parser = FlydigiParser()
     settled(parser)
     _ = try parser.parse(data: CapturedReport.with(hatAndFace: 0x10))
     #expect(try parser.parse(data: CapturedReport.with(hatAndFace: 0x10)).isEmpty)
   }
 
-  @Test func testRestingAxisJitterStaysInDeadzone() {
+  @Test
+  func testRestingAxisJitterStaysInDeadzone() {
     #expect(FlydigiParser.axis(0xFF) == 0)
     #expect(FlydigiParser.axis(0x00) == 0)
     #expect(FlydigiParser.axis(0x7F) > 0.9)

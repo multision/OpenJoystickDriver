@@ -70,7 +70,8 @@ public final class HIDManager: Sendable {
     await backend.setFeatureReport(locationID: locationID, report: report)
   }
 
-  public func getFeatureReport(locationID: UInt32, request: PhysicalHIDFeatureReadRequest) async
-    -> Data?
-  { await backend.getFeatureReport(locationID: locationID, request: request) }
+  public func getFeatureReport(
+    locationID: UInt32,
+    request: PhysicalHIDFeatureReadRequest
+  ) async -> Data? { await backend.getFeatureReport(locationID: locationID, request: request) }
 }

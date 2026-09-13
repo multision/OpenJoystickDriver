@@ -34,10 +34,11 @@ extension RemappingEngineState {
       return clearTouchSurface(surface, for: identifier, at: uptime)
     }
 
-    let geometryChanged = previous.map {
-      $0.width != sample.width || $0.height != sample.height || $0.originX != sample.originX
-        || $0.originY != sample.originY
-    } ?? false
+    let geometryChanged =
+      previous.map {
+        $0.width != sample.width || $0.height != sample.height || $0.originX != sample.originX
+          || $0.originY != sample.originY
+      } ?? false
     let oldContacts = geometryChanged ? [:] : previous?.contacts ?? [:]
     var contacts: [UInt8: RemappingTouchContactState] = [:]
     for contact in sample.contacts where contact.isActive {
@@ -49,8 +50,7 @@ extension RemappingEngineState {
     }
 
     let oldPrimaryID = geometryChanged ? nil : previous?.primaryContactID
-    let primaryID = oldPrimaryID.flatMap { contacts[$0] == nil ? nil : $0 }
-      ?? contacts.keys.min()
+    let primaryID = oldPrimaryID.flatMap { contacts[$0] == nil ? nil : $0 } ?? contacts.keys.min()
     let next = RemappingTouchSurfaceState(
       width: sample.width,
       height: sample.height,
@@ -77,17 +77,20 @@ extension RemappingEngineState {
     let oldDiscrete = device.activeSources.filter { $0.touchSurface == surface }
     var nextDiscrete: Set<RemappingSource> = []
     if primaryID != nil {
-      nextDiscrete.formUnion(possibleSources.filter {
-        switch $0 {
-        case .touchContact: return true
-        case .touchGrid(let grid):
-          guard let primaryID, let contact = contacts[primaryID] else { return false }
-          return Self.gridCell(for: contact.position, columns: grid.columns, rows: grid.rows)
-            == (grid.column, grid.row)
-        case .touchSwipe: return false
-        case .button, .dpad, .axis, .axisDirection, .triggerStage, .motionLean: return false
+      nextDiscrete.formUnion(
+        possibleSources.filter {
+          switch $0 {
+          case .touchContact: return true
+          case .touchGrid(let grid):
+            guard let primaryID, let contact = contacts[primaryID] else { return false }
+            return Self.gridCell(for: contact.position, columns: grid.columns, rows: grid.rows) == (
+              grid.column, grid.row
+            )
+          case .touchSwipe: return false
+          case .button, .dpad, .axis, .axisDirection, .triggerStage, .motionLean: return false
+          }
         }
-      })
+      )
     }
     for source in oldDiscrete.subtracting(nextDiscrete).sorted(by: Self.touchSourceLessThan) {
       actions += setSource(source, isActive: false, for: identifier, at: uptime)
@@ -149,11 +152,9 @@ extension RemappingEngineState {
   ) -> [RemappingEngineAction] {
     guard let device = devices[identifier] else { return [] }
     var actions: [RemappingEngineAction] = []
-    for source in device.activeSources.filter({ $0.touchSurface == surface })
-      .sorted(by: Self.touchSourceLessThan)
-    {
-      actions += setSource(source, isActive: false, for: identifier, at: uptime)
-    }
+    for source in device.activeSources.filter({ $0.touchSurface == surface }).sorted(
+      by: Self.touchSourceLessThan
+    ) { actions += setSource(source, isActive: false, for: identifier, at: uptime) }
     guard let mapping = device.profile.touchMappings.first(where: { $0.surface == surface }),
       mapping.mode != .pointer, var updated = devices[identifier]
     else { return actions }
@@ -173,11 +174,12 @@ extension RemappingEngineState {
     return RemappingTouchPoint(x: min(1, max(0, x)), y: min(1, max(0, y)))
   }
 
-  private static func gridCell(for point: RemappingTouchPoint, columns: Int, rows: Int)
-    -> (Int, Int)
-  {
-    (min(columns - 1, Int(point.x * Double(columns))),
-      min(rows - 1, Int(point.y * Double(rows))))
+  private static func gridCell(
+    for point: RemappingTouchPoint,
+    columns: Int,
+    rows: Int
+  ) -> (Int, Int) {
+    (min(columns - 1, Int(point.x * Double(columns))), min(rows - 1, Int(point.y * Double(rows))))
   }
 
   private static func swipeDirection(
@@ -215,8 +217,10 @@ extension RemappingEngineState {
       y /= magnitude
     }
     let scaledMagnitude = (min(magnitude, 1) - mapping.deadzone) / (1 - mapping.deadzone)
-    return RemappingTouchPoint(x: x / min(magnitude, 1) * scaledMagnitude,
-      y: y / min(magnitude, 1) * scaledMagnitude)
+    return RemappingTouchPoint(
+      x: x / min(magnitude, 1) * scaledMagnitude,
+      y: y / min(magnitude, 1) * scaledMagnitude
+    )
   }
 
   private static func touchSourceLessThan(_ lhs: RemappingSource, _ rhs: RemappingSource) -> Bool {

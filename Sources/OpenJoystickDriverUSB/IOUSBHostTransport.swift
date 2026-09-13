@@ -15,9 +15,10 @@ public actor IOUSBHostTransportProvider: USBTransportProvider {
     try Self.devices(from: Self.deviceFacts())
   }
 
-  public func open(_ device: USBTransportDevice, options: USBTransportOpenOptions) async throws
-    -> any USBTransportSession
-  {
+  public func open(
+    _ device: USBTransportDevice,
+    options: USBTransportOpenOptions
+  ) async throws -> any USBTransportSession {
     guard device.route == .ioUSBHost else { throw USBTransportError.notSupported }
 
     if let configurationValue = options.configurationValue {
@@ -79,9 +80,10 @@ public actor IOUSBHostTransportProvider: USBTransportProvider {
     } catch { throw transportError(error) }
   }
 
-  private static func waitForInterfaceService(device: USBTransportDevice, interfaceNumber: UInt8)
-    async throws -> io_service_t
-  {
+  private static func waitForInterfaceService(
+    device: USBTransportDevice,
+    interfaceNumber: UInt8
+  ) async throws -> io_service_t {
     for attempt in 0..<20 {
       if let service = try interfaceService(for: device, interfaceNumber: interfaceNumber) {
         return service
@@ -109,9 +111,10 @@ public actor IOUSBHostTransportProvider: USBTransportProvider {
     }
   }
 
-  private static func interfaceService(for device: USBTransportDevice, interfaceNumber: UInt8)
-    throws -> io_service_t?
-  {
+  private static func interfaceService(
+    for device: USBTransportDevice,
+    interfaceNumber: UInt8
+  ) throws -> io_service_t? {
     try firstMatchingService(className: "IOUSBHostInterface") { service in
       uint16Property(service, key: "idVendor") == device.vendorID
         && uint16Property(service, key: "idProduct") == device.productID
@@ -135,9 +138,10 @@ public actor IOUSBHostTransportProvider: USBTransportProvider {
     return service
   }
 
-  private static func matchingServices<T>(className: String, transform: (io_service_t) -> T?) throws
-    -> [T]
-  {
+  private static func matchingServices<T>(
+    className: String,
+    transform: (io_service_t) -> T?
+  ) throws -> [T] {
     var iterator: io_iterator_t = 0
     let result = IOServiceGetMatchingServices(
       kIOMasterPortDefault,
@@ -155,9 +159,10 @@ public actor IOUSBHostTransportProvider: USBTransportProvider {
     return values
   }
 
-  private static func firstMatchingService(className: String, matches: (io_service_t) -> Bool)
-    throws -> io_service_t?
-  {
+  private static func firstMatchingService(
+    className: String,
+    matches: (io_service_t) -> Bool
+  ) throws -> io_service_t? {
     var iterator: io_iterator_t = 0
     let result = IOServiceGetMatchingServices(
       kIOMasterPortDefault,

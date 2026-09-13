@@ -7,9 +7,10 @@ struct ControllerEventNormalizationResult: Equatable, Sendable {
 }
 
 enum ControllerEventNormalizer {
-  static func normalize(_ events: [ControllerEvent], from currentState: DeviceInputState)
-    -> ControllerEventNormalizationResult
-  {
+  static func normalize(
+    _ events: [ControllerEvent],
+    from currentState: DeviceInputState
+  ) -> ControllerEventNormalizationResult {
     var adjustedAnalogValueCount = 0
     let sanitized = events.map { event in
       sanitize(

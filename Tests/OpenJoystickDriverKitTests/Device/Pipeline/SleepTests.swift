@@ -4,7 +4,8 @@ import Testing
 @testable import OpenJoystickDriverKit
 
 struct DevicePipelineSleepTests {
-  @Test func testSleepingPipelineKeepsPhysicalInputStateButStopsVirtualDispatch() async {
+  @Test
+  func testSleepingPipelineKeepsPhysicalInputStateButStopsVirtualDispatch() async {
     let dispatcher = RecordingOutputDispatcher()
     let pipeline = DevicePipeline(
       identifier: DeviceIdentifier(vendorID: 100, productID: 200),
@@ -28,7 +29,8 @@ struct DevicePipelineSleepTests {
     #expect(abs(pipeline.inputState().leftStickX - 0.8) < 0.001)
   }
 
-  @Test func testForegroundGateNeutralizesOutputAndWaitsForNeutralBeforeResuming() async {
+  @Test
+  func testForegroundGateNeutralizesOutputAndWaitsForNeutralBeforeResuming() async {
     let dispatcher = RecordingOutputDispatcher()
     let pipeline = DevicePipeline(
       identifier: DeviceIdentifier(vendorID: 100, productID: 200),
@@ -56,7 +58,8 @@ struct DevicePipelineSleepTests {
     )
   }
 
-  @Test func testForegroundGateRearmsAfterFirstPostFocusChangeWithoutFullNeutral() async {
+  @Test
+  func testForegroundGateRearmsAfterFirstPostFocusChangeWithoutFullNeutral() async {
     let dispatcher = RecordingOutputDispatcher()
     let pipeline = DevicePipeline(
       identifier: DeviceIdentifier(vendorID: 100, productID: 200),
@@ -73,24 +76,29 @@ struct DevicePipelineSleepTests {
 
     await pipeline.setExternalOutputAllowed(false)
     #expect(
-      dispatcher.flattenedEvents == [.leftStickChanged(x: 0.8, y: 0), .leftStickChanged(x: 0, y: 0)]
+      dispatcher.flattenedEvents == [
+        .leftStickChanged(x: 0.8, y: 0), .leftStickChanged(x: 0, y: 0),
+      ]
     )
 
     await pipeline.setExternalOutputAllowed(true)
     await pipeline.feedHIDData(Data([5]))
     #expect(
-      dispatcher.flattenedEvents == [.leftStickChanged(x: 0.8, y: 0), .leftStickChanged(x: 0, y: 0)]
+      dispatcher.flattenedEvents == [
+        .leftStickChanged(x: 0.8, y: 0), .leftStickChanged(x: 0, y: 0),
+      ]
     )
 
     await pipeline.feedHIDData(Data([4]))
     #expect(
       dispatcher.flattenedEvents == [
-        .leftStickChanged(x: 0.8, y: 0), .leftStickChanged(x: 0, y: 0), .buttonPressed(.b)
+        .leftStickChanged(x: 0.8, y: 0), .leftStickChanged(x: 0, y: 0), .buttonPressed(.b),
       ]
     )
   }
 
-  @Test func testRepeatedAllowedSignalDoesNotRearmForegroundGate() async {
+  @Test
+  func testRepeatedAllowedSignalDoesNotRearmForegroundGate() async {
     let dispatcher = RecordingOutputDispatcher()
     let pipeline = DevicePipeline(
       identifier: DeviceIdentifier(vendorID: 100, productID: 200),
@@ -108,7 +116,8 @@ struct DevicePipelineSleepTests {
     #expect(dispatcher.flattenedEvents == [.buttonPressed(.b)])
   }
 
-  @Test func testPipelineSuppressesContradictoryDuplicateAndInvalidParserEvents() async {
+  @Test
+  func testPipelineSuppressesContradictoryDuplicateAndInvalidParserEvents() async {
     let dispatcher = RecordingOutputDispatcher()
     let pipeline = DevicePipeline(
       identifier: DeviceIdentifier(vendorID: 100, productID: 200),
@@ -129,7 +138,8 @@ struct DevicePipelineSleepTests {
     #expect(dispatcher.flattenedEvents == [.buttonPressed(.a)])
   }
 
-  @Test func testStopNeutralizesForwardedButtonState() async {
+  @Test
+  func testStopNeutralizesForwardedButtonState() async {
     let dispatcher = RecordingOutputDispatcher()
     let pipeline = DevicePipeline(
       identifier: DeviceIdentifier(vendorID: 100, productID: 200),
@@ -148,7 +158,8 @@ struct DevicePipelineSleepTests {
     #expect(dispatcher.flattenedEvents == [.buttonPressed(.a), .buttonReleased(.a)])
   }
 
-  @Test func testStopNeutralizesForwardedDpadAndAxesState() async {
+  @Test
+  func testStopNeutralizesForwardedDpadAndAxesState() async {
     let dispatcher = RecordingOutputDispatcher()
     let pipeline = DevicePipeline(
       identifier: DeviceIdentifier(vendorID: 100, productID: 200),
@@ -168,12 +179,13 @@ struct DevicePipelineSleepTests {
     #expect(
       dispatcher.flattenedEvents == [
         .dpadChanged(.north), .leftStickChanged(x: 0.8, y: 0), .dpadChanged(.neutral),
-        .leftStickChanged(x: 0, y: 0)
+        .leftStickChanged(x: 0, y: 0),
       ]
     )
   }
 
-  @Test func testInputConnectionLifecycleDefersAndStopsOutput() async {
+  @Test
+  func testInputConnectionLifecycleDefersAndStopsOutput() async {
     let dispatcher = RecordingOutputDispatcher()
     let pipeline = DevicePipeline(
       identifier: DeviceIdentifier(vendorID: 10462, productID: 4418),

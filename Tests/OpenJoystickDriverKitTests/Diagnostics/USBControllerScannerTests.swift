@@ -3,7 +3,8 @@ import Testing
 @testable import OpenJoystickDriverKit
 
 struct USBControllerScannerTests {
-  @Test func scannerCarriesObservedTopologyClassificationAndReconciliation() async throws {
+  @Test
+  func scannerCarriesObservedTopologyClassificationAndReconciliation() async throws {
     let device = USBTransportDevice(
       route: .ioUSBHost,
       serviceID: 7,
@@ -35,7 +36,7 @@ struct USBControllerScannerTests {
               direction: .out,
               maxPacketSize: 64,
               interval: 4
-            )
+            ),
           ]
         )
       ]
@@ -65,9 +66,10 @@ private actor ScannerProvider: USBTransportObservationProvider {
 
   func transportObservations() throws -> [ControllerTransportObservation] { [observation] }
 
-  func open(_ device: USBTransportDevice, options: USBTransportOpenOptions) throws
-    -> any USBTransportSession
-  { ScannerSession() }
+  func open(
+    _ device: USBTransportDevice,
+    options: USBTransportOpenOptions
+  ) throws -> any USBTransportSession { ScannerSession() }
 }
 
 private final class ScannerSession: USBTransportSession, @unchecked Sendable {

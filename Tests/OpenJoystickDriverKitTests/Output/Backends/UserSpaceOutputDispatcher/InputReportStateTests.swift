@@ -3,7 +3,8 @@ import Testing
 @testable import OpenJoystickDriverKit
 
 struct UserSpaceInputReportStateTests {
-  @Test func currentInputReportTracksChangesForHostGetReportRequests() throws {
+  @Test
+  func currentInputReportTracksChangesForHostGetReportRequests() throws {
     let format = try HIDDescriptorReportFormat(
       descriptor: XboxOneBluetoothHIDDescriptor.seriesDescriptor
     )
@@ -24,7 +25,8 @@ struct UserSpaceInputReportStateTests {
     #expect(state.currentReport() == neutral)
   }
 
-  @Test func seriesIdleReportMatchesInterruptGetReportLayout() throws {
+  @Test
+  func seriesIdleReportMatchesInterruptGetReportLayout() throws {
     let format = try HIDDescriptorReportFormat(
       descriptor: XboxOneBluetoothHIDDescriptor.seriesDescriptor,
       buttonUsageMap: XboxOneBluetoothHIDDescriptor.buttonUsageMap,
@@ -36,7 +38,8 @@ struct UserSpaceInputReportStateTests {
     #expect(Array(report[1...8]) == [0x00, 0x80, 0x00, 0x80, 0x00, 0x80, 0x00, 0x80])
   }
 
-  @Test func genericCompatibilityTriggersReturnToTheirExactPreActuationReport() {
+  @Test
+  func genericCompatibilityTriggersReturnToTheirExactPreActuationReport() {
     let format = OJDSDLGamepadFormat()
     let firstSession = UserSpaceInputReportState(format: format)
     let neutral = firstSession.currentReport()
@@ -58,7 +61,8 @@ struct UserSpaceInputReportStateTests {
     #expect(Array(neutral[12...13]) == [0, 0])
   }
 
-  @Test func appleCompatibilityTracksShareSeparatelyFromView() throws {
+  @Test
+  func appleCompatibilityTracksShareSeparatelyFromView() throws {
     let format = try HIDDescriptorReportFormat(
       descriptor: XboxOneBluetoothHIDDescriptor.seriesDescriptor,
       buttonUsageMap: XboxOneBluetoothHIDDescriptor.buttonUsageMap,

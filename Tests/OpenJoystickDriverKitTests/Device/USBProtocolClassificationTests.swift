@@ -3,7 +3,8 @@ import Testing
 @testable import OpenJoystickDriverKit
 
 struct USBProtocolClassificationTests {
-  @Test func xusbCandidateRequiresTheAuthoritativeInterfaceAndPair() {
+  @Test
+  func xusbCandidateRequiresTheAuthoritativeInterfaceAndPair() {
     let result = USBProtocolClassifier.classify(
       observation(
         interfaceClass: 0xFF,
@@ -19,7 +20,8 @@ struct USBProtocolClassificationTests {
     #expect(result.matchedPredicates.contains(.completeInterruptPair))
   }
 
-  @Test func endpointAddressesDoNotAffectXUSBClassification() {
+  @Test
+  func endpointAddressesDoNotAffectXUSBClassification() {
     let first = USBProtocolClassifier.classify(
       observation(
         interfaceClass: 0xFF,
@@ -41,7 +43,8 @@ struct USBProtocolClassificationTests {
     #expect(first.matchedPredicates == second.matchedPredicates)
   }
 
-  @Test func gipCandidateIsAdvisoryAndNeverAnAdmissionDecision() {
+  @Test
+  func gipCandidateIsAdvisoryAndNeverAnAdmissionDecision() {
     let result = USBProtocolClassifier.classify(
       observation(
         interfaceClass: 0xFF,
@@ -55,7 +58,8 @@ struct USBProtocolClassificationTests {
     #expect(result.disposition == .advisory)
   }
 
-  @Test func simultaneousXUSBAndGIPSignaturesAreAnExplicitAmbiguousConflict() {
+  @Test
+  func simultaneousXUSBAndGIPSignaturesAreAnExplicitAmbiguousConflict() {
     let result = USBProtocolClassifier.classify(
       ControllerTransportObservation(
         vendorID: 1,
@@ -74,7 +78,7 @@ struct USBProtocolClassificationTests {
             interfaceSubclass: 0x47,
             interfaceProtocol: 0xD0,
             endpoints: [endpoint(0x82, .in), endpoint(0x02, .out)]
-          )
+          ),
         ]
       )
     )
@@ -84,7 +88,8 @@ struct USBProtocolClassificationTests {
     #expect(result.conflictingCandidates == [.xusb, .gip])
   }
 
-  @Test func arbitraryVendorInterfaceIsRejected() {
+  @Test
+  func arbitraryVendorInterfaceIsRejected() {
     let result = USBProtocolClassifier.classify(
       observation(
         interfaceClass: 0xFF,
@@ -98,7 +103,8 @@ struct USBProtocolClassificationTests {
     #expect(result.disposition == .unsupported)
   }
 
-  @Test func genericHIDRequiresActualLayoutEvidence() {
+  @Test
+  func genericHIDRequiresActualLayoutEvidence() {
     let noLayout = USBProtocolClassifier.classify(observation(interfaceClass: 0x03))
     let layout = USBProtocolClassifier.classify(
       observation(
@@ -111,7 +117,8 @@ struct USBProtocolClassificationTests {
     #expect(layout.selected == .genericHID)
   }
 
-  @Test func conflictDoesNotSwitchKnownRecordVariant() {
+  @Test
+  func conflictDoesNotSwitchKnownRecordVariant() {
     let result = KnownRecordProtocolReconciler.reconcile(
       observation: observation(
         interfaceClass: 0xFF,
@@ -126,7 +133,8 @@ struct USBProtocolClassificationTests {
     #expect(result.hasConflict)
   }
 
-  @Test func originalXboxXIDSignatureIsAdvisory() {
+  @Test
+  func originalXboxXIDSignatureIsAdvisory() {
     let result = USBProtocolClassifier.classify(
       observation(
         interfaceClass: 0x58,
@@ -141,7 +149,8 @@ struct USBProtocolClassificationTests {
     #expect(result.matchedPredicates.contains(.xidInterfaceIdentity))
   }
 
-  @Test func xbox360WirelessArgonAdapterUsesXUSBProtocol129() {
+  @Test
+  func xbox360WirelessArgonAdapterUsesXUSBProtocol129() {
     let result = USBProtocolClassifier.classify(
       observation(
         interfaceClass: 0xFF,
@@ -155,7 +164,8 @@ struct USBProtocolClassificationTests {
     #expect(result.disposition == .advisory)
   }
 
-  @Test func originalXboxVariantMatchesXIDAndConflictsWithXUSB() {
+  @Test
+  func originalXboxVariantMatchesXIDAndConflictsWithXUSB() {
     let xidMatch = KnownRecordProtocolReconciler.reconcile(
       observation: observation(
         interfaceClass: 0x58,
@@ -181,7 +191,8 @@ struct USBProtocolClassificationTests {
     #expect(xusbConflict.hasConflict)
   }
 
-  @Test func xboxAdaptiveJoystickReconcilesAsGIP() {
+  @Test
+  func xboxAdaptiveJoystickReconcilesAsGIP() {
     let result = KnownRecordProtocolReconciler.reconcile(
       observation: observation(
         interfaceClass: 0xFF,
@@ -196,7 +207,8 @@ struct USBProtocolClassificationTests {
     #expect(!result.matchingPredicates.isEmpty)
   }
 
-  @Test func exactCatalogAdmissionSetRemainsCatalogOwned() {
+  @Test
+  func exactCatalogAdmissionSetRemainsCatalogOwned() {
     let registry = ParserRegistry()
     let known = DeviceIdentifier(vendorID: 0x045E, productID: 0x028E)
     let unknown = DeviceIdentifier(vendorID: 0xFFFF, productID: 0x0001)
@@ -231,9 +243,10 @@ struct USBProtocolClassificationTests {
     )
   }
 
-  private func endpoint(_ address: UInt8, _ direction: USBEndpointDirection)
-    -> USBEndpointTransportFacts
-  {
+  private func endpoint(
+    _ address: UInt8,
+    _ direction: USBEndpointDirection
+  ) -> USBEndpointTransportFacts {
     USBEndpointTransportFacts(
       address: address,
       transferType: .interrupt,

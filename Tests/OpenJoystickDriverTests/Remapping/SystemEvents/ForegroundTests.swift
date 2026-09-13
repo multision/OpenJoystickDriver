@@ -4,7 +4,8 @@ import Testing
 @testable import OpenJoystickDriver
 
 struct RemappingForegroundPolicyTests {
-  @Test func applicationScopeRequiresExactFrontmostBundleIdentifier() {
+  @Test
+  func applicationScopeRequiresExactFrontmostBundleIdentifier() {
     let scope = RemappingApplicationScope.application(bundleIdentifier: "com.example.Game")
     #expect(
       RemappingForegroundPolicy.eligibility(
@@ -32,7 +33,8 @@ struct RemappingForegroundPolicyTests {
     )
   }
 
-  @Test func globalScopeStillRequiresPostEventAuthorization() {
+  @Test
+  func globalScopeStillRequiresPostEventAuthorization() {
     #expect(
       RemappingForegroundPolicy.eligibility(
         for: .global,
@@ -51,7 +53,8 @@ struct RemappingForegroundPolicyTests {
     )
   }
 
-  @Test func explicitSuppressionPrecedesOtherEligibilityStates() {
+  @Test
+  func explicitSuppressionPrecedesOtherEligibilityStates() {
     #expect(
       RemappingForegroundPolicy.eligibility(
         for: .application(bundleIdentifier: "com.example.Game"),

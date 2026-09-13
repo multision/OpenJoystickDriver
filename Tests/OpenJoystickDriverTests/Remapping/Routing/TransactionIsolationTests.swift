@@ -4,8 +4,10 @@ import Testing
 
 @testable import OpenJoystickDriver
 
-@Suite(.serialized) struct RemappingProfileTransactionIsolationTests {
-  @Test func rejectedCandidateCannotEmitBeforeExactRollbackCompletes() async throws {
+@Suite(.serialized)
+struct RemappingProfileTransactionIsolationTests {
+  @Test
+  func rejectedCandidateCannotEmitBeforeExactRollbackCompletes() async throws {
     let original = transactionProfile(name: "Original", key: .space)
     let gate = ResponseAcceptanceGate()
     let harness = try await TransactionIsolationHarness.make(
@@ -65,7 +67,8 @@ import Testing
     #expect(resumedTrace.contains(.compatibility([.buttonPressed(.b)], compatibility)))
   }
 
-  @Test func acceptedCandidateCannotEmitUntilResponseAcceptanceCompletes() async throws {
+  @Test
+  func acceptedCandidateCannotEmitUntilResponseAcceptanceCompletes() async throws {
     let original = transactionProfile(name: "Original", key: .space)
     let gate = ResponseAcceptanceGate()
     let harness = try await TransactionIsolationHarness.make(initialProfile: original) { _ in
@@ -98,7 +101,8 @@ import Testing
     )
   }
 
-  @Test func createFailureRollsBackGateAndRestoresOutput() async throws {
+  @Test
+  func createFailureRollsBackGateAndRestoresOutput() async throws {
     let original = transactionProfile(name: "Original", key: .space)
     let harness = try await TransactionIsolationHarness.make(initialProfile: original)
     defer { harness.removeFiles() }
@@ -119,7 +123,8 @@ import Testing
     #expect(harness.recorder.snapshot().last == .system(.keyDown(.space)))
   }
 
-  @Test func failedRestoreRemainsTypedFailClosedUntilExplicitRecovery() async throws {
+  @Test
+  func failedRestoreRemainsTypedFailClosedUntilExplicitRecovery() async throws {
     let original = transactionProfile(name: "Original", key: .space)
     let gate = ResponseAcceptanceGate()
     let harness = try await TransactionIsolationHarness.make(
@@ -162,7 +167,8 @@ import Testing
     #expect(harness.recorder.snapshot().last == .system(.keyDown(.space)))
   }
 
-  @Test func coordinatorSnapshotUsesOneRouterAccessSample() async throws {
+  @Test
+  func coordinatorSnapshotUsesOneRouterAccessSample() async throws {
     let probe = MutablePostEventProbe()
     let harness = try await TransactionIsolationHarness.make(
       initialProfile: transactionProfile(name: "Original", key: .space),
@@ -182,7 +188,8 @@ import Testing
     #expect(snapshot.routes[0].eligibility == .eligible)
   }
 
-  @Test func cancelledMutationRollsBackBeforeNextSerializedMutationRuns() async throws {
+  @Test
+  func cancelledMutationRollsBackBeforeNextSerializedMutationRuns() async throws {
     let original = transactionProfile(name: "Original", key: .space)
     let gate = ResponseAcceptanceGate()
     let harness = try await TransactionIsolationHarness.make(initialProfile: original) { _ in

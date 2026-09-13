@@ -156,7 +156,8 @@ actor DevicePipeline {
   }
 
   /// Feed HID input report data (called by DeviceManager for class 0x03 devices).
-  @discardableResult func feedHIDData(_ data: Data) async -> [PhysicalHIDOutputReport] {
+  @discardableResult
+  func feedHIDData(_ data: Data) async -> [PhysicalHIDOutputReport] {
     guard isActive else { return [] }
     appendToPacketLog(bytes: Array(data), direction: "rx")
     do {
@@ -173,15 +174,18 @@ actor DevicePipeline {
   }
 
   func consumeHIDFeatureReport(
-    _ data: Data, request: PhysicalHIDFeatureReadRequest, transport: String?
+    _ data: Data,
+    request: PhysicalHIDFeatureReadRequest,
+    transport: String?
   ) -> Bool {
     guard isActive, let consumer = parser as? any HIDFeatureReportConsumer else { return false }
     return consumer.consumeHIDFeatureReport(data, request: request, transport: transport)
   }
 
   func hidStartupOutputPlan(transport: String?) -> ([PhysicalHIDOutputReport], UInt64) {
-    guard isActive, let provider = parser as? any HIDStartupOutputReportProvider
-    else { return ([], 0) }
+    guard isActive, let provider = parser as? any HIDStartupOutputReportProvider else {
+      return ([], 0)
+    }
     return (
       provider.hidStartupReports(transport: transport),
       provider.hidStartupReportIntervalNanoseconds(transport: transport)
@@ -369,9 +373,11 @@ actor DevicePipeline {
     }
   }
 
-  func hidFeatureHapticReports(left: UInt8, right: UInt8, durationMs: Int)
-    -> [PhysicalHIDOutputReport]
-  {
+  func hidFeatureHapticReports(
+    left: UInt8,
+    right: UInt8,
+    durationMs: Int
+  ) -> [PhysicalHIDOutputReport] {
     (parser as? PhysicalHIDFeatureHapticOutput)?.physicalHapticReports(
       left: left,
       right: right,
@@ -379,9 +385,7 @@ actor DevicePipeline {
     ) ?? []
   }
 
-  nonisolated func supportsHIDFeatureHaptics() -> Bool {
-    parser is PhysicalHIDFeatureHapticOutput
-  }
+  nonisolated func supportsHIDFeatureHaptics() -> Bool { parser is PhysicalHIDFeatureHapticOutput }
 
   nonisolated func minimumPhysicalOutputIntervalNanoseconds() -> UInt64 {
     (parser as? PhysicalHIDRumbleOutput)?.minimumPhysicalOutputIntervalNanoseconds ?? 0
@@ -410,7 +414,8 @@ actor DevicePipeline {
     effect: PhysicalAdaptiveTriggerEffect
   ) -> PhysicalHIDOutputReport? {
     (parser as? PhysicalHIDAdaptiveTriggerOutput)?.physicalAdaptiveTriggerReport(
-      trigger, effect: effect
+      trigger,
+      effect: effect
     )
   }
 

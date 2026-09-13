@@ -116,7 +116,7 @@ public final class GIPParser: InputParser, PhysicalRumbleOutput, USBDeferredOutp
     guard let handle else { return }
     let seq = sequencer.next(for: GIPCommand.status)
     let packet: [UInt8] = [
-      GIPCommand.status, GIPOption.internal, seq, gipStatusSubCommandLength, 0x00, 0x00, 0x00
+      GIPCommand.status, GIPOption.internal, seq, gipStatusSubCommandLength, 0x00, 0x00, 0x00,
     ]
     _ = try await handle.writeInterruptPacket(
       endpoint: outEndpoint,
@@ -137,7 +137,7 @@ public final class GIPParser: InputParser, PhysicalRumbleOutput, USBDeferredOutp
     return [
       GIPCommand.acknowledge, clientAndInternal, sequence, 9, 0, command, clientAndInternal,
       UInt8(truncatingIfNeeded: totalLength), UInt8(truncatingIfNeeded: totalLength >> 8), 0, 0,
-      UInt8(truncatingIfNeeded: remaining), UInt8(truncatingIfNeeded: remaining >> 8)
+      UInt8(truncatingIfNeeded: remaining), UInt8(truncatingIfNeeded: remaining >> 8),
     ]
   }
 
@@ -250,7 +250,7 @@ public final class GIPParser: InputParser, PhysicalRumbleOutput, USBDeferredOutp
     // the unflagged rumble commands sent by the Linux xone and xpad drivers.
     let packet: [UInt8] = [
       GIPCommand.rumble, 0x00, seq, gipRumbleSubCommandLength, 0x00, activation, ltMotor, rtMotor,
-      left, right, gipRumbleDefaultDuration, 0x00, 0xFF  // on=255, off=0, repeat=255
+      left, right, gipRumbleDefaultDuration, 0x00, 0xFF,  // on=255, off=0, repeat=255
     ]
     _ = try await handle.writeInterruptPacket(
       endpoint: outEndpoint,
@@ -373,9 +373,12 @@ public final class GIPParser: InputParser, PhysicalRumbleOutput, USBDeferredOutp
     return []
   }
 
-  private func parseSticksEvents(lsx: Int16, lsy: Int16, rsx: Int16, rsy: Int16)
-    -> [ControllerEvent]
-  {
+  private func parseSticksEvents(
+    lsx: Int16,
+    lsy: Int16,
+    rsx: Int16,
+    rsy: Int16
+  ) -> [ControllerEvent] {
     var events: [ControllerEvent] = []
     if lsx != prevLSX || lsy != prevLSY {
       let lx = normalizeStick(lsx)

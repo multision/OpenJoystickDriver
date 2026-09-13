@@ -4,36 +4,51 @@
 
   struct ProfileTriggerSheet: View {
     let onSave: ([RemappingTriggerMapping]) throws -> Void
-    @Environment(\.presentationMode) private var presentationMode
-    @State private var left: ProfileTriggerDraft
-    @State private var right: ProfileTriggerDraft
-    @State private var selected: RemappingTriggerSource = .left
-    @State private var errorMessage: String?
+    @Environment(\.presentationMode)
+    private var presentationMode
+    @State
+    private var left: ProfileTriggerDraft
+    @State
+    private var right: ProfileTriggerDraft
+    @State
+    private var selected: RemappingTriggerSource = .left
+    @State
+    private var errorMessage: String?
 
     init(
       mappings: [RemappingTriggerMapping],
       onSave: @escaping ([RemappingTriggerMapping]) throws -> Void
     ) {
       self.onSave = onSave
-      _left = State(initialValue: ProfileTriggerDraft(
-        source: .left, mapping: mappings.first { $0.source == .left }
-      ))
-      _right = State(initialValue: ProfileTriggerDraft(
-        source: .right, mapping: mappings.first { $0.source == .right }
-      ))
+      _left = State(
+        initialValue: ProfileTriggerDraft(
+          source: .left,
+          mapping: mappings.first { $0.source == .left }
+        )
+      )
+      _right = State(
+        initialValue: ProfileTriggerDraft(
+          source: .right,
+          mapping: mappings.first { $0.source == .right }
+        )
+      )
     }
 
     var body: some View {
       VStack(alignment: .leading, spacing: 16) {
-        Text(OJDLocalized.string("profiles.trigger.title", fallback: "Trigger stages"))
-          .font(.headline)
+        Text(OJDLocalized.string("profiles.trigger.title", fallback: "Trigger stages")).font(
+          .headline
+        )
         Picker(
-          OJDLocalized.string("profiles.trigger.source", fallback: "Trigger"), selection: $selected
+          OJDLocalized.string("profiles.trigger.source", fallback: "Trigger"),
+          selection: $selected
         ) {
-          Text(OJDLocalized.string("profiles.trigger.left", fallback: "Left trigger"))
-            .tag(RemappingTriggerSource.left)
-          Text(OJDLocalized.string("profiles.trigger.right", fallback: "Right trigger"))
-            .tag(RemappingTriggerSource.right)
+          Text(OJDLocalized.string("profiles.trigger.left", fallback: "Left trigger")).tag(
+            RemappingTriggerSource.left
+          )
+          Text(OJDLocalized.string("profiles.trigger.right", fallback: "Right trigger")).tag(
+            RemappingTriggerSource.right
+          )
         }.pickerStyle(SegmentedPickerStyle())
         ScrollView {
           ProfileTriggerFields(draft: selected == .left ? $left : $right).padding(.trailing, 8)

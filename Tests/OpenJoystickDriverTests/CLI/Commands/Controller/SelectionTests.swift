@@ -4,7 +4,8 @@ import Testing
 @testable import OpenJoystickDriver
 
 struct ConnectedControllerSelectionTests {
-  @Test func selectsTheOnlyMatchingModelWithoutAnExplicitRuntimeIdentifier() throws {
+  @Test
+  func selectsTheOnlyMatchingModelWithoutAnExplicitRuntimeIdentifier() throws {
     let other = device(name: "Other", vendorID: 3, productID: 4, id: "other")
     let expected = device(name: "Expected", vendorID: 1, productID: 2, id: "expected")
 
@@ -17,7 +18,8 @@ struct ConnectedControllerSelectionTests {
     #expect(selected.runtimeIdentifier == "expected")
   }
 
-  @Test func selectsOneOfTwoIdenticalModelsByRuntimeIdentifier() throws {
+  @Test
+  func selectsOneOfTwoIdenticalModelsByRuntimeIdentifier() throws {
     let first = device(name: "Controller", vendorID: 1, productID: 2, id: "first")
     let second = device(name: "Controller", vendorID: 1, productID: 2, id: "second")
 
@@ -31,7 +33,8 @@ struct ConnectedControllerSelectionTests {
     #expect(selected.runtimeIdentifier == "second")
   }
 
-  @Test func rejectsAmbiguousModelsAndListsTheirOpaqueSelectors() {
+  @Test
+  func rejectsAmbiguousModelsAndListsTheirOpaqueSelectors() {
     let first = device(name: "Controller", vendorID: 1, productID: 2, id: "first")
     let second = device(name: "Controller", vendorID: 1, productID: 2, id: "second")
 
@@ -52,7 +55,8 @@ struct ConnectedControllerSelectionTests {
     }
   }
 
-  @Test func runtimeIdentifierMustBelongToTheRequestedModel() {
+  @Test
+  func runtimeIdentifierMustBelongToTheRequestedModel() {
     let selectedIDOnAnotherModel = device(name: "Other", vendorID: 3, productID: 4, id: "selected")
 
     #expect(throws: ConnectedControllerSelection.Failure.self) {
@@ -65,7 +69,8 @@ struct ConnectedControllerSelectionTests {
     }
   }
 
-  @Test func rejectsAnOpaqueSelectorSharedByMultipleCandidates() {
+  @Test
+  func rejectsAnOpaqueSelectorSharedByMultipleCandidates() {
     let first = device(name: "First", vendorID: 1, productID: 2, id: "duplicate")
     let second = device(name: "Second", vendorID: 1, productID: 2, id: "duplicate")
 
@@ -77,9 +82,12 @@ struct ConnectedControllerSelectionTests {
     }
   }
 
-  private func device(name: String, vendorID: UInt16, productID: UInt16, id: String)
-    -> ApplicationServiceDeviceDescription
-  {
+  private func device(
+    name: String,
+    vendorID: UInt16,
+    productID: UInt16,
+    id: String
+  ) -> ApplicationServiceDeviceDescription {
     ApplicationServiceDeviceDescription(
       name: name,
       vendorID: vendorID,

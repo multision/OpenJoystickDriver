@@ -45,8 +45,7 @@ public enum CompatibilityProtocolBackendCatalog {
       .gip,
       firstParty: xboxSeriesIdentity,
       explicit: [
-        xboxSeriesIdentity,
-        CompatibilityUSBIdentity(vendorID: 0x045E, productID: 0x0B00),
+        xboxSeriesIdentity, CompatibilityUSBIdentity(vendorID: 0x045E, productID: 0x0B00),
         CompatibilityUSBIdentity(vendorID: 0x045E, productID: 0x0B12),
         CompatibilityUSBIdentity(vendorID: 0x045E, productID: 0x02EA),
       ],
@@ -75,8 +74,7 @@ public enum CompatibilityProtocolBackendCatalog {
       .hid,
       firstParty: dualShock4Identity,
       explicit: [
-        dualShock4Identity,
-        CompatibilityUSBIdentity(vendorID: 0x054C, productID: 0x05C4),
+        dualShock4Identity, CompatibilityUSBIdentity(vendorID: 0x054C, productID: 0x05C4),
         CompatibilityUSBIdentity(vendorID: 0x054C, productID: 0x0BA0),
       ],
       profile: .dualShock4USB,
@@ -86,10 +84,7 @@ public enum CompatibilityProtocolBackendCatalog {
     publishable(
       .hid,
       firstParty: dualSenseIdentity,
-      explicit: [
-        dualSenseIdentity,
-        CompatibilityUSBIdentity(vendorID: 0x054C, productID: 0x0DF2),
-      ],
+      explicit: [dualSenseIdentity, CompatibilityUSBIdentity(vendorID: 0x054C, productID: 0x0DF2)],
       profile: .dualSenseUSB,
       identity: .dualSense,
       notes: "Sony DualSense USB. Automatic for DualSense physical devices."
@@ -104,15 +99,15 @@ public enum CompatibilityProtocolBackendCatalog {
     ),
   ]
 
-  public static func route(for subfamily: PhysicalProtocolSubfamily)
-    -> CompatibilityProtocolBackendRoute?
-  {
+  public static func route(
+    for subfamily: PhysicalProtocolSubfamily
+  ) -> CompatibilityProtocolBackendRoute? {
     routes.first { $0.subfamily == subfamily && $0.canPublish }
   }
 
-  public static func hidDialectRoute(for device: ApplicationServiceDeviceDescription)
-    -> CompatibilityProtocolBackendRoute?
-  {
+  public static func hidDialectRoute(
+    for device: ApplicationServiceDeviceDescription
+  ) -> CompatibilityProtocolBackendRoute? {
     hidDialectRoutes.first { route in
       guard route.canPublish else { return false }
       if route.containsExplicit(vendorID: device.vendorID, productID: device.productID) {

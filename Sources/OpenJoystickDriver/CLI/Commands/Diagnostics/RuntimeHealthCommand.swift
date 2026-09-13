@@ -212,7 +212,7 @@ struct RuntimeHealthCommand {
         CLILocalized.text(
           "cli.runtime.help_max_samples",
           "At most 100000 samples may be requested."
-        )
+        ),
       ].joined(separator: "\n")
     )
   }

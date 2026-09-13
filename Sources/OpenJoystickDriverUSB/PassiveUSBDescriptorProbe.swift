@@ -385,8 +385,10 @@ public struct PassiveUSBProbeResult: Equatable, Sendable, Codable {
 }
 
 public protocol PassiveUSBRegistrySource: Sendable {
-  func matchingServices(className: String, numericProperties: [String: UInt64]) throws
-    -> [PassiveUSBRegistryNode]
+  func matchingServices(
+    className: String,
+    numericProperties: [String: UInt64]
+  ) throws -> [PassiveUSBRegistryNode]
 }
 
 public enum PassiveUSBRegistryFactParser {
@@ -523,7 +525,7 @@ public enum PassiveUSBRegistryFactParser {
 
   private static let descriptorKeys = [
     "Configuration Descriptor", "kUSBConfigurationDescriptor", "USB Configuration Descriptor",
-    "DescriptorBytes", "descriptorBytes"
+    "DescriptorBytes", "descriptorBytes",
   ]
 
   private static func findDescriptorBlobs(_ node: PassiveUSBRegistryNode) -> [Blob] {
@@ -570,9 +572,9 @@ public enum PassiveUSBDescriptorProbe {
     public static let buildMode = "RELEASE"
   #endif
 
-  public static func scan(authorizedTuple tuple: PassiveUSBDescriptorTuple) throws
-    -> PassiveUSBProbeResult
-  {
+  public static func scan(
+    authorizedTuple tuple: PassiveUSBDescriptorTuple
+  ) throws -> PassiveUSBProbeResult {
     guard contributorGate() else { throw PassiveUSBDescriptorProbeError.contributorGateRequired }
     return try scanWithoutGate(authorizedTuple: tuple, source: IOUSBHostPassiveUSBRegistrySource())
   }
@@ -609,9 +611,9 @@ public enum PassiveUSBDescriptorProbe {
   /// Reads descriptor-backed transport facts without claiming an interface or
   /// issuing a USB transfer. This path is intentionally independent of the
   /// contributor gate and does not participate in raw-USB admission.
-  static func transportObservation(for device: USBTransportDevice) throws
-    -> ControllerTransportObservation?
-  {
+  static func transportObservation(
+    for device: USBTransportDevice
+  ) throws -> ControllerTransportObservation? {
     let tuple = PassiveUSBDescriptorTuple(vendorID: device.vendorID, productID: device.productID)
     let roots = try IOUSBHostPassiveUSBRegistrySource().matchingServices(
       className: "IOUSBHostDevice",

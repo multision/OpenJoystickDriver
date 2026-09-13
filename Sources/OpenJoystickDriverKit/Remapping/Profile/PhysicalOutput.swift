@@ -41,17 +41,14 @@ public enum RemappingPhysicalOutput: Codable, Equatable, Hashable, Sendable {
         intensity: try values.decode(Double.self, forKey: .intensity)
       )
     case .playerIndicator:
-      self = .playerIndicator(
-        try values.decode(PhysicalPlayerIndicator.self, forKey: .indicator)
-      )
+      self = .playerIndicator(try values.decode(PhysicalPlayerIndicator.self, forKey: .indicator))
     case .color:
       self = .color(
         red: try values.decode(UInt8.self, forKey: .red),
         green: try values.decode(UInt8.self, forKey: .green),
         blue: try values.decode(UInt8.self, forKey: .blue)
       )
-    case .brightness:
-      self = .brightness(try values.decode(Double.self, forKey: .intensity))
+    case .brightness: self = .brightness(try values.decode(Double.self, forKey: .intensity))
     case .adaptiveTrigger:
       self = .adaptiveTrigger(
         try values.decode(PhysicalAdaptiveTrigger.self, forKey: .trigger),
@@ -87,6 +84,4 @@ public enum RemappingPhysicalOutput: Codable, Equatable, Hashable, Sendable {
   }
 }
 
-public enum RemappingPhysicalOutputError: Error, Equatable, Sendable {
-  case invalidValue
-}
+public enum RemappingPhysicalOutputError: Error, Equatable, Sendable { case invalidValue }

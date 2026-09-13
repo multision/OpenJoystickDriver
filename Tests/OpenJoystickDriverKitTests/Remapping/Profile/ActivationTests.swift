@@ -4,7 +4,8 @@ import Testing
 @testable import OpenJoystickDriverKit
 
 struct RemappingActivationTests {
-  @Test func longHoldFiresAlternateDestinationAfterThreshold() async throws {
+  @Test
+  func longHoldFiresAlternateDestinationAfterThreshold() async throws {
     let sink = RemappingTestSink()
     let engine = RemappingEventEngine(sink: sink)
     let currentProfile = profile(bindings: [
@@ -39,7 +40,8 @@ struct RemappingActivationTests {
     #expect(sink.actions() == [.keyDown(.b), .keyUp(.b)])
   }
 
-  @Test func longHoldEarlyReleaseFiresDefaultAsQuickDownUp() async throws {
+  @Test
+  func longHoldEarlyReleaseFiresDefaultAsQuickDownUp() async throws {
     let sink = RemappingTestSink()
     let engine = RemappingEventEngine(sink: sink)
     let currentProfile = profile(bindings: [
@@ -68,7 +70,8 @@ struct RemappingActivationTests {
     #expect(sink.actions() == [.keyDown(.a), .keyUp(.a)])
   }
 
-  @Test func doubleTapFiresAlternateOnSecondPress() async throws {
+  @Test
+  func doubleTapFiresAlternateOnSecondPress() async throws {
     let sink = RemappingTestSink()
     let engine = RemappingEventEngine(sink: sink)
     let currentProfile = profile(bindings: [
@@ -113,7 +116,8 @@ struct RemappingActivationTests {
     #expect(sink.actions() == [.keyDown(.c), .keyUp(.c)])
   }
 
-  @Test func doubleTapWindowExpiryFiresDefault() async throws {
+  @Test
+  func doubleTapWindowExpiryFiresDefault() async throws {
     let sink = RemappingTestSink()
     let engine = RemappingEventEngine(sink: sink)
     let currentProfile = profile(bindings: [
@@ -143,7 +147,8 @@ struct RemappingActivationTests {
     #expect(sink.actions() == [.keyDown(.a), .keyUp(.a)])
   }
 
-  @Test func bindingWithoutActivationFiresImmediately() async throws {
+  @Test
+  func bindingWithoutActivationFiresImmediately() async throws {
     let sink = RemappingTestSink()
     let engine = RemappingEventEngine(sink: sink)
     let currentProfile = profile(bindings: [binding(source: .button(.south), key: .space)])
@@ -158,7 +163,8 @@ struct RemappingActivationTests {
     #expect(sink.actions() == [.keyDown(.space), .keyUp(.space)])
   }
 
-  @Test func longHoldDoesNotFireAfterEarlyReleaseWhenBothConfigured() async throws {
+  @Test
+  func longHoldDoesNotFireAfterEarlyReleaseWhenBothConfigured() async throws {
     let sink = RemappingTestSink()
     let engine = RemappingEventEngine(sink: sink)
     let currentProfile = profile(bindings: [
@@ -196,9 +202,10 @@ struct RemappingActivationTests {
 
   // MARK: - Helpers
 
-  private func profile(name: String = "Activation", bindings: [RemappingBinding])
-    -> RemappingProfile
-  {
+  private func profile(
+    name: String = "Activation",
+    bindings: [RemappingBinding]
+  ) -> RemappingProfile {
     RemappingProfile(
       name: name,
       device: RemappingDeviceScope(vendorID: 1, productID: 2),

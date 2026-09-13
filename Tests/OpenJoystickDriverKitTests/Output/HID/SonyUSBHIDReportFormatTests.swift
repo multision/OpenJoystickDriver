@@ -4,7 +4,8 @@ import Testing
 @testable import OpenJoystickDriverKit
 
 struct VirtualIdentityPresentationTests {
-  @Test func microsoftIdentitiesUseXboxSymbols() {
+  @Test
+  func microsoftIdentitiesUseXboxSymbols() {
     #expect(VirtualDeviceProfile.xbox360Wired.presentation == .xbox)
     #expect(VirtualDeviceProfile.xboxSeries.presentation == .xbox)
     #expect(VirtualDeviceProfile.xbox360Wired.presentation.controllerSymbolName == "xbox.logo")
@@ -12,7 +13,8 @@ struct VirtualIdentityPresentationTests {
     #expect(VirtualDeviceProfile.xboxSeries.productName == "Xbox Wireless Controller")
   }
 
-  @Test func sonyIdentitiesUsePlayStationSymbolsKeyedFromVID() {
+  @Test
+  func sonyIdentitiesUsePlayStationSymbolsKeyedFromVID() {
     #expect(VirtualDeviceProfile.dualShock4USB.presentation == .playstation)
     #expect(VirtualDeviceProfile.dualSenseUSB.presentation == .playstation)
     #expect(VirtualDeviceProfile.dualShock4USB.productName == "Wireless Controller")
@@ -21,11 +23,13 @@ struct VirtualIdentityPresentationTests {
     #expect(VirtualDeviceProfile.switchProUSB.productName == "Pro Controller")
   }
 
-  @Test func genericHIDUsesGenericSymbol() {
+  @Test
+  func genericHIDUsesGenericSymbol() {
     #expect(VirtualDeviceProfile.openJoystickDriverGenericHID.presentation == .generic)
   }
 
-  @Test func publishedIdentityFollowsRequestedSpoofWhenAvailable() {
+  @Test
+  func publishedIdentityFollowsRequestedSpoofWhenAvailable() {
     let gamesir = ApplicationServiceDeviceDescription(
       name: "GameSir",
       vendorID: 0x3537,
@@ -100,7 +104,8 @@ struct VirtualIdentityPresentationTests {
 }
 
 struct SonyUSBHIDReportFormatTests {
-  @Test func dualShock4USBReportParsesThroughDS4Parser() throws {
+  @Test
+  func dualShock4USBReportParsesThroughDS4Parser() throws {
     var state = VirtualGamepadState()
     state.buttons =
       (1 << GamepadHIDDescriptor.ButtonBit.a.rawValue)
@@ -119,7 +124,8 @@ struct SonyUSBHIDReportFormatTests {
     #expect(events.contains(.buttonPressed(.ps)))
   }
 
-  @Test func dualSenseUSBReportParsesThroughDualSenseParser() throws {
+  @Test
+  func dualSenseUSBReportParsesThroughDualSenseParser() throws {
     var state = VirtualGamepadState()
     state.buttons = 1 << GamepadHIDDescriptor.ButtonBit.y.rawValue
     let report = DualSenseUSBHIDReportFormat().buildInputReport(from: state)
@@ -131,7 +137,8 @@ struct SonyUSBHIDReportFormatTests {
     #expect(events.contains(.buttonPressed(.triangle)))
   }
 
-  @Test func dualShock4USBDescriptorExposesSticksHatButtonsAndTriggers() throws {
+  @Test
+  func dualShock4USBDescriptorExposesSticksHatButtonsAndTriggers() throws {
     let parsed = try #require(
       HIDReportDescriptorParser.parse(descriptor: DualShock4USBHIDDescriptor.descriptor)
     )
@@ -149,7 +156,8 @@ struct SonyUSBHIDReportFormatTests {
     #expect(report1.filter { $0.usagePage == 0x09 }.count == 14)
   }
 
-  @Test func dualSenseUSBDescriptorExposesSixAxesHatAndButtons() throws {
+  @Test
+  func dualSenseUSBDescriptorExposesSixAxesHatAndButtons() throws {
     let parsed = try #require(
       HIDReportDescriptorParser.parse(descriptor: DualSenseUSBHIDDescriptor.descriptor)
     )

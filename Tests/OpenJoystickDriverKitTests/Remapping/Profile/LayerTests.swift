@@ -4,7 +4,8 @@ import Testing
 @testable import OpenJoystickDriverKit
 
 struct RemappingLayerTests {
-  @Test func holdLayerOverridesBaseBindingWhileActivatorHeld() async throws {
+  @Test
+  func holdLayerOverridesBaseBindingWhileActivatorHeld() async throws {
     let sink = RemappingTestSink()
     let engine = RemappingEventEngine(sink: sink)
     let layer = RemappingLayer(
@@ -67,7 +68,8 @@ struct RemappingLayerTests {
     #expect(sink.actions() == [.keyDown(.a), .keyUp(.a)])
   }
 
-  @Test func toggleLayerActivatesOnPressAndDeactivatesOnNextPress() async throws {
+  @Test
+  func toggleLayerActivatesOnPressAndDeactivatesOnNextPress() async throws {
     let sink = RemappingTestSink()
     let engine = RemappingEventEngine(sink: sink)
     let layer = RemappingLayer(
@@ -118,29 +120,30 @@ struct RemappingLayerTests {
     #expect(sink.actions() == [.keyDown(.a), .keyUp(.a)])
   }
 
-  @Test func rejectsInvalidLayerAxisBindingBeforeEmittingInput() async throws {
+  @Test
+  func rejectsInvalidLayerAxisBindingBeforeEmittingInput() async throws {
     let sink = RemappingTestSink()
     let engine = RemappingEventEngine(sink: sink)
     let layer = RemappingLayer(
       name: "Aim",
       activationMode: .hold,
       activator: .button(.leftShoulder),
-      bindings: [
-        RemappingBinding(
-          source: .axis(.rightStickX), destination: .mouseMovement(.x)
-        )
-      ]
+      bindings: [RemappingBinding(source: .axis(.rightStickX), destination: .mouseMovement(.x))]
     )
     let invalid = profile(bindings: [], layers: [layer])
     await #expect(throws: RemappingValidationError.axisTuningRequired(index: 0)) {
       try await engine.process(
-        events: [.buttonPressed(.leftBumper)], from: device(1), using: invalid, at: 0
+        events: [.buttonPressed(.leftBumper)],
+        from: device(1),
+        using: invalid,
+        at: 0
       )
     }
     #expect(sink.actions().isEmpty)
   }
 
-  @Test func rejectsDuplicateIdentifiersAcrossBaseAndLayerMappings() {
+  @Test
+  func rejectsDuplicateIdentifiersAcrossBaseAndLayerMappings() {
     let base = binding(source: .button(.south), key: .a)
     let layer = RemappingLayer(
       name: "Alternate",
@@ -159,7 +162,8 @@ struct RemappingLayerTests {
     }
   }
 
-  @Test func rejectsInvalidNestedSequenceAndDuplicateLayerIdentifiers() {
+  @Test
+  func rejectsInvalidNestedSequenceAndDuplicateLayerIdentifiers() {
     let layer = RemappingLayer(
       name: "Alternate",
       activationMode: .hold,
@@ -176,20 +180,28 @@ struct RemappingLayerTests {
       try profile(bindings: [], layers: [layer]).validate()
     }
     let first = RemappingLayer(
-      name: "First", activationMode: .hold, activator: .button(.leftShoulder)
+      name: "First",
+      activationMode: .hold,
+      activator: .button(.leftShoulder)
     )
     let second = RemappingLayer(
-      id: first.id, name: "Second", activationMode: .hold, activator: .button(.rightShoulder)
+      id: first.id,
+      name: "Second",
+      activationMode: .hold,
+      activator: .button(.rightShoulder)
     )
     #expect(throws: RemappingValidationError.duplicateLayerID(first.id)) {
       try profile(bindings: [], layers: [first, second]).validate()
     }
   }
 
-  @Test func mappingLimitIncludesNestedMappings() {
+  @Test
+  func mappingLimitIncludesNestedMappings() {
     let layers = (0...RemappingProfile.maximumBindingCount).map { index in
       RemappingLayer(
-        name: "Layer \(index)", activationMode: .hold, activator: .button(.leftShoulder)
+        name: "Layer \(index)",
+        activationMode: .hold,
+        activator: .button(.leftShoulder)
       )
     }
     #expect(throws: RemappingValidationError.tooManyBindings(layers.count)) {
@@ -197,10 +209,9 @@ struct RemappingLayerTests {
     }
   }
 
-  @Test func rejectsActivatorBoundInsideAnyLayer() {
-    let first = RemappingLayer(
-      name: "First", activationMode: .hold, activator: .button(.east)
-    )
+  @Test
+  func rejectsActivatorBoundInsideAnyLayer() {
+    let first = RemappingLayer(name: "First", activationMode: .hold, activator: .button(.east))
     let second = RemappingLayer(
       name: "Second",
       activationMode: .hold,

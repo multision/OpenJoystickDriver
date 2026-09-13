@@ -25,7 +25,10 @@ struct RemappingTimedTurn {
     }
     let due = advance(at: uptime)
     let combined = target - emitted + degrees
-    guard combined.isFinite, abs(combined) <= 3600 else { reset(); return due }
+    guard combined.isFinite, abs(combined) <= 3600 else {
+      reset()
+      return due
+    }
     target = combined
     emitted = 0
     started = lastUptime

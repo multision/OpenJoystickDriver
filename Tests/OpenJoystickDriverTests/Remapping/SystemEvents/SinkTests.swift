@@ -6,7 +6,8 @@ import Testing
 @testable import OpenJoystickDriver
 
 struct CoreGraphicsSinkTests {
-  @Test func everySymbolicKeyboardKeyHasAnOfficialVirtualKey() throws {
+  @Test
+  func everySymbolicKeyboardKeyHasAnOfficialVirtualKey() throws {
     let translator = MacVirtualKeyTranslator()
     for key in RemappingKeyboardKey.allCases {
       #expect(translator.virtualKey(for: key) != nil, "Missing virtual key for \(key)")
@@ -15,7 +16,8 @@ struct CoreGraphicsSinkTests {
     #expect(translator.virtualKey(for: .insert) == CGKeyCode(kVK_Help))
   }
 
-  @Test func modifiersAndKeysPreservePressReleaseOrderAndFlags() throws {
+  @Test
+  func modifiersAndKeysPreservePressReleaseOrderAndFlags() throws {
     let poster = RecordingPoster()
     let sink = makeSink(poster: poster)
 
@@ -33,15 +35,16 @@ struct CoreGraphicsSinkTests {
         .keyboard(virtualKey: CGKeyCode(kVK_ANSI_A), isDown: true, flags: [.shift, .command]),
         .keyboard(virtualKey: CGKeyCode(kVK_ANSI_A), isDown: false, flags: [.shift, .command]),
         .modifier(virtualKey: CGKeyCode(kVK_Command), flags: [.shift]),
-        .modifier(virtualKey: CGKeyCode(kVK_Shift), flags: [])
+        .modifier(virtualKey: CGKeyCode(kVK_Shift), flags: []),
       ]
     )
   }
 
-  @Test func everyModifierUsesItsPlatformKeyAndFlag() throws {
+  @Test
+  func everyModifierUsesItsPlatformKeyAndFlag() throws {
     let cases: [(RemappingKeyModifier, CGKeyCode, CoreGraphicsModifierFlags)] = [
       (.command, CGKeyCode(kVK_Command), .command), (.control, CGKeyCode(kVK_Control), .control),
-      (.option, CGKeyCode(kVK_Option), .option), (.shift, CGKeyCode(kVK_Shift), .shift)
+      (.option, CGKeyCode(kVK_Option), .option), (.shift, CGKeyCode(kVK_Shift), .shift),
     ]
     for (modifier, virtualKey, flag) in cases {
       let poster = RecordingPoster()
@@ -51,13 +54,14 @@ struct CoreGraphicsSinkTests {
       #expect(
         poster.events == [
           .modifier(virtualKey: virtualKey, flags: flag),
-          .modifier(virtualKey: virtualKey, flags: [])
+          .modifier(virtualKey: virtualKey, flags: []),
         ]
       )
     }
   }
 
-  @Test func eachMouseButtonKeepsItsCoreGraphicsIdentity() throws {
+  @Test
+  func eachMouseButtonKeepsItsCoreGraphicsIdentity() throws {
     let poster = RecordingPoster(pointerLocation: CGPoint(x: 12, y: 34))
     let sink = makeSink(poster: poster)
 
@@ -78,13 +82,14 @@ struct CoreGraphicsSinkTests {
           button: button,
           isDown: false,
           location: CGPoint(x: 12, y: 34)
-        )
+        ),
       ]
     }
     #expect(poster.events == expected)
   }
 
-  @Test func pointerAmountsAreClampedScaledAndReadCurrentLocation() throws {
+  @Test
+  func pointerAmountsAreClampedScaledAndReadCurrentLocation() throws {
     let poster = RecordingPoster(pointerLocation: CGPoint(x: 100, y: 200))
     let sink = makeSink(poster: poster)
 
@@ -95,7 +100,7 @@ struct CoreGraphicsSinkTests {
     #expect(
       poster.events == [
         .pointer(location: CGPoint(x: 132, y: 200), deltaX: 32, deltaY: 0),
-        .pointer(location: CGPoint(x: 140, y: 178), deltaX: 0, deltaY: -32)
+        .pointer(location: CGPoint(x: 140, y: 178), deltaX: 0, deltaY: -32),
       ]
     )
     #expect(poster.pointerReadCount == 2)
@@ -107,17 +112,20 @@ struct CoreGraphicsSinkTests {
     #expect(poster.pointerReadCount == 3)
   }
 
-  @Test func integratedPointerDeltaPreservesUnitsAndSamplesCurrentOrigin() throws {
+  @Test
+  func integratedPointerDeltaPreservesUnitsAndSamplesCurrentOrigin() throws {
     let poster = RecordingPoster(pointerLocation: CGPoint(x: 100, y: 200))
     let sink = makeSink(poster: poster)
     try sink.send(.pointerDelta(x: 0.125, y: -2.5))
     poster.pointerLocation = CGPoint(x: 300, y: 400)
     try sink.send(.pointerDelta(x: 64, y: 0.25))
     try sink.send(.pointerDelta(x: 0, y: 0))
-    #expect(poster.events == [
-      .pointer(location: CGPoint(x: 100.125, y: 197.5), deltaX: 0.125, deltaY: -2.5),
-      .pointer(location: CGPoint(x: 364, y: 400.25), deltaX: 64, deltaY: 0.25)
-    ])
+    #expect(
+      poster.events == [
+        .pointer(location: CGPoint(x: 100.125, y: 197.5), deltaX: 0.125, deltaY: -2.5),
+        .pointer(location: CGPoint(x: 364, y: 400.25), deltaX: 64, deltaY: 0.25),
+      ]
+    )
     #expect(poster.pointerReadCount == 2)
     #expect(throws: CoreGraphicsSystemInputSinkError.eventPreparationFailed) {
       try sink.send(.pointerDelta(x: .nan, y: 0))
@@ -128,7 +136,8 @@ struct CoreGraphicsSinkTests {
     #expect(poster.events.count == 2)
   }
 
-  @Test func scrollPreservesSubUnitResidualsAndAxisIdentity() throws {
+  @Test
+  func scrollPreservesSubUnitResidualsAndAxisIdentity() throws {
     let poster = RecordingPoster()
     let sink = makeSink(poster: poster)
 
@@ -142,7 +151,8 @@ struct CoreGraphicsSinkTests {
     #expect(poster.events.last == .scroll(deltaX: -1, deltaY: 0))
   }
 
-  @Test func neutralScrollClearsOnlyItsAxisResidual() throws {
+  @Test
+  func neutralScrollClearsOnlyItsAxisResidual() throws {
     let poster = RecordingPoster()
     let sink = makeSink(poster: poster)
 
@@ -155,7 +165,8 @@ struct CoreGraphicsSinkTests {
     #expect(poster.events == [.scroll(deltaX: 0, deltaY: 1)])
   }
 
-  @Test func missingPreflightBlocksEveryPost() {
+  @Test
+  func missingPreflightBlocksEveryPost() {
     let poster = RecordingPoster()
     let sink = makeSink(poster: poster, authorized: false)
 
@@ -165,7 +176,8 @@ struct CoreGraphicsSinkTests {
     #expect(poster.events.isEmpty)
   }
 
-  @Test func unsupportedKeyFailsBeforePosting() {
+  @Test
+  func unsupportedKeyFailsBeforePosting() {
     let poster = RecordingPoster()
     let sink = makeSink(poster: poster, translator: UnsupportedKeyTranslator())
 
@@ -175,7 +187,8 @@ struct CoreGraphicsSinkTests {
     #expect(poster.events.isEmpty)
   }
 
-  @Test func creationAndPostingFailuresUseStableErrors() {
+  @Test
+  func creationAndPostingFailuresUseStableErrors() {
     let creationPoster = RecordingPoster(failure: .creation)
     let creationSink = makeSink(poster: creationPoster)
     #expect(throws: CoreGraphicsSystemInputSinkError.eventPreparationFailed) {
@@ -189,7 +202,8 @@ struct CoreGraphicsSinkTests {
     }
   }
 
-  @Test func invalidContinuousAmountFailsWithoutPosting() {
+  @Test
+  func invalidContinuousAmountFailsWithoutPosting() {
     let poster = RecordingPoster()
     let sink = makeSink(poster: poster)
 

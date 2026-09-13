@@ -31,13 +31,7 @@ public struct RemappingTouchGridSource: Codable, Equatable, Hashable, Sendable {
   public let column: Int
   public let row: Int
 
-  public init(
-    surface: RemappingTouchSurface,
-    columns: Int,
-    rows: Int,
-    column: Int,
-    row: Int
-  ) {
+  public init(surface: RemappingTouchSurface, columns: Int, rows: Int, column: Int, row: Int) {
     self.surface = surface
     self.columns = columns
     self.rows = rows

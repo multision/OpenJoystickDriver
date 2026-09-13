@@ -48,9 +48,7 @@ public final class FlydigiParser: InputParser, @unchecked Sendable {
     static let rightStick: UInt8 = 0x80
   }
 
-  private enum SystemMask {
-    static let guide: UInt8 = 0x80
-  }
+  private enum SystemMask { static let guide: UInt8 = 0x80 }
 
   private var prevHatAndFace: UInt8 = 0
   private var prevShoulders: UInt8 = 0
@@ -74,9 +72,7 @@ public final class FlydigiParser: InputParser, @unchecked Sendable {
   /// Parses one Flydigi input report and returns zero or more controller events.
   public func parse(data: Data) throws -> [ControllerEvent] {
     let bytes = [UInt8](data)
-    guard bytes.count == flydigiReportLength, bytes.first == flydigiInputReportID else {
-      return []
-    }
+    guard bytes.count == flydigiReportLength, bytes.first == flydigiInputReportID else { return [] }
 
     return stateLock.withLock {
       var events: [ControllerEvent] = []
@@ -103,7 +99,7 @@ public final class FlydigiParser: InputParser, @unchecked Sendable {
   private func faceEvents(_ value: UInt8) -> [ControllerEvent] {
     var events: [ControllerEvent] = []
     let pairs: [(UInt8, Button)] = [
-      (FaceMask.a, .a), (FaceMask.b, .b), (FaceMask.x, .x), (FaceMask.y, .y)
+      (FaceMask.a, .a), (FaceMask.b, .b), (FaceMask.x, .x), (FaceMask.y, .y),
     ]
     for (mask, button) in pairs {
       events += transition(mask: mask, current: value, previous: prevHatAndFace, button: button)
@@ -116,12 +112,9 @@ public final class FlydigiParser: InputParser, @unchecked Sendable {
   private func shoulderEvents(_ value: UInt8) -> [ControllerEvent] {
     var events: [ControllerEvent] = []
     let pairs: [(UInt8, Button)] = [
-      (ShoulderMask.leftBumper, .leftBumper),
-      (ShoulderMask.rightBumper, .rightBumper),
-      (ShoulderMask.back, .back),
-      (ShoulderMask.start, .start),
-      (ShoulderMask.leftStick, .leftStick),
-      (ShoulderMask.rightStick, .rightStick)
+      (ShoulderMask.leftBumper, .leftBumper), (ShoulderMask.rightBumper, .rightBumper),
+      (ShoulderMask.back, .back), (ShoulderMask.start, .start),
+      (ShoulderMask.leftStick, .leftStick), (ShoulderMask.rightStick, .rightStick),
     ]
     for (mask, button) in pairs {
       events += transition(mask: mask, current: value, previous: prevShoulders, button: button)
@@ -135,9 +128,12 @@ public final class FlydigiParser: InputParser, @unchecked Sendable {
   }
 
   /// Emits a press or release only when the masked bit changed.
-  private func transition(mask: UInt8, current: UInt8, previous: UInt8, button: Button)
-    -> [ControllerEvent]
-  {
+  private func transition(
+    mask: UInt8,
+    current: UInt8,
+    previous: UInt8,
+    button: Button
+  ) -> [ControllerEvent] {
     let isPressed = current & mask != 0
     guard isPressed != (previous & mask != 0) else { return [] }
     return [isPressed ? .buttonPressed(button) : .buttonReleased(button)]

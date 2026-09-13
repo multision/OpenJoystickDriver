@@ -86,7 +86,8 @@ extension DeviceManager {
     }
   }
 
-  @discardableResult func handleUSBDeviceAdded(
+  @discardableResult
+  func handleUSBDeviceAdded(
     _ device: USBTransportDevice,
     provider: any USBTransportProvider
   ) async -> USBDeviceHandlingOutcome {

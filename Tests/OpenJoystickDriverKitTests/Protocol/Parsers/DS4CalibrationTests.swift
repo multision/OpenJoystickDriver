@@ -4,7 +4,8 @@ import Testing
 @testable import OpenJoystickDriverKit
 
 struct DS4CalibrationTests {
-  @Test func onlyChangedAcceptedCoefficientsAdvanceRevision() throws {
+  @Test
+  func onlyChangedAcceptedCoefficientsAdvanceRevision() throws {
     let parser = DS4Parser()
     let request = try #require(parser.hidStartupFeatureReadRequests().first)
     #expect(try motion(parser).physicalReading?.calibrationRevision == 0)
@@ -42,19 +43,24 @@ struct DS4CalibrationTests {
     #expect(!parser.consumeHIDFeatureReport(data.dropLast(), request: request, transport: nil))
   }
 
-  @Test func bluetoothModeReplyCannotInstallUSBLayout() throws {
+  @Test
+  func bluetoothModeReplyCannotInstallUSBLayout() throws {
     let parser = DS4Parser()
     let requests = parser.hidStartupFeatureReadRequests(transport: "Bluetooth")
     #expect(requests.map(\.reportID) == [2, 5])
-    #expect(parser.consumeHIDFeatureReport(
-      factory(bluetooth: false), request: requests[0], transport: "Bluetooth"
-    ))
+    #expect(
+      parser.consumeHIDFeatureReport(
+        factory(bluetooth: false),
+        request: requests[0],
+        transport: "Bluetooth"
+      )
+    )
     #expect(try motion(parser).physicalReading?.calibrationSource == .nominalDeviceScale)
     var corrupted = factory(bluetooth: true)
     corrupted[40] ^= 1
-    #expect(!parser.consumeHIDFeatureReport(
-      corrupted, request: requests[1], transport: "Bluetooth"
-    ))
+    #expect(
+      !parser.consumeHIDFeatureReport(corrupted, request: requests[1], transport: "Bluetooth")
+    )
     #expect(try motion(parser).physicalReading?.calibrationSource == .nominalDeviceScale)
   }
 
@@ -67,10 +73,12 @@ struct DS4CalibrationTests {
     for (index, value) in [Int16(8292), -8092, 100].enumerated() {
       write(value, into: &data, at: 19 + index * 2)
     }
-    return try #require(parser.parse(data: data).compactMap { event -> ControllerMotionSample? in
-      if case .motionSample(let sample) = event { return sample }
-      return nil
-    }.first)
+    return try #require(
+      parser.parse(data: data).compactMap { event -> ControllerMotionSample? in
+        if case .motionSample(let sample) = event { return sample }
+        return nil
+      }.first
+    )
   }
 
   private func factory(bluetooth: Bool) -> Data {

@@ -14,7 +14,8 @@ struct XboxOneHIDReportFormatTests {
   private func report(buttonBit: Int) throws -> [UInt8] {
     try format().buildInputReport(from: VirtualGamepadState(buttons: 1 << UInt32(buttonBit)))
   }
-  @Test func testMapsFaceAndShoulderButtonsDirectly() throws {
+  @Test
+  func testMapsFaceAndShoulderButtonsDirectly() throws {
     let a = try report(buttonBit: 0)
     let rb = try report(buttonBit: 5)
 
@@ -23,7 +24,8 @@ struct XboxOneHIDReportFormatTests {
     #expect(a[14] == 0x01)
     #expect(rb[14] == 0x20)
   }
-  @Test func testParsesAndPacksPrimaryAxes() throws {
+  @Test
+  func testParsesAndPacksPrimaryAxes() throws {
     let full = try format().buildInputReport(
       from: VirtualGamepadState(
         leftStickX: 32_767,
@@ -52,18 +54,20 @@ struct XboxOneHIDReportFormatTests {
     #expect(full[14] == 0x00)
   }
 
-  @Test func testPacksIdleSticksAtUnsignedCenter() throws {
+  @Test
+  func testPacksIdleSticksAtUnsignedCenter() throws {
     let idle = try format().buildInputReport(from: VirtualGamepadState())
 
     #expect(idle.count == 17)
     #expect(idle[0] == 1)
     #expect(Array(idle[1...8]) == [0x00, 0x80, 0x00, 0x80, 0x00, 0x80, 0x00, 0x80])
   }
-  @Test func testMapsAppleGameControllerButtonsOneAtATime() throws {
+  @Test
+  func testMapsAppleGameControllerButtonsOneAtATime() throws {
     let neutral = try format().buildInputReport(from: VirtualGamepadState())
     let cases: [(bit: GamepadHIDDescriptor.ButtonBit, reportByte: Int, mask: UInt8)] = [
       (.back, 14, 0x40), (.start, 14, 0x80), (.leftStick, 15, 0x01), (.rightStick, 15, 0x02),
-      (.guide, 15, 0x04)
+      (.guide, 15, 0x04),
     ]
 
     for testCase in cases {
@@ -77,7 +81,8 @@ struct XboxOneHIDReportFormatTests {
       )
     }
   }
-  @Test func testPreservesPrimaryButtonCountAndGuideMapping() throws {
+  @Test
+  func testPreservesPrimaryButtonCountAndGuideMapping() throws {
     let parsed = try #require(
       HIDReportDescriptorParser.parse(descriptor: XboxOneBluetoothHIDDescriptor.seriesDescriptor)
     )
@@ -95,7 +100,8 @@ struct XboxOneHIDReportFormatTests {
     #expect(parsed.fields.contains { $0.reportID == 1 && $0.usagePage == 0x0C && $0.usage == 0xB2 })
     #expect(buttonUsages.count == 15)
   }
-  @Test func testMapsShareIndependentlyFromView() throws {
+  @Test
+  func testMapsShareIndependentlyFromView() throws {
     let neutral = try format().buildInputReport(from: VirtualGamepadState())
     let view = try report(buttonBit: GamepadHIDDescriptor.ButtonBit.back.rawValue)
     let share = try report(buttonBit: GamepadHIDDescriptor.ButtonBit.share.rawValue)
@@ -108,7 +114,8 @@ struct XboxOneHIDReportFormatTests {
       share.enumerated().allSatisfy { index, value in index == 16 || value == neutral[index] }
     )
   }
-  @Test func testPacksDpadAsHatSwitch() throws {
+  @Test
+  func testPacksDpadAsHatSwitch() throws {
     let north = try format().buildInputReport(from: VirtualGamepadState(hat: .north))
     let east = try format().buildInputReport(from: VirtualGamepadState(hat: .east))
     let neutral = try format().buildInputReport(from: VirtualGamepadState(hat: .neutral))
@@ -117,7 +124,8 @@ struct XboxOneHIDReportFormatTests {
     #expect(east[13] == 0x03)
     #expect(neutral[13] == 0x00)
   }
-  @Test func testPacksDpadAsDigitalButtons() throws {
+  @Test
+  func testPacksDpadAsDigitalButtons() throws {
     let north = try format().buildInputReport(
       from: VirtualGamepadState(buttons: GamepadHIDDescriptor.dpadButtonBits(for: .north))
     )

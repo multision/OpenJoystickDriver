@@ -84,10 +84,11 @@ private final class ConcurrentFactoryProbe: @unchecked Sendable {
   }
 }
 
-@Suite(.serialized) struct CompatibilityTests {
-  private func provider(_ values: [ApplicationServiceDeviceDescription])
-    -> @Sendable () async -> [ApplicationServiceDeviceDescription]
-  { { values } }
+@Suite(.serialized)
+struct CompatibilityTests {
+  private func provider(
+    _ values: [ApplicationServiceDeviceDescription]
+  ) -> @Sendable () async -> [ApplicationServiceDeviceDescription] { { values } }
 
   private func description(_ id: DeviceIdentifier) -> ApplicationServiceDeviceDescription {
     ApplicationServiceDeviceDescription(
@@ -102,7 +103,8 @@ private final class ConcurrentFactoryProbe: @unchecked Sendable {
     )
   }
 
-  @Test func automaticConsumerChangesWithSameEffectiveIdentityDoNotRebuild() async {
+  @Test
+  func automaticConsumerChangesWithSameEffectiveIdentityDoNotRebuild() async {
     let identifier = DeviceIdentifier(vendorID: 0x057E, productID: 0x2009)
     let probe = ConcurrentFactoryProbe()
     let box = AutomaticConsumerBox()
@@ -137,9 +139,10 @@ private final class ConcurrentFactoryProbe: @unchecked Sendable {
     await dispatcher.close()
   }
 
-  @Test func automaticActivationBuildsOneCoherentChildPerController() async throws {
+  @Test
+  func automaticActivationBuildsOneCoherentChildPerController() async throws {
     let identifiers = [
-      DeviceIdentifier(vendorID: 1, productID: 2), DeviceIdentifier(vendorID: 3, productID: 4)
+      DeviceIdentifier(vendorID: 1, productID: 2), DeviceIdentifier(vendorID: 3, productID: 4),
     ]
     let created = AutomaticConsumerBox()
     let descriptions = identifiers.map { description($0) }
@@ -167,9 +170,10 @@ private final class ConcurrentFactoryProbe: @unchecked Sendable {
     #expect(created.created.allSatisfy { $0.closed })
   }
 
-  @Test func automaticActivationFailureClosesTheEntireChildSet() async {
+  @Test
+  func automaticActivationFailureClosesTheEntireChildSet() async {
     let identifiers = [
-      DeviceIdentifier(vendorID: 1, productID: 2), DeviceIdentifier(vendorID: 3, productID: 4)
+      DeviceIdentifier(vendorID: 1, productID: 2), DeviceIdentifier(vendorID: 3, productID: 4),
     ]
     let created = AutomaticConsumerBox()
     let descriptions = identifiers.map { description($0) }
@@ -198,9 +202,10 @@ private final class ConcurrentFactoryProbe: @unchecked Sendable {
     await dispatcher.close()
   }
 
-  @Test func automaticEffectiveIdentityChangeDelegatesWithoutOverlappingChildren() async throws {
+  @Test
+  func automaticEffectiveIdentityChangeDelegatesWithoutOverlappingChildren() async throws {
     let identifiers = [
-      DeviceIdentifier(vendorID: 1, productID: 2), DeviceIdentifier(vendorID: 3, productID: 4)
+      DeviceIdentifier(vendorID: 1, productID: 2), DeviceIdentifier(vendorID: 3, productID: 4),
     ]
     let created = AutomaticConsumerBox()
     let box = AutomaticConsumerBox()
@@ -231,9 +236,10 @@ private final class ConcurrentFactoryProbe: @unchecked Sendable {
     await dispatcher.close()
   }
 
-  @Test func repeatedChangedIdentityRefreshRequestsTheOwningTransition() async throws {
+  @Test
+  func repeatedChangedIdentityRefreshRequestsTheOwningTransition() async throws {
     let identifiers = [
-      DeviceIdentifier(vendorID: 1, productID: 2), DeviceIdentifier(vendorID: 3, productID: 4)
+      DeviceIdentifier(vendorID: 1, productID: 2), DeviceIdentifier(vendorID: 3, productID: 4),
     ]
     let created = AutomaticConsumerBox()
     let box = AutomaticConsumerBox()
@@ -266,7 +272,8 @@ private final class ConcurrentFactoryProbe: @unchecked Sendable {
     await dispatcher.close()
   }
 
-  @Test func concurrentFirstDispatchCoalescesAndKeepsBothEvents() async {
+  @Test
+  func concurrentFirstDispatchCoalescesAndKeepsBothEvents() async {
     let id = DeviceIdentifier(vendorID: 0x3537, productID: 0x1010)
     let probe = ConcurrentFactoryProbe()
     probe.gate = DispatchSemaphore(value: 0)
@@ -292,7 +299,8 @@ private final class ConcurrentFactoryProbe: @unchecked Sendable {
     #expect(probe.snapshot().2[0].counts().1 == 1)
   }
 
-  @Test func differentControllersBuildIndependently() async {
+  @Test
+  func differentControllersBuildIndependently() async {
     let first = DeviceIdentifier(vendorID: 0x3537, productID: 0x1010)
     let second = DeviceIdentifier(vendorID: 0x3537, productID: 0x1011)
     let probe = ConcurrentFactoryProbe()
@@ -318,7 +326,8 @@ private final class ConcurrentFactoryProbe: @unchecked Sendable {
     await dispatcher.close()
   }
 
-  @Test func stopDuringBuildDoesNotResurrect() async {
+  @Test
+  func stopDuringBuildDoesNotResurrect() async {
     let id = DeviceIdentifier(vendorID: 0x3537, productID: 0x1010)
     let probe = ConcurrentFactoryProbe()
     probe.gate = DispatchSemaphore(value: 0)
@@ -343,7 +352,8 @@ private final class ConcurrentFactoryProbe: @unchecked Sendable {
     await dispatcher.close()
   }
 
-  @Test func closeDuringBuildClosesExactlyOnce() async {
+  @Test
+  func closeDuringBuildClosesExactlyOnce() async {
     let id = DeviceIdentifier(vendorID: 0x3537, productID: 0x1010)
     let probe = ConcurrentFactoryProbe()
     probe.gate = DispatchSemaphore(value: 0)
@@ -365,7 +375,8 @@ private final class ConcurrentFactoryProbe: @unchecked Sendable {
     #expect(probe.snapshot().2.first?.counts().1 == 1)
   }
 
-  @Test func retiredLeaseClosesAfterReleaseOnlyOnce() async {
+  @Test
+  func retiredLeaseClosesAfterReleaseOnlyOnce() async {
     let backend = ConcurrentBackendProbe()
     let slot = AutomaticBackendSlot(backend)
     let lease = slot.acquire()
@@ -376,7 +387,8 @@ private final class ConcurrentFactoryProbe: @unchecked Sendable {
     #expect(backend.counts().1 == 1)
   }
 
-  @Test func suppressionForwardsToNewAndReusedBackends() async {
+  @Test
+  func suppressionForwardsToNewAndReusedBackends() async {
     let id = DeviceIdentifier(vendorID: 0x3537, productID: 0x1010)
     let probe = ConcurrentFactoryProbe()
     let dispatcher = AutomaticUserSpaceOutputDispatcher(
@@ -395,7 +407,8 @@ private final class ConcurrentFactoryProbe: @unchecked Sendable {
     await dispatcher.close()
   }
 
-  @Test func repeatedForegroundRefreshesKeepLatestBackend() async {
+  @Test
+  func repeatedForegroundRefreshesKeepLatestBackend() async {
     let id = DeviceIdentifier(vendorID: 0x3537, productID: 0x1010)
     let probe = ConcurrentFactoryProbe()
     let box = AutomaticConsumerBox()
@@ -414,7 +427,8 @@ private final class ConcurrentFactoryProbe: @unchecked Sendable {
     await dispatcher.close()
   }
 
-  @Test func unchangedForegroundRefreshPreservesVirtualDevice() async {
+  @Test
+  func unchangedForegroundRefreshPreservesVirtualDevice() async {
     let id = DeviceIdentifier(vendorID: 0x3537, productID: 0x1010)
     let probe = ConcurrentFactoryProbe()
     let dispatcher = AutomaticUserSpaceOutputDispatcher(
@@ -433,7 +447,8 @@ private final class ConcurrentFactoryProbe: @unchecked Sendable {
     await dispatcher.close()
   }
 
-  @Test func consumerChangeDoesNotDropCurrentDispatch() async {
+  @Test
+  func consumerChangeDoesNotDropCurrentDispatch() async {
     let id = DeviceIdentifier(vendorID: 0x3537, productID: 0x1010)
     let probe = ConcurrentFactoryProbe()
     let box = AutomaticConsumerBox()
@@ -453,7 +468,8 @@ private final class ConcurrentFactoryProbe: @unchecked Sendable {
     await dispatcher.close()
   }
 
-  @Test func unrelatedControllerStopLeavesOtherControllerUsable() async {
+  @Test
+  func unrelatedControllerStopLeavesOtherControllerUsable() async {
     let first = DeviceIdentifier(vendorID: 0x3537, productID: 0x1010)
     let second = DeviceIdentifier(vendorID: 0x3537, productID: 0x1011)
     let probe = ConcurrentFactoryProbe()
@@ -472,7 +488,8 @@ private final class ConcurrentFactoryProbe: @unchecked Sendable {
     await dispatcher.close()
   }
 
-  @Test func automaticDispatcherRefreshesOnConsumerChangeWithoutInput() async {
+  @Test
+  func automaticDispatcherRefreshesOnConsumerChangeWithoutInput() async {
     let manager = DeviceManager(dispatcher: LoggingOutputDispatcher())
     let identifier = DeviceIdentifier(vendorID: 0x3537, productID: 0x1010)
     let description = ApplicationServiceDeviceDescription(
@@ -516,7 +533,8 @@ private final class ConcurrentFactoryProbe: @unchecked Sendable {
     await dispatcher.close()
   }
 
-  @Test func coalescingStressRunsTwentyFiveExplicitIterations() async {
+  @Test
+  func coalescingStressRunsTwentyFiveExplicitIterations() async {
     for _ in 0..<25 {
       let id = DeviceIdentifier(vendorID: 0x3537, productID: 0x1010)
       let probe = ConcurrentFactoryProbe()
@@ -535,7 +553,8 @@ private final class ConcurrentFactoryProbe: @unchecked Sendable {
     }
   }
 
-  @Test func rejectedCompatibilityIdentityDoesNotPublishRequestedValue() async {
+  @Test
+  func rejectedCompatibilityIdentityDoesNotPublishRequestedValue() async {
     let gateway = GatewayStub(setIdentityResult: false)
     let viewModel = await MainActor.run { RuntimeViewModel(gateway: gateway) }
 
@@ -550,7 +569,8 @@ private final class ConcurrentFactoryProbe: @unchecked Sendable {
     #expect(await gateway.selectedIdentity == .sdl2_3)
   }
 
-  @Test func resettingCompatibilityIdentityUsesTheScopedMutation() async {
+  @Test
+  func resettingCompatibilityIdentityUsesTheScopedMutation() async {
     let gateway = GatewayStub()
     let viewModel = await MainActor.run { RuntimeViewModel(gateway: gateway) }
 
@@ -560,7 +580,8 @@ private final class ConcurrentFactoryProbe: @unchecked Sendable {
     #expect(await gateway.setIdentityCallCount == 1)
   }
 
-  @Test func compatibilitySuccessDoesNotInheritAnUnrelatedRuntimeError() async {
+  @Test
+  func compatibilitySuccessDoesNotInheritAnUnrelatedRuntimeError() async {
     let gateway = GatewayStub(statusShouldFail: true)
     let viewModel = await MainActor.run { RuntimeViewModel(gateway: gateway) }
 
@@ -575,7 +596,8 @@ private final class ConcurrentFactoryProbe: @unchecked Sendable {
     #expect(await MainActor.run { viewModel.lastError } != nil)
   }
 
-  @Test func newerCompatibilitySelectionWinsOverAnOlderIdentityRead() async {
+  @Test
+  func newerCompatibilitySelectionWinsOverAnOlderIdentityRead() async {
     let gateway = GatewayStub(compatibilityReadDelayNanoseconds: 100_000_000)
     let viewModel = await MainActor.run { RuntimeViewModel(gateway: gateway) }
     let read = Task { @MainActor in await viewModel.loadCompatibilityIdentity() }
@@ -592,7 +614,8 @@ private final class ConcurrentFactoryProbe: @unchecked Sendable {
     #expect(identity == .appleGameController)
   }
 
-  @Test func compatibilitySelectionUpdatesTheStatusSummary() async {
+  @Test
+  func compatibilitySelectionUpdatesTheStatusSummary() async {
     let gateway = GatewayStub()
     let viewModel = await MainActor.run { RuntimeViewModel(gateway: gateway) }
 
@@ -608,7 +631,8 @@ private final class ConcurrentFactoryProbe: @unchecked Sendable {
     #expect(status.compatibilityLabel == "Apple GameController")
   }
 
-  @Test func rpcRejectsUnknownIdentityWithoutChangingRuntimeOrPersistence() async {
+  @Test
+  func rpcRejectsUnknownIdentityWithoutChangingRuntimeOrPersistence() async {
     let defaults = UserDefaults.standard
     let key = ApplicationServiceServer.compatibilityIdentityDefaultsKey
     let priorRawValue = defaults.object(forKey: key)
@@ -660,7 +684,8 @@ private final class ConcurrentFactoryProbe: @unchecked Sendable {
     #expect(defaults.string(forKey: key) == CompatibilityIdentity.appleGameController.rawValue)
   }
 
-  @Test func serverInitSanitizesUnknownPersistedIdentityToAutomatic() {
+  @Test
+  func serverInitSanitizesUnknownPersistedIdentityToAutomatic() {
     let defaults = UserDefaults.standard
     let key = ApplicationServiceServer.compatibilityIdentityDefaultsKey
     let priorRawValue = defaults.object(forKey: key)
@@ -701,7 +726,8 @@ private final class ConcurrentFactoryProbe: @unchecked Sendable {
     #expect(defaults.string(forKey: key) == CompatibilityIdentity.automatic.rawValue)
   }
 
-  @Test func rpcAcceptsCurrentIdentityWithoutReplacingTheLiveBackend() async {
+  @Test
+  func rpcAcceptsCurrentIdentityWithoutReplacingTheLiveBackend() async {
     let permissionManager = PermissionManager()
     let compatibilityDispatcher = CompatibilityOutputDispatcher()
     let profileLibrary = RemappingProfileLibrary()

@@ -53,8 +53,8 @@ public struct PhysicalAdaptiveTriggerEffect: Codable, Equatable, Hashable, Senda
   public static let off = Self(kind: .off)
 
   public func validate() throws {
-    guard startPosition.isFinite, (0...1).contains(startPosition),
-      strength.isFinite, (0...1).contains(strength)
+    guard startPosition.isFinite, (0...1).contains(startPosition), strength.isFinite,
+      (0...1).contains(strength)
     else { throw PhysicalAdaptiveTriggerEffectError.invalidValue }
     if kind == .off, startPosition != 0 || strength != 0 {
       throw PhysicalAdaptiveTriggerEffectError.invalidValue
@@ -68,9 +68,7 @@ public struct PhysicalAdaptiveTriggerEffect: Codable, Equatable, Hashable, Senda
   }
 }
 
-public enum PhysicalAdaptiveTriggerEffectError: Error, Equatable, Sendable {
-  case invalidValue
-}
+public enum PhysicalAdaptiveTriggerEffectError: Error, Equatable, Sendable { case invalidValue }
 
 /// Physical output capabilities implemented by the active controller protocol.
 public struct PhysicalControllerOutputCapabilities: Codable, Equatable, Hashable, Sendable {
@@ -120,13 +118,16 @@ public struct PhysicalControllerOutputCapabilities: Codable, Equatable, Hashable
       rumbleMotors: try values.decodeIfPresent([PhysicalRumbleMotor].self, forKey: .rumbleMotors)
         ?? [],
       lightingFeatures: try values.decodeIfPresent(
-        [PhysicalLightingFeature].self, forKey: .lightingFeatures
+        [PhysicalLightingFeature].self,
+        forKey: .lightingFeatures
       ) ?? [],
       binaryRumbleMotors: try values.decodeIfPresent(
-        [PhysicalRumbleMotor].self, forKey: .binaryRumbleMotors
+        [PhysicalRumbleMotor].self,
+        forKey: .binaryRumbleMotors
       ) ?? [],
       adaptiveTriggers: try values.decodeIfPresent(
-        [PhysicalAdaptiveTrigger].self, forKey: .adaptiveTriggers
+        [PhysicalAdaptiveTrigger].self,
+        forKey: .adaptiveTriggers
       ) ?? []
     )
   }
@@ -187,8 +188,12 @@ public protocol PhysicalHIDRumbleOutput: AnyObject, Sendable {
   var minimumPhysicalOutputIntervalNanoseconds: UInt64 { get }
   var supportsPhysicalRumble: Bool { get }
 
-  func physicalRumbleReport(left: UInt8, right: UInt8, lt: UInt8, rt: UInt8)
-    -> PhysicalHIDOutputReport
+  func physicalRumbleReport(
+    left: UInt8,
+    right: UInt8,
+    lt: UInt8,
+    rt: UInt8
+  ) -> PhysicalHIDOutputReport
 }
 
 extension PhysicalHIDRumbleOutput {
@@ -204,8 +209,11 @@ extension PhysicalHIDRumbleOutput {
 public protocol PhysicalHIDFeatureHapticOutput: AnyObject, Sendable {
   var physicalRumbleMotors: [PhysicalRumbleMotor] { get }
 
-  func physicalHapticReports(left: UInt8, right: UInt8, durationMs: Int)
-    -> [PhysicalHIDOutputReport]
+  func physicalHapticReports(
+    left: UInt8,
+    right: UInt8,
+    durationMs: Int
+  ) -> [PhysicalHIDOutputReport]
 }
 
 /// Optional RGB lightbar support delivered through a HID output report.
@@ -232,8 +240,9 @@ extension PhysicalHIDFeatureBrightnessOutput {
 public protocol PhysicalHIDPlayerIndicatorOutput: AnyObject, Sendable {
   var physicalLightingFeatures: [PhysicalLightingFeature] { get }
 
-  func physicalPlayerIndicatorReport(_ indicator: PhysicalPlayerIndicator)
-    -> PhysicalHIDOutputReport
+  func physicalPlayerIndicatorReport(
+    _ indicator: PhysicalPlayerIndicator
+  ) -> PhysicalHIDOutputReport
 }
 
 /// Optional adaptive-trigger support delivered through a HID output report.

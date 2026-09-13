@@ -50,18 +50,21 @@ struct XIDParserTests {
     #expect(events == [.dpadChanged(directions[Int(mask)])])
   }
 
-  @Test func shortReportIsIgnored() throws {
+  @Test
+  func shortReportIsIgnored() throws {
     #expect(try XIDParser().parse(data: Data([0x00, 0x14, 0x00])).isEmpty)
   }
 
-  @Test func analogABecomesDigitalPress() throws {
+  @Test
+  func analogABecomesDigitalPress() throws {
     let parser = XIDParser()
     _ = try parser.parse(data: makeXIDReport())
     let events = try parser.parse(data: makeXIDReport(analogA: 0xFF))
     #expect(events.contains(.buttonPressed(.a)))
   }
 
-  @Test func digitalStartAndDpadMatchLinuxXpad() throws {
+  @Test
+  func digitalStartAndDpadMatchLinuxXpad() throws {
     let parser = XIDParser()
     _ = try parser.parse(data: makeXIDReport())
     let events = try parser.parse(data: makeXIDReport(digital: 0x11))
@@ -69,7 +72,8 @@ struct XIDParserTests {
     #expect(events.contains(.dpadChanged(.north)))
   }
 
-  @Test func analogTriggersAndBlackWhiteShoulders() throws {
+  @Test
+  func analogTriggersAndBlackWhiteShoulders() throws {
     let parser = XIDParser()
     _ = try parser.parse(data: makeXIDReport())
     let events = try parser.parse(data: makeXIDReport(black: 0x80, white: 0x40, lt: 128, rt: 255))
@@ -79,7 +83,8 @@ struct XIDParserTests {
     #expect(events.contains(.rightTriggerChanged(1)))
   }
 
-  @Test func analogZeroReleasesFaceButton() throws {
+  @Test
+  func analogZeroReleasesFaceButton() throws {
     let parser = XIDParser()
     _ = try parser.parse(data: makeXIDReport(analogY: 0x20))
     let events = try parser.parse(data: makeXIDReport(analogY: 0))

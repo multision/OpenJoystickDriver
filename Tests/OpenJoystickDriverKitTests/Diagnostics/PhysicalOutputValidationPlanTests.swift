@@ -3,7 +3,8 @@ import OpenJoystickDriverKit
 import Testing
 
 struct PhysicalOutputValidationPlanTests {
-  @Test func buildsCapabilityDrivenRedactedSteps() {
+  @Test
+  func buildsCapabilityDrivenRedactedSteps() {
     let device = ApplicationServiceDeviceDescription(
       name: "Secret Controller Name",
       vendorID: 1234,
@@ -21,7 +22,7 @@ struct PhysicalOutputValidationPlanTests {
       plan.steps.map(\.id) == [
         "left-main", "right-main", "left-trigger", "right-trigger", "player-indicators",
         "player-indicators-off", "color-red", "color-green", "color-blue", "brightness-low",
-        "brightness-high"
+        "brightness-high",
       ]
     )
     let firstCommand =
@@ -32,7 +33,8 @@ struct PhysicalOutputValidationPlanTests {
     #expect(plan.notes.allSatisfy { !$0.contains("SERIAL-SECRET") })
   }
 
-  @Test func usesHapticLabelsAndProducesNoUnsupportedSteps() {
+  @Test
+  func usesHapticLabelsAndProducesNoUnsupportedSteps() {
     let haptics = PhysicalOutputValidationPlan(
       vendorID: 10,
       productID: 20,

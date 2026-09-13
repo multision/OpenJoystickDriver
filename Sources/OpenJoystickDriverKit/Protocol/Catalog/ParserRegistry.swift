@@ -25,9 +25,10 @@ public final class ParserRegistry: Sendable {
   }
 
   /// Returns the parser using transport facts resolved from the connected USB device.
-  public func parser(for identifier: DeviceIdentifier, transportProfile: DeviceTransportProfile)
-    -> any InputParser
-  {
+  public func parser(
+    for identifier: DeviceIdentifier,
+    transportProfile: DeviceTransportProfile
+  ) -> any InputParser {
     let runtimeProfile = catalog.runtimeProfile(for: identifier)
     switch catalog.parserName(for: identifier) {
     case "GIP":

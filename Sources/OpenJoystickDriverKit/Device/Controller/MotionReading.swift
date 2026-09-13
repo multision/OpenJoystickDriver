@@ -48,19 +48,24 @@ public struct ControllerMotionReading: Sendable, Equatable, Codable {
 
   public init(from decoder: any Decoder) throws {
     let container = try decoder.container(keyedBy: CodingKeys.self)
-    guard let reading = try Self(
-      gyroscopeDegreesPerSecond: container.decode(
-        ControllerMotionVector.self, forKey: .gyroscopeDegreesPerSecond
-      ),
-      accelerationG: container.decode(ControllerMotionVector.self, forKey: .accelerationG),
-      calibrationSource: container.decode(
-        ControllerMotionCalibrationSource.self, forKey: .calibrationSource
-      ),
-      calibrationRevision: container.decodeIfPresent(UInt64.self, forKey: .calibrationRevision) ?? 0
-    ) else {
-      throw DecodingError.dataCorrupted(.init(
-        codingPath: decoder.codingPath, debugDescription: "Motion readings must be finite"
-      ))
+    guard
+      let reading = try Self(
+        gyroscopeDegreesPerSecond: container.decode(
+          ControllerMotionVector.self,
+          forKey: .gyroscopeDegreesPerSecond
+        ),
+        accelerationG: container.decode(ControllerMotionVector.self, forKey: .accelerationG),
+        calibrationSource: container.decode(
+          ControllerMotionCalibrationSource.self,
+          forKey: .calibrationSource
+        ),
+        calibrationRevision: container.decodeIfPresent(UInt64.self, forKey: .calibrationRevision)
+          ?? 0
+      )
+    else {
+      throw DecodingError.dataCorrupted(
+        .init(codingPath: decoder.codingPath, debugDescription: "Motion readings must be finite")
+      )
     }
     self = reading
   }

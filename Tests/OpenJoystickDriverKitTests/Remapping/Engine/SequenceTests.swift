@@ -4,7 +4,8 @@ import Testing
 @testable import OpenJoystickDriverKit
 
 struct RemappingSequenceTests {
-  @Test func sequenceFiresWhenSourcesPressedInOrderWithinWindow() async throws {
+  @Test
+  func sequenceFiresWhenSourcesPressedInOrderWithinWindow() async throws {
     let sink = RemappingTestSink()
     let engine = RemappingEventEngine(sink: sink)
     let currentProfile = profile(

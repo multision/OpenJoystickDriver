@@ -3,26 +3,28 @@ import OpenJoystickDriverKit
 extension MappingProfileEditor {
   static let touchOptions: Set<String> = [
     "--touch-surface", "--touch-mode", "--touch-pointer-sensitivity", "--touch-stick-radius",
-    "--touch-deadzone"
+    "--touch-deadzone",
   ]
 
   static func touchMappings(
-    _ options: MappingOptions, defaultValue: [RemappingTouchMapping] = []
+    _ options: MappingOptions,
+    defaultValue: [RemappingTouchMapping] = []
   ) throws -> [RemappingTouchMapping] {
     guard touchOptions.contains(where: options.contains) else { return defaultValue }
     guard let rawSurface = options["--touch-surface"],
       let surface = RemappingTouchSurface(rawValue: rawSurface)
     else {
-      throw MappingCommandError.invalidArguments(
-        "--touch-surface: primary|left|right required"
-      )
+      throw MappingCommandError.invalidArguments("--touch-surface: primary|left|right required")
     }
-    let old = defaultValue.first { $0.surface == surface }
+    let old =
+      defaultValue.first { $0.surface == surface }
       ?? RemappingTouchMapping(surface: surface, mode: .pointer)
     let rawMode = options["--touch-mode"] ?? old.mode.rawValue
     if rawMode == "none" {
-      guard !touchOptions.subtracting(["--touch-surface", "--touch-mode"])
-        .contains(where: options.contains)
+      guard
+        !touchOptions.subtracting(["--touch-surface", "--touch-mode"]).contains(
+          where: options.contains
+        )
       else { throw MappingCommandError.invalidArguments("Cannot tune a removed touch mapping") }
       return defaultValue.filter { $0.surface != surface }
     }
@@ -40,7 +42,8 @@ extension MappingProfileEditor {
       surface: surface,
       mode: mode,
       pointerSensitivity: try number(
-        "--touch-pointer-sensitivity", fallback: old.pointerSensitivity
+        "--touch-pointer-sensitivity",
+        fallback: old.pointerSensitivity
       ),
       stickRadius: try number("--touch-stick-radius", fallback: old.stickRadius),
       deadzone: try number("--touch-deadzone", fallback: old.deadzone)

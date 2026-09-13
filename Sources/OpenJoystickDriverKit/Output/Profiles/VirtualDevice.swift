@@ -53,9 +53,7 @@ public enum UserSpaceVirtualDeviceConstants {
     if productName == product { return false }
     if isOJDUserSpaceLocationID(locationID) { return false }
     if transport?.caseInsensitiveCompare("Virtual") == .orderedSame { return false }
-    return !AppleGameControllerSyntheticHID.isSyntheticDevice(
-      syntheticProperty: syntheticProperty
-    )
+    return !AppleGameControllerSyntheticHID.isSyntheticDevice(syntheticProperty: syntheticProperty)
   }
 
   public static func isAppleGameControllerSyntheticDevice(_ value: Any?) -> Bool {
@@ -65,9 +63,10 @@ public enum UserSpaceVirtualDeviceConstants {
     return CFBooleanGetValue(unsafeDowncast(cfValue, to: CFBoolean.self))
   }
 
-  public static func acceptsPhysicalHIDEvent(_ event: PhysicalHIDEvent, syntheticProperty: Any?)
-    -> Bool
-  {
+  public static func acceptsPhysicalHIDEvent(
+    _ event: PhysicalHIDEvent,
+    syntheticProperty: Any?
+  ) -> Bool {
     _ = event
     return !isAppleGameControllerSyntheticDevice(syntheticProperty)
   }
@@ -152,7 +151,8 @@ public struct PhysicalHIDTrackingStateMachine {
 
   public init() {}
 
-  @discardableResult public mutating func register(
+  @discardableResult
+  public mutating func register(
     deviceID: UInt64,
     locationID: UInt32,
     syntheticProperty: Any?,
@@ -203,7 +203,8 @@ public struct PhysicalHIDTrackingStateMachine {
   }
 
   /// Removes all devices at a location and returns whether a tracked location existed.
-  @discardableResult public mutating func remove(locationID: UInt32) -> Bool {
+  @discardableResult
+  public mutating func remove(locationID: UInt32) -> Bool {
     guard let deviceIDs = deviceIDsByLocation.removeValue(forKey: locationID), !deviceIDs.isEmpty
     else { return false }
     deviceIDs.forEach { devices.removeValue(forKey: $0) }
@@ -238,7 +239,8 @@ public struct PhysicalHIDBackendEventAdapter {
 
   public init() {}
 
-  @discardableResult public mutating func add(
+  @discardableResult
+  public mutating func add(
     deviceID: UInt64,
     locationID: UInt32,
     syntheticProperty: Any?,

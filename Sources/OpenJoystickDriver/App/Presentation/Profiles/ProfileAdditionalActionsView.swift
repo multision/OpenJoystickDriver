@@ -4,8 +4,10 @@
 
   struct ProfileAdditionalActionsView: View {
     let source: RemappingSource
-    @Binding var actions: [RemappingAction]
-    @State private var editing: RemappingAction?
+    @Binding
+    var actions: [RemappingAction]
+    @State
+    private var editing: RemappingAction?
 
     var body: some View {
       VStack(alignment: .leading, spacing: 8) {
@@ -22,17 +24,13 @@
                   ForEach(
                     DestinationOption.options(for: source, including: action.destination),
                     id: \.destination
-                  ) {
-                    Text($0.title).tag($0.destination)
-                  }
+                  ) { Text($0.title).tag($0.destination) }
                 }
                 PhysicalOutputDestinationFields(destination: destinationBinding(action))
                 HStack {
                   Button(
                     OJDLocalized.string("profiles.bindingBehavior", fallback: "Assignment behavior")
-                  ) {
-                    editing = action
-                  }
+                  ) { editing = action }
                   Button(OJDLocalized.string("profiles.moveUp", fallback: "Move up")) {
                     move(action, by: -1)
                   }.disabled(actions.first?.id == action.id)
@@ -67,32 +65,39 @@
           ),
           showsAdditionalActions: false
         ) { behavior, duration, turbo, hold, tap, _ in
-          replace(RemappingAction(
-            id: action.id,
-            destination: action.destination,
-            behavior: behavior,
-            pulseDurationMs: behavior == .pulse
-              ? duration : RemappingBinding.defaultPulseDurationMs,
-            turbo: turbo,
-            longHold: hold,
-            doubleTap: tap
-          ))
+          replace(
+            RemappingAction(
+              id: action.id,
+              destination: action.destination,
+              behavior: behavior,
+              pulseDurationMs: behavior == .pulse
+                ? duration : RemappingBinding.defaultPulseDurationMs,
+              turbo: turbo,
+              longHold: hold,
+              doubleTap: tap
+            )
+          )
         }
       }
     }
 
     private func destinationBinding(_ action: RemappingAction) -> Binding<RemappingDestination> {
-      Binding(get: { action.destination }, set: { destination in
-        replace(RemappingAction(
-          id: action.id,
-          destination: destination,
-          behavior: action.behavior,
-          pulseDurationMs: action.pulseDurationMs,
-          turbo: action.turbo,
-          longHold: action.longHold,
-          doubleTap: action.doubleTap
-        ))
-      })
+      Binding(
+        get: { action.destination },
+        set: { destination in
+          replace(
+            RemappingAction(
+              id: action.id,
+              destination: destination,
+              behavior: action.behavior,
+              pulseDurationMs: action.pulseDurationMs,
+              turbo: action.turbo,
+              longHold: action.longHold,
+              doubleTap: action.doubleTap
+            )
+          )
+        }
+      )
     }
 
     private func replace(_ action: RemappingAction) {

@@ -3,7 +3,8 @@
   import SwiftUI
 
   struct ProfileTriggerFields: View {
-    @Binding var draft: ProfileTriggerDraft
+    @Binding
+    var draft: ProfileTriggerDraft
 
     var body: some View {
       VStack(alignment: .leading, spacing: 12) {
@@ -20,10 +21,7 @@
           if draft.mode.buffersSoftPull {
             field("skipWindow", "Quick-pull window (ms)", $draft.skipWindowMs)
           }
-          Toggle(
-            label("passthrough", "Keep analog trigger passthrough"),
-            isOn: $draft.passthrough
-          )
+          Toggle(label("passthrough", "Keep analog trigger passthrough"), isOn: $draft.passthrough)
         }
       }
     }

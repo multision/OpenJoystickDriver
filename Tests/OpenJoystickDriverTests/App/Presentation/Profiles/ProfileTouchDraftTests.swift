@@ -4,7 +4,8 @@ import Testing
 @testable import OpenJoystickDriver
 
 struct ProfileTouchDraftTests {
-  @Test func preservesIdentityAndAcceptsLocaleDecimals() throws {
+  @Test
+  func preservesIdentityAndAcceptsLocaleDecimals() throws {
     let mapping = RemappingTouchMapping(
       surface: .right,
       mode: .pointer,
@@ -24,7 +25,8 @@ struct ProfileTouchDraftTests {
     #expect(try draft.validatedMapping() == nil)
   }
 
-  @Test func profileEditPreservesOtherContractFields() throws {
+  @Test
+  func profileEditPreservesOtherContractFields() throws {
     let binding = RemappingBinding(
       source: .touchContact(.primary),
       destination: .keyboard(key: .space, modifiers: [])

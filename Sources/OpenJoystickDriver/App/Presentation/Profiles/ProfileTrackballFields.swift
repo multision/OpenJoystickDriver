@@ -3,20 +3,18 @@
   import SwiftUI
 
   struct ProfileTrackballFields: View {
-    @Binding var draft: ProfileTrackballDraft
+    @Binding
+    var draft: ProfileTrackballDraft
 
     var body: some View {
       VStack(alignment: .leading, spacing: 12) {
         Toggle(label("enabled", "Trackball"), isOn: $draft.enabled)
         if draft.enabled {
-          Text(label(
-            "hint", "Hold the control to continue motion while repositioning the controller."
-          ))
-            .font(.caption)
+          Text(
+            label("hint", "Hold the control to continue motion while repositioning the controller.")
+          ).font(.caption)
           Picker(label("source", "Trackball control"), selection: $draft.source) {
-            ForEach(sources, id: \.source) { option in
-              Text(option.title).tag(option.source)
-            }
+            ForEach(sources, id: \.source) { option in Text(option.title).tag(option.source) }
           }
           Picker(label("axes", "Trackball axes"), selection: $draft.axes) {
             Text(label("pitch", "Pitch")).tag(RemappingGyroTrackballAxes.pitch)

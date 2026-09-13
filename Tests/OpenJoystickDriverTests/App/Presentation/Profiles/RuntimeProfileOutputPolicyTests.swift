@@ -31,18 +31,25 @@ struct RuntimeProfileOutputPolicyTests {
     if behavior == .pulse {
       #expect(changed.profile.bindings.first?.pulseDurationMs == 375)
       let decoded = try JSONDecoder().decode(
-        RemappingProfile.self, from: JSONEncoder().encode(changed.profile)
+        RemappingProfile.self,
+        from: JSONEncoder().encode(changed.profile)
       )
       #expect(decoded == changed.profile)
       let switched = try changed.settingBindingBehaviors(
-        behavior: .hold, turbo: nil, longHold: nil, doubleTap: nil, for: binding.id
+        behavior: .hold,
+        turbo: nil,
+        longHold: nil,
+        doubleTap: nil,
+        for: binding.id
       )
-      #expect(switched.profile.bindings.first?.pulseDurationMs
-        == RemappingBinding.defaultPulseDurationMs)
+      #expect(
+        switched.profile.bindings.first?.pulseDurationMs == RemappingBinding.defaultPulseDurationMs
+      )
     }
   }
 
-  @Test func policyEditsPreserveMappingsAndRejectDisablingRequiredVirtualOutput() throws {
+  @Test
+  func policyEditsPreserveMappingsAndRejectDisablingRequiredVirtualOutput() throws {
     let profile = RemappingProfile(
       name: "Virtual",
       device: RemappingDeviceScope(vendorID: 1, productID: 2),
@@ -60,7 +67,8 @@ struct RuntimeProfileOutputPolicyTests {
     }
   }
 
-  @Test func virtualDestinationChoicesRespectSourceKinds() {
+  @Test
+  func virtualDestinationChoicesRespectSourceKinds() {
     let digital = DestinationOption.options(for: .button(.south)).map(\.destination)
     #expect(digital.contains(.gamepadButton(.north)))
     #expect(digital.contains(.gamepadDpad(.up)))

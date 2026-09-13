@@ -86,9 +86,10 @@ enum InstalledCLIForwarder {
     for pointer in pointers { if let pointer { free(UnsafeMutableRawPointer(pointer)) } }
   }
 
-  private static func installedCLIIsCurrent(sourceExecutableURL: URL, installedExecutableURL: URL)
-    -> Bool
-  {
+  private static func installedCLIIsCurrent(
+    sourceExecutableURL: URL,
+    installedExecutableURL: URL
+  ) -> Bool {
     guard let repositoryRoot = repositoryRoot(containing: sourceExecutableURL) else { return true }
     guard
       let installedDate = try? installedExecutableURL.resourceValues(forKeys: [
@@ -108,7 +109,7 @@ enum InstalledCLIForwarder {
     for case let file as URL in enumerator {
       guard
         let values = try? file.resourceValues(forKeys: [
-          .contentModificationDateKey, .isRegularFileKey
+          .contentModificationDateKey, .isRegularFileKey,
         ])
       else { return false }
       if values.isRegularFile == true, let date = values.contentModificationDate,

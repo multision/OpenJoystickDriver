@@ -40,7 +40,8 @@ public struct RemappingAction: Codable, Equatable, Hashable, Identifiable, Senda
     id = try values.decode(UUID.self, forKey: .id)
     destination = try values.decode(RemappingDestination.self, forKey: .destination)
     behavior = try values.decodeIfPresent(RemappingBindingBehavior.self, forKey: .behavior) ?? .hold
-    pulseDurationMs = try values.decodeIfPresent(Double.self, forKey: .pulseDurationMs)
+    pulseDurationMs =
+      try values.decodeIfPresent(Double.self, forKey: .pulseDurationMs)
       ?? RemappingBinding.defaultPulseDurationMs
     turbo = try values.decodeIfPresent(RemappingTurbo.self, forKey: .turbo)
     longHold = try values.decodeIfPresent(RemappingLongHold.self, forKey: .longHold)

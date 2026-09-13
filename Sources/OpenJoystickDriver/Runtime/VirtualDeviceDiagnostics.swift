@@ -49,8 +49,7 @@ enum HIDGameControllerSupport {
     in probes: [ApplicationServiceHIDGamepadSnapshot]
   ) -> Bool? {
     let identity = probes.filter {
-      $0.vendorID == snapshot.vendorID
-        && $0.productID == snapshot.productID
+      $0.vendorID == snapshot.vendorID && $0.productID == snapshot.productID
         && $0.isOJDUserSpace == snapshot.isOJDUserSpace
     }
     let exact = identity.filter { $0.locationID == snapshot.locationID }
@@ -68,7 +67,8 @@ enum IOHIDGameControllerProbe {
   }
 }
 
-@available(macOS, introduced: 10.15) private enum IOHIDVirtualDeviceDiagnostics {
+@available(macOS, introduced: 10.15)
+private enum IOHIDVirtualDeviceDiagnostics {
   private static let ioUserClassKey = "IOUserClass"
 
   static func enumerate() -> [ApplicationServiceHIDGamepadSnapshot] {
@@ -139,7 +139,8 @@ enum IOHIDGameControllerProbe {
   }
 }
 
-@available(macOS 15, *) private enum CoreHIDVirtualDeviceDiagnostics {
+@available(macOS 15, *)
+private enum CoreHIDVirtualDeviceDiagnostics {
   static func enumerate() async -> [ApplicationServiceHIDGamepadSnapshot] {
     let collector = SnapshotCollector()
     let manager = HIDDeviceManager()
@@ -153,7 +154,7 @@ enum IOHIDGameControllerProbe {
         ),
         AppleGameControllerSyntheticHID.coreHIDMatchingCriteria(
           primaryUsage: .genericDesktop(.multiAxisController)
-        )
+        ),
       ]
       do {
         for try await notification in await manager.monitorNotifications(matchingCriteria: criteria)
@@ -172,9 +173,9 @@ enum IOHIDGameControllerProbe {
     return await collector.snapshot().sorted(by: snapshotOrder)
   }
 
-  private static func snapshot(_ client: HIDDeviceClient) async
-    -> ApplicationServiceHIDGamepadSnapshot
-  {
+  private static func snapshot(
+    _ client: HIDDeviceClient
+  ) async -> ApplicationServiceHIDGamepadSnapshot {
     let serial = await client.serialNumber
     let location = await client.locationID
     return ApplicationServiceHIDGamepadSnapshot(

@@ -8,12 +8,12 @@ extension MappingProfileEditor {
     "--stick-flick-duration-ms", "--stick-flick-threshold", "--stick-flick-hysteresis",
     "--stick-pointer-radius-points", "--stick-scroll-degrees-per-line", "--stick-scroll-axis",
     "--stick-rotation-direction", "--stick-steering-degrees-at-full-scale",
-    "--stick-steering-return-degrees-per-second", "--stick-steering-output",
-    "--stick-passthrough"
+    "--stick-steering-return-degrees-per-second", "--stick-steering-output", "--stick-passthrough",
   ]
 
   static func stickMappings(
-    _ options: MappingOptions, defaultValue: [RemappingStickMapping] = []
+    _ options: MappingOptions,
+    defaultValue: [RemappingStickMapping] = []
   ) throws -> [RemappingStickMapping] {
     guard stickOptions.contains(where: options.contains) else { return defaultValue }
     guard let rawSource = options["--stick-source"],
@@ -22,8 +22,10 @@ extension MappingProfileEditor {
     let old = defaultValue.first { $0.source == source } ?? RemappingStickMapping(source: source)
     let rawMode = options["--stick-mode"] ?? old.mode.rawValue
     if rawMode == "none" {
-      guard !stickOptions.subtracting(["--stick-source", "--stick-mode"])
-        .contains(where: options.contains)
+      guard
+        !stickOptions.subtracting(["--stick-source", "--stick-mode"]).contains(
+          where: options.contains
+        )
       else { throw MappingCommandError.invalidArguments("Cannot tune a removed stick mapping") }
       return defaultValue.filter { $0.source != source }
     }
@@ -77,16 +79,22 @@ extension MappingProfileEditor {
       scrollDegreesPerLine: number("scroll-degrees-per-line", old.scrollDegreesPerLine),
       scrollAxis: choice("scroll-axis", old.scrollAxis, as: RemappingStickScrollAxis.self),
       rotationDirection: choice(
-        "rotation-direction", old.rotationDirection, as: RemappingStickRotationDirection.self
+        "rotation-direction",
+        old.rotationDirection,
+        as: RemappingStickRotationDirection.self
       ),
       steeringDegreesAtFullScale: number(
-        "steering-degrees-at-full-scale", old.steeringDegreesAtFullScale
+        "steering-degrees-at-full-scale",
+        old.steeringDegreesAtFullScale
       ),
       steeringReturnDegreesPerSecond: number(
-        "steering-return-degrees-per-second", old.steeringReturnDegreesPerSecond
+        "steering-return-degrees-per-second",
+        old.steeringReturnDegreesPerSecond
       ),
       steeringOutput: choice(
-        "steering-output", old.steeringOutput, as: RemappingStickSteeringOutput.self
+        "steering-output",
+        old.steeringOutput,
+        as: RemappingStickSteeringOutput.self
       ),
       passthrough: boolean("passthrough", old.passthrough)
     )

@@ -8,8 +8,8 @@ public protocol USBTransportSession: AnyObject, Sendable {
   var inputOwnership: HIDInputOwnership { get async }
 
   /// Sends one packet to an interrupt OUT endpoint.
-  @discardableResult func writeInterruptPacket(endpoint: UInt8, data: [UInt8], timeout: UInt32)
-    async throws -> Int
+  @discardableResult
+  func writeInterruptPacket(endpoint: UInt8, data: [UInt8], timeout: UInt32) async throws -> Int
 
   /// Receives one packet from an interrupt IN endpoint.
   func readInterruptPacket(endpoint: UInt8, length: Int, timeout: UInt32) async throws -> [UInt8]
@@ -103,14 +103,18 @@ public struct USBTransportDevice: Hashable, Sendable {
 /// Discovers and opens physical USB interfaces without exposing a transport framework to Kit.
 public protocol USBTransportProvider: Sendable {
   func devices() async throws -> [USBTransportDevice]
-  func open(_ device: USBTransportDevice, options: USBTransportOpenOptions) async throws
-    -> any USBTransportSession
+  func open(
+    _ device: USBTransportDevice,
+    options: USBTransportOpenOptions
+  ) async throws -> any USBTransportSession
 
   /// Resolves descriptor-backed transport facts without claiming the device.
   /// Providers that do not expose passive descriptor observations retain the
   /// catalog profile by default.
-  func resolveTransportProfile(for device: USBTransportDevice, configured: DeviceTransportProfile)
-    async -> DeviceTransportProfile
+  func resolveTransportProfile(
+    for device: USBTransportDevice,
+    configured: DeviceTransportProfile
+  ) async -> DeviceTransportProfile
 }
 
 extension USBTransportProvider {

@@ -100,28 +100,30 @@ public final class SteamControllerParser: InputParser, ControllerInputConnection
       steamFeatureReport([
         steamControllerSetSettingsValuesCommand, 9, steamControllerLeftTrackpadModeSetting,
         steamControllerTrackpadNone, 0, steamControllerRightTrackpadModeSetting,
-        steamControllerTrackpadNone, 0, steamControllerIMUModeSetting, steamControllerRawIMUMode, 0
-      ])
+        steamControllerTrackpadNone, 0, steamControllerIMUModeSetting, steamControllerRawIMUMode, 0,
+      ]),
     ]
   }
 
   public func hidShutdownFeatureReports() -> [PhysicalHIDOutputReport] {
     [
       steamFeatureReport([steamControllerSetDefaultDigitalMappingsCommand]),
-      steamFeatureReport([steamControllerLoadDefaultSettingsCommand])
+      steamFeatureReport([steamControllerLoadDefaultSettingsCommand]),
     ]
   }
 
   public func physicalBrightnessReport(_ brightness: UInt8) -> PhysicalHIDOutputReport {
     steamFeatureReport([
       steamControllerSetSettingsValuesCommand, 3, steamControllerUserLEDBrightnessSetting,
-      brightness, 0
+      brightness, 0,
     ])
   }
 
-  public func physicalHapticReports(left: UInt8, right: UInt8, durationMs: Int)
-    -> [PhysicalHIDOutputReport]
-  {
+  public func physicalHapticReports(
+    left: UInt8,
+    right: UInt8,
+    durationMs: Int
+  ) -> [PhysicalHIDOutputReport] {
     guard isLogicalControllerConnected else { return [] }
     let effectiveDurationMs = durationMs > 0 ? min(durationMs, 5_000) : 65
     let totalMicroseconds = max(1, effectiveDurationMs * 1_000)
@@ -220,9 +222,10 @@ public final class SteamControllerParser: InputParser, ControllerInputConnection
     let rt = bytes[ReportOffset.rightTrigger]
     let lpadTouched = (b2 & 0x08) != 0
     let lpadAndJoy = (b2 & 0x80) != 0
-    let lx = lpadTouched
-      ? (lpadAndJoy ? prevLX : 0) : readInt16LE(bytes, offset: ReportOffset.leftX)
-    let ly = lpadTouched
+    let lx =
+      lpadTouched ? (lpadAndJoy ? prevLX : 0) : readInt16LE(bytes, offset: ReportOffset.leftX)
+    let ly =
+      lpadTouched
       ? (lpadAndJoy ? prevLY : 0) : clampedNegatedInt16LE(bytes, offset: ReportOffset.leftY)
     let rx = readInt16LE(bytes, offset: ReportOffset.rightPadX)
     let ry = clampedNegatedInt16LE(bytes, offset: ReportOffset.rightPadY)
@@ -259,7 +262,7 @@ public final class SteamControllerParser: InputParser, ControllerInputConnection
       steamControllerHapticPulseCommand, steamControllerHapticPulsePayloadLength, pad,
       UInt8(truncatingIfNeeded: durationMicroseconds),
       UInt8(truncatingIfNeeded: durationMicroseconds >> 8), 0, 0, UInt8(truncatingIfNeeded: count),
-      UInt8(truncatingIfNeeded: count >> 8), gain
+      UInt8(truncatingIfNeeded: count >> 8), gain,
     ])
   }
 
@@ -286,9 +289,11 @@ public final class SteamControllerParser: InputParser, ControllerInputConnection
     prevRY = 0
   }
 
-  private func parseButtons(buttons0 b0: UInt8, buttons1 b1: UInt8, buttons2 b2: UInt8)
-    -> [ControllerEvent]
-  {
+  private func parseButtons(
+    buttons0 b0: UInt8,
+    buttons1 b1: UInt8,
+    buttons2 b2: UInt8
+  ) -> [ControllerEvent] {
     var events: [ControllerEvent] = []
     events.append(
       contentsOf: diffButtons(
@@ -296,7 +301,7 @@ public final class SteamControllerParser: InputParser, ControllerInputConnection
         curr: b0,
         mapping: [
           (0x01, .r2Digital), (0x02, .l2Digital), (0x04, .rightBumper), (0x08, .leftBumper),
-          (0x10, .y), (0x20, .b), (0x40, .x), (0x80, .a)
+          (0x10, .y), (0x20, .b), (0x40, .x), (0x80, .a),
         ]
       )
     )
@@ -312,7 +317,7 @@ public final class SteamControllerParser: InputParser, ControllerInputConnection
         prev: prevButtons2,
         curr: b2,
         mapping: [
-          (0x01, .rightGrip), (0x02, .leftPadClick), (0x04, .rightPadClick), (0x40, .leftStick)
+          (0x01, .rightGrip), (0x02, .leftPadClick), (0x04, .rightPadClick), (0x40, .leftStick),
         ]
       )
     )
@@ -336,9 +341,12 @@ public final class SteamControllerParser: InputParser, ControllerInputConnection
     return events
   }
 
-  private func parseSticks(leftX: Int16, leftY: Int16, rightX: Int16, rightY: Int16)
-    -> [ControllerEvent]
-  {
+  private func parseSticks(
+    leftX: Int16,
+    leftY: Int16,
+    rightX: Int16,
+    rightY: Int16
+  ) -> [ControllerEvent] {
     var events: [ControllerEvent] = []
     if leftX != prevLX || leftY != prevLY {
       events.append(.leftStickChanged(x: normalizeAxis(leftX), y: normalizeAxis(leftY)))
@@ -349,9 +357,11 @@ public final class SteamControllerParser: InputParser, ControllerInputConnection
     return events
   }
 
-  private func diffButtons(prev: UInt8, curr: UInt8, mapping: [(UInt8, Button)])
-    -> [ControllerEvent]
-  {
+  private func diffButtons(
+    prev: UInt8,
+    curr: UInt8,
+    mapping: [(UInt8, Button)]
+  ) -> [ControllerEvent] {
     var events: [ControllerEvent] = []
     for (mask, button) in mapping {
       let wasPressed = (prev & mask) != 0

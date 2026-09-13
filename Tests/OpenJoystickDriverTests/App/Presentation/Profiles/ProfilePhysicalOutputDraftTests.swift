@@ -4,28 +4,51 @@ import Testing
 import OpenJoystickDriverKit
 
 struct ProfilePhysicalOutputDraftTests {
-  @Test func destinationCatalogIncludesEveryPhysicalOutputKind() {
+  @Test
+  func destinationCatalogIncludesEveryPhysicalOutputKind() {
     let outputs = DestinationOption.physical.compactMap { option -> RemappingPhysicalOutput? in
       guard case .physical(let output) = option.destination else { return nil }
       return output
     }
 
-    #expect(outputs.contains { if case .rumble = $0 { return true }; return false })
-    #expect(outputs.contains { if case .playerIndicator = $0 { return true }; return false })
-    #expect(outputs.contains { if case .color = $0 { return true }; return false })
-    #expect(outputs.contains { if case .brightness = $0 { return true }; return false })
-    #expect(outputs.contains { if case .adaptiveTrigger = $0 { return true }; return false })
+    #expect(
+      outputs.contains {
+        if case .rumble = $0 { return true }
+        return false
+      }
+    )
+    #expect(
+      outputs.contains {
+        if case .playerIndicator = $0 { return true }
+        return false
+      }
+    )
+    #expect(
+      outputs.contains {
+        if case .color = $0 { return true }
+        return false
+      }
+    )
+    #expect(
+      outputs.contains {
+        if case .brightness = $0 { return true }
+        return false
+      }
+    )
+    #expect(
+      outputs.contains {
+        if case .adaptiveTrigger = $0 { return true }
+        return false
+      }
+    )
   }
 
-  @Test func importedPhysicalValueRemainsEditableOutsidePresetCatalog() throws {
+  @Test
+  func importedPhysicalValueRemainsEditableOutsidePresetCatalog() throws {
     let custom = RemappingDestination.physical(
       .adaptiveTrigger(
         .left,
-        PhysicalAdaptiveTriggerEffect(
-          kind: .resistance,
-          startPosition: 0.23,
-          strength: 0.61
-        )
+        PhysicalAdaptiveTriggerEffect(kind: .resistance, startPosition: 0.23, strength: 0.61)
       )
     )
     #expect(

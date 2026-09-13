@@ -67,9 +67,12 @@ public struct Localization: @unchecked Sendable {
 
   /// Formats `count` through a `Localizable.stringsdict` plural (`%#@count@`).
   /// Foundation picks the CLDR category; callers should not branch on `count == 1`.
-  public func plural(_ key: String, count: Int, defaultValue: String? = nil, comment: String = "")
-    -> String
-  {
+  public func plural(
+    _ key: String,
+    count: Int,
+    defaultValue: String? = nil,
+    comment: String = ""
+  ) -> String {
     let fallback = defaultValue ?? key
     guard let preferredBundle else {
       return Self.format(fallback, count: count, locale: formattingLocale)
@@ -175,9 +178,10 @@ public struct Localization: @unchecked Sendable {
     parseStringsDictCategories(for: localization, in: bundle ?? moduleBundle)
   }
 
-  private static func localizedLanguage(among localizations: [String], preferredLanguages: [String])
-    -> String?
-  {
+  private static func localizedLanguage(
+    among localizations: [String],
+    preferredLanguages: [String]
+  ) -> String? {
     guard
       let preferred = Bundle.preferredLocalizations(
         from: localizations,
@@ -226,9 +230,10 @@ public struct Localization: @unchecked Sendable {
     return try? Data(contentsOf: URL(fileURLWithPath: path))
   }
 
-  private static func parseStringsDictData(for localization: String, in bundle: Bundle) -> [String:
-    [String]]
-  {
+  private static func parseStringsDictData(
+    for localization: String,
+    in bundle: Bundle
+  ) -> [String: [String]] {
     guard let data = stringsDictData(for: localization, in: bundle),
       let propertyList = try? PropertyListSerialization.propertyList(
         from: data,
@@ -244,9 +249,10 @@ public struct Localization: @unchecked Sendable {
     }
   }
 
-  private static func parseStringsDictCategories(for localization: String, in bundle: Bundle)
-    -> [String: Set<String>]
-  {
+  private static func parseStringsDictCategories(
+    for localization: String,
+    in bundle: Bundle
+  ) -> [String: Set<String>] {
     guard let data = stringsDictData(for: localization, in: bundle),
       let propertyList = try? PropertyListSerialization.propertyList(
         from: data,

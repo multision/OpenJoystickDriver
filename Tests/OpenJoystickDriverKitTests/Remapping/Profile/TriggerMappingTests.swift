@@ -4,7 +4,8 @@ import Testing
 @testable import OpenJoystickDriverKit
 
 struct TriggerMappingTests {
-  @Test func allModesRoundTripInTheSchemaThreeProfile() throws {
+  @Test
+  func allModesRoundTripInTheSchemaThreeProfile() throws {
     for mode in RemappingDualStageTriggerMode.allCases {
       let mapping = RemappingTriggerMapping(
         source: .left,
@@ -20,10 +21,12 @@ struct TriggerMappingTests {
         device: RemappingDeviceScope(vendorID: 1, productID: 2),
         applicationScope: .global,
         triggerMappings: [mapping],
-        bindings: [RemappingBinding(
-          source: .triggerStage(.left, .soft),
-          destination: .keyboard(key: .a, modifiers: [])
-        )]
+        bindings: [
+          RemappingBinding(
+            source: .triggerStage(.left, .soft),
+            destination: .keyboard(key: .a, modifiers: [])
+          )
+        ]
       )
       try profile.validate()
       let data = try JSONEncoder().encode(profile)
@@ -31,15 +34,16 @@ struct TriggerMappingTests {
     }
   }
 
-  @Test func validationRequiresUniqueValidMappingsForStageSources() {
+  @Test
+  func validationRequiresUniqueValidMappingsForStageSources() {
     let mapping = RemappingTriggerMapping(source: .right)
     #expect(throws: RemappingValidationError.duplicateTriggerMapping(.right)) {
       try profile(mappings: [mapping, mapping]).validate()
     }
     #expect(throws: RemappingValidationError.invalidTriggerMapping(.right)) {
-      try profile(mappings: [RemappingTriggerMapping(
-        source: .right, softThreshold: 0.9, fullThreshold: 0.8
-      )]).validate()
+      try profile(mappings: [
+        RemappingTriggerMapping(source: .right, softThreshold: 0.9, fullThreshold: 0.8)
+      ]).validate()
     }
     #expect(throws: RemappingValidationError.triggerStageWithoutMapping(.right)) {
       try profile(mappings: []).validate()
@@ -52,10 +56,12 @@ struct TriggerMappingTests {
       device: RemappingDeviceScope(vendorID: 1, productID: 2),
       applicationScope: .global,
       triggerMappings: mappings,
-      bindings: [RemappingBinding(
-        source: .triggerStage(.right, .full),
-        destination: .keyboard(key: .b, modifiers: [])
-      )]
+      bindings: [
+        RemappingBinding(
+          source: .triggerStage(.right, .full),
+          destination: .keyboard(key: .b, modifiers: [])
+        )
+      ]
     )
   }
 }

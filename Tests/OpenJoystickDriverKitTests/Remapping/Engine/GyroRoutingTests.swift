@@ -3,7 +3,8 @@ import Testing
 @testable import OpenJoystickDriverKit
 
 struct GyroRoutingTests {
-  @Test func layerTuningNeutralizesStickAndResumesAfterFreshBaseline() {
+  @Test
+  func layerTuningNeutralizesStickAndResumesAfterFreshBaseline() {
     var engine = RemappingEngineState()
     let device = DeviceIdentifier(vendorID: 1, productID: 2)
     let profile = RemappingProfile(
@@ -14,14 +15,19 @@ struct GyroRoutingTests {
       motionTuning: RemappingMotionTuning(space: .local, automaticBias: false),
       gyroOutput: RemappingGyroOutput(mode: .rightStick, fullStickDegreesPerSecond: 100),
       bindings: [],
-      layers: [RemappingLayer(
-        name: "Aim",
-        activationMode: .hold,
-        activator: .button(.south),
-        motionTuning: RemappingMotionTuning(
-          space: .local, pitchSensitivity: 0.5, yawSensitivity: 0.5, automaticBias: false
+      layers: [
+        RemappingLayer(
+          name: "Aim",
+          activationMode: .hold,
+          activator: .button(.south),
+          motionTuning: RemappingMotionTuning(
+            space: .local,
+            pitchSensitivity: 0.5,
+            yawSensitivity: 0.5,
+            automaticBias: false
+          )
         )
-      )]
+      ]
     )
     let initial = engine.process(
       events: [.motionSample(sample(0, time: 0)), .motionSample(sample(1, time: 10_000_000))],
@@ -29,11 +35,16 @@ struct GyroRoutingTests {
       profile: profile,
       at: 10_000_000
     )
-    #expect(initial == [.gamepad(
-      RemappingGamepadState(axes: [.rightStickX: -1, .rightStickY: 0.5]), device
-    )])
+    #expect(
+      initial == [
+        .gamepad(RemappingGamepadState(axes: [.rightStickX: -1, .rightStickY: 0.5]), device)
+      ]
+    )
     let changed = engine.process(
-      events: [.buttonPressed(.a)], from: device, profile: profile, at: 11_000_000
+      events: [.buttonPressed(.a)],
+      from: device,
+      profile: profile,
+      at: 11_000_000
     )
     #expect(changed == [.gamepad(.neutral, device)])
     #expect(!engine.hasScheduledOutput)
@@ -50,17 +61,23 @@ struct GyroRoutingTests {
       profile: profile,
       at: 30_000_000
     )
-    #expect(resumed == [.gamepad(
-      RemappingGamepadState(axes: [.rightStickX: -0.5, .rightStickY: 0.25]), device
-    )])
+    #expect(
+      resumed == [
+        .gamepad(RemappingGamepadState(axes: [.rightStickX: -0.5, .rightStickY: 0.25]), device)
+      ]
+    )
     let released = engine.process(
-      events: [.buttonReleased(.a)], from: device, profile: profile, at: 31_000_000
+      events: [.buttonReleased(.a)],
+      from: device,
+      profile: profile,
+      at: 31_000_000
     )
     #expect(released == [.gamepad(.neutral, device)])
     #expect(!engine.hasScheduledOutput)
   }
 
-  @Test func trackballMouseRetainsVelocityAndDropsItAcrossSampleGaps() {
+  @Test
+  func trackballMouseRetainsVelocityAndDropsItAcrossSampleGaps() {
     var engine = RemappingEngineState()
     let device = DeviceIdentifier(vendorID: 1, productID: 2)
     let profile = RemappingProfile(
@@ -105,7 +122,8 @@ struct GyroRoutingTests {
 
   @Test(arguments: [false, true], [RemappingGyroOutputMode.disabled, .mouse])
   func activationConsumptionControlsOriginalVirtualButton(
-    consumes: Bool, mode: RemappingGyroOutputMode
+    consumes: Bool,
+    mode: RemappingGyroOutputMode
   ) {
     var engine = RemappingEngineState()
     let device = DeviceIdentifier(vendorID: 1, productID: 2)
@@ -123,23 +141,27 @@ struct GyroRoutingTests {
       bindings: []
     )
     let pressed = engine.process(
-      events: [.buttonPressed(.a)], from: device, profile: profile, at: 0
+      events: [.buttonPressed(.a)],
+      from: device,
+      profile: profile,
+      at: 0
     )
     let suppresses = consumes && mode != .disabled
-    let expected: [RemappingEngineAction] = suppresses ? [] : [
-      .gamepad(RemappingGamepadState(buttons: [.south]), device)
-    ]
+    let expected: [RemappingEngineAction] =
+      suppresses ? [] : [.gamepad(RemappingGamepadState(buttons: [.south]), device)]
     #expect(pressed == expected)
     let released = engine.process(
-      events: [.buttonReleased(.a)], from: device, profile: profile, at: 1
+      events: [.buttonReleased(.a)],
+      from: device,
+      profile: profile,
+      at: 1
     )
     #expect(released == (suppresses ? [] : [.gamepad(.neutral, device)]))
   }
 
   @Test(arguments: [RemappingGyroActivationMode.whileHeld, .whileReleased, .toggle])
-  func activationWaitsForFreshBaselineAndDeactivationClearsStick(
-    mode: RemappingGyroActivationMode
-  ) {
+  func activationWaitsForFreshBaselineAndDeactivationClearsStick(mode: RemappingGyroActivationMode)
+  {
     var engine = RemappingEngineState()
     let device = DeviceIdentifier(vendorID: 1, productID: 2)
     let profile = RemappingProfile(
@@ -178,7 +200,8 @@ struct GyroRoutingTests {
       at: 20_000_000
     )
     #expect(!movement.isEmpty)
-    let disable: [ControllerEvent] = mode == .toggle
+    let disable: [ControllerEvent] =
+      mode == .toggle
       ? [.buttonReleased(.a), .buttonPressed(.a)]
       : [mode == .whileHeld ? .buttonReleased(.a) : .buttonPressed(.a)]
     let stopped = engine.process(events: disable, from: device, profile: profile, at: 21_000_000)
@@ -186,7 +209,8 @@ struct GyroRoutingTests {
     #expect(!engine.hasScheduledOutput)
   }
 
-  @Test func gyroTimeoutPreservesOtherBindingsOnTheSameStick() {
+  @Test
+  func gyroTimeoutPreservesOtherBindingsOnTheSameStick() {
     var engine = RemappingEngineState()
     let device = DeviceIdentifier(vendorID: 1, productID: 2)
     let profile = RemappingProfile(
@@ -196,11 +220,13 @@ struct GyroRoutingTests {
       outputPolicy: RemappingOutputPolicy(virtualGamepad: .mapped),
       motionTuning: RemappingMotionTuning(space: .local, automaticBias: false),
       gyroOutput: RemappingGyroOutput(mode: .rightStick, fullStickDegreesPerSecond: 100),
-      bindings: [RemappingBinding(
-        source: .axis(.leftStickX),
-        destination: .gamepadAxis(.rightStickX),
-        axisTuning: RemappingAxisTuning(deadzone: 0)
-      )]
+      bindings: [
+        RemappingBinding(
+          source: .axis(.leftStickX),
+          destination: .gamepadAxis(.rightStickX),
+          axisTuning: RemappingAxisTuning(deadzone: 0)
+        )
+      ]
     )
     _ = engine.process(
       events: [.leftStickChanged(x: 0.25, y: 0), .motionSample(sample(0, time: 0))],
@@ -214,9 +240,11 @@ struct GyroRoutingTests {
       profile: profile,
       at: 10_000_000
     )
-    #expect(combined == [.gamepad(
-      RemappingGamepadState(axes: [.rightStickX: -0.75, .rightStickY: 0.5]), device
-    )])
+    #expect(
+      combined == [
+        .gamepad(RemappingGamepadState(axes: [.rightStickX: -0.75, .rightStickY: 0.5]), device)
+      ]
+    )
     let expired = engine.tick(at: 110_000_000)
     #expect(expired == [.gamepad(RemappingGamepadState(axes: [.rightStickX: 0.25]), device)])
     let released = engine.releaseController(device)
@@ -260,13 +288,16 @@ struct GyroRoutingTests {
     }
     let reset = try await engine.calibrateMotion(.reset, for: device)
     #expect(!reset.hasMotionBaseline)
-    #expect(await virtual.states == [
-      RemappingGamepadState(axes: [.leftStickX: -1, .leftStickY: 0.5]), .neutral
-    ])
+    #expect(
+      await virtual.states == [
+        RemappingGamepadState(axes: [.leftStickX: -1, .leftStickY: 0.5]), .neutral,
+      ]
+    )
     #expect(await !engine.hasScheduledOutput())
   }
 
-  @Test func gyroStickUsesAngularSpeedAndNeutralizesAtSampleTimeout() {
+  @Test
+  func gyroStickUsesAngularSpeedAndNeutralizesAtSampleTimeout() {
     var engine = RemappingEngineState()
     let device = DeviceIdentifier(vendorID: 1, productID: 2)
     let profile = RemappingProfile(
@@ -279,7 +310,10 @@ struct GyroRoutingTests {
       bindings: []
     )
     _ = engine.process(
-      events: [.motionSample(sample(0, time: 0))], from: device, profile: profile, at: 0
+      events: [.motionSample(sample(0, time: 0))],
+      from: device,
+      profile: profile,
+      at: 0
     )
     let movement = engine.process(
       events: [.motionSample(sample(1, time: 10_000_000))],
@@ -287,12 +321,15 @@ struct GyroRoutingTests {
       profile: profile,
       at: 10_000_000
     )
-    #expect(movement == [.gamepad(
-      RemappingGamepadState(axes: [.rightStickX: -1, .rightStickY: 0.5]), device
-    )])
-    #expect(engine.nextScheduledTick(
-      after: 10_000_000, continuousIntervalNanoseconds: 8_000_000
-    ) == 110_000_000)
+    #expect(
+      movement == [
+        .gamepad(RemappingGamepadState(axes: [.rightStickX: -1, .rightStickY: 0.5]), device)
+      ]
+    )
+    #expect(
+      engine.nextScheduledTick(after: 10_000_000, continuousIntervalNanoseconds: 8_000_000)
+        == 110_000_000
+    )
     let before = engine.tick(at: 109_999_999)
     #expect(before.isEmpty)
     let expired = engine.tick(at: 110_000_000)
@@ -300,7 +337,8 @@ struct GyroRoutingTests {
     #expect(!engine.hasScheduledOutput)
   }
 
-  @Test func mouseUsesSampleTimeAndDoesNotReplayBaselineOrDuplicateSamples() {
+  @Test
+  func mouseUsesSampleTimeAndDoesNotReplayBaselineOrDuplicateSamples() {
     var engine = RemappingEngineState()
     let device = DeviceIdentifier(vendorID: 1, productID: 2)
     let profile = RemappingProfile(
@@ -312,7 +350,10 @@ struct GyroRoutingTests {
       bindings: []
     )
     let baseline = engine.process(
-      events: [.motionSample(sample(0, time: 0))], from: device, profile: profile, at: 0
+      events: [.motionSample(sample(0, time: 0))],
+      from: device,
+      profile: profile,
+      at: 0
     )
     #expect(baseline.isEmpty)
     let movement = engine.process(

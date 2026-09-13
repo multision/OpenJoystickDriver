@@ -13,12 +13,19 @@ struct RemappingMotionBias {
   private var samples = 0
   private var manual = false
 
-  mutating func startManualCollection() { clearWindow(); manual = true }
-  mutating func pauseManualCollection() { clearWindow(); manual = false }
+  mutating func startManualCollection() {
+    clearWindow()
+    manual = true
+  }
+  mutating func pauseManualCollection() {
+    clearWindow()
+    manual = false
+  }
 
   mutating func reset() { self = Self() }
 
-  @discardableResult mutating func setOffset(_ value: ControllerMotionVector) -> Bool {
+  @discardableResult
+  mutating func setOffset(_ value: ControllerMotionVector) -> Bool {
     guard value.isFinite else { return false }
     offset = SIMD3(value.x, value.y, value.z)
     clearWindow()
@@ -26,7 +33,9 @@ struct RemappingMotionBias {
   }
 
   mutating func update(
-    _ reading: ControllerMotionReading, deltaTime: Double, automatic: Bool
+    _ reading: ControllerMotionReading,
+    deltaTime: Double,
+    automatic: Bool
   ) -> ControllerMotionVector {
     let gyro = SIMD3(
       reading.gyroscopeDegreesPerSecond.x,
@@ -48,19 +57,25 @@ struct RemappingMotionBias {
       let magnitudeSquared = accel.x * accel.x + accel.y * accel.y + accel.z * accel.z
       guard (0.64...1.44).contains(magnitudeSquared),
         max(abs(gyro.x), abs(gyro.y), abs(gyro.z)) <= 10
-      else { clearWindow(); return }
+      else {
+        clearWindow()
+        return
+      }
     }
     if samples == 0 {
-      minimumGyro = gyro; maximumGyro = gyro
-      minimumAccel = accel; maximumAccel = accel
+      minimumGyro = gyro
+      maximumGyro = gyro
+      minimumAccel = accel
+      maximumAccel = accel
     }
     for axis in 0..<3 {
       minimumGyro[axis] = min(minimumGyro[axis], gyro[axis])
       maximumGyro[axis] = max(maximumGyro[axis], gyro[axis])
       minimumAccel[axis] = min(minimumAccel[axis], accel[axis])
       maximumAccel[axis] = max(maximumAccel[axis], accel[axis])
-      if !manual, maximumGyro[axis] - minimumGyro[axis] > 0.5
-        || maximumAccel[axis] - minimumAccel[axis] > 0.025
+      if !manual,
+        maximumGyro[axis] - minimumGyro[axis] > 0.5
+          || maximumAccel[axis] - minimumAccel[axis] > 0.025
       {
         clearWindow()
         return

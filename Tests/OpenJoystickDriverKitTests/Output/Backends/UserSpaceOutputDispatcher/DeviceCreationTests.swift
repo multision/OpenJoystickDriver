@@ -7,12 +7,13 @@ import Testing
 @testable import OpenJoystickDriverKit
 
 struct UserSpaceDeviceCreationTests {
-  @Test func attemptsProgressFromFullDeferredCreationToDocumentedMinimum() throws {
+  @Test
+  func attemptsProgressFromFullDeferredCreationToDocumentedMinimum() throws {
     let descriptor = Data([0x05, 0x01, 0x09, 0x05])
     let base: [String: Any] = [
       kIOHIDReportDescriptorKey as String: descriptor, kIOHIDVendorIDKey as String: 1,
       kIOHIDProductIDKey as String: 2, kIOHIDProductKey as String: "Test",
-      kIOHIDLocationIDKey as String: 3, kIOHIDMaxInputReportSizeKey as String: 15
+      kIOHIDLocationIDKey as String: 3, kIOHIDMaxInputReportSizeKey as String: 15,
     ]
 
     let attempts = UserSpaceOutputDispatcher.deviceCreationAttempts(
@@ -26,7 +27,8 @@ struct UserSpaceDeviceCreationTests {
     #expect(attempts.last?.properties[kIOHIDReportDescriptorKey as String] as? Data == descriptor)
     #expect(attempts.map(\.label).count == Set(attempts.map(\.label)).count)
   }
-  @Test func retryPolicyPermitsOneAttemptPerDelayWindow() {
+  @Test
+  func retryPolicyPermitsOneAttemptPerDelayWindow() {
     var policy = UserSpaceDeviceCreationRetryPolicy(delayNanoseconds: 5)
 
     #expect(policy.permitsAttempt(at: 100))
@@ -37,7 +39,8 @@ struct UserSpaceDeviceCreationTests {
     #expect(policy.permitsAttempt(at: 105))
   }
 
-  @Test func retryPolicyClampsOverflowAtMaximumTimestamp() {
+  @Test
+  func retryPolicyClampsOverflowAtMaximumTimestamp() {
     var policy = UserSpaceDeviceCreationRetryPolicy(delayNanoseconds: 5)
 
     policy.recordFailure(at: UInt64.max - 2)
@@ -47,21 +50,16 @@ struct UserSpaceDeviceCreationTests {
     #expect(policy.permitsAttempt(at: UInt64.max))
   }
 
-  @Test(
-    arguments: [
-      (VirtualDeviceProfile.xboxSeries, kIOHIDTransportBluetoothValue),
-      (VirtualDeviceProfile.xboxOneS, kIOHIDTransportBluetoothValue),
-      (VirtualDeviceProfile.xbox360Wired, kIOHIDTransportUSBValue),
-      (VirtualDeviceProfile.dualShock4USB, kIOHIDTransportUSBValue),
-      (VirtualDeviceProfile.dualSenseUSB, kIOHIDTransportUSBValue),
-      (VirtualDeviceProfile.switchProUSB, kIOHIDTransportUSBValue),
-      (VirtualDeviceProfile.openJoystickDriver, kIOHIDTransportUSBValue)
-    ]
-  )
-  func ioHIDTransportValueMatchesIdentity(
-    _ profile: VirtualDeviceProfile,
-    _ expected: String
-  ) {
+  @Test(arguments: [
+    (VirtualDeviceProfile.xboxSeries, kIOHIDTransportBluetoothValue),
+    (VirtualDeviceProfile.xboxOneS, kIOHIDTransportBluetoothValue),
+    (VirtualDeviceProfile.xbox360Wired, kIOHIDTransportUSBValue),
+    (VirtualDeviceProfile.dualShock4USB, kIOHIDTransportUSBValue),
+    (VirtualDeviceProfile.dualSenseUSB, kIOHIDTransportUSBValue),
+    (VirtualDeviceProfile.switchProUSB, kIOHIDTransportUSBValue),
+    (VirtualDeviceProfile.openJoystickDriver, kIOHIDTransportUSBValue),
+  ])
+  func ioHIDTransportValueMatchesIdentity(_ profile: VirtualDeviceProfile, _ expected: String) {
     #expect(UserSpaceOutputDispatcher.ioHIDTransportValue(for: profile) == expected)
     let extra = UserSpaceOutputDispatcher.virtualDeviceExtraProperties(profile: profile)
     #expect(extra[kIOHIDTransportKey as String] as? String == expected)
@@ -90,7 +88,9 @@ struct UserSpaceDeviceCreationTests {
     #expect(extra[kIOHIDTransportKey as String] as? String == kIOHIDTransportBluetoothValue)
   }
 
-  @available(macOS 15, *) @Test func coreHIDUSBProfilePublishesUSBTransport() {
+  @available(macOS 15, *)
+  @Test
+  func coreHIDUSBProfilePublishesUSBTransport() {
     let properties = UserSpaceOutputDispatcher.virtualDeviceProperties(
       profile: .xbox360Wired,
       format: Xbox360MacHIDReportFormat(),

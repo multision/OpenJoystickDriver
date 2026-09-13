@@ -4,7 +4,8 @@ import Testing
 @testable import OpenJoystickDriverKit
 
 struct ControllerRecordProbePlanTests {
-  @Test func loadsGIPRecordWithDefaultStartupSequence() throws {
+  @Test
+  func loadsGIPRecordWithDefaultStartupSequence() throws {
     let plan = try ControllerRecordProbePlan(data: try recordData())
 
     #expect(plan.name == "Controller 1532:0a43")
@@ -19,7 +20,8 @@ struct ControllerRecordProbePlanTests {
     #expect(plan.makeParser() is GIPParser)
   }
 
-  @Test func loadsRecordSelectedStartupAndTransportOptions() throws {
+  @Test
+  func loadsRecordSelectedStartupAndTransportOptions() throws {
     let plan = try ControllerRecordProbePlan(
       data: try recordData(
         configuration: "set1-before-claim",
@@ -33,7 +35,8 @@ struct ControllerRecordProbePlanTests {
     #expect(plan.startupPackets == [.powerOn, .xboxOneSInit, .ledOn, .authDone])
   }
 
-  @Test func loadsXbox360RecordWithoutGIPStartup() throws {
+  @Test
+  func loadsXbox360RecordWithoutGIPStartup() throws {
     let plan = try ControllerRecordProbePlan(
       data: try recordData(driver: "XUSB", variant: "xbox360")
     )
@@ -45,7 +48,8 @@ struct ControllerRecordProbePlanTests {
     #expect(parser.usbStartupOutputPackets() == [[0x01, 0x03, 0x06]])
   }
 
-  @Test func loadsGIPRecordWithKeepAliveDisabled() throws {
+  @Test
+  func loadsGIPRecordWithKeepAliveDisabled() throws {
     let plan = try ControllerRecordProbePlan(data: try recordData(keepAliveEnabled: false))
     let parser = try #require(plan.makeParser() as? GIPParser)
 
@@ -53,7 +57,8 @@ struct ControllerRecordProbePlanTests {
     #expect(parser.keepAlivePolicy == .disabled)
   }
 
-  @Test func loadsXbox360WirelessReceiverRecord() throws {
+  @Test
+  func loadsXbox360WirelessReceiverRecord() throws {
     let plan = try ControllerRecordProbePlan(
       data: try recordData(
         driver: "XUSB",
@@ -69,19 +74,22 @@ struct ControllerRecordProbePlanTests {
     #expect(parser.usbStartupOutputPackets().isEmpty)
   }
 
-  @Test func rejectsInvalidEndpointDirections() {
+  @Test
+  func rejectsInvalidEndpointDirections() {
     #expect(throws: ControllerRecordProbeError.self) {
       try ControllerRecordProbePlan(data: try recordData(inputEndpoint: 2, outputEndpoint: 130))
     }
   }
 
-  @Test func rejectsUnknownGIPStartupPacket() {
+  @Test
+  func rejectsUnknownGIPStartupPacket() {
     #expect(throws: ControllerRecordProbeError.self) {
       try ControllerRecordProbePlan(data: try recordData(startupPackets: ["notARealPacket"]))
     }
   }
 
-  @Test func rejectsUnsupportedProtocolBeforeHardwareAccess() {
+  @Test
+  func rejectsUnsupportedProtocolBeforeHardwareAccess() {
     #expect(throws: ControllerRecordProbeError.self) {
       try ControllerRecordProbePlan(
         data: try recordData(driver: "GenericHID", variant: "genericHID")
@@ -89,13 +97,15 @@ struct ControllerRecordProbePlanTests {
     }
   }
 
-  @Test func rejectsHIDTransportBeforeHardwareAccess() {
+  @Test
+  func rejectsHIDTransportBeforeHardwareAccess() {
     #expect(throws: ControllerRecordProbeError.self) {
       try ControllerRecordProbePlan(data: try recordData(transport: "hid"))
     }
   }
 
-  @Test func rejectsMissingOrWrongCurrentSchemaIdentity() {
+  @Test
+  func rejectsMissingOrWrongCurrentSchemaIdentity() {
     #expect(throws: ControllerRecordProbeError.self) {
       try ControllerRecordProbePlan(data: try recordData(schemaID: nil))
     }
@@ -104,7 +114,8 @@ struct ControllerRecordProbePlanTests {
     }
   }
 
-  @Test func rejectsRemovedOrUnknownFields() {
+  @Test
+  func rejectsRemovedOrUnknownFields() {
     #expect(throws: ControllerRecordProbeError.self) {
       try ControllerRecordProbePlan(data: try recordData(extraRootField: "provenance"))
     }
@@ -113,7 +124,8 @@ struct ControllerRecordProbePlanTests {
     }
   }
 
-  @Test func rejectsSchemaInvalidOptionalValues() {
+  @Test
+  func rejectsSchemaInvalidOptionalValues() {
     for mutation in [
       { (record: inout [String: Any]) in record["usb"] = [:] },
       { (record: inout [String: Any]) in record["usb"] = ["interface": 0] },
@@ -133,7 +145,7 @@ struct ControllerRecordProbePlanTests {
         var protocolConfig = record["protocol"] as? [String: Any] ?? [:]
         protocolConfig["quirks"] = ["gyro"]
         record["protocol"] = protocolConfig
-      }, { (record: inout [String: Any]) in record["usb"] = ["endpoints": ["in": 130, "out": 2]] }
+      }, { (record: inout [String: Any]) in record["usb"] = ["endpoints": ["in": 130, "out": 2]] },
     ] {
       #expect(throws: ControllerRecordProbeError.self) {
         try ControllerRecordProbePlan(data: try mutatedRecord(mutation))
@@ -169,7 +181,7 @@ struct ControllerRecordProbePlanTests {
     if let extraProtocolField { protocolConfig[extraProtocolField] = true }
 
     var record: [String: Any] = [
-      "vendor_id": 5_426, "product_id": 2_627, "transport": transport, "protocol": protocolConfig
+      "vendor_id": 5_426, "product_id": 2_627, "transport": transport, "protocol": protocolConfig,
     ]
     if let schemaID { record["$schema"] = schemaID }
     if let extraRootField { record[extraRootField] = ["source": "legacy"] }

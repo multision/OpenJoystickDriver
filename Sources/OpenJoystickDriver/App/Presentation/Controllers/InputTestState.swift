@@ -14,10 +14,16 @@
       rightTrigger: UInt8,
       durationMilliseconds: Int
     ) async throws -> Bool
-    func setPlayerIndicator(for selector: RuntimeDeviceSelector, indicator: PhysicalPlayerIndicator)
-      async throws -> Bool
-    func setColor(for selector: RuntimeDeviceSelector, red: UInt8, green: UInt8, blue: UInt8)
-      async throws -> Bool
+    func setPlayerIndicator(
+      for selector: RuntimeDeviceSelector,
+      indicator: PhysicalPlayerIndicator
+    ) async throws -> Bool
+    func setColor(
+      for selector: RuntimeDeviceSelector,
+      red: UInt8,
+      green: UInt8,
+      blue: UInt8
+    ) async throws -> Bool
     func setBrightness(for selector: RuntimeDeviceSelector, brightness: UInt8) async throws -> Bool
   }
 
@@ -25,7 +31,7 @@
     static let standardButtons: Set<Button> = [
       .a, .b, .x, .y, .cross, .circle, .square, .triangle, .leftBumper, .rightBumper, .l1, .r1,
       .l2Digital, .r2Digital, .back, .share, .guide, .ps, .start, .options, .leftStick, .rightStick,
-      .dpadUp, .dpadDown, .dpadLeft, .dpadRight
+      .dpadUp, .dpadDown, .dpadLeft, .dpadRight,
     ]
 
     /// Classic face/shoulder/stick/dpad controls. Share/Mute/touchpad stay outside this set so
@@ -33,7 +39,7 @@
     static let coreDiagnosticButtons: Set<Button> = [
       .a, .b, .x, .y, .cross, .circle, .square, .triangle, .leftBumper, .rightBumper, .l1, .r1,
       .l2Digital, .r2Digital, .back, .guide, .ps, .start, .leftStick, .rightStick, .dpadUp,
-      .dpadDown, .dpadLeft, .dpadRight
+      .dpadDown, .dpadLeft, .dpadRight,
     ]
 
     static func isPressed(_ buttons: [Button], in state: DeviceInputState) -> Bool {
@@ -74,17 +80,26 @@
 
   /// View-owned physical-output values are isolated from session state so continuous controls do
   /// not invalidate the live input hierarchy or window chrome while they are being dragged.
-  @MainActor final class InputTestOutputSettings: ObservableObject {
-    @Published var rumbleIntensities: [PhysicalRumbleMotor: Double] = [:]
-    @Published var rumbleDurationMilliseconds = 300.0
-    @Published var playerIndicator: PhysicalPlayerIndicator = .off
-    @Published var red = 0.0
-    @Published var green = 122.0
-    @Published var blue = 255.0
-    @Published var brightness = 255.0
+  @MainActor
+  final class InputTestOutputSettings: ObservableObject {
+    @Published
+    var rumbleIntensities: [PhysicalRumbleMotor: Double] = [:]
+    @Published
+    var rumbleDurationMilliseconds = 300.0
+    @Published
+    var playerIndicator: PhysicalPlayerIndicator = .off
+    @Published
+    var red = 0.0
+    @Published
+    var green = 122.0
+    @Published
+    var blue = 255.0
+    @Published
+    var brightness = 255.0
   }
 
-  @MainActor final class InputTestViewModel: ObservableObject {
+  @MainActor
+  final class InputTestViewModel: ObservableObject {
     enum SessionState: Equatable {
       case idle
       case starting
@@ -112,11 +127,16 @@
 
     typealias Sleep = @Sendable (UInt64) async throws -> Void
 
-    @Published private(set) var device: ApplicationServiceDeviceDescription?
-    @Published private(set) var sessionState: SessionState = .idle
-    @Published private(set) var outputState: OutputState = .idle
-    @Published private(set) var outputError: String?
-    @Published private(set) var isDeviceConnected = false
+    @Published
+    private(set) var device: ApplicationServiceDeviceDescription?
+    @Published
+    private(set) var sessionState: SessionState = .idle
+    @Published
+    private(set) var outputState: OutputState = .idle
+    @Published
+    private(set) var outputError: String?
+    @Published
+    private(set) var isDeviceConnected = false
     let liveState = InputTestLiveState()
     let outputSettings = InputTestOutputSettings()
     let motionCalibration: MotionCalibrationViewModel

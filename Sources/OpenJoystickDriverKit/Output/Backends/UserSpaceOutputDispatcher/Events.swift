@@ -83,9 +83,9 @@ extension UserSpaceOutputDispatcher {
     case .dpadLeft: return 13
     case .dpadRight: return 14
     case .share: return 15
-    case .l2Digital, .r2Digital, .touchpad, .mute,
-      .leftGrip, .rightGrip, .leftPadClick, .leftSL, .leftSR, .rightSL, .rightSR,
-      .leftFunction, .rightFunction, .leftPaddle, .rightPaddle: return nil
+    case .l2Digital, .r2Digital, .touchpad, .mute, .leftGrip, .rightGrip, .leftPadClick, .leftSL,
+      .leftSR, .rightSL, .rightSR, .leftFunction, .rightFunction, .leftPaddle, .rightPaddle:
+      return nil
     }
   }
 

@@ -3,7 +3,8 @@ import Testing
 @testable import OpenJoystickDriverKit
 
 struct USBDescriptorTransportResolverTests {
-  @Test func liveDescriptorFactsReplaceProtocolDefaults() {
+  @Test
+  func liveDescriptorFactsReplaceProtocolDefaults() {
     let configured = DeviceTransportProfile.gipDefault
     let resolved = USBDescriptorTransportResolver.resolve(
       configured: configured,
@@ -21,7 +22,8 @@ struct USBDescriptorTransportResolverTests {
     #expect(resolved.outputEndpoint == 0x04)
   }
 
-  @Test func explicitRecordOverridesWinOverDescriptorFacts() {
+  @Test
+  func explicitRecordOverridesWinOverDescriptorFacts() {
     let configured = DeviceTransportProfile(
       inputEndpoint: 0x81,
       outputEndpoint: 0x01,
@@ -49,14 +51,16 @@ struct USBDescriptorTransportResolverTests {
     #expect(resolved.postHandshakeSettleNanoseconds == 200_000_000)
   }
 
-  @Test func discoveryFailureRetainsProtocolDefaultsAndOverrides() {
+  @Test
+  func discoveryFailureRetainsProtocolDefaultsAndOverrides() {
     let configured = DeviceTransportProfile.gipDefault
     #expect(
       USBDescriptorTransportResolver.resolve(configured: configured, discovered: nil) == configured
     )
   }
 
-  @Test func descriptorSelectionUsesCompleteInterruptPairFromAlternateSetting() throws {
+  @Test
+  func descriptorSelectionUsesCompleteInterruptPairFromAlternateSetting() throws {
     let selected = USBDescriptorTransportResolver.discover(
       interfaces: [
         interface(number: 2, alternate: 0, endpoints: [endpoint(0x81, input: true)]),
@@ -64,7 +68,7 @@ struct USBDescriptorTransportResolverTests {
           number: 2,
           alternate: 1,
           endpoints: [endpoint(0x84, input: true), endpoint(0x04, input: false)]
-        )
+        ),
       ],
       preferredInterface: 0,
       requirePreferredInterface: false
@@ -77,14 +81,15 @@ struct USBDescriptorTransportResolverTests {
     #expect(discovered.outputEndpoint == 0x04)
   }
 
-  @Test func descriptorSelectionRequiresInterruptInputAndOutput() {
+  @Test
+  func descriptorSelectionRequiresInterruptInputAndOutput() {
     let selected = USBDescriptorTransportResolver.discover(
       interfaces: [
         interface(number: 1, endpoints: [endpoint(0x81, input: true)]),
         interface(
           number: 2,
           endpoints: [endpoint(0x82, input: true), endpoint(0x02, input: false, interrupt: false)]
-        )
+        ),
       ],
       preferredInterface: 0,
       requirePreferredInterface: false
@@ -93,7 +98,8 @@ struct USBDescriptorTransportResolverTests {
     #expect(selected == nil)
   }
 
-  @Test func descriptorSelectionHonorsExplicitInterfaceAndVendorClass() throws {
+  @Test
+  func descriptorSelectionHonorsExplicitInterfaceAndVendorClass() throws {
     let selected = USBDescriptorTransportResolver.discover(
       interfaces: [
         interface(
@@ -105,7 +111,10 @@ struct USBDescriptorTransportResolverTests {
           number: 2,
           endpoints: [endpoint(0x82, input: true), endpoint(0x02, input: false)]
         ),
-        interface(number: 3, endpoints: [endpoint(0x83, input: true), endpoint(0x03, input: false)])
+        interface(
+          number: 3,
+          endpoints: [endpoint(0x83, input: true), endpoint(0x03, input: false)]
+        ),
       ],
       preferredInterface: 3,
       requirePreferredInterface: true
@@ -117,10 +126,14 @@ struct USBDescriptorTransportResolverTests {
     #expect(discovered.outputEndpoint == 0x03)
   }
 
-  @Test func descriptorSelectionReturnsNilWhenExplicitInterfaceHasNoPair() {
+  @Test
+  func descriptorSelectionReturnsNilWhenExplicitInterfaceHasNoPair() {
     let selected = USBDescriptorTransportResolver.discover(
       interfaces: [
-        interface(number: 2, endpoints: [endpoint(0x82, input: true), endpoint(0x02, input: false)])
+        interface(
+          number: 2,
+          endpoints: [endpoint(0x82, input: true), endpoint(0x02, input: false)]
+        )
       ],
       preferredInterface: 3,
       requirePreferredInterface: true
@@ -129,9 +142,13 @@ struct USBDescriptorTransportResolverTests {
     #expect(selected == nil)
   }
 
-  private func endpoint(_ address: UInt8, input: Bool, interrupt: Bool = true)
-    -> USBEndpointTransportFacts
-  { USBEndpointTransportFacts(address: address, isInterrupt: interrupt, isInput: input) }
+  private func endpoint(
+    _ address: UInt8,
+    input: Bool,
+    interrupt: Bool = true
+  ) -> USBEndpointTransportFacts {
+    USBEndpointTransportFacts(address: address, isInterrupt: interrupt, isInput: input)
+  }
 
   private func interface(
     number: UInt8,

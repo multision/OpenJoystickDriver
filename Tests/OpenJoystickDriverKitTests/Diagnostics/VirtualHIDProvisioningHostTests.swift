@@ -8,14 +8,16 @@ struct VirtualHIDProvisioningHostTests {
   private let hardwareUUID = "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE"
   private let otherID = "BBBBBBBB-CCCC-DDDD-EEEE-FFFFFFFFFFFF"
 
-  @Test func missingDeviceListIsUnrestricted() {
+  @Test
+  func missingDeviceListIsUnrestricted() {
     #expect(
       VirtualHIDProvisioningHost.authorization(profilePlist: [:], hostIDs: [hardwareUUID])
         == .unrestricted
     )
   }
 
-  @Test func provisionsAllDevicesIsUnrestricted() {
+  @Test
+  func provisionsAllDevicesIsUnrestricted() {
     #expect(
       VirtualHIDProvisioningHost.authorization(
         profilePlist: ["ProvisionsAllDevices": true, "ProvisionedDevices": [otherID]],
@@ -24,7 +26,8 @@ struct VirtualHIDProvisioningHostTests {
     )
   }
 
-  @Test func provisioningUDIDMatchIsIncluded() {
+  @Test
+  func provisioningUDIDMatchIsIncluded() {
     #expect(
       VirtualHIDProvisioningHost.authorization(
         profilePlist: ["ProvisionedDevices": [provisioningUDID]],
@@ -33,7 +36,8 @@ struct VirtualHIDProvisioningHostTests {
     )
   }
 
-  @Test func hardwareUUIDMatchIsIncluded() {
+  @Test
+  func hardwareUUIDMatchIsIncluded() {
     #expect(
       VirtualHIDProvisioningHost.authorization(
         profilePlist: ["ProvisionedDevices": [hardwareUUID]],
@@ -42,7 +46,8 @@ struct VirtualHIDProvisioningHostTests {
     )
   }
 
-  @Test func hyphenAndCaseDifferencesStillMatch() {
+  @Test
+  func hyphenAndCaseDifferencesStillMatch() {
     #expect(
       VirtualHIDProvisioningHost.authorization(
         profilePlist: ["ProvisionedDevices": [provisioningUDID]],
@@ -57,7 +62,8 @@ struct VirtualHIDProvisioningHostTests {
     )
   }
 
-  @Test func unlistedHostIsExcluded() {
+  @Test
+  func unlistedHostIsExcluded() {
     #expect(
       VirtualHIDProvisioningHost.authorization(
         profilePlist: ["ProvisionedDevices": [otherID]],
@@ -66,7 +72,8 @@ struct VirtualHIDProvisioningHostTests {
     )
   }
 
-  @Test func listedDevicesWithoutHostIDsAreUnavailable() {
+  @Test
+  func listedDevicesWithoutHostIDsAreUnavailable() {
     #expect(
       VirtualHIDProvisioningHost.authorization(
         profilePlist: ["ProvisionedDevices": [provisioningUDID]],

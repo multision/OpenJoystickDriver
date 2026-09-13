@@ -3,12 +3,17 @@ import Testing
 @testable import OpenJoystickDriver
 
 struct ProfileStickDraftTests {
-  @Test func preservesAllSettingsAndAcceptsLocaleDecimals() throws {
+  @Test
+  func preservesAllSettingsAndAcceptsLocaleDecimals() throws {
     let mapping = RemappingStickMapping(
       source: .right,
       mode: .flickOnly,
       tuning: RemappingStickTuning(
-        innerDeadzone: 0.2, outerDeadzone: 0.1, responseExponent: 2, invertX: true, invertY: true
+        innerDeadzone: 0.2,
+        outerDeadzone: 0.1,
+        responseExponent: 2,
+        invertX: true,
+        invertY: true
       ),
       aimDegreesPerSecond: 250,
       pointerPointsPerDegree: 4,
@@ -36,14 +41,18 @@ struct ProfileStickDraftTests {
     #expect(try draft.validatedMapping() == nil)
   }
 
-  @Test func profileEditPreservesBindings() throws {
+  @Test
+  func profileEditPreservesBindings() throws {
     let profile = RemappingProfile(
       name: "Current",
       device: RemappingDeviceScope(vendorID: 1, productID: 2),
       applicationScope: .global,
-      bindings: [RemappingBinding(
-        source: .button(.south), destination: .keyboard(key: .space, modifiers: [])
-      )]
+      bindings: [
+        RemappingBinding(
+          source: .button(.south),
+          destination: .keyboard(key: .space, modifiers: [])
+        )
+      ]
     )
     let mapping = RemappingStickMapping(source: .left)
     let edited = try RuntimeProfileDraft(profile: profile).settingStickMappings([mapping])
@@ -59,7 +68,8 @@ struct ProfileStickDraftTests {
     }
   }
 
-  @Test func newDraftRequiresEnablementAndRejectsInvalidText() throws {
+  @Test
+  func newDraftRequiresEnablementAndRejectsInvalidText() throws {
     var draft = ProfileStickDraft(source: .left, mapping: nil)
     #expect(try draft.validatedMapping() == nil)
     draft.enabled = true

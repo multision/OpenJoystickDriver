@@ -140,9 +140,10 @@ extension DevicePipeline {
     }
   }
 
-  func openDeviceWithRetry(provider: any USBTransportProvider, device: USBTransportDevice) async
-    -> USBOpenResult
-  {
+  func openDeviceWithRetry(
+    provider: any USBTransportProvider,
+    device: USBTransportDevice
+  ) async -> USBOpenResult {
     var lastError = USBTransportError.notFound
     for attempt in 0..<usbRecoveryPolicy.openRetryDelays.count {
       do {
@@ -205,9 +206,7 @@ extension DevicePipeline {
         let events = try parseEvents(from: bytes, receivedAtNanoseconds: receivedAt)
         await sendDeferredUSBOutputPackets(handle: handle)
         _ = await handleInputConnectionStateChangeIfNeeded()
-        if inputConnectionActive {
-          await handleParsedEvents(events, now: receivedAt)
-        }
+        if inputConnectionActive { await handleParsedEvents(events, now: receivedAt) }
       } catch let error as USBTransportError where error.isTimeout {
         // No data in this interval; throttle below to avoid a hot timeout loop.
         shouldThrottleIdle = true

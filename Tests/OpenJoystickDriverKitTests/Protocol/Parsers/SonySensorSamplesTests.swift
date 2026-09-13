@@ -4,7 +4,8 @@ import Testing
 @testable import OpenJoystickDriverKit
 
 struct SonySensorSamplesTests {
-  @Test func clockPreservesFractionsWrapsAndRepeatedSamples() {
+  @Test
+  func clockPreservesFractionsWrapsAndRepeatedSamples() {
     var clock = SonySensorClock(mask: 0xFFFF, tickNumerator: 16_000)
     #expect(clock.timestamp(65_535).elapsedNanoseconds == 0)
     #expect(clock.timestamp(0).elapsedNanoseconds == 5333)
@@ -20,7 +21,8 @@ struct SonySensorSamplesTests {
     #expect(dualSense.timestamp(2).elapsedNanoseconds == 1000)
   }
 
-  @Test func dualSenseUSBDecodesSignedVectorsAndBothContacts() throws {
+  @Test
+  func dualSenseUSBDecodesSignedVectorsAndBothContacts() throws {
     var report = [UInt8](repeating: 0, count: 64)
     report[0] = 1
     report[8] = 8
@@ -29,22 +31,28 @@ struct SonySensorSamplesTests {
     report.replaceSubrange(33..<41, with: [5, 0x34, 0xA2, 0x12, 0x87, 1, 0, 0])
     let parser = DualSenseParser()
     let events = try parser.parse(data: Data(report))
-    let motion = try #require(events.compactMap { event -> ControllerMotionSample? in
-      if case .motionSample(let sample) = event { return sample }
-      return nil
-    }.first)
+    let motion = try #require(
+      events.compactMap { event -> ControllerMotionSample? in
+        if case .motionSample(let sample) = event { return sample }
+        return nil
+      }.first
+    )
     #expect(motion.rawGyroscope == ControllerRawSensorVector(x: -32_768, y: 32_767, z: -1))
     #expect(motion.rawAccelerometer == ControllerRawSensorVector(x: 1, y: -256, z: 256))
     #expect(motion.timestamp.rawCounter == 0xFFFF_FFFE)
-    let touch = try #require(events.compactMap { event -> ControllerTouchSample? in
-      if case .touchSample(let sample) = event { return sample }
-      return nil
-    }.first)
+    let touch = try #require(
+      events.compactMap { event -> ControllerTouchSample? in
+        if case .touchSample(let sample) = event { return sample }
+        return nil
+      }.first
+    )
     #expect(touch.width == 1920 && touch.height == 1080)
-    #expect(touch.contacts == [
-      ControllerTouchContact(id: 5, isActive: true, x: 0x234, y: 0x12A),
-      ControllerTouchContact(id: 7, isActive: false, x: 1, y: 0)
-    ])
+    #expect(
+      touch.contacts == [
+        ControllerTouchContact(id: 5, isActive: true, x: 0x234, y: 0x12A),
+        ControllerTouchContact(id: 7, isActive: false, x: 1, y: 0),
+      ]
+    )
     #expect(touch.reportTimestamp == motion.timestamp)
     report.replaceSubrange(28..<32, with: [1, 0, 0, 0])
     let next = try parser.parse(data: Data(report))
@@ -56,7 +64,8 @@ struct SonySensorSamplesTests {
     #expect(next.count == 2)
   }
 
-  @Test func dualShock4HistoryIsOrderedAndMalformedHistoryDoesNotLoseMotion() throws {
+  @Test
+  func dualShock4HistoryIsOrderedAndMalformedHistoryDoesNotLoseMotion() throws {
     var report = [UInt8](repeating: 0, count: 64)
     report[0] = 1
     report[5] = 8
@@ -75,10 +84,12 @@ struct SonySensorSamplesTests {
     #expect(touches.map(\.rawTouchCounter) == [254, 255, 0])
     #expect(touches.map(\.historyIndex) == [0, 1, 2])
     #expect(touches.allSatisfy { $0.width == 1920 && $0.height == 942 })
-    let motion = try #require(events.compactMap { event -> ControllerMotionSample? in
-      if case .motionSample(let sample) = event { return sample }
-      return nil
-    }.first)
+    let motion = try #require(
+      events.compactMap { event -> ControllerMotionSample? in
+        if case .motionSample(let sample) = event { return sample }
+        return nil
+      }.first
+    )
     #expect(motion.rawGyroscope.x == -2)
     report[33] = 4
     let malformed = try parser.parse(data: Data(report))
@@ -89,7 +100,8 @@ struct SonySensorSamplesTests {
     }
   }
 
-  @Test func dualShock4BluetoothRetainsFourthHistoryFrame() throws {
+  @Test
+  func dualShock4BluetoothRetainsFourthHistoryFrame() throws {
     var report = [UInt8](repeating: 0, count: 78)
     report[0] = 0x11
     report[1] = 0xC0
@@ -109,7 +121,8 @@ struct SonySensorSamplesTests {
     #expect(touches.map { $0.contacts[0].id } == [0, 1, 2, 3])
   }
 
-  @Test func shortDualShock4ControlReportsDoNotInventSensorSamples() throws {
+  @Test
+  func shortDualShock4ControlReportsDoNotInventSensorSamples() throws {
     let report = Data([1, 128, 128, 128, 128, 8, 0, 0, 0, 0])
     #expect(try DS4Parser().parse(data: report) == [.dpadChanged(.neutral)])
   }

@@ -103,7 +103,7 @@ public struct HIDDescriptorReportFormat: VirtualGamepadReportFormat, @unchecked 
     preferredTransport: String?
   ) -> [UInt8]? {
     let matching = AppleGameControllerSyntheticHID.ioHIDMatchingExcludingSynthetics([
-      kIOHIDVendorIDKey as String: vendorID, kIOHIDProductIDKey as String: productID
+      kIOHIDVendorIDKey as String: vendorID, kIOHIDProductIDKey as String: productID,
     ])
     let mgr = IOHIDManagerCreate(kCFAllocatorDefault, IOOptionBits(kIOHIDOptionsTypeNone))
     IOHIDManagerSetDeviceMatching(mgr, matching as CFDictionary)

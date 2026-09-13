@@ -4,7 +4,8 @@ import Testing
 @testable import OpenJoystickDriver
 
 struct RemappingMotionCalibrationRoutingTests {
-  @Test func calibrationAffectsOnlySelectedControllerAndReconnectStartsFresh() async throws {
+  @Test
+  func calibrationAffectsOnlySelectedControllerAndReconnectStartsFresh() async throws {
     let harness = try await RemappingRouterHarness.make(profile: remappingRouterProfile())
     defer { harness.removeFiles() }
     let first = remappingRouterDevice(1)
@@ -13,7 +14,8 @@ struct RemappingMotionCalibrationRoutingTests {
       try await harness.router.dispatchCausally(events: [sample(0)], from: device)
     }
     let started = try await harness.router.motionCalibration(
-      for: first.runtimeIdentifier, command: .start
+      for: first.runtimeIdentifier,
+      command: .start
     )
     #expect(started.isCollecting)
     try await harness.router.dispatchCausally(events: [sample(1)], from: first)
@@ -22,7 +24,8 @@ struct RemappingMotionCalibrationRoutingTests {
     #expect(firstStatus.offsetDegreesPerSecond.y == 3)
     #expect(!secondStatus.isCollecting && secondStatus.offsetDegreesPerSecond.y == 0)
     let paused = try await harness.router.motionCalibration(
-      for: first.runtimeIdentifier, command: .pause
+      for: first.runtimeIdentifier,
+      command: .pause
     )
     #expect(!paused.isCollecting && paused.offsetDegreesPerSecond.y == 3)
     try await harness.router.stopController(first)
@@ -37,22 +40,24 @@ struct RemappingMotionCalibrationRoutingTests {
   }
 
   private func sample(_ sequence: UInt64) -> ControllerEvent {
-    .motionSample(ControllerMotionSample(
-      timestamp: ControllerSampleTimestamp(
-        rawCounter: 0,
-        elapsedNanoseconds: sequence * 10_000_000,
-        tickNanosecondsNumerator: nil,
-        tickNanosecondsDenominator: nil,
-        sequenceIndex: sequence,
-        basis: .hostEstimate
-      ),
-      rawGyroscope: ControllerRawSensorVector(x: 0, y: 0, z: 0),
-      rawAccelerometer: ControllerRawSensorVector(x: 0, y: 0, z: 0),
-      physicalReading: ControllerMotionReading(
-        gyroscopeDegreesPerSecond: ControllerMotionVector(x: 0, y: 3, z: 0),
-        accelerationG: ControllerMotionVector(x: 0, y: 1, z: 0),
-        calibrationSource: .nominalDeviceScale
+    .motionSample(
+      ControllerMotionSample(
+        timestamp: ControllerSampleTimestamp(
+          rawCounter: 0,
+          elapsedNanoseconds: sequence * 10_000_000,
+          tickNanosecondsNumerator: nil,
+          tickNanosecondsDenominator: nil,
+          sequenceIndex: sequence,
+          basis: .hostEstimate
+        ),
+        rawGyroscope: ControllerRawSensorVector(x: 0, y: 0, z: 0),
+        rawAccelerometer: ControllerRawSensorVector(x: 0, y: 0, z: 0),
+        physicalReading: ControllerMotionReading(
+          gyroscopeDegreesPerSecond: ControllerMotionVector(x: 0, y: 3, z: 0),
+          accelerationG: ControllerMotionVector(x: 0, y: 1, z: 0),
+          calibrationSource: .nominalDeviceScale
+        )
       )
-    ))
+    )
   }
 }

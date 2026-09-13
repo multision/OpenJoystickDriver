@@ -34,7 +34,8 @@
       completion: @escaping @Sendable (RuntimeNotificationAuthorizationState, String?) -> Void
     )
     func settings(completion: @escaping @Sendable (RuntimeNotificationSettings) -> Void)
-    @MainActor func openSystemSettings()
+    @MainActor
+    func openSystemSettings()
   }
 
   extension NotificationAuthorizationControlling {
@@ -71,7 +72,8 @@
       }
     }
 
-    @MainActor func openSystemSettings() {
+    @MainActor
+    func openSystemSettings() {
       let bundleIdentifier = Bundle.main.bundleIdentifier ?? "com.openjoystickdriver.app"
       let notificationsPane = "x-apple.systempreferences:com.apple.Notifications-Settings.extension"
       if #available(macOS 13.0, *),
@@ -85,9 +87,9 @@
       }
     }
 
-    private static func state(for status: UNAuthorizationStatus)
-      -> RuntimeNotificationAuthorizationState
-    {
+    private static func state(
+      for status: UNAuthorizationStatus
+    ) -> RuntimeNotificationAuthorizationState {
       switch status {
       case .notDetermined: return .notDetermined
       case .denied: return .denied
@@ -106,10 +108,14 @@
     }
   }
 
-  @MainActor final class NotificationPermissionModel: ObservableObject {
-    @Published private(set) var state: RuntimeNotificationAuthorizationState = .checking
-    @Published private(set) var settings = RuntimeNotificationSettings.authorizationOnly(.checking)
-    @Published private(set) var errorMessage: String?
+  @MainActor
+  final class NotificationPermissionModel: ObservableObject {
+    @Published
+    private(set) var state: RuntimeNotificationAuthorizationState = .checking
+    @Published
+    private(set) var settings = RuntimeNotificationSettings.authorizationOnly(.checking)
+    @Published
+    private(set) var errorMessage: String?
 
     private let authorization: any NotificationAuthorizationControlling
 
@@ -148,7 +154,8 @@
     let controllers: [String: String]?
     let activeProfiles: [String: String]?
 
-    @MainActor init(viewModel: RuntimeViewModel) {
+    @MainActor
+    init(viewModel: RuntimeViewModel) {
       switch viewModel.statusState {
       case .available(let status):
         controllers = Dictionary(
@@ -247,7 +254,8 @@
     ) { completionHandler(Self.foregroundPresentationOptions) }
   }
 
-  @MainActor final class RuntimeNotificationMonitor {
+  @MainActor
+  final class RuntimeNotificationMonitor {
     private let defaults: UserDefaults
     private let delivery: any RuntimeNotificationDelivering
     private var previousSnapshot: RuntimeNotificationSnapshot?

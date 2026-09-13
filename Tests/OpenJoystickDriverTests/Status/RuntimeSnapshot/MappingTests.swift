@@ -4,7 +4,8 @@ import Testing
 @testable import OpenJoystickDriver
 
 struct StatusMappingTests {
-  @Test func mapsPermissionStatesWithoutTreatingUnknownAsDenied() {
+  @Test
+  func mapsPermissionStatesWithoutTreatingUnknownAsDenied() {
     let snapshot = RuntimeStatusSnapshot(
       payload: payload(inputMonitoring: "denied", accessibility: "unknown")
     )
@@ -15,7 +16,8 @@ struct StatusMappingTests {
     #expect(snapshot.permissions.isAvailable)
   }
 
-  @Test func marksPermissionStateUnavailableWithoutRuntimeOrLocalEvidence() {
+  @Test
+  func marksPermissionStateUnavailableWithoutRuntimeOrLocalEvidence() {
     let snapshot = RuntimeStatusSnapshot.unavailable
 
     #expect(snapshot.permissions.inputMonitoring == .unavailable)
@@ -23,7 +25,8 @@ struct StatusMappingTests {
     #expect(!snapshot.permissions.isAvailable)
   }
 
-  @Test func mapsOutputErrorSeparatelyFromItsDiagnostic() {
+  @Test
+  func mapsOutputErrorSeparatelyFromItsDiagnostic() {
     let snapshot = RuntimeStatusSnapshot(
       payload: payload(enabled: false, outputStatus: "error: Accessibility denied")
     )
@@ -33,14 +36,16 @@ struct StatusMappingTests {
     #expect(snapshot.output.detail == nil)
   }
 
-  @Test func distinguishesEnabledDisabledAndUnavailableOutput() {
+  @Test
+  func distinguishesEnabledDisabledAndUnavailableOutput() {
     #expect(CompatibilityOutputStatus(enabled: true, status: "on").state == .enabled)
     #expect(CompatibilityOutputStatus(enabled: false, status: "off").state == .disabled)
     #expect(CompatibilityOutputStatus(enabled: nil, status: nil).state == .unavailable)
     #expect(CompatibilityOutputStatus(enabled: false, status: "unknown").state == .unavailable)
   }
 
-  @Test func mapsOnlyKnownCompatibilityIdentityValues() {
+  @Test
+  func mapsOnlyKnownCompatibilityIdentityValues() {
     let known = RuntimeStatusSnapshot(payload: payload(identity: "apple-gamecontroller"))
     let invalid = RuntimeStatusSnapshot(payload: payload(identity: "future-profile"))
 
@@ -50,7 +55,8 @@ struct StatusMappingTests {
     #expect(invalid.compatibility.diagnostic == "Unknown compatibility identity: future-profile")
   }
 
-  @Test func wrapsControllerDescriptionsWithoutSynthesizingContractIdentity() {
+  @Test
+  func wrapsControllerDescriptionsWithoutSynthesizingContractIdentity() {
     let description = ApplicationServiceDeviceDescription(
       name: "Test Controller",
       vendorID: 0x1234,

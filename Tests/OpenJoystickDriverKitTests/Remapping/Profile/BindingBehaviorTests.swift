@@ -4,9 +4,11 @@ import Testing
 @testable import OpenJoystickDriverKit
 
 struct RemappingBindingBehaviorTests {
-  @Test func omittedBehaviorInCurrentSchemaDecodesAsHold() throws {
+  @Test
+  func omittedBehaviorInCurrentSchemaDecodesAsHold() throws {
     let binding = RemappingBinding(
-      source: .button(.south), destination: .keyboard(key: .a, modifiers: [])
+      source: .button(.south),
+      destination: .keyboard(key: .a, modifiers: [])
     )
     let original = profile(binding)
     let data = try JSONEncoder().encode(original)
@@ -19,7 +21,8 @@ struct RemappingBindingBehaviorTests {
     #expect(decoded == original)
   }
 
-  @Test func olderSchemaIsRejectedBeforeBindingPayloadIsDecoded() throws {
+  @Test
+  func olderSchemaIsRejectedBeforeBindingPayloadIsDecoded() throws {
     let data = Data(#"{"schema_version":2,"bindings":"not an array"}"#.utf8)
     #expect(throws: RemappingValidationError.unsupportedSchemaVersion(2)) {
       try JSONDecoder().decode(RemappingProfile.self, from: data)

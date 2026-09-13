@@ -36,14 +36,11 @@ extension RemappingDeviceState {
     bindingID: UUID
   ) -> [RemappingEngineAction] {
     var actions: [RemappingEngineAction] = []
-    if output.pointerDelta.x.isFinite, output.pointerDelta.y.isFinite,
-      output.pointerDelta != .zero
+    if output.pointerDelta.x.isFinite, output.pointerDelta.y.isFinite, output.pointerDelta != .zero
     {
       actions.append(.system(.pointerDelta(x: output.pointerDelta.x, y: output.pointerDelta.y)))
     }
-    if output.scrollLines.x.isFinite, output.scrollLines.y.isFinite,
-      output.scrollLines != .zero
-    {
+    if output.scrollLines.x.isFinite, output.scrollLines.y.isFinite, output.scrollLines != .zero {
       actions.append(
         .system(.scrollDelta(deltaX: output.scrollLines.x, deltaY: output.scrollLines.y))
       )

@@ -5,7 +5,8 @@
   import SwiftUI
 
   struct DeveloperToolsView: View {
-    @ObservedObject private var model: DeveloperToolsViewModel
+    @ObservedObject
+    private var model: DeveloperToolsViewModel
 
     init(model: DeveloperToolsViewModel) { self.model = model }
 
@@ -24,7 +25,8 @@
       }.onAppear { model.requestRefresh() }.onDisappear { model.close() }
     }
 
-    @ViewBuilder private var content: some View {
+    @ViewBuilder
+    private var content: some View {
       switch model.loadState {
       case .idle, .loading:
         LoadingStateView(

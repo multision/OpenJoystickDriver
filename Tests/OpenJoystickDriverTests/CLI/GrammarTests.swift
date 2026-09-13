@@ -28,16 +28,18 @@ struct CLIGrammarTests {
     (
       "diagnose report --output report.json",
       CLIInvocation.diagnose(.report(["--output", "report.json"]))
-    ), ("update check --json", CLIInvocation.updateCheck(["--json"]))
-  ]) func parsesApprovedGrammar(raw: String, expected: CLIInvocation) throws {
+    ), ("update check --json", CLIInvocation.updateCheck(["--json"])),
+  ])
+  func parsesApprovedGrammar(raw: String, expected: CLIInvocation) throws {
     let arguments = raw.split(separator: " ").map(String.init)
     #expect(try CLIGrammar(arguments: arguments).invocation == expected)
   }
 
   #if DEBUG
-    @Test func debugGrammarRecognizesPassiveCommand() throws {
+    @Test
+    func debugGrammarRecognizesPassiveCommand() throws {
       let invocation = try CLIGrammar(arguments: [
-        "diagnose", "usb-passive", "--vid", "3537", "--pid", "1010"
+        "diagnose", "usb-passive", "--vid", "3537", "--pid", "1010",
       ]).invocation
       #expect(invocation == .diagnose(.usbPassive(["--vid", "3537", "--pid", "1010"])))
     }
@@ -46,12 +48,14 @@ struct CLIGrammarTests {
   @Test(arguments: [
     [], ["run"], ["list"], ["input"], ["logs"], ["updates"], ["report"], ["physical-output"],
     ["compatibility"], ["selftest"], ["sysext"], ["install"], ["uninstall"], ["start"], ["restart"],
-    ["reset-settings"]
-  ]) func rejectsRemovedTopLevelSpellings(arguments: [String]) {
+    ["reset-settings"],
+  ])
+  func rejectsRemovedTopLevelSpellings(arguments: [String]) {
     #expect(throws: CLIParseError.self) { try CLIGrammar(arguments: arguments) }
   }
 
-  @Test func rejectsMissingAndUnexpectedNestedCommands() {
+  @Test
+  func rejectsMissingAndUnexpectedNestedCommands() {
     #expect(throws: CLIParseError.self) { try CLIGrammar(arguments: ["controller"]) }
     #expect(throws: CLIParseError.self) { try CLIGrammar(arguments: ["app", "login"]) }
     #expect(throws: CLIParseError.self) {
@@ -60,21 +64,24 @@ struct CLIGrammarTests {
     #expect(throws: CLIParseError.self) { try CLIGrammar(arguments: ["compat", "set"]) }
   }
 
-  @Test func rejectsObsoletePublicSpellingsAtGrammarLevel() {
+  @Test
+  func rejectsObsoletePublicSpellingsAtGrammarLevel() {
     for arguments in [
       ["controller", "input"], ["mapping", "list"], ["compatibility", "get"],
       ["extension", "activate"], ["extension", "deactivate"], ["permissions", "open-settings"],
       ["diagnose", "self-test"], ["diagnose", "gamecontroller-catalog"], ["diagnose", "summary"],
-      ["app", "start"], ["app", "restart"]
+      ["app", "start"], ["app", "restart"],
     ] { #expect(throws: CLIParseError.self) { try CLIGrammar(arguments: arguments) } }
   }
 
-  @Test func standardHelpAndVersionFlagsRemainExplicit() throws {
+  @Test
+  func standardHelpAndVersionFlagsRemainExplicit() throws {
     #expect(try CLIGrammar(arguments: ["--help"]).invocation == .help)
     #expect(try CLIGrammar(arguments: ["-v"]).invocation == .version)
   }
 
-  @Test func extractsTheGlobalServiceTimeoutBeforeTheCommand() throws {
+  @Test
+  func extractsTheGlobalServiceTimeoutBeforeTheCommand() throws {
     let grammar = try CLIGrammar(arguments: ["--timeout", "2.5", "status"])
     #expect(grammar.invocation == .status([]))
     #expect(grammar.serviceTimeoutSeconds == 2.5)

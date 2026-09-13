@@ -3,7 +3,8 @@ import Testing
 @testable import OpenJoystickDriverKit
 
 struct LayerMotionProfileTests {
-  @Test func optionalOverrideRoundTripsAndLegacyLayerDecodes() throws {
+  @Test
+  func optionalOverrideRoundTripsAndLegacyLayerDecodes() throws {
     let layer = RemappingLayer(
       name: "Aim",
       activationMode: .hold,
@@ -18,7 +19,8 @@ struct LayerMotionProfileTests {
     #expect(try JSONDecoder().decode(RemappingLayer.self, from: legacy).motionTuning == nil)
   }
 
-  @Test func profileRejectsInvalidAndLegacyOverrides() {
+  @Test
+  func profileRejectsInvalidAndLegacyOverrides() {
     func profile(version: Int, tuning: RemappingMotionTuning) -> RemappingProfile {
       RemappingProfile(
         schemaVersion: version,
@@ -26,9 +28,14 @@ struct LayerMotionProfileTests {
         device: RemappingDeviceScope(vendorID: 1, productID: 2),
         applicationScope: .global,
         bindings: [],
-        layers: [RemappingLayer(
-          name: "Aim", activationMode: .hold, activator: .button(.east), motionTuning: tuning
-        )]
+        layers: [
+          RemappingLayer(
+            name: "Aim",
+            activationMode: .hold,
+            activator: .button(.east),
+            motionTuning: tuning
+          )
+        ]
       )
     }
     #expect(throws: RemappingValidationError.unsupportedSchemaVersion(2)) {

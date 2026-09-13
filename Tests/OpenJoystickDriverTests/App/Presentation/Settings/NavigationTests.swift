@@ -4,8 +4,10 @@ import Testing
 
 @testable import OpenJoystickDriver
 
-@Suite struct SettingsNavigationTests {
-  @Test func controllersPaneUsesAContentMinimumThatFitsTheThreeColumnIdentityGrid() {
+@Suite
+struct SettingsNavigationTests {
+  @Test
+  func controllersPaneUsesAContentMinimumThatFitsTheThreeColumnIdentityGrid() {
     let controllerMinimum = SettingsWindowSizingPolicy.minimumContentSize(for: .controllers)
     let defaultMinimum = SettingsWindowSizingPolicy.minimumContentSize(for: .overview)
 
@@ -25,20 +27,23 @@ import Testing
     )
   }
 
-  @Test func developerPaneIsProgressivelyDisclosed() {
+  @Test
+  func developerPaneIsProgressivelyDisclosed() {
     #expect(
       SettingsPane.primaryCases(developerToolsEnabled: false) == [
-        .overview, .controllers, .profiles, .console, .settings
+        .overview, .controllers, .profiles, .console, .settings,
       ]
     )
     #expect(
       SettingsPane.primaryCases(developerToolsEnabled: true) == [
-        .overview, .controllers, .profiles, .console, .developer, .settings
+        .overview, .controllers, .profiles, .console, .developer, .settings,
       ]
     )
   }
 
-  @Test @MainActor func disablingDeveloperToolsLeavesTheHiddenPane() {
+  @Test
+  @MainActor
+  func disablingDeveloperToolsLeavesTheHiddenPane() {
     let navigation = SettingsNavigationModel(developerToolsEnabled: true)
     navigation.requestPane(.developer)
     #expect(navigation.selectedPane == .developer)
@@ -48,7 +53,9 @@ import Testing
     #expect(navigation.selectedPane == .settings)
   }
 
-  @Test @MainActor func restoresTheLastAcceptedPane() {
+  @Test
+  @MainActor
+  func restoresTheLastAcceptedPane() {
     let suiteName = "SettingsNavigationTests.\(UUID().uuidString)"
     guard let defaults = UserDefaults(suiteName: suiteName) else {
       #expect(Bool(false), "Could not create isolated UserDefaults suite")
@@ -66,7 +73,9 @@ import Testing
     #expect(restored.selectedPane == .profiles)
   }
 
-  @Test @MainActor func dirtySelectionPersistsOnlyAfterDiscard() {
+  @Test
+  @MainActor
+  func dirtySelectionPersistsOnlyAfterDiscard() {
     let suiteName = "SettingsNavigationTests.\(UUID().uuidString)"
     guard let defaults = UserDefaults(suiteName: suiteName) else {
       #expect(Bool(false), "Could not create isolated UserDefaults suite")
@@ -94,7 +103,9 @@ import Testing
     #expect(afterDiscard.selectedPane == .settings)
   }
 
-  @Test @MainActor func canceledDirtySelectionLeavesThePersistedPaneUnchanged() {
+  @Test
+  @MainActor
+  func canceledDirtySelectionLeavesThePersistedPaneUnchanged() {
     let suiteName = "SettingsNavigationTests.\(UUID().uuidString)"
     guard let defaults = UserDefaults(suiteName: suiteName) else {
       #expect(Bool(false), "Could not create isolated UserDefaults suite")
@@ -115,7 +126,9 @@ import Testing
     #expect(restored.selectedPane == .controllers)
   }
 
-  @Test @MainActor func activeProfileMutationKeepsTheProfilesPaneMountedUntilResolution() {
+  @Test
+  @MainActor
+  func activeProfileMutationKeepsTheProfilesPaneMountedUntilResolution() {
     let suiteName = "SettingsNavigationTests.\(UUID().uuidString)"
     guard let defaults = UserDefaults(suiteName: suiteName) else {
       #expect(Bool(false), "Could not create isolated UserDefaults suite")
@@ -150,7 +163,9 @@ import Testing
     #expect(navigation.selectedPane == .settings)
   }
 
-  @Test @MainActor func overlappingProfileMutationCannotReleaseTheFirstNavigationOwner() {
+  @Test
+  @MainActor
+  func overlappingProfileMutationCannotReleaseTheFirstNavigationOwner() {
     let suiteName = "SettingsNavigationTests.\(UUID().uuidString)"
     guard let defaults = UserDefaults(suiteName: suiteName) else {
       #expect(Bool(false), "Could not create isolated UserDefaults suite")
@@ -180,7 +195,9 @@ import Testing
     #expect(navigation.selectedPane == .settings)
   }
 
-  @Test @MainActor func matchingPreflightFailureReleasesNavigationOwner() {
+  @Test
+  @MainActor
+  func matchingPreflightFailureReleasesNavigationOwner() {
     let suiteName = "SettingsNavigationTests.\(UUID().uuidString)"
     guard let defaults = UserDefaults(suiteName: suiteName) else {
       #expect(Bool(false), "Could not create isolated UserDefaults suite")
@@ -208,7 +225,9 @@ import Testing
     #expect(navigation.selectedPane == .settings)
   }
 
-  @Test @MainActor func preflightFailureReleasesBothOwnersAndPreservesDirtyDraft() async {
+  @Test
+  @MainActor
+  func preflightFailureReleasesBothOwnersAndPreservesDirtyDraft() async {
     let suiteName = "SettingsNavigationTests.\(UUID().uuidString)"
     guard let defaults = UserDefaults(suiteName: suiteName) else {
       #expect(Bool(false), "Could not create isolated UserDefaults suite")

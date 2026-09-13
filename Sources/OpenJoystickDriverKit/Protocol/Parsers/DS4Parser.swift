@@ -92,7 +92,9 @@ public final class DS4Parser: InputParser, PhysicalHIDRumbleOutput, PhysicalHIDC
   }
 
   public func consumeHIDFeatureReport(
-    _ data: Data, request: PhysicalHIDFeatureReadRequest, transport: String?
+    _ data: Data,
+    request: PhysicalHIDFeatureReadRequest,
+    transport: String?
   ) -> Bool {
     let bluetooth = transport == "Bluetooth" || connectionMode == .bluetooth
     guard request.length == data.count, data.first == request.reportID else { return false }
@@ -101,13 +103,15 @@ public final class DS4Parser: InputParser, PhysicalHIDRumbleOutput, PhysicalHIDC
       return data.count == 37
     }
     let bytes = Array(data)
-    guard bytes.count == (bluetooth ? 41 : 37), request.reportID == (bluetooth ? 5 : 2)
-    else { return false }
+    guard bytes.count == (bluetooth ? 41 : 37), request.reportID == (bluetooth ? 5 : 2) else {
+      return false
+    }
     if bluetooth {
       var crc = updateCRC32(0xFFFF_FFFF, byte: 0xA3)
       for byte in bytes.dropLast(4) { crc = updateCRC32(crc, byte: byte) }
-      let expected = UInt32(bytes[37]) | (UInt32(bytes[38]) << 8)
-        | (UInt32(bytes[39]) << 16) | (UInt32(bytes[40]) << 24)
+      let expected =
+        UInt32(bytes[37]) | (UInt32(bytes[38]) << 8) | (UInt32(bytes[39]) << 16)
+        | (UInt32(bytes[40]) << 24)
       guard ~crc == expected else { return false }
     }
     guard let calibrated = SonyMotionCalibration.dualShock4Factory(bytes, bluetooth: bluetooth)
@@ -168,9 +172,12 @@ public final class DS4Parser: InputParser, PhysicalHIDRumbleOutput, PhysicalHIDC
     return events
   }
 
-  public func physicalRumbleReport(left: UInt8, right: UInt8, lt _: UInt8, rt _: UInt8)
-    -> PhysicalHIDOutputReport
-  {
+  public func physicalRumbleReport(
+    left: UInt8,
+    right: UInt8,
+    lt _: UInt8,
+    rt _: UInt8
+  ) -> PhysicalHIDOutputReport {
     switch connectionMode {
     case .usb:
       var report = [UInt8](repeating: 0, count: ds4USBOutputReportLength)
@@ -252,9 +259,9 @@ public final class DS4Parser: InputParser, PhysicalHIDRumbleOutput, PhysicalHIDC
     return bytes
   }
 
-  private func parseSticks(bytes: [UInt8]) -> (
-    events: [ControllerEvent], raws: (UInt8, UInt8, UInt8, UInt8)
-  ) {
+  private func parseSticks(
+    bytes: [UInt8]
+  ) -> (events: [ControllerEvent], raws: (UInt8, UInt8, UInt8, UInt8)) {
     let lsxRaw = bytes[ReportOffset.leftStickX]
     let lsyRaw = bytes[ReportOffset.leftStickY]
     let rsxRaw = bytes[ReportOffset.rightStickX]
@@ -307,7 +314,7 @@ public final class DS4Parser: InputParser, PhysicalHIDRumbleOutput, PhysicalHIDC
       curr: shoulders,
       mapping: [
         (0x01, .l1), (0x02, .r1), (0x10, .share), (0x20, .options), (0x40, .leftStick),
-        (0x80, .rightStick)
+        (0x80, .rightStick),
       ]
     )
     return (events, shoulders)

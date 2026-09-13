@@ -5,7 +5,8 @@
   import SwiftUI
 
   struct DeveloperControllerSummaryView: View {
-    @ObservedObject var model: DeveloperToolsViewModel
+    @ObservedObject
+    var model: DeveloperToolsViewModel
 
     var body: some View {
       GroupBox {
@@ -113,8 +114,7 @@
 
     private func protocolName(_ value: ControllerProtocolVariant) -> String {
       switch value {
-      case .xid:
-        return OJDLocalized.string("controller.originalXbox", fallback: "Original Xbox")
+      case .xid: return OJDLocalized.string("controller.originalXbox", fallback: "Original Xbox")
       case .xbox360: return OJDLocalized.string("controller.xbox360", fallback: "Xbox 360")
       case .xbox360Wireless:
         return OJDLocalized.string(

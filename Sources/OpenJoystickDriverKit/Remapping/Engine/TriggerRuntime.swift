@@ -45,9 +45,7 @@ struct RemappingDualStageTriggerRuntime {
     return evaluate(at: uptime)
   }
 
-  mutating func advance(at uptime: UInt64) -> [RemappingTriggerStageChange] {
-    evaluate(at: uptime)
-  }
+  mutating func advance(at uptime: UInt64) -> [RemappingTriggerStageChange] { evaluate(at: uptime) }
 
   mutating func reset() -> [RemappingTriggerStageChange] {
     phase = .idle
@@ -81,10 +79,7 @@ struct RemappingDualStageTriggerRuntime {
       }
       if uptime >= deadline {
         phase = .soft
-        return setOutputs(
-          soft: true,
-          full: mapping.mode.permitsLateFullPull && fullPhysical
-        )
+        return setOutputs(soft: true, full: mapping.mode.permitsLateFullPull && fullPhysical)
       }
       return setOutputs(soft: mapping.mode.emitsSoftWhileBuffered, full: false)
     case .soft:
@@ -102,10 +97,7 @@ struct RemappingDualStageTriggerRuntime {
     }
   }
 
-  private mutating func setOutputs(
-    soft: Bool,
-    full: Bool
-  ) -> [RemappingTriggerStageChange] {
+  private mutating func setOutputs(soft: Bool, full: Bool) -> [RemappingTriggerStageChange] {
     var changes: [RemappingTriggerStageChange] = []
     for (stage, current, next) in [
       (RemappingTriggerStage.soft, softOutput, soft),
@@ -129,7 +121,5 @@ struct RemappingDualStageTriggerRuntime {
     threshold: Double,
     hysteresis: Double,
     wasActive: Bool
-  ) -> Bool {
-    wasActive ? value > max(0, threshold - hysteresis) : value >= threshold
-  }
+  ) -> Bool { wasActive ? value > max(0, threshold - hysteresis) : value >= threshold }
 }

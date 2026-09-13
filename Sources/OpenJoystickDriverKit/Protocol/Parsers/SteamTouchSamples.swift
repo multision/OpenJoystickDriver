@@ -3,10 +3,8 @@ struct SteamTouchSamples {
   private var leftX: Int32 = 0
   private var leftY: Int32 = 0
 
-  mutating func decode(
-    _ bytes: [UInt8],
-    timestamp: ControllerSampleTimestamp
-  ) -> [ControllerEvent] {
+  mutating func decode(_ bytes: [UInt8], timestamp: ControllerSampleTimestamp) -> [ControllerEvent]
+  {
     let padPacket = bytes[10] & 0x08 != 0
     let interleaved = bytes[10] & 0x80 != 0
     if padPacket {
@@ -24,7 +22,7 @@ struct SteamTouchSamples {
         x: signed16(bytes, at: 20),
         y: signed16(bytes, at: 22),
         timestamp: timestamp
-      )
+      ),
     ]
   }
 

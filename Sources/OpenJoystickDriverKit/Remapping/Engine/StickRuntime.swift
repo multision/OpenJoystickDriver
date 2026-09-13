@@ -25,8 +25,8 @@ struct RemappingStickRuntime {
 
   var needsTicks: Bool {
     turn.isActive
-      || (mapping.mode == .aim && value != .zero
-        && mapping.aimDegreesPerSecond > 0 && mapping.pointerPointsPerDegree > 0)
+      || (mapping.mode == .aim && value != .zero && mapping.aimDegreesPerSecond > 0
+        && mapping.pointerPointsPerDegree > 0)
       || (mapping.mode == .steering && steeringDegrees != 0 && value.length < 1
         && mapping.steeringReturnDegreesPerSecond > 0)
   }
@@ -80,12 +80,10 @@ struct RemappingStickRuntime {
       previousTarget = target
     case .pointerRing:
       let target =
-        next == .zero
-        ? .zero : SIMD2(next.x, -next.y) / next.length * mapping.pointerRadiusPoints
+        next == .zero ? .zero : SIMD2(next.x, -next.y) / next.length * mapping.pointerRadiusPoints
       output.pointerDelta += target - previousTarget
       previousTarget = target
-    case .scrollWheel:
-      output.scrollLines += scrollOutput(previous: previousValue, current: next)
+    case .scrollWheel: output.scrollLines += scrollOutput(previous: previousValue, current: next)
     case .steering:
       updateSteering(previous: previousValue, current: next)
       output.virtualAxes[mapping.steeringOutput.axis] = steeringValue
@@ -99,12 +97,14 @@ struct RemappingStickRuntime {
     lastUptime = now
     var output = RemappingStickRuntimeOutput.zero
     if mapping.mode == .aim {
-      let scale = Double(elapsed) / 1_000_000_000
-        * mapping.aimDegreesPerSecond * mapping.pointerPointsPerDegree
+      let scale =
+        Double(elapsed) / 1_000_000_000 * mapping.aimDegreesPerSecond
+        * mapping.pointerPointsPerDegree
       output.pointerDelta = SIMD2(value.x * scale, -value.y * scale)
     } else if mapping.mode == .steering {
       if value.length < 1, steeringDegrees != 0 {
-        let amount = mapping.steeringReturnDegreesPerSecond * Double(elapsed) / 1_000_000_000
+        let amount =
+          mapping.steeringReturnDegreesPerSecond * Double(elapsed) / 1_000_000_000
           * max(0, 1 - value.length)
         steeringDegrees = Self.approachZero(steeringDegrees, by: amount)
       }
@@ -126,7 +126,8 @@ struct RemappingStickRuntime {
     let angle = atan2(current.y, current.x)
     defer { previousAngle = angle }
     guard let oldAngle = previousAngle, previous != .zero else { return .zero }
-    let delta = Self.shortestAngle(from: oldAngle, to: angle) * 180 / .pi
+    let delta =
+      Self.shortestAngle(from: oldAngle, to: angle) * 180 / .pi
       * mapping.rotationDirection.multiplier
     scrollRemainderDegrees += delta
     let lines = (scrollRemainderDegrees / mapping.scrollDegreesPerLine).rounded(.towardZero)
@@ -137,24 +138,20 @@ struct RemappingStickRuntime {
     }
   }
 
-  private mutating func updateSteering(
-    previous: SIMD2<Double>,
-    current: SIMD2<Double>
-  ) {
+  private mutating func updateSteering(previous: SIMD2<Double>, current: SIMD2<Double>) {
     guard previous != .zero, current != .zero else { return }
     let oldAngle = atan2(previous.y, previous.x)
     let angle = atan2(current.y, current.x)
-    let delta = Self.shortestAngle(from: oldAngle, to: angle) * 180 / .pi
-      * current.length * mapping.rotationDirection.multiplier
+    let delta =
+      Self.shortestAngle(from: oldAngle, to: angle) * 180 / .pi * current.length
+      * mapping.rotationDirection.multiplier
     steeringDegrees = min(
       mapping.steeringDegreesAtFullScale,
       max(-mapping.steeringDegreesAtFullScale, steeringDegrees + delta)
     )
   }
 
-  private var steeringValue: Double {
-    steeringDegrees / mapping.steeringDegreesAtFullScale
-  }
+  private var steeringValue: Double { steeringDegrees / mapping.steeringDegreesAtFullScale }
 
   private func neutralizingOutput() -> RemappingStickRuntimeOutput {
     var output = RemappingStickRuntimeOutput.zero
@@ -179,6 +176,4 @@ struct RemappingStickRuntime {
   }
 }
 
-private extension SIMD2 where Scalar == Double {
-  var length: Double { hypot(x, y) }
-}
+private extension SIMD2 where Scalar == Double { var length: Double { hypot(x, y) } }

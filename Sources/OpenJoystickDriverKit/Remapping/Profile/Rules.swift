@@ -276,8 +276,9 @@ extension RemappingProfile {
         try validateSource(source)
         switch source {
         case .axis: throw RemappingValidationError.chordContinuousSource(index: index)
-        case .button, .dpad, .axisDirection, .triggerStage, .motionLean, .touchContact,
-          .touchGrid, .touchSwipe: break
+        case .button, .dpad, .axisDirection, .triggerStage, .motionLean, .touchContact, .touchGrid,
+          .touchSwipe:
+          break
         }
       }
       guard !chord.destination.isContinuous else {
@@ -304,8 +305,9 @@ extension RemappingProfile {
         try validateSource(source)
         switch source {
         case .axis: throw RemappingValidationError.sequenceContinuousSource(index: index)
-        case .button, .dpad, .axisDirection, .triggerStage, .motionLean, .touchContact,
-          .touchGrid, .touchSwipe: break
+        case .button, .dpad, .axisDirection, .triggerStage, .motionLean, .touchContact, .touchGrid,
+          .touchSwipe:
+          break
         }
       }
       guard !sequence.destination.isContinuous else {
@@ -347,8 +349,9 @@ extension RemappingProfile {
       try validateSource(layer.activator)
       switch layer.activator {
       case .axis: throw RemappingValidationError.layerActivatorNotDiscrete(index: index)
-      case .button, .dpad, .axisDirection, .triggerStage, .motionLean, .touchContact,
-        .touchGrid, .touchSwipe: break
+      case .button, .dpad, .axisDirection, .triggerStage, .motionLean, .touchContact, .touchGrid,
+        .touchSwipe:
+        break
       }
       guard activators.insert(layer.activator).inserted else {
         throw RemappingValidationError.duplicateLayerActivator(index: index)
@@ -392,11 +395,8 @@ extension RemappingProfile {
         throw RemappingValidationError.triggerStageWithoutMapping(trigger)
       }
     case .motionLean:
-      let hasLean = motionTuning.lean != nil
-        || layers.contains { $0.motionTuning?.lean != nil }
-      guard hasLean else {
-        throw RemappingValidationError.motionLeanWithoutMapping
-      }
+      let hasLean = motionTuning.lean != nil || layers.contains { $0.motionTuning?.lean != nil }
+      guard hasLean else { throw RemappingValidationError.motionLeanWithoutMapping }
     case .touchGrid(let grid):
       guard RemappingTouchGridSource.dimensionRange.contains(grid.columns),
         RemappingTouchGridSource.dimensionRange.contains(grid.rows),

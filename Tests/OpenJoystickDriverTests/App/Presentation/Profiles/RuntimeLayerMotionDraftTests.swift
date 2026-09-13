@@ -3,12 +3,17 @@ import Testing
 @testable import OpenJoystickDriver
 
 struct RuntimeLayerMotionDraftTests {
-  @Test func nativeLayerMotionPreservesAndClears() throws {
+  @Test
+  func nativeLayerMotionPreservesAndClears() throws {
     let binding = RemappingBinding(
-      source: .button(.south), destination: .keyboard(key: .space, modifiers: [])
+      source: .button(.south),
+      destination: .keyboard(key: .space, modifiers: [])
     )
     let layer = RemappingLayer(
-      name: "Aim", activationMode: .hold, activator: .button(.east), bindings: [binding]
+      name: "Aim",
+      activationMode: .hold,
+      activator: .button(.east),
+      bindings: [binding]
     )
     let original = RemappingProfile(
       name: "Current",

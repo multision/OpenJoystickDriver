@@ -6,9 +6,9 @@ struct RemappingDeferredSequence {
 }
 
 extension RemappingEngineState {
-  mutating func commitDeferredSequences(device: inout RemappingDeviceState)
-    -> [RemappingEngineAction]
-  {
+  mutating func commitDeferredSequences(
+    device: inout RemappingDeviceState
+  ) -> [RemappingEngineAction] {
     let ready = device.deferredSequences.filter { $0.awaitingSources.isEmpty }
     device.deferredSequences.removeAll { $0.awaitingSources.isEmpty }
     return ready.flatMap {

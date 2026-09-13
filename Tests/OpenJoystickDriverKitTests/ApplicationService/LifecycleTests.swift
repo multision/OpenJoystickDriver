@@ -3,8 +3,10 @@ import Testing
 
 @testable import OpenJoystickDriverKit
 
-@Suite("Application service lifecycle") struct LifecycleTests {
-  @Test("main app executable owns runtime") func applicationExecutableURL() {
+@Suite("Application service lifecycle")
+struct LifecycleTests {
+  @Test("main app executable owns runtime")
+  func applicationExecutableURL() {
     let url = ApplicationServiceManager.applicationExecutableURL(
       in: URL(fileURLWithPath: "/Applications/OpenJoystickDriver.app", isDirectory: true)
     )
@@ -14,13 +16,11 @@ import Testing
     #expect(!url.path.contains("OpenJoystickDriverDaemon"))
   }
 
-  @Test("main app has a stable service identity") func serviceIdentity() {
-    #expect(ApplicationServiceManager.label == "com.openjoystickdriver")
-  }
+  @Test("main app has a stable service identity")
+  func serviceIdentity() { #expect(ApplicationServiceManager.label == "com.openjoystickdriver") }
 
-  @Test("login registration uses the main-app registration client") func registrationUsesClient()
-    throws
-  {
+  @Test("login registration uses the main-app registration client")
+  func registrationUsesClient() throws {
     let service = RecordingRegistration(status: .notRegistered)
 
     try ApplicationServiceManager.registerMainApp(using: service)

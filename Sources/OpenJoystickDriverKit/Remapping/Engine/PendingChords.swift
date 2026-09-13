@@ -8,27 +8,31 @@ struct RemappingPendingChordPress {
 }
 
 extension RemappingDeviceState {
-  var pendingChordDeadline: UInt64? {
-    pendingChordPresses.map { resolvedDeadline($0) }.min()
-  }
+  var pendingChordDeadline: UInt64? { pendingChordPresses.map { resolvedDeadline($0) }.min() }
 
   func resolvedDeadline(_ press: RemappingPendingChordPress) -> UInt64 {
     deferredChordDeadline(for: press.source) ?? press.deadline
   }
 
   mutating func bufferChordPress(_ source: RemappingSource, at uptime: UInt64) -> Bool {
-    let windows = effectiveChords.filter {
-      $0.mode == .simultaneous && $0.sources.contains(source)
-    }.map(\.windowMs)
+    let windows = effectiveChords.filter { $0.mode == .simultaneous && $0.sources.contains(source) }
+      .map(\.windowMs)
     guard let window = windows.max() else { return false }
     let (end, overflow) = uptime.addingReportingOverflow(UInt64(window * 1_000_000) + 1)
     let axisValue: Float?
-    if case .axisDirection(let axis, _) = source { axisValue = physicalAxes[axis] } else {
+    if case .axisDirection(let axis, _) = source {
+      axisValue = physicalAxes[axis]
+    } else {
       axisValue = nil
     }
-    pendingChordPresses.append(RemappingPendingChordPress(
-      source: source, uptime: uptime, deadline: overflow ? .max : end, axisValue: axisValue
-    ))
+    pendingChordPresses.append(
+      RemappingPendingChordPress(
+        source: source,
+        uptime: uptime,
+        deadline: overflow ? .max : end,
+        axisValue: axisValue
+      )
+    )
     return true
   }
 }
@@ -49,7 +53,11 @@ extension RemappingEngineState {
       device.replayedChordSources.insert(press.source)
       for binding in device.binding(for: press.source)?.expandedActions ?? [] {
         actions += processAction(
-          binding, isActive: true, suppressed: false, device: &device, at: press.uptime
+          binding,
+          isActive: true,
+          suppressed: false,
+          device: &device,
+          at: press.uptime
         )
       }
       for index in device.sequenceHistory.indices {
@@ -68,7 +76,9 @@ extension RemappingEngineState {
         let value = press.axisValue
       {
         replayAxis = (axis, value)
-      } else { replayAxis = nil }
+      } else {
+        replayAxis = nil
+      }
       actions += device.updatePassthrough(replayingAxis: replayAxis)
     }
     return actions

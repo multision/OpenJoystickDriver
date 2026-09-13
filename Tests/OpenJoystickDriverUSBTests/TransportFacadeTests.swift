@@ -5,7 +5,8 @@ import Testing
 @testable import OpenJoystickDriverUSB
 
 struct TransportFacadeTests {
-  @Test func facadeExposesPassiveObservationCapabilityWithoutChangingAdmissionOwnership() {
+  @Test
+  func facadeExposesPassiveObservationCapabilityWithoutChangingAdmissionOwnership() {
     let provider: any USBTransportObservationProvider = OpenJoystickDriverUSBTransportProvider()
     _ = provider
     #expect(
@@ -18,7 +19,8 @@ struct TransportFacadeTests {
     )
   }
 
-  @Test func defaultProviderResolutionHookRetainsConfiguredProfile() async {
+  @Test
+  func defaultProviderResolutionHookRetainsConfiguredProfile() async {
     let provider = FakeUSBTransportProvider()
     let configured = DeviceTransportProfile.gipDefault
 
@@ -30,7 +32,8 @@ struct TransportFacadeTests {
     )
   }
 
-  @Test func driverKitResolutionDoesNotUseDescriptorRouteFallback() {
+  @Test
+  func driverKitResolutionDoesNotUseDescriptorRouteFallback() {
     let configured = DeviceTransportProfile.gipDefault
     let observation = ControllerTransportObservation(
       vendorID: 0x045E,
@@ -41,7 +44,7 @@ struct TransportFacadeTests {
           interfaceClass: 0xFF,
           endpoints: [
             USBEndpointTransportFacts(address: 0x84, isInterrupt: true, isInput: true),
-            USBEndpointTransportFacts(address: 0x04, isInterrupt: true, isInput: false)
+            USBEndpointTransportFacts(address: 0x04, isInterrupt: true, isInput: false),
           ]
         )
       ]
@@ -56,7 +59,8 @@ struct TransportFacadeTests {
     )
   }
 
-  @Test func facadeResolutionUsesCompletePassiveInterruptPair() {
+  @Test
+  func facadeResolutionUsesCompletePassiveInterruptPair() {
     let configured = DeviceTransportProfile.gipDefault
     let observation = ControllerTransportObservation(
       vendorID: 0x3537,
@@ -68,7 +72,7 @@ struct TransportFacadeTests {
           interfaceClass: 0xFF,
           endpoints: [
             USBEndpointTransportFacts(address: 0x84, isInterrupt: true, isInput: true),
-            USBEndpointTransportFacts(address: 0x04, isInterrupt: true, isInput: false)
+            USBEndpointTransportFacts(address: 0x04, isInterrupt: true, isInput: false),
           ]
         )
       ]
@@ -86,12 +90,14 @@ struct TransportFacadeTests {
     #expect(resolved.outputEndpoint == 0x04)
   }
 
-  @Test func mapsUnsupportedAndBadArgumentToEquivalentUnsupportedTransportErrors() {
+  @Test
+  func mapsUnsupportedAndBadArgumentToEquivalentUnsupportedTransportErrors() {
     #expect(IOUSBHostTransportProvider.transportError(kIOReturnUnsupported) == .notSupported)
     #expect(IOUSBHostTransportProvider.transportError(kIOReturnBadArgument) == .notSupported)
   }
 
-  @Test func accessibleThirdPartyDeviceUsesDirectIOUSBHost() {
+  @Test
+  func accessibleThirdPartyDeviceUsesDirectIOUSBHost() {
     let direct = device(route: .ioUSBHost, serviceID: 1, vendorID: 0x054C, productID: 0x0268)
 
     #expect(
@@ -104,7 +110,8 @@ struct TransportFacadeTests {
     )
   }
 
-  @Test func entitlementRestrictedModelNeverFallsBackToDirectIOUSBHost() {
+  @Test
+  func entitlementRestrictedModelNeverFallsBackToDirectIOUSBHost() {
     let direct = device(route: .ioUSBHost, serviceID: 1, vendorID: 0x045E, productID: 0x0B12)
 
     #expect(
@@ -117,7 +124,8 @@ struct TransportFacadeTests {
     )
   }
 
-  @Test func observedDriverKitOwnerWinsOnlyForTheSamePhysicalDevice() {
+  @Test
+  func observedDriverKitOwnerWinsOnlyForTheSamePhysicalDevice() {
     let directClaimed = device(
       route: .ioUSBHost,
       serviceID: 1,
@@ -150,7 +158,8 @@ struct TransportFacadeTests {
     #expect(selected == [driverKit, anotherDirect])
   }
 
-  @Test func oneDiscoveryBackendCanOperateWhenTheOtherIsUnavailable() async throws {
+  @Test
+  func oneDiscoveryBackendCanOperateWhenTheOtherIsUnavailable() async throws {
     let directDevice = device(route: .ioUSBHost, serviceID: 1)
     let direct = FakeUSBTransportProvider(devicesResult: .success([directDevice]))
     let unavailable = FakeUSBTransportProvider(devicesResult: .failure(.disconnected))
@@ -164,7 +173,8 @@ struct TransportFacadeTests {
     #expect(try await provider.devices() == [directDevice])
   }
 
-  @Test func openDispatchesByRecordedRouteWithoutFallback() async {
+  @Test
+  func openDispatchesByRecordedRouteWithoutFallback() async {
     let direct = FakeUSBTransportProvider(openResult: .failure(.accessDenied))
     let driverKit = FakeUSBTransportProvider()
     let provider = OpenJoystickDriverUSBTransportProvider(
@@ -185,7 +195,8 @@ struct TransportFacadeTests {
     #expect(await driverKit.openCount == 0)
   }
 
-  @Test func directDiscoveryUsesDeviceServiceBeforeInterfacesExist() {
+  @Test
+  func directDiscoveryUsesDeviceServiceBeforeInterfacesExist() {
     let devices = IOUSBHostTransportProvider.devices(from: [
       IOUSBHostDeviceFacts(
         serviceID: 10,
@@ -250,9 +261,10 @@ private actor FakeUSBTransportProvider: USBTransportProvider {
 
   func devices() throws -> [USBTransportDevice] { try devicesResult.get() }
 
-  func open(_ device: USBTransportDevice, options: USBTransportOpenOptions) throws
-    -> any USBTransportSession
-  {
+  func open(
+    _ device: USBTransportDevice,
+    options: USBTransportOpenOptions
+  ) throws -> any USBTransportSession {
     openCount += 1
     return try openResult.get()
   }

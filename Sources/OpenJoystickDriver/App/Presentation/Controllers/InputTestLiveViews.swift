@@ -5,7 +5,8 @@
   import SwiftUI
 
   struct InputTestLiveInputView: View {
-    @ObservedObject var liveState: InputTestLiveState
+    @ObservedObject
+    var liveState: InputTestLiveState
     let publishedProfile: VirtualDeviceProfile
 
     var body: some View {
@@ -74,7 +75,11 @@
       symbols: InputTestControllerSymbolSet
     ) -> some View {
       HStack(spacing: 10) {
-        indicator(symbols.leftShoulder, buttons: [.leftBumper, .l1], pressedButtons: pressedButtons)
+        indicator(
+          symbols.leftShoulder,
+          buttons: [.leftBumper, .l1],
+          pressedButtons: pressedButtons
+        )
         indicator(
           symbols.leftTrigger,
           active: snapshot.leftTrigger > 0.05 || isPressed([.l2Digital], in: pressedButtons)
@@ -126,7 +131,8 @@
       }
     }
 
-    @ViewBuilder private func systemCluster(
+    @ViewBuilder
+    private func systemCluster(
       pressedButtons: Set<String>,
       symbols: InputTestControllerSymbolSet,
       publishedProfile: VirtualDeviceProfile
@@ -200,9 +206,10 @@
       )
     }
 
-    private func indicator(_ presentation: InputTestControllerSymbolSet.Control, active: Bool)
-      -> some View
-    {
+    private func indicator(
+      _ presentation: InputTestControllerSymbolSet.Control,
+      active: Bool
+    ) -> some View {
       InputTestIndicator(
         title: presentation.title,
         symbol: presentation.symbol,
@@ -251,15 +258,16 @@
       return .standard
     }
 
-    static func viewButtons(for glyphFamily: VirtualIdentityGlyphFamily)
-      -> [OpenJoystickDriverKit.Button]
-    { glyphFamily == .playstation ? [.share] : [.back] }
+    static func viewButtons(
+      for glyphFamily: VirtualIdentityGlyphFamily
+    ) -> [OpenJoystickDriverKit.Button] { glyphFamily == .playstation ? [.share] : [.back] }
 
     static let shareButtons: [OpenJoystickDriverKit.Button] = [.share]
   }
 
   struct InputTestAxisValuesView: View {
-    @ObservedObject var liveState: InputTestLiveState
+    @ObservedObject
+    var liveState: InputTestLiveState
 
     var body: some View {
       let snapshot = liveState.snapshot

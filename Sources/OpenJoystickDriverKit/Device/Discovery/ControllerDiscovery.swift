@@ -157,9 +157,10 @@ public actor DeviceManager {
   /// Returns the latest input snapshot for a device matched by vendor and product ID.
   ///
   /// Returns nil if no pipeline is active for the device.
-  public func inputState(for identifier: DeviceIdentifier, runtimeIdentifier: String? = nil)
-    -> DeviceInputState?
-  {
+  public func inputState(
+    for identifier: DeviceIdentifier,
+    runtimeIdentifier: String? = nil
+  ) -> DeviceInputState? {
     guard let key = connectedIdentifier(matching: identifier, runtimeIdentifier: runtimeIdentifier)
     else { return nil }
     return pipelines[key]?.inputState()
@@ -168,16 +169,17 @@ public actor DeviceManager {
   /// Returns the ownership evidence for the exact connected device identifier.
   ///
   /// Missing identifiers intentionally fail closed to unknown ownership.
-  public func ownershipObservation(for identifier: DeviceIdentifier)
-    -> ControllerOwnershipObservation
-  { deviceInfos[identifier]?.ownershipObservation ?? .unknown }
+  public func ownershipObservation(
+    for identifier: DeviceIdentifier
+  ) -> ControllerOwnershipObservation { deviceInfos[identifier]?.ownershipObservation ?? .unknown }
 
   /// Returns recent raw USB packets for a device matched by vendor and product ID.
   ///
   /// Returns an empty array if no pipeline is active for the device.
-  public func packetLog(for identifier: DeviceIdentifier, runtimeIdentifier: String? = nil)
-    -> [PacketLogEntry]
-  {
+  public func packetLog(
+    for identifier: DeviceIdentifier,
+    runtimeIdentifier: String? = nil
+  ) -> [PacketLogEntry] {
     guard let key = connectedIdentifier(matching: identifier, runtimeIdentifier: runtimeIdentifier)
     else { return [] }
     return pipelines[key]?.getPacketLog() ?? []
@@ -295,10 +297,7 @@ public actor DeviceManager {
       pipeline.physicalOutputCapabilities().lightingFeatures.contains(.programmableBrightness)
     else { return false }
     let previousOwnership = physicalOutputOwnership
-    _ = physicalOutputOwnership.setManual(
-      .brightness(Double(brightness) / 255),
-      for: key
-    )
+    _ = physicalOutputOwnership.setManual(.brightness(Double(brightness) / 255), for: key)
     let delivered = await applyPhysicalChannel(.brightness, for: key, pipeline: pipeline)
     if !delivered { physicalOutputOwnership = previousOwnership }
     return delivered
@@ -331,9 +330,7 @@ public actor DeviceManager {
     do { try output.validate() } catch { return false }
     guard let pipeline = pipelines[identifier] else {
       if !active {
-        _ = physicalOutputOwnership.setMapping(
-          output, active: false, owner: owner, for: identifier
-        )
+        _ = physicalOutputOwnership.setMapping(output, active: false, owner: owner, for: identifier)
         return true
       }
       return false
@@ -343,7 +340,10 @@ public actor DeviceManager {
     }
     let previousOwnership = physicalOutputOwnership
     let channel = physicalOutputOwnership.setMapping(
-      output, active: active, owner: owner, for: identifier
+      output,
+      active: active,
+      owner: owner,
+      for: identifier
     )
     let delivered = await applyPhysicalChannel(channel, for: identifier, pipeline: pipeline)
     if !delivered { physicalOutputOwnership = previousOwnership }
@@ -388,7 +388,8 @@ public actor DeviceManager {
     case .playerIndicator:
       let indicator: PhysicalPlayerIndicator
       if case .playerIndicator(let value) = physicalOutputOwnership.effectiveOutput(
-        for: channel, device: identifier
+        for: channel,
+        device: identifier
       ) {
         indicator = value
       } else {
@@ -413,7 +414,9 @@ public actor DeviceManager {
       }
       guard let locationID = identifier.locationID,
         let report = await pipeline.hidColorReport(
-          red: components.0, green: components.1, blue: components.2
+          red: components.0,
+          green: components.1,
+          blue: components.2
         )
       else { return false }
       do { try await enforcePhysicalHIDOutputInterval(for: identifier, pipeline: pipeline) } catch {
@@ -456,9 +459,12 @@ public actor DeviceManager {
     durationMs: Int
   ) async -> Bool {
     func byte(for motor: PhysicalRumbleMotor) -> UInt8 {
-      guard case .rumble(_, let intensity) = physicalOutputOwnership.effectiveOutput(
-        for: .rumble(motor), device: identifier
-      ) else { return 0 }
+      guard
+        case .rumble(_, let intensity) = physicalOutputOwnership.effectiveOutput(
+          for: .rumble(motor),
+          device: identifier
+        )
+      else { return 0 }
       return UInt8((intensity * 255).rounded())
     }
     let left = byte(for: .leftMain)
@@ -508,9 +514,10 @@ public actor DeviceManager {
     }
   }
 
-  private func connectedIdentifier(matching model: DeviceIdentifier, runtimeIdentifier: String?)
-    -> DeviceIdentifier?
-  {
+  private func connectedIdentifier(
+    matching model: DeviceIdentifier,
+    runtimeIdentifier: String?
+  ) -> DeviceIdentifier? {
     Self.connectedIdentifier(
       among: pipelines.keys,
       matching: model,
@@ -555,9 +562,10 @@ public actor DeviceManager {
     }
   }
 
-  private func sendHIDRumbleReport(_ report: PhysicalHIDOutputReport?, locationID: UInt32?) async
-    -> Bool
-  {
+  private func sendHIDRumbleReport(
+    _ report: PhysicalHIDOutputReport?,
+    locationID: UInt32?
+  ) async -> Bool {
     guard let report, let locationID else { return false }
     return await hidManager.setOutputReport(locationID: locationID, report: report)
   }

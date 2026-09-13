@@ -136,7 +136,7 @@ public enum AppleGameControllerSupportAuditor {
         fileURLWithPath: "/System/Library/AssetsV2/PreinstalledAssetsV2/RequiredByOs/"
           + "com_apple_MobileAsset_GameController_DB1"
       )
-    )
+    ),
   ]
 
   public static func auditCurrentSystem() -> AppleGameControllerSupportAudit {
@@ -241,9 +241,10 @@ public enum AppleGameControllerSupportAuditor {
     )
   }
 
-  static func snapshot(bundleInfoData: [Data], source: AppleGameControllerCatalogSource)
-    -> AppleGameControllerCatalogSnapshot
-  {
+  static func snapshot(
+    bundleInfoData: [Data],
+    source: AppleGameControllerCatalogSource
+  ) -> AppleGameControllerCatalogSnapshot {
     var accumulators: [DeviceKey: EntryAccumulator] = [:]
     var versions: Set<String> = []
     var skippedDeviceCount = 0
@@ -322,9 +323,10 @@ public enum AppleGameControllerSupportAuditor {
     )
   }
 
-  private static func loadBestAsset(at root: URL, source: AppleGameControllerCatalogSource)
-    -> AppleGameControllerCatalogSnapshot?
-  {
+  private static func loadBestAsset(
+    at root: URL,
+    source: AppleGameControllerCatalogSource
+  ) -> AppleGameControllerCatalogSnapshot? {
     let fileManager = FileManager.default
     guard
       let assetURLs = try? fileManager.contentsOfDirectory(

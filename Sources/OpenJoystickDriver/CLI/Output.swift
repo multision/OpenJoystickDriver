@@ -78,9 +78,10 @@ func installCLIShutdownHandlers() {
   }
 }
 
-func withCLIShutdownCleanup<T>(_ cleanup: @escaping @Sendable () -> Void, _ body: () throws -> T)
-  rethrows -> T
-{
+func withCLIShutdownCleanup<T>(
+  _ cleanup: @escaping @Sendable () -> Void,
+  _ body: () throws -> T
+) rethrows -> T {
   let previous = cliShutdownState.replaceCleanup(cleanup)
   defer { _ = cliShutdownState.replaceCleanup(previous) }
   return try body()
@@ -125,9 +126,10 @@ func runSyncResult<T: Sendable>(_ block: @Sendable @escaping () async -> T) -> T
 ///
 /// Returns nil on timeout. Safe for CLI status probes that must not hang when
 /// the application service connection is invalidated without a reply.
-func runSyncResult<T: Sendable>(timeout seconds: Double, _ block: @Sendable @escaping () async -> T)
-  -> T?
-{
+func runSyncResult<T: Sendable>(
+  timeout seconds: Double,
+  _ block: @Sendable @escaping () async -> T
+) -> T? {
   let semaphore = DispatchSemaphore(value: 0)
   nonisolated(unsafe) var result: T?
   Task {

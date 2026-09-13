@@ -8,7 +8,8 @@
   // MARK: - Debug
 
   struct DebugView: View {
-    @ObservedObject var viewModel: RuntimeViewModel
+    @ObservedObject
+    var viewModel: RuntimeViewModel
 
     var body: some View {
       ScrollView {
@@ -39,7 +40,8 @@
       )
     }
 
-    @ViewBuilder private var statusSummaryContent: some View {
+    @ViewBuilder
+    private var statusSummaryContent: some View {
       switch viewModel.statusState {
       case .loading:
         LoadingStateView(
@@ -115,7 +117,8 @@
       }
     }
 
-    @ViewBuilder private var diagnosticsContent: some View {
+    @ViewBuilder
+    private var diagnosticsContent: some View {
       switch viewModel.supportDiagnosticsState {
       case .idle:
         Text(OJDLocalized.string("debug.noneYet", fallback: "No diagnostics collected yet."))
@@ -158,7 +161,8 @@
       OJDLocalized.plural("debug.devices", count: count, fallback: "%d detected")
     }
 
-    @ViewBuilder private var reportStatus: some View {
+    @ViewBuilder
+    private var reportStatus: some View {
       switch viewModel.supportReportState {
       case .idle: EmptyView()
       case .saving:
@@ -178,7 +182,8 @@
       }
     }
 
-    @ViewBuilder private var logsStatus: some View {
+    @ViewBuilder
+    private var logsStatus: some View {
       switch viewModel.supportLogsState {
       case .idle: EmptyView()
       case .saving:

@@ -4,7 +4,8 @@ import Testing
 @testable import OpenJoystickDriverKit
 
 struct RemappingTouchMappingTests {
-  @Test func touchContractRoundTripsWithoutChangingTypedSources() throws {
+  @Test
+  func touchContractRoundTripsWithoutChangingTypedSources() throws {
     let mapping = RemappingTouchMapping(
       id: UUID(uuidString: "00000000-0000-0000-0000-000000000001")!,
       surface: .right,
@@ -15,12 +16,8 @@ struct RemappingTouchMappingTests {
     )
     let sources: [RemappingSource] = [
       .touchContact(.right),
-      .touchGrid(
-        RemappingTouchGridSource(surface: .right, columns: 3, rows: 2, column: 2, row: 1)
-      ),
-      .touchSwipe(
-        RemappingTouchSwipeSource(surface: .right, direction: .up, minimumDistance: 0.3)
-      )
+      .touchGrid(RemappingTouchGridSource(surface: .right, columns: 3, rows: 2, column: 2, row: 1)),
+      .touchSwipe(RemappingTouchSwipeSource(surface: .right, direction: .up, minimumDistance: 0.3)),
     ]
     let profile = RemappingProfile(
       name: "Touch",
@@ -34,12 +31,14 @@ struct RemappingTouchMappingTests {
 
     try profile.validate()
     let decoded = try JSONDecoder().decode(
-      RemappingProfile.self, from: JSONEncoder().encode(profile)
+      RemappingProfile.self,
+      from: JSONEncoder().encode(profile)
     )
     #expect(decoded == profile)
   }
 
-  @Test func invalidGridSwipeAndDuplicateContinuousMappingAreRejected() {
+  @Test
+  func invalidGridSwipeAndDuplicateContinuousMappingAreRejected() {
     let invalidGrid = profile(
       touchMappings: [],
       source: .touchGrid(
@@ -59,7 +58,7 @@ struct RemappingTouchMappingTests {
     let duplicate = profile(
       touchMappings: [
         RemappingTouchMapping(surface: .left, mode: .pointer),
-        RemappingTouchMapping(surface: .left, mode: .pointer)
+        RemappingTouchMapping(surface: .left, mode: .pointer),
       ],
       source: .touchContact(.left)
     )
@@ -68,7 +67,8 @@ struct RemappingTouchMappingTests {
     }
   }
 
-  @Test func touchStickRequiresVirtualOutput() {
+  @Test
+  func touchStickRequiresVirtualOutput() {
     let value = profile(
       touchMappings: [RemappingTouchMapping(surface: .primary, mode: .rightStick)],
       source: .touchContact(.primary)
@@ -77,7 +77,8 @@ struct RemappingTouchMappingTests {
   }
 
   private func profile(
-    touchMappings: [RemappingTouchMapping], source: RemappingSource
+    touchMappings: [RemappingTouchMapping],
+    source: RemappingSource
   ) -> RemappingProfile {
     RemappingProfile(
       name: "Touch",

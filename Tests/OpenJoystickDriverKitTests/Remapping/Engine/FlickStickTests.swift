@@ -2,7 +2,8 @@ import Testing
 @testable import OpenJoystickDriverKit
 
 struct FlickStickTests {
-  @Test func outwardFlickRotatesAndRearmsOnlyAfterReturningInside() {
+  @Test
+  func outwardFlickRotatesAndRearmsOnlyAfterReturningInside() {
     var stick = RemappingFlickStick()
     let first = stick.process(x: 1, y: 0)
     #expect(first == .flick(degrees: 90))
@@ -16,7 +17,8 @@ struct FlickStickTests {
     #expect(rearmed == .flick(degrees: -90))
   }
 
-  @Test func rimRotationCrossesRearSeamWithoutFullTurn() {
+  @Test
+  func rimRotationCrossesRearSeamWithoutFullTurn() {
     var stick = RemappingFlickStick()
     _ = stick.process(x: 0.01, y: -1)
     let event = stick.process(x: -0.01, y: -1)
@@ -27,7 +29,8 @@ struct FlickStickTests {
     #expect(degrees > 0 && degrees < 2)
   }
 
-  @Test func invalidInputDropsOldAngle() {
+  @Test
+  func invalidInputDropsOldAngle() {
     var stick = RemappingFlickStick()
     _ = stick.process(x: 1, y: 0)
     let invalid = stick.process(x: .nan, y: 0)

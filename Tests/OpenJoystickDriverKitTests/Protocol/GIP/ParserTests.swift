@@ -4,7 +4,8 @@ import Testing
 @testable import OpenJoystickDriverKit
 
 struct GIPParserTests {
-  @Test func testSequencerIncrements() {
+  @Test
+  func testSequencerIncrements() {
     var seq = GIPSequencer()
     #expect(seq.next(for: 5) == 0)
     #expect(seq.next(for: 5) == 1)
@@ -14,14 +15,16 @@ struct GIPParserTests {
     #expect(seq.next(for: 5) == 2)
   }
 
-  @Test func testSequencerWrapsAt255() {
+  @Test
+  func testSequencerWrapsAt255() {
     var seq = GIPSequencer()
     for _ in 0..<255 { _ = seq.next(for: 1) }
     #expect(seq.next(for: 1) == 255)
     #expect(seq.next(for: 1) == 0)
   }
 
-  @Test func testSequencerReset() {
+  @Test
+  func testSequencerReset() {
     var seq = GIPSequencer()
     _ = seq.next(for: 5)
     _ = seq.next(for: 5)
@@ -29,19 +32,22 @@ struct GIPParserTests {
     #expect(seq.next(for: 5) == 0)
   }
 
-  @Test func testDefaultStartupSequence() {
+  @Test
+  func testDefaultStartupSequence() {
     #expect(GIPStartupPacket.defaultSequence == [.powerOn, .ledOn, .authDone])
     #expect(GIPStartupPacket.powerOn.packet(sequence: 0) == [5, 32, 0, 1, 0])
     #expect(GIPStartupPacket.ledOn.packet(sequence: 0) == [10, 32, 0, 3, 0, 1, 20])
     #expect(GIPStartupPacket.authDone.packet(sequence: 0) == [6, 32, 0, 2, 1, 0])
   }
 
-  @Test func testKeepAlivePolicyDefaultsToEnabledAndCanBeDisabled() {
+  @Test
+  func testKeepAlivePolicyDefaultsToEnabledAndCanBeDisabled() {
     #expect(GIPParser().keepAlivePolicy == .enabled)
     #expect(GIPParser(keepAlivePolicy: .disabled).keepAlivePolicy == .disabled)
   }
 
-  @Test func testXpadXboxOneStartupPackets() {
+  @Test
+  func testXpadXboxOneStartupPackets() {
     #expect(GIPStartupPacket.xboxOneSInit.packet(sequence: 0) == [5, 32, 0, 15, 6])
     #expect(GIPStartupPacket.extraInput.packet(sequence: 1) == [77, 16, 1, 2, 7, 0])
     #expect(
@@ -49,7 +55,7 @@ struct GIPParserTests {
     )
     #expect(
       GIPStartupPacket.rumbleBegin.packet(sequence: 3) == [
-        9, 0, 3, 9, 0, 15, 0, 0, 29, 29, 255, 0, 0
+        9, 0, 3, 9, 0, 15, 0, 0, 29, 29, 255, 0, 0,
       ]
     )
     #expect(
@@ -57,7 +63,8 @@ struct GIPParserTests {
     )
   }
 
-  @Test func testAcknowledgementPacketMatchesGIPLayout() {
+  @Test
+  func testAcknowledgementPacketMatchesGIPLayout() {
     #expect(
       GIPParser.acknowledgementPacket(
         command: GIPCommand.input,
@@ -65,12 +72,13 @@ struct GIPParserTests {
         sequence: 0x55,
         totalLength: 0x1234
       ) == [
-        GIPCommand.acknowledge, 0x23, 0x55, 9, 0, GIPCommand.input, 0x23, 0x34, 0x12, 0, 0, 0, 0
+        GIPCommand.acknowledge, 0x23, 0x55, 9, 0, GIPCommand.input, 0x23, 0x34, 0x12, 0, 0, 0, 0,
       ]
     )
   }
 
-  @Test func testAcknowledgementIsDeferredUntilTransportConsumesIt() throws {
+  @Test
+  func testAcknowledgementIsDeferredUntilTransportConsumesIt() throws {
     let parser = GIPParser()
     let options = GIPOption.acknowledge | 0x03
     let packet = Data([GIPCommand.virtualKey, options, 0x55, 1, 1])
@@ -89,10 +97,11 @@ struct GIPParserTests {
     #expect(parser.consumeUSBOutputPackets().isEmpty)
   }
 
-  @Test func testAuthenticationResponseIsDeferredUntilTransportConsumesIt() throws {
+  @Test
+  func testAuthenticationResponseIsDeferredUntilTransportConsumesIt() throws {
     let parser = GIPParser()
     let authPayload = Data([
-      GIPAuthType.device, GIPAuthType.version, GIPAuthState.devInit.rawValue, 0, 0, 0
+      GIPAuthType.device, GIPAuthType.version, GIPAuthState.devInit.rawValue, 0, 0, 0,
     ])
     let packet = Data([GIPCommand.authenticate, 0, 0x17, UInt8(authPayload.count)]) + authPayload
 
@@ -102,13 +111,14 @@ struct GIPParserTests {
     #expect(responses.first?.prefix(3) == [GIPCommand.authenticate, GIPOption.internal, 0])
     #expect(
       responses.first?[4...6] == [
-        GIPAuthType.host, GIPAuthType.version, GIPAuthState.hostInit.rawValue
+        GIPAuthType.host, GIPAuthType.version, GIPAuthState.hostInit.rawValue,
       ]
     )
     #expect(parser.consumeUSBOutputPackets().isEmpty)
   }
 
-  @Test func testParseSplitFrameAcrossTransfers() throws {
+  @Test
+  func testParseSplitFrameAcrossTransfers() throws {
     let parser = GIPParser()
     let packet = inputPacket(payload: Data(repeating: 0, count: 14))
 
@@ -121,7 +131,8 @@ struct GIPParserTests {
     )
   }
 
-  @Test func testParseStackedFramesFromOneTransfer() throws {
+  @Test
+  func testParseStackedFramesFromOneTransfer() throws {
     let parser = GIPParser()
     var pressed = Data(repeating: 0, count: 14)
     pressed[0] = 16
@@ -132,7 +143,8 @@ struct GIPParserTests {
     #expect(events.contains(.buttonPressed(.a)))
   }
 
-  @Test func testParseExtendedLengthFrameWithEvenHeaderPadding() throws {
+  @Test
+  func testParseExtendedLengthFrameWithEvenHeaderPadding() throws {
     let parser = GIPParser()
     var payload = Data(repeating: 0, count: 128)
     payload[0] = 16
@@ -141,7 +153,8 @@ struct GIPParserTests {
     #expect(try parser.parse(data: packet).contains(.buttonPressed(.a)))
   }
 
-  @Test func testParseChunkFrameHeaderWithoutBlockingFollowingFrame() throws {
+  @Test
+  func testParseChunkFrameHeaderWithoutBlockingFollowingFrame() throws {
     let parser = GIPParser()
     let chunk =
       Data([GIPCommand.input, GIPOption.chunk, 0, 14, 0x80, 0]) + Data(repeating: 0, count: 14)
@@ -152,7 +165,8 @@ struct GIPParserTests {
     #expect(try parser.parse(data: inputPacket(payload: pressed)).contains(.buttonPressed(.a)))
   }
 
-  @Test func testParseMainInputAllZero() throws {
+  @Test
+  func testParseMainInputAllZero() throws {
     let parser = GIPParser()
     var packet = Data([0x20, 32, 0, 14])
     packet += Data(repeating: 0, count: 14)
@@ -164,7 +178,8 @@ struct GIPParserTests {
     #expect(hasLeftStick)
   }
 
-  @Test func testParseMainInputAButton() throws {
+  @Test
+  func testParseMainInputAButton() throws {
     let parser = GIPParser()
     var payload = Data(repeating: 0, count: 14)
     payload[0] = 16  // A button
@@ -174,7 +189,8 @@ struct GIPParserTests {
     #expect(events.contains(.buttonPressed(.a)))
   }
 
-  @Test func testParseMainInputShareButton() throws {
+  @Test
+  func testParseMainInputShareButton() throws {
     let parser = GIPParser()
     var payload = Data(repeating: 0, count: 32)
     payload[14] = 1
@@ -186,7 +202,8 @@ struct GIPParserTests {
     #expect(releaseEvents.contains(.buttonReleased(.share)))
   }
 
-  @Test func testParseMainInputMultipleButtons() throws {
+  @Test
+  func testParseMainInputMultipleButtons() throws {
     let parser = GIPParser()
     var payload = Data(repeating: 0, count: 14)
     // buttons0: A(16) + B(32) = 48
@@ -202,38 +219,44 @@ struct GIPParserTests {
     #expect(events.contains(.dpadChanged(.north)))
   }
 
-  @Test func testUnknownCMDReturnsEmpty() throws {
+  @Test
+  func testUnknownCMDReturnsEmpty() throws {
     let parser = GIPParser()
     let packet = Data([3, 32, 1, 4, 32, 0, 0, 0])
     let events = try parser.parse(data: packet)
     #expect(events.isEmpty)
   }
 
-  @Test func testParseGuideButtonPressed() throws {
+  @Test
+  func testParseGuideButtonPressed() throws {
     let parser = GIPParser()
     let packet = Data([7, 32, 0, 1, 1])
     let events = try parser.parse(data: packet)
     #expect(events.contains(.buttonPressed(.guide)))
   }
 
-  @Test func testParseGuideButtonReleased() throws {
+  @Test
+  func testParseGuideButtonReleased() throws {
     let parser = GIPParser()
     let packet = Data([7, 32, 0, 1, 0])
     let events = try parser.parse(data: packet)
     #expect(events.contains(.buttonReleased(.guide)))
   }
 
-  @Test func testParseShortPacketBuffersUntilComplete() throws {
+  @Test
+  func testParseShortPacketBuffersUntilComplete() throws {
     let parser = GIPParser()
     #expect(try parser.parse(data: Data([GIPCommand.input, 32])).isEmpty)
   }
 
-  @Test func testParseIncompletePayloadBuffersUntilComplete() throws {
+  @Test
+  func testParseIncompletePayloadBuffersUntilComplete() throws {
     let parser = GIPParser()
     #expect(try parser.parse(data: Data([GIPCommand.input, 32, 0, 14, 0, 0])).isEmpty)
   }
 
-  @Test func testTriggerNormalization() throws {
+  @Test
+  func testTriggerNormalization() throws {
     let parser = GIPParser()
     var payload = Data(repeating: 0, count: 14)
     // LT = 1023 (max) = 0x03FF LE
@@ -253,7 +276,8 @@ struct GIPParserTests {
     #expect(abs(ltVal - 1.0) < 0.01)
   }
 
-  @Test func testStickNormalization() throws {
+  @Test
+  func testStickNormalization() throws {
     let parser = GIPParser()
     var payload = Data(repeating: 0, count: 14)
     // LSX = Int16(-32768) = full left -> lx ~ -1.0
@@ -277,7 +301,8 @@ struct GIPParserTests {
     #expect(abs(ly - 1.0) < 0.01)
   }
 
-  @Test func testDpadCombinations() throws {
+  @Test
+  func testDpadCombinations() throws {
     let parser = GIPParser()
     // up+right = 1+8 = 9
     var payload = Data(repeating: 0, count: 14)
@@ -288,14 +313,16 @@ struct GIPParserTests {
     #expect(events.contains(.dpadChanged(.northEast)))
   }
 
-  @Test func testUnhandledReportTypeReturnsEmpty() throws {
+  @Test
+  func testUnhandledReportTypeReturnsEmpty() throws {
     let parser = GIPParser()
     let packet = Data([99, 32, 0, 2, 0, 0])
     let events = try parser.parse(data: packet)
     #expect(events.isEmpty)
   }
 
-  @Test func testChangeDetectionSuppressesDuplicates() throws {
+  @Test
+  func testChangeDetectionSuppressesDuplicates() throws {
     let parser = GIPParser()
     var payload1 = Data(repeating: 0, count: 14)
     payload1[0] = 16  // A
@@ -310,7 +337,8 @@ struct GIPParserTests {
     #expect(!events2.contains(.buttonReleased(.a)))
   }
 
-  @Test func testReleaseClearsHeldButtonAndDoesNotRepeatWhileNeutral() throws {
+  @Test
+  func testReleaseClearsHeldButtonAndDoesNotRepeatWhileNeutral() throws {
     let parser = GIPParser()
     var held = Data(repeating: 0, count: 14)
     held[1] = 1  // D-pad up
@@ -328,14 +356,14 @@ struct GIPParserTests {
     #expect(repeatedNeutralEvents.isEmpty)
   }
 
-  @Test func testGamesirStyleThirtyTwoByteGIPReportMapsViewGuideMenuAndShareFromPacketBytes() throws
-  {
+  @Test
+  func testGamesirStyleThirtyTwoByteGIPReportMapsViewGuideMenuAndShareFromPacketBytes() throws {
     let parser = GIPParser()
     let view = try parser.parse(
       data: Data([
         0x20, 0x00, 0x03, 0x20, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
       ])
     )
     #expect(view.contains(.buttonPressed(.back)))
@@ -346,7 +374,7 @@ struct GIPParserTests {
       data: Data([
         0x20, 0x00, 0x04, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
       ])
     )
 
@@ -359,7 +387,7 @@ struct GIPParserTests {
       data: Data([
         0x20, 0x00, 0x05, 0x20, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
       ])
     )
     #expect(menu.contains(.buttonPressed(.start)))
@@ -369,7 +397,7 @@ struct GIPParserTests {
       data: Data([
         0x20, 0x00, 0x06, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
       ])
     )
 
@@ -378,7 +406,7 @@ struct GIPParserTests {
         // Live GameSir G7 SE Share press: payload[14] = 0x01 on a 32-byte GIP input.
         0x20, 0x00, 0x47, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
       ])
     )
     #expect(share.contains(.buttonPressed(.share)))
@@ -389,13 +417,14 @@ struct GIPParserTests {
       data: Data([
         0x20, 0x00, 0x48, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
       ])
     )
     #expect(shareRelease.contains(.buttonReleased(.share)))
   }
 
-  @Test func testShareOffsetReadsShareFromTheEndRelativeGIPPacking() throws {
+  @Test
+  func testShareOffsetReadsShareFromTheEndRelativeGIPPacking() throws {
     let parser = GIPParser(mappingOptions: .shareOffset)
     var payload = Data(repeating: 0, count: 30)
     payload[8] = 1
@@ -403,7 +432,8 @@ struct GIPParserTests {
     #expect(events.contains(.buttonPressed(.share)))
   }
 
-  @Test func testFirmwareCommandDoesNotInventExtraButtons() throws {
+  @Test
+  func testFirmwareCommandDoesNotInventExtraButtons() throws {
     let parser = GIPParser()
     var payload = Data(repeating: 0, count: 16)
     payload[14] = 0x05
@@ -411,7 +441,8 @@ struct GIPParserTests {
     #expect(try parser.parse(data: packet).isEmpty)
   }
 
-  @Test func diagnosticHostRecipesStayEmptyUntilAVerifiedPacketExists() {
+  @Test
+  func diagnosticHostRecipesStayEmptyUntilAVerifiedPacketExists() {
     #expect(GIPStartupPacket.allCases.allSatisfy { !$0.isDiagnosticRecipe })
   }
 

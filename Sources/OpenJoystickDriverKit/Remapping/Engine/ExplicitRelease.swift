@@ -3,7 +3,8 @@ import Foundation
 extension RemappingEngineState {
   /// Cancels matching contributions owned by this exact controller.
   mutating func releaseDestination(
-    _ destination: RemappingDestination, device: inout RemappingDeviceState
+    _ destination: RemappingDestination,
+    device: inout RemappingDeviceState
   ) -> [RemappingEngineAction] {
     let held = device.heldBindings.filter { $0.value == destination }.keys
     let repeating = device.turbos.filter { $0.value.destination == destination }.keys

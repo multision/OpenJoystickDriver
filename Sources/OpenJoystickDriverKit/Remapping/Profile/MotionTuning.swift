@@ -56,7 +56,7 @@ public struct RemappingMotionTuning: Codable, Equatable, Hashable, Sendable {
       ("threshold_degrees_per_second", thresholdDegreesPerSecond, 0...1000),
       ("yaw_relaxation", yawRelaxation, 0...10),
       ("side_reduction_threshold", sideReductionThreshold, 0...1),
-      ("gravity_correction_rate", gravityCorrectionRate, 0...100)
+      ("gravity_correction_rate", gravityCorrectionRate, 0...100),
     ]
     for (field, value, range) in fields {
       guard value.isFinite, range.contains(value) else {
@@ -91,16 +91,17 @@ public struct RemappingMotionTuning: Codable, Equatable, Hashable, Sendable {
       yawSensitivity: try values.decodeIfPresent(Double.self, forKey: .yawSensitivity) ?? 1,
       invertPitch: try values.decodeIfPresent(Bool.self, forKey: .invertPitch) ?? false,
       invertYaw: try values.decodeIfPresent(Bool.self, forKey: .invertYaw) ?? false,
-      smoothingHalfTimeMs: try values.decodeIfPresent(
-        Double.self, forKey: .smoothingHalfTimeMs
-      ) ?? 0,
+      smoothingHalfTimeMs: try values.decodeIfPresent(Double.self, forKey: .smoothingHalfTimeMs)
+        ?? 0,
       thresholdDegreesPerSecond: try values.decodeIfPresent(
-        Double.self, forKey: .thresholdDegreesPerSecond
+        Double.self,
+        forKey: .thresholdDegreesPerSecond
       ) ?? 0,
       automaticBias: try values.decodeIfPresent(Bool.self, forKey: .automaticBias) ?? true,
       yawRelaxation: try values.decodeIfPresent(Double.self, forKey: .yawRelaxation) ?? 1.41,
       sideReductionThreshold: try values.decodeIfPresent(
-        Double.self, forKey: .sideReductionThreshold
+        Double.self,
+        forKey: .sideReductionThreshold
       ) ?? 0.125,
       gravityCorrectionRate: try values.decodeIfPresent(Double.self, forKey: .gravityCorrectionRate)
         ?? 2,

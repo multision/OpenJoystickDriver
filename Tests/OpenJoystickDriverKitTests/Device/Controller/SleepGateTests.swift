@@ -3,7 +3,8 @@ import Testing
 @testable import OpenJoystickDriverKit
 
 struct ControllerSleepGateTests {
-  @Test func testControllerSleepsAfterNeutralIdleTimeout() {
+  @Test
+  func testControllerSleepsAfterNeutralIdleTimeout() {
     var gate = ControllerSleepGate(idleTimeoutNanoseconds: 5)
     let neutral = DeviceInputState(vendorID: 100, productID: 200)
     var pressed = neutral

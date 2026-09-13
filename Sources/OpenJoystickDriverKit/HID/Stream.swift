@@ -35,7 +35,7 @@ public final class HIDDeviceStream: @unchecked Sendable {
     var matches: [[String: Any]] = [
       [
         kIOHIDDeviceUsagePageKey: kHIDPage_GenericDesktop,
-        kIOHIDDeviceUsageKey: kHIDUsage_GD_GamePad
+        kIOHIDDeviceUsageKey: kHIDUsage_GD_GamePad,
       ]
     ]
     matches += additionalProfileIdentifiers.map {

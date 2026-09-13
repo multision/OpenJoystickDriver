@@ -3,13 +3,15 @@ import OpenJoystickDriverKit
 
 protocol CoreGraphicsPostEventAccessProbing: Sendable {
   func preflight() -> Bool
-  @discardableResult func request() -> Bool
+  @discardableResult
+  func request() -> Bool
 }
 
 private struct PlatformPostEventAccessProbe: CoreGraphicsPostEventAccessProbing {
   func preflight() -> Bool { CGPreflightPostEventAccess() }
 
-  @discardableResult func request() -> Bool { CGRequestPostEventAccess() }
+  @discardableResult
+  func request() -> Bool { CGRequestPostEventAccess() }
 }
 
 /// Reads and requests the CoreGraphics permission used for keyboard and pointer injection.
@@ -31,7 +33,8 @@ public struct CoreGraphicsPostEventAccess: Sendable {
   ///
   /// The return value from `CGRequestPostEventAccess` is intentionally ignored;
   /// it is not accepted as evidence that event posting is now authorized.
-  @discardableResult public func requestAccess() -> RemappingPostEventAccessState {
+  @discardableResult
+  public func requestAccess() -> RemappingPostEventAccessState {
     let initialState = currentState()
     guard initialState != .granted else { return initialState }
     _ = probe.request()

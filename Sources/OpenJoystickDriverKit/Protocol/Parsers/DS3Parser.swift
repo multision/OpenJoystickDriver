@@ -72,7 +72,7 @@ public final class DS3Parser: InputParser, HIDStartupFeatureReadRequestProvider,
       PhysicalHIDFeatureReadRequest(
         reportID: ds3OperationalReportF5,
         length: ds3OperationalReportF5Length
-      )
+      ),
     ]
   }
 
@@ -93,17 +93,20 @@ public final class DS3Parser: InputParser, HIDStartupFeatureReadRequestProvider,
     ]
   }
 
-  public func physicalRumbleReport(left: UInt8, right: UInt8, lt _: UInt8, rt _: UInt8)
-    -> PhysicalHIDOutputReport
-  {
+  public func physicalRumbleReport(
+    left: UInt8,
+    right: UInt8,
+    lt _: UInt8,
+    rt _: UInt8
+  ) -> PhysicalHIDOutputReport {
     physicalRumbleLeft = left
     physicalRumbleRightOn = right > 0
     return physicalOutputReport()
   }
 
-  public func physicalPlayerIndicatorReport(_ indicator: PhysicalPlayerIndicator)
-    -> PhysicalHIDOutputReport
-  {
+  public func physicalPlayerIndicatorReport(
+    _ indicator: PhysicalPlayerIndicator
+  ) -> PhysicalHIDOutputReport {
     physicalPlayerIndicator = indicator
     return physicalOutputReport()
   }
@@ -112,7 +115,7 @@ public final class DS3Parser: InputParser, HIDStartupFeatureReadRequestProvider,
     var bytes: [UInt8] = [
       0x01, 0x01, 0xFF, 0x00, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0x27, 0x10, 0x00,
       0x32, 0xFF, 0x27, 0x10, 0x00, 0x32, 0xFF, 0x27, 0x10, 0x00, 0x32, 0xFF, 0x27, 0x10, 0x00,
-      0x32, 0x00, 0x00, 0x00, 0x00, 0x00
+      0x32, 0x00, 0x00, 0x00, 0x00, 0x00,
     ]
     precondition(bytes.count == ds3OutputReportLength)
     bytes[3] = physicalRumbleRightOn ? 1 : 0
@@ -163,9 +166,11 @@ public final class DS3Parser: InputParser, HIDStartupFeatureReadRequestProvider,
     return events
   }
 
-  private func parseButtons(buttons0 b0: UInt8, buttons1 b1: UInt8, buttons2 b2: UInt8)
-    -> [ControllerEvent]
-  {
+  private func parseButtons(
+    buttons0 b0: UInt8,
+    buttons1 b1: UInt8,
+    buttons2 b2: UInt8
+  ) -> [ControllerEvent] {
     var events: [ControllerEvent] = []
     events.append(
       contentsOf: diffButtons(
@@ -180,7 +185,7 @@ public final class DS3Parser: InputParser, HIDStartupFeatureReadRequestProvider,
         curr: b1,
         mapping: [
           (0x01, .l2Digital), (0x02, .r2Digital), (0x04, .l1), (0x08, .r1), (0x10, .triangle),
-          (0x20, .circle), (0x40, .cross), (0x80, .square)
+          (0x20, .circle), (0x40, .cross), (0x80, .square),
         ]
       )
     )
@@ -198,9 +203,12 @@ public final class DS3Parser: InputParser, HIDStartupFeatureReadRequestProvider,
     return [.dpadChanged(mapDpad(up: up, right: right, down: down, left: left))]
   }
 
-  private func parseSticks(leftX: UInt8, leftY: UInt8, rightX: UInt8, rightY: UInt8)
-    -> [ControllerEvent]
-  {
+  private func parseSticks(
+    leftX: UInt8,
+    leftY: UInt8,
+    rightX: UInt8,
+    rightY: UInt8
+  ) -> [ControllerEvent] {
     var events: [ControllerEvent] = []
     if leftX != prevLX || leftY != prevLY {
       events.append(.leftStickChanged(x: normalizeAxis(leftX), y: -normalizeAxis(leftY)))
@@ -218,9 +226,11 @@ public final class DS3Parser: InputParser, HIDStartupFeatureReadRequestProvider,
     return events
   }
 
-  private func diffButtons(prev: UInt8, curr: UInt8, mapping: [(UInt8, Button)])
-    -> [ControllerEvent]
-  {
+  private func diffButtons(
+    prev: UInt8,
+    curr: UInt8,
+    mapping: [(UInt8, Button)]
+  ) -> [ControllerEvent] {
     var events: [ControllerEvent] = []
     for (mask, button) in mapping {
       let wasPressed = (prev & mask) != 0

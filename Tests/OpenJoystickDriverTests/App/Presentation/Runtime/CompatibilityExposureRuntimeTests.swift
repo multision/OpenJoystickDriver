@@ -26,7 +26,8 @@ private final class ExposureState: @unchecked Sendable {
   var descriptions: [ApplicationServiceDeviceDescription] = []
 }
 
-@Suite(.serialized) struct CompatibilityExposureRuntimeTests {
+@Suite(.serialized)
+struct CompatibilityExposureRuntimeTests {
   private let identifier = DeviceIdentifier(vendorID: 0x3537, productID: 0x1010)
 
   private func gipDescription() -> ApplicationServiceDeviceDescription {
@@ -58,7 +59,8 @@ private final class ExposureState: @unchecked Sendable {
     return (adapter, backend)
   }
 
-  @Test func explicitAppleIdentityPublishesForRawUSBGIP() async throws {
+  @Test
+  func explicitAppleIdentityPublishesForRawUSBGIP() async throws {
     let state = ExposureState()
     state.descriptions = [gipDescription()]
     let (adapter, backend) = makeAdapter(identity: .appleGameController, state: state)
@@ -70,9 +72,8 @@ private final class ExposureState: @unchecked Sendable {
     #expect(backend.dispatches == 1)
   }
 
-  @Test func explicitActivationAndLazyDispatchRejectUnavailableProfile()
-    async throws
-  {
+  @Test
+  func explicitActivationAndLazyDispatchRejectUnavailableProfile() async throws {
     let state = ExposureState()
     state.descriptions = [gipDescription()]
     let (adapter, backend) = makeAdapter(identity: .xbox360HID, state: state)
@@ -84,7 +85,8 @@ private final class ExposureState: @unchecked Sendable {
 
   }
 
-  @Test func explicitActivationAndLazyDispatchRejectMissingDevice() async throws {
+  @Test
+  func explicitActivationAndLazyDispatchRejectMissingDevice() async throws {
     let state = ExposureState()
     let (adapter, backend) = makeAdapter(identity: .appleGameController, state: state)
     try await adapter.activate(controller: identifier)
@@ -93,7 +95,8 @@ private final class ExposureState: @unchecked Sendable {
     #expect(backend.dispatches == 0)
   }
 
-  @Test func explicitIdentityContinuesPublishingWhenOwnershipIsUnknown() async throws {
+  @Test
+  func explicitIdentityContinuesPublishingWhenOwnershipIsUnknown() async throws {
     let state = ExposureState()
     state.descriptions = [gipDescription()]
     state.ownership = .unknown
@@ -106,7 +109,8 @@ private final class ExposureState: @unchecked Sendable {
     #expect(backend.dispatches == 1)
   }
 
-  @Test func suppressionAndCloseForwardThroughAdapter() async {
+  @Test
+  func suppressionAndCloseForwardThroughAdapter() async {
     let state = ExposureState()
     state.descriptions = [gipDescription()]
     let (adapter, backend) = makeAdapter(identity: .appleGameController, state: state)
@@ -120,7 +124,8 @@ private final class ExposureState: @unchecked Sendable {
     #expect(backend.closes == 1)
   }
 
-  @Test func automaticResolvedIdentityUsesTheSameEligibilityGate() async {
+  @Test
+  func automaticResolvedIdentityUsesTheSameEligibilityGate() async {
     let state = ExposureState()
     state.descriptions = [gipDescription()]
     let backend = ExposureBackendProbe()

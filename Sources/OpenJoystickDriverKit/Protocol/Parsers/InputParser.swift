@@ -110,7 +110,9 @@ extension HIDStartupFeatureReadRequestProvider {
 public protocol HIDFeatureReportConsumer: AnyObject, Sendable {
   /// False means the report was rejected and the previous parser state remains valid.
   func consumeHIDFeatureReport(
-    _ data: Data, request: PhysicalHIDFeatureReadRequest, transport: String?
+    _ data: Data,
+    request: PhysicalHIDFeatureReadRequest,
+    transport: String?
   ) -> Bool
 }
 

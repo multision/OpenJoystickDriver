@@ -78,9 +78,10 @@ public actor OpenJoystickDriverUSBTransportProvider: USBTransportProvider,
     }
   }
 
-  public func open(_ device: USBTransportDevice, options: USBTransportOpenOptions) async throws
-    -> any USBTransportSession
-  {
+  public func open(
+    _ device: USBTransportDevice,
+    options: USBTransportOpenOptions
+  ) async throws -> any USBTransportSession {
     switch device.route {
     case .ioUSBHost: return try await ioUSBHostProvider.open(device, options: options)
     case .usbDriverKit: return try await usbDriverKitProvider.open(device, options: options)

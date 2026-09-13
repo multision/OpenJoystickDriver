@@ -1,7 +1,8 @@
 import CoreHID
 import Foundation
 
-@available(macOS 15, *) actor CoreHIDAccessBackend: HIDAccessBackend {
+@available(macOS 15, *)
+actor CoreHIDAccessBackend: HIDAccessBackend {
   private struct ClientRecord {
     let client: HIDDeviceClient
     let vendorID: UInt16
@@ -29,7 +30,7 @@ import Foundation
       ),
       AppleGameControllerSyntheticHID.coreHIDMatchingCriteria(
         primaryUsage: .genericDesktop(.multiAxisController)
-      )
+      ),
     ]
     criteria += additionalProfileIdentifiers.map {
       AppleGameControllerSyntheticHID.coreHIDMatchingCriteria(
@@ -80,9 +81,11 @@ import Foundation
     return nil
   }
 
-  private func setReport(locationID: UInt32, report: PhysicalHIDOutputReport, type: HIDReportType)
-    async -> Bool
-  {
+  private func setReport(
+    locationID: UInt32,
+    report: PhysicalHIDOutputReport,
+    type: HIDReportType
+  ) async -> Bool {
     guard eventAdapter.acceptsFeedback(locationID: locationID) else { return false }
     for client in clients(at: locationID) {
       do {

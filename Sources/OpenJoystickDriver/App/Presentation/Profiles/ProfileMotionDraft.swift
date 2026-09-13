@@ -48,8 +48,7 @@ struct ProfileMotionDraft {
 
   var numericText: [String: String] {
     [
-      "pitchSensitivity": String(pitchSensitivity),
-      "yawSensitivity": String(yawSensitivity),
+      "pitchSensitivity": String(pitchSensitivity), "yawSensitivity": String(yawSensitivity),
       "smoothingHalfTimeMs": String(smoothingHalfTimeMs),
       "thresholdDegreesPerSecond": String(thresholdDegreesPerSecond),
       "yawRelaxation": String(yawRelaxation),
@@ -59,17 +58,14 @@ struct ProfileMotionDraft {
       "leanHysteresisDegrees": String(leanHysteresisDegrees),
       "steeringDeadzoneDegrees": String(steeringDeadzoneDegrees),
       "steeringFullScaleDegrees": String(steeringFullScaleDegrees),
-      "steeringResponseExponent": String(steeringResponseExponent)
+      "steeringResponseExponent": String(steeringResponseExponent),
     ]
   }
 
-  func applyingNumericText(
-    _ text: [String: String], decimalSeparator: String = "."
-  ) throws -> Self {
+  func applyingNumericText(_ text: [String: String], decimalSeparator: String = ".") throws -> Self
+  {
     func number(_ field: String) throws -> Double {
-      guard let raw = text[field] else {
-        throw RemappingMotionTuningError.invalidField(field)
-      }
+      guard let raw = text[field] else { throw RemappingMotionTuningError.invalidField(field) }
       guard let value = Self.numericValue(raw, decimalSeparator: decimalSeparator) else {
         throw RemappingMotionTuningError.invalidField(field)
       }
@@ -93,8 +89,10 @@ struct ProfileMotionDraft {
   }
 
   static func numericValue(_ raw: String, decimalSeparator: String = ".") -> Double? {
-    let normalized = raw.trimmingCharacters(in: .whitespacesAndNewlines)
-      .replacingOccurrences(of: decimalSeparator, with: ".")
+    let normalized = raw.trimmingCharacters(in: .whitespacesAndNewlines).replacingOccurrences(
+      of: decimalSeparator,
+      with: "."
+    )
     guard let value = Double(normalized), value.isFinite else { return nil }
     return value
   }

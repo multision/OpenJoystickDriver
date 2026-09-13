@@ -5,13 +5,16 @@ import Testing
 
 @testable import OpenJoystickDriver
 
-@Suite(.serialized) struct StatusTests {
-  @Test func unresolvedPermissionStatesNeedUserAction() {
+@Suite(.serialized)
+struct StatusTests {
+  @Test
+  func unresolvedPermissionStatesNeedUserAction() {
     #expect(RuntimePresentation.permissionLabel(.unknown) == "Needs attention")
     #expect(RuntimePresentation.permissionLabel(.denied) == "Needs attention")
   }
 
-  @Test func translatesStatus() async throws {
+  @Test
+  func translatesStatus() async throws {
     let device = ApplicationServiceDeviceDescription(
       name: "Test Pad",
       vendorID: 0x1234,
@@ -53,7 +56,8 @@ import Testing
     #expect(RuntimePresentation.modifierSystemSymbolName(.shift) == "shift")
   }
 
-  @Test func statusReadinessWaitsForPostEventAccess() async {
+  @Test
+  func statusReadinessWaitsForPostEventAccess() async {
     let device = ApplicationServiceDeviceDescription(
       name: "Test Pad",
       vendorID: 0x1234,
@@ -101,7 +105,8 @@ import Testing
     #expect(status.readiness == .needsAttention)
   }
 
-  @Test func liveStatusRefreshPublishesControllerDisconnectionWithoutLoadingTheUI() async {
+  @Test
+  func liveStatusRefreshPublishesControllerDisconnectionWithoutLoadingTheUI() async {
     let device = ApplicationServiceDeviceDescription(
       name: "Test Pad",
       vendorID: 0x1234,
@@ -142,7 +147,8 @@ import Testing
     #expect(status.devices.isEmpty)
   }
 
-  @Test func liveStatusFailureRetainsLastKnownControllerState() async {
+  @Test
+  func liveStatusFailureRetainsLastKnownControllerState() async {
     let device = ApplicationServiceDeviceDescription(
       name: "Test Pad",
       vendorID: 0x1234,
@@ -176,7 +182,9 @@ import Testing
     #expect(status.devices.map(\.runtimeIdentifier) == [device.runtimeIdentifier])
   }
 
-  @Test @MainActor func controllerInventoryRefreshIsScopedAndCoalescesConcurrentRequests() async {
+  @Test
+  @MainActor
+  func controllerInventoryRefreshIsScopedAndCoalescesConcurrentRequests() async {
     let gateway = GatewayStub(statusReadDelayNanoseconds: 100_000_000)
     let viewModel = RuntimeViewModel(gateway: gateway)
 
@@ -190,7 +198,9 @@ import Testing
     #expect(await gateway.remappingSnapshotCallCount == 0)
   }
 
-  @Test @MainActor func unchangedLiveStatusRefreshDoesNotRepublishObservableState() async {
+  @Test
+  @MainActor
+  func unchangedLiveStatusRefreshDoesNotRepublishObservableState() async {
     let gateway = GatewayStub()
     let viewModel = RuntimeViewModel(gateway: gateway)
     await viewModel.refresh()
@@ -204,7 +214,9 @@ import Testing
     withExtendedLifetime(observation) {}
   }
 
-  @Test @MainActor func livePollingDoesNotCancelTheFullProfilesAndIdentityRefresh() async {
+  @Test
+  @MainActor
+  func livePollingDoesNotCancelTheFullProfilesAndIdentityRefresh() async {
     let gateway = GatewayStub(statusReadDelayNanoseconds: 100_000_000)
     let viewModel = RuntimeViewModel(gateway: gateway)
     let fullRefresh = Task { await viewModel.refresh() }
@@ -223,7 +235,9 @@ import Testing
     }
   }
 
-  @Test @MainActor func liveStatusRefreshPublishesActiveProfileChanges() async {
+  @Test
+  @MainActor
+  func liveStatusRefreshPublishesActiveProfileChanges() async {
     let profile = makeProfile(name: "Desktop")
     let gateway = GatewayStub(snapshotPayload: snapshot(profiles: [profile]))
     let viewModel = RuntimeViewModel(gateway: gateway)
@@ -247,7 +261,8 @@ import Testing
     #expect(current.activeProfiles.map(\.profileID) == [profile.id])
   }
 
-  @Test func statusReadinessIgnoresPostEventAccessWithoutActiveMappings() async {
+  @Test
+  func statusReadinessIgnoresPostEventAccessWithoutActiveMappings() async {
     let device = ApplicationServiceDeviceDescription(
       name: "Test Pad",
       vendorID: 0x1234,
@@ -282,7 +297,8 @@ import Testing
     #expect(status.readiness == .ready)
   }
 
-  @Test func statusReadinessRemainsUnknownBeforeRemappingSnapshot() {
+  @Test
+  func statusReadinessRemainsUnknownBeforeRemappingSnapshot() {
     let payload = ApplicationServiceStatusPayload(
       inputMonitoring: "granted",
       accessibility: "granted",

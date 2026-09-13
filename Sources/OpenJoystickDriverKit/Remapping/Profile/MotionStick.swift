@@ -62,9 +62,8 @@ public struct RemappingMotionSteering: Codable, Equatable, Hashable, Sendable {
   }
 
   public func validate() throws {
-    guard deadzoneDegrees.isFinite, (0...89).contains(deadzoneDegrees),
-      fullScaleDegrees.isFinite, (1...90).contains(fullScaleDegrees),
-      deadzoneDegrees < fullScaleDegrees,
+    guard deadzoneDegrees.isFinite, (0...89).contains(deadzoneDegrees), fullScaleDegrees.isFinite,
+      (1...90).contains(fullScaleDegrees), deadzoneDegrees < fullScaleDegrees,
       responseExponent.isFinite, (0.1...10).contains(responseExponent)
     else { throw RemappingMotionTuningError.invalidField("steering") }
   }

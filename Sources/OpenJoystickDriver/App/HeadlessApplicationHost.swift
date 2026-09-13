@@ -14,7 +14,8 @@ final class HeadlessApplicationHost {
     private var presentation: MenuBarCoordinator?
   #endif
 
-  @MainActor func run() -> Never {
+  @MainActor
+  func run() -> Never {
     registerForLoginIfNeeded()
     #if canImport(AppKit) && canImport(SwiftUI)
       runtime.handleShutdownSignal { [weak runtime] in

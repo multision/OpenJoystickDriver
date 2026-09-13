@@ -4,7 +4,8 @@ import Testing
 @testable import OpenJoystickDriverUSB
 
 struct PassiveUSBDescriptorProbeTests {
-  @Test func exactTupleAuthorizationAndContributorGate() {
+  @Test
+  func exactTupleAuthorizationAndContributorGate() {
     let tuple = PassiveUSBDescriptorTuple(vendorID: 0x3537, productID: 0x1010)
     #expect(PassiveUSBDescriptorProbe.authorizedTuples.contains(tuple))
     #expect(
@@ -19,7 +20,8 @@ struct PassiveUSBDescriptorProbeTests {
       ])
     )
   }
-  @Test func constrainedScanRejectsUnauthorizedZeroAndMultipleAndDoesNotAskSource() throws {
+  @Test
+  func constrainedScanRejectsUnauthorizedZeroAndMultipleAndDoesNotAskSource() throws {
     let source = SpySource(matches: [])
     let unauthorized = PassiveUSBDescriptorTuple(vendorID: 1, productID: 2)
     #expect(throws: PassiveUSBDescriptorProbeError.tupleNotAuthorized) {
@@ -41,7 +43,8 @@ struct PassiveUSBDescriptorProbeTests {
       }
     )
   }
-  @Test func nestedRegistryParserPreservesOwnershipAndZeroDescriptors() throws {
+  @Test
+  func nestedRegistryParserPreservesOwnershipAndZeroDescriptors() throws {
     let tuple = PassiveUSBDescriptorTuple(vendorID: 0x3537, productID: 0x1010)
     let result = PassiveUSBRegistryFactParser.parse(
       root: fixtureRoot(),
@@ -56,7 +59,8 @@ struct PassiveUSBDescriptorProbeTests {
     #expect(result.observedUSBFacts.interfacesState == .unverified)
     #expect(result.parsedDescriptorFacts.state == .parsed)
   }
-  @Test func layersAndContradictionsAreTypedAndInferenceCannotBecomeObservation() throws {
+  @Test
+  func layersAndContradictionsAreTypedAndInferenceCannotBecomeObservation() throws {
     let tuple = PassiveUSBDescriptorTuple(vendorID: 0x3537, productID: 0x1010)
     let result = PassiveUSBRegistryFactParser.parse(
       root: fixtureRoot(),
@@ -100,12 +104,13 @@ struct PassiveUSBDescriptorProbeTests {
     #expect(
       object.keys.sorted() == [
         "catalogInference", "observedUSBFacts", "parsedDescriptorFacts", "protocolClassification",
-        "specificationInference", "userReportedPolling"
+        "specificationInference", "userReportedPolling",
       ]
     )
     #expect(noSensitiveKeys(object))
   }
-  @Test func alternateSettingsKeepTheirOwnEndpoints() throws {
+  @Test
+  func alternateSettingsKeepTheirOwnEndpoints() throws {
     let root = PassiveUSBRegistryNode(
       serviceClass: "IOUSBHostDevice",
       properties: [
@@ -113,8 +118,8 @@ struct PassiveUSBDescriptorProbeTests {
         "bDeviceProtocol": .unsignedInteger(0xFF), "bNumConfigurations": .unsignedInteger(1),
         "Configuration Descriptor": .bytes([
           9, 2, 0x29, 0, 1, 1, 0, 0x80, 0x32, 9, 4, 0, 0, 1, 0xFF, 0x47, 0xD0, 0, 7, 5, 0x81, 3, 0,
-          0, 1, 9, 4, 0, 1, 1, 0xFF, 0x47, 0xD0, 0, 7, 5, 2, 3, 0, 0, 1
-        ])
+          0, 1, 9, 4, 0, 1, 1, 0xFF, 0x47, 0xD0, 0, 7, 5, 2, 3, 0, 0, 1,
+        ]),
       ],
       children: []
     )
@@ -127,7 +132,8 @@ struct PassiveUSBDescriptorProbeTests {
     #expect(interfaces.map(\.alternateSetting) == [0, 1])
     #expect(interfaces.map { $0.endpoints.map(\.address) } == [[0x81], [0x02]])
   }
-  @Test func descriptorParserRejectsMalformedBlobsAndKeepsUnknownDescriptors() throws {
+  @Test
+  func descriptorParserRejectsMalformedBlobsAndKeepsUnknownDescriptors() throws {
     #expect(throws: PassiveUSBDescriptorBlobError.missingConfiguration) {
       try PassiveUSBConfigurationDescriptorParser.parse([9, 4, 0, 0, 0, 0, 0, 0, 0])
     }
@@ -141,17 +147,18 @@ struct PassiveUSBDescriptorProbeTests {
       try PassiveUSBConfigurationDescriptorParser.parse([9, 2, 10, 0, 0, 1, 0, 0, 0])
     }
     let parsed = try PassiveUSBConfigurationDescriptorParser.parse([
-      9, 2, 0x15, 0, 1, 1, 0, 0x80, 0x32, 3, 0x99, 0, 9, 4, 0, 0, 0, 0xFF, 0x47, 0xD0, 0
+      9, 2, 0x15, 0, 1, 1, 0, 0x80, 0x32, 3, 0x99, 0, 9, 4, 0, 0, 0, 0xFF, 0x47, 0xD0, 0,
     ])
     #expect(parsed.descriptors.map(\.type) == [2, 0x99, 4])
     #expect(parsed.interfaces.count == 1)
     #expect(parsed.interfaces[0].endpoints.isEmpty)
   }
-  @Test func endpointCountsAddressesAttributesAndIntervalsAreStrict() throws {
+  @Test
+  func endpointCountsAddressesAttributesAndIntervalsAreStrict() throws {
     func blob(endpointCount: UInt8, endpoint: [UInt8]) -> [UInt8] {
       [
         9, 2, UInt8(18 + endpoint.count), 0, 1, 1, 0, 0x80, 0x32, 9, 4, 0, 0, endpointCount, 0xFF,
-        0x47, 0xD0, 0
+        0x47, 0xD0, 0,
       ] + endpoint
     }
     #expect(throws: PassiveUSBDescriptorBlobError.totalLengthMismatch) {
@@ -187,14 +194,17 @@ struct PassiveUSBDescriptorProbeTests {
       )
     }
   }
-  @Test func intervalBoundariesAreSpeedAndTransferScoped() throws {
-    func parse(_ transfer: UInt8, _ interval: UInt8, _ speed: PassiveUSBNegotiatedSpeed) throws
-      -> UInt64?
-    {
+  @Test
+  func intervalBoundariesAreSpeedAndTransferScoped() throws {
+    func parse(
+      _ transfer: UInt8,
+      _ interval: UInt8,
+      _ speed: PassiveUSBNegotiatedSpeed
+    ) throws -> UInt64? {
       try PassiveUSBConfigurationDescriptorParser.parse(
         [
           9, 2, 25, 0, 1, 1, 0, 0x80, 0x32, 9, 4, 0, 0, 1, 0xFF, 0x47, 0xD0, 0, 7, 5, 1, transfer,
-          0, 0, interval
+          0, 0, interval,
         ],
         negotiatedSpeed: speed
       ).interfaces[0].endpoints[0].nominalIntervalMicroseconds
@@ -208,11 +218,12 @@ struct PassiveUSBDescriptorProbeTests {
     #expect(try parse(2, 1, .high) == nil)
     #expect(try parse(0, 1, .high) == nil)
   }
-  @Test func endpointUsageAndLowSpeedTransferRulesAreIndependent() throws {
+  @Test
+  func endpointUsageAndLowSpeedTransferRulesAreIndependent() throws {
     func blob(attributes: UInt8, interval: UInt8) -> [UInt8] {
       [
         9, 2, 25, 0, 1, 1, 0, 0x80, 0x32, 9, 4, 0, 0, 1, 0xFF, 0x47, 0xD0, 0, 7, 5, 1, attributes,
-        64, 0, interval
+        64, 0, interval,
       ]
     }
     for usage in [UInt8(0x03), UInt8(0x13)] {
@@ -251,11 +262,12 @@ struct PassiveUSBDescriptorProbeTests {
       try PassiveUSBConfigurationDescriptorParser.parse(blob(attributes: 1, interval: 17))
     }
   }
-  @Test func isochronousUsageValuesAcceptZeroOneTwoAndRejectThree() throws {
+  @Test
+  func isochronousUsageValuesAcceptZeroOneTwoAndRejectThree() throws {
     func blob(_ attributes: UInt8) -> [UInt8] {
       [
         9, 2, 25, 0, 1, 1, 0, 0x80, 0x32, 9, 4, 0, 0, 1, 0xFF, 0x47, 0xD0, 0, 7, 5, 1, attributes,
-        0, 2, 1
+        0, 2, 1,
       ]
     }
     for attributes in [UInt8(1), UInt8(0x11), UInt8(0x21)] {
@@ -267,11 +279,12 @@ struct PassiveUSBDescriptorProbeTests {
       try _ = PassiveUSBConfigurationDescriptorParser.parse(blob(0x31))
     }
   }
-  @Test func isochronousSynchronizationValuesAreAllAccepted() throws {
+  @Test
+  func isochronousSynchronizationValuesAreAllAccepted() throws {
     func blob(_ attributes: UInt8) -> [UInt8] {
       [
         9, 2, 25, 0, 1, 1, 0, 0x80, 0x32, 9, 4, 0, 0, 1, 0xFF, 0x47, 0xD0, 0, 7, 5, 1, attributes,
-        0, 2, 1
+        0, 2, 1,
       ]
     }
     for attributes in [UInt8(1), UInt8(5), UInt8(9), UInt8(13)] {
@@ -280,18 +293,20 @@ struct PassiveUSBDescriptorProbeTests {
       }
     }
   }
-  @Test func periodicZeroIsInvalidBeforeSpeedIsKnown() {
+  @Test
+  func periodicZeroIsInvalidBeforeSpeedIsKnown() {
     let bytes: [UInt8] = [
-      9, 2, 25, 0, 1, 1, 0, 0x80, 0x32, 9, 4, 0, 0, 1, 0xFF, 0x47, 0xD0, 0, 7, 5, 1, 3, 0, 0, 0
+      9, 2, 25, 0, 1, 1, 0, 0x80, 0x32, 9, 4, 0, 0, 1, 0xFF, 0x47, 0xD0, 0, 7, 5, 1, 3, 0, 0, 0,
     ]
     #expect(throws: PassiveUSBDescriptorBlobError.invalidInterval) {
       try _ = PassiveUSBConfigurationDescriptorParser.parse(bytes)
     }
   }
-  @Test func superSpeedCompanionsAreOwnedAndValidated() throws {
+  @Test
+  func superSpeedCompanionsAreOwnedAndValidated() throws {
     let regular: [UInt8] = [
       9, 2, 31, 0, 1, 1, 0, 0x80, 0x32, 9, 4, 0, 0, 1, 0xFF, 0x47, 0xD0, 0, 7, 5, 1, 3, 64, 0, 1, 6,
-      0x30, 0, 0, 64, 0
+      0x30, 0, 0, 64, 0,
     ]
     let parsed = try PassiveUSBConfigurationDescriptorParser.parse(
       regular,
@@ -316,7 +331,7 @@ struct PassiveUSBDescriptorProbeTests {
     }
     let ssp: [UInt8] = [
       9, 2, 39, 0, 1, 1, 0, 0x80, 0x32, 9, 4, 0, 0, 1, 0xFF, 0x47, 0xD0, 0, 7, 5, 1, 1, 0, 2, 1, 6,
-      0x30, 0, 0x80, 1, 0, 8, 0x31, 0, 0, 0x50, 0xC3, 0, 0
+      0x30, 0, 0x80, 1, 0, 8, 0x31, 0, 0, 0x50, 0xC3, 0, 0,
     ]
     let sspParsed = try PassiveUSBConfigurationDescriptorParser.parse(
       ssp,
@@ -346,7 +361,7 @@ struct PassiveUSBDescriptorProbeTests {
     #expect(throws: PassiveUSBDescriptorBlobError.orphanCompanionDescriptor) {
       let orphan: [UInt8] = [
         9, 2, 33, 0, 1, 1, 0, 0x80, 0x32, 9, 4, 0, 0, 1, 0xFF, 0x47, 0xD0, 0, 7, 5, 1, 1, 0, 0, 1,
-        8, 0x31, 0, 0, 0, 0, 0, 0
+        8, 0x31, 0, 0, 0, 0, 0, 0,
       ]
       try _ = PassiveUSBConfigurationDescriptorParser.parse(
         orphan,
@@ -360,11 +375,12 @@ struct PassiveUSBDescriptorProbeTests {
       )
     }
   }
-  @Test func superSpeedPacketBurstMatrixIsTransferSpecific() throws {
+  @Test
+  func superSpeedPacketBurstMatrixIsTransferSpecific() throws {
     func blob(transfer: UInt8, packet: UInt16, burst: UInt8) -> [UInt8] {
       [
         9, 2, 31, 0, 1, 1, 0, 0x80, 0x32, 9, 4, 0, 0, 1, 0xFF, 0x47, 0xD0, 0, 7, 5, 1, transfer,
-        UInt8(packet & 0xFF), UInt8(packet >> 8), 1, 6, 0x30, burst, 0, 0, 0
+        UInt8(packet & 0xFF), UInt8(packet >> 8), 1, 6, 0x30, burst, 0, 0, 0,
       ]
     }
     for packet in [UInt16(1), UInt16(1_024)] {
@@ -406,14 +422,19 @@ struct PassiveUSBDescriptorProbeTests {
       )
     }
   }
-  @Test func superSpeedControlAndBulkPacketAndStreamBoundariesAreStrict() throws {
-    func blob(transfer: UInt8, packet: UInt16, burst: UInt8, attributes: UInt8, bytes: UInt16 = 0)
-      -> [UInt8]
-    {
+  @Test
+  func superSpeedControlAndBulkPacketAndStreamBoundariesAreStrict() throws {
+    func blob(
+      transfer: UInt8,
+      packet: UInt16,
+      burst: UInt8,
+      attributes: UInt8,
+      bytes: UInt16 = 0
+    ) -> [UInt8] {
       [
         9, 2, 31, 0, 1, 1, 0, 0x80, 0x32, 9, 4, 0, 0, 1, 0xFF, 0x47, 0xD0, 0, 7, 5, 1, transfer,
         UInt8(packet & 0xFF), UInt8(packet >> 8), 1, 6, 0x30, burst, attributes,
-        UInt8(bytes & 0xFF), UInt8(bytes >> 8)
+        UInt8(bytes & 0xFF), UInt8(bytes >> 8),
       ]
     }
     #expect(throws: Never.self) {
@@ -463,7 +484,8 @@ struct PassiveUSBDescriptorProbeTests {
       )
     }
   }
-  @Test func superSpeedInterruptAndIsoPacketAndByteBoundariesAreStrict() throws {
+  @Test
+  func superSpeedInterruptAndIsoPacketAndByteBoundariesAreStrict() throws {
     func blob(
       transfer: UInt8,
       packet: UInt16,
@@ -474,7 +496,7 @@ struct PassiveUSBDescriptorProbeTests {
       [
         9, 2, 31, 0, 1, 1, 0, 0x80, 0x32, 9, 4, 0, 0, 1, 0xFF, 0x47, 0xD0, 0, 7, 5, 1, transfer,
         UInt8(packet & 0xFF), UInt8(packet >> 8), 1, 6, 0x30, burst, attributes,
-        UInt8(bytes & 0xFF), UInt8(bytes >> 8)
+        UInt8(bytes & 0xFF), UInt8(bytes >> 8),
       ]
     }
     for packet in [UInt16(0), UInt16(1_025)] {
@@ -510,12 +532,13 @@ struct PassiveUSBDescriptorProbeTests {
       )
     }
   }
-  @Test func sspBoundaryContextAndOrderingCasesAreTyped() throws {
+  @Test
+  func sspBoundaryContextAndOrderingCasesAreTyped() throws {
     func fixture(dw: UInt32 = 50_000, marker: UInt8 = 0x80, sspBytes: UInt16 = 1) -> [UInt8] {
       [
         9, 2, 39, 0, 1, 1, 0, 0x80, 0x32, 9, 4, 0, 0, 1, 0xFF, 0x47, 0xD0, 0, 7, 5, 1, 1, 0, 2, 1,
         6, 0x30, 0, marker, UInt8(sspBytes & 0xFF), UInt8(sspBytes >> 8), 8, 0x31, 0, 0,
-        UInt8(dw & 0xFF), UInt8((dw >> 8) & 0xFF), UInt8((dw >> 16) & 0xFF), UInt8(dw >> 24)
+        UInt8(dw & 0xFF), UInt8((dw >> 8) & 0xFF), UInt8((dw >> 16) & 0xFF), UInt8(dw >> 24),
       ]
     }
     let context = PassiveUSBSuperSpeedPlusValidationContext(
@@ -592,12 +615,13 @@ struct PassiveUSBDescriptorProbeTests {
       )
     }
   }
-  @Test func identicalAliasesParseAndDifferentAliasesAreAmbiguous() throws {
+  @Test
+  func identicalAliasesParseAndDifferentAliasesAreAmbiguous() throws {
     let bytes: [UInt8] = [9, 2, 9, 0, 0, 1, 0, 0x80, 0x32]
     let root = PassiveUSBRegistryNode(
       serviceClass: "IOUSBHostDevice",
       properties: [
-        "Configuration Descriptor": .bytes(bytes), "kUSBConfigurationDescriptor": .bytes(bytes)
+        "Configuration Descriptor": .bytes(bytes), "kUSBConfigurationDescriptor": .bytes(bytes),
       ]
     )
     let same = PassiveUSBRegistryFactParser.parse(
@@ -611,7 +635,7 @@ struct PassiveUSBDescriptorProbeTests {
       serviceClass: "IOUSBHostDevice",
       properties: [
         "Configuration Descriptor": .bytes(bytes),
-        "kUSBConfigurationDescriptor": .bytes(bytes + [0])
+        "kUSBConfigurationDescriptor": .bytes(bytes + [0]),
       ]
     )
     let ambiguous = PassiveUSBRegistryFactParser.parse(
@@ -622,7 +646,8 @@ struct PassiveUSBDescriptorProbeTests {
     #expect(ambiguous.parsedDescriptorFacts.state == .ambiguous)
     #expect(ambiguous.parsedDescriptorFacts.configuration == nil)
   }
-  @Test func boundedBlobAndOwnershipBoundaryCasesAreIndependent() throws {
+  @Test
+  func boundedBlobAndOwnershipBoundaryCasesAreIndependent() throws {
     #expect(throws: PassiveUSBDescriptorBlobError.unsafeSize) {
       try _ = PassiveUSBConfigurationDescriptorParser.parse([])
     }
@@ -658,16 +683,17 @@ struct PassiveUSBDescriptorProbeTests {
     }
     #expect(throws: PassiveUSBDescriptorBlobError.impossibleEndpointOwnership) {
       try _ = PassiveUSBConfigurationDescriptorParser.parse([
-        9, 2, 23, 0, 1, 1, 0, 0x80, 0x32, 7, 5, 1, 3, 64, 0, 1, 7, 5, 1, 3, 64, 0, 1
+        9, 2, 23, 0, 1, 1, 0, 0x80, 0x32, 7, 5, 1, 3, 64, 0, 1, 7, 5, 1, 3, 64, 0, 1,
       ])
     }
     #expect(throws: PassiveUSBDescriptorBlobError.impossibleEndpointOwnership) {
       try _ = PassiveUSBConfigurationDescriptorParser.parse([
-        9, 2, 16, 0, 1, 1, 0, 0x80, 0x32, 7, 5, 1, 3, 64, 0, 1
+        9, 2, 16, 0, 1, 1, 0, 0x80, 0x32, 7, 5, 1, 3, 64, 0, 1,
       ])
     }
   }
-  @Test func matchingFailuresRemainTypedAndInterpolated() {
+  @Test
+  func matchingFailuresRemainTypedAndInterpolated() {
     let source = SpySource(error: .matchingFailed(-536_870_181))
     #expect(throws: PassiveUSBDescriptorProbeError.matchingFailed(-536_870_181)) {
       try PassiveUSBDescriptorProbe.scanWithoutGate(
@@ -679,13 +705,14 @@ struct PassiveUSBDescriptorProbeTests {
       PassiveUSBDescriptorProbeError.matchingFailed(-7).errorDescription?.contains("-7") == true
     )
   }
-  @Test func speedAliasesAreObservedOrAmbiguousWithoutPromotingUnknownSpeed() {
+  @Test
+  func speedAliasesAreObservedOrAmbiguousWithoutPromotingUnknownSpeed() {
     let root = fixtureRoot()
     let observed = PassiveUSBRegistryFactParser.parse(
       root: PassiveUSBRegistryNode(
         serviceClass: root.serviceClass,
         properties: root.properties.merging([
-          "USBSpeed": .string("high"), "Device Speed": .unsignedInteger(2)
+          "USBSpeed": .string("high"), "Device Speed": .unsignedInteger(2),
         ]) { _, new in new },
         children: root.children
       ),
@@ -698,7 +725,7 @@ struct PassiveUSBDescriptorProbeTests {
       root: PassiveUSBRegistryNode(
         serviceClass: root.serviceClass,
         properties: root.properties.merging([
-          "USBSpeed": .string("high"), "Device Speed": .string("full")
+          "USBSpeed": .string("high"), "Device Speed": .string("full"),
         ]) { _, new in new },
         children: root.children
       ),
@@ -719,8 +746,8 @@ struct PassiveUSBDescriptorProbeTests {
         "kUSBCurrentConfiguration": .unsignedInteger(0),
         "Configuration Descriptor": .bytes([
           9, 2, 0x19, 0, 1, 1, 0, 0x80, 0x32, 9, 4, 0, 0, 1, 0xFF, 0x47, 0xD0, 0, 7, 5, 1, 3, 0, 0,
-          1
-        ])
+          1,
+        ]),
       ],
       children: children ?? [interface]
     )
@@ -732,7 +759,7 @@ struct PassiveUSBDescriptorProbeTests {
       properties: [
         "bEndpointAddress": .unsignedInteger(UInt64(endpoint)),
         "wMaxPacketSize": .unsignedInteger(0), "bInterval": .unsignedInteger(0),
-        "transferType": .string("interrupt")
+        "transferType": .string("interrupt"),
       ]
     )
     return PassiveUSBRegistryNode(
@@ -741,7 +768,7 @@ struct PassiveUSBDescriptorProbeTests {
         "bInterfaceNumber": .unsignedInteger(UInt64(number)),
         "bAlternateSetting": .unsignedInteger(UInt64(alternate)),
         "bInterfaceClass": .unsignedInteger(0xFF), "bInterfaceSubClass": .unsignedInteger(0x47),
-        "bInterfaceProtocol": .unsignedInteger(0xD0)
+        "bInterfaceProtocol": .unsignedInteger(0xD0),
       ],
       children: [endpoint]
     )
@@ -763,25 +790,5 @@ struct PassiveUSBDescriptorProbeTests {
     }
     if let array = value as? [Any] { return array.allSatisfy(noSensitiveKeys) }
     return true
-  }
-}
-private final class SpySource: PassiveUSBRegistrySource, @unchecked Sendable {
-  struct Call: Equatable {
-    let className: String
-    let properties: [String: UInt64]
-  }
-  var matches: [PassiveUSBRegistryNode]
-  var error: PassiveUSBDescriptorProbeError?
-  var calls: [Call] = []
-  init(matches: [PassiveUSBRegistryNode] = [], error: PassiveUSBDescriptorProbeError? = nil) {
-    self.matches = matches
-    self.error = error
-  }
-  func matchingServices(className: String, numericProperties: [String: UInt64]) throws
-    -> [PassiveUSBRegistryNode]
-  {
-    calls.append(Call(className: className, properties: numericProperties))
-    if let error { throw error }
-    return matches
   }
 }

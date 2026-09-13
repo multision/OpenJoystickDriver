@@ -4,7 +4,8 @@ import Testing
 @testable import OpenJoystickDriverKit
 
 struct NintendoUSBHIDReportFormatTests {
-  @Test func switchProUSBReportParsesThroughSwitchProParser() throws {
+  @Test
+  func switchProUSBReportParsesThroughSwitchProParser() throws {
     var state = VirtualGamepadState()
     state.buttons =
       (1 << GamepadHIDDescriptor.ButtonBit.a.rawValue)
@@ -30,7 +31,8 @@ struct NintendoUSBHIDReportFormatTests {
     #expect(events.contains(.dpadChanged(.north)))
   }
 
-  @Test func switchProIdentityUsesNintendoPresentation() {
+  @Test
+  func switchProIdentityUsesNintendoPresentation() {
     #expect(VirtualDeviceProfile.switchProUSB.presentation == .nintendo)
     #expect(VirtualDeviceProfile.switchProUSB.productName == "Pro Controller")
     #expect(VirtualDeviceProfile.switchProUSB.vendorID == 0x057E)
@@ -46,12 +48,11 @@ struct NintendoUSBHIDReportFormatTests {
       protocolVariant: .switchPro
     )
     #expect(PublishedVirtualIdentity.profile(for: physical, requested: .automatic) == .switchProUSB)
-    #expect(
-      PublishedVirtualIdentity.profile(for: physical, requested: .switchPro) == .switchProUSB
-    )
+    #expect(PublishedVirtualIdentity.profile(for: physical, requested: .switchPro) == .switchProUSB)
   }
 
-  @Test func switchProUSBDescriptorDeclaresJoystickReport30() throws {
+  @Test
+  func switchProUSBDescriptorDeclaresJoystickReport30() throws {
     let parsed = try #require(
       HIDReportDescriptorParser.parse(descriptor: SwitchProUSBHIDDescriptor.descriptor)
     )

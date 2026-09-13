@@ -9,7 +9,8 @@ struct Xbox360HIDReportFormatTests {
   private func report(buttonBit: Int) -> [UInt8] {
     format().buildInputReport(from: VirtualGamepadState(buttons: 1 << UInt32(buttonBit)))
   }
-  @Test func testExposesReportShape() throws {
+  @Test
+  func testExposesReportShape() throws {
     let f = format()
     let parsed = try HIDDescriptorReportFormat(descriptor: f.descriptor)
 
@@ -19,7 +20,8 @@ struct Xbox360HIDReportFormatTests {
     #expect(parsed.inputReportID == nil)
     #expect(parsed.inputReportPayloadSize == 13)
   }
-  @Test func testMapsFaceAndShoulderButtons() {
+  @Test
+  func testMapsFaceAndShoulderButtons() {
     let a = report(buttonBit: 0)
     let y = report(buttonBit: 3)
     let lb = report(buttonBit: 4)
@@ -30,7 +32,8 @@ struct Xbox360HIDReportFormatTests {
     #expect(lb[0] == 0x10)
     #expect(rb[0] == 0x20)
   }
-  @Test func testMapsControlButtons() {
+  @Test
+  func testMapsControlButtons() {
     let leftStick = report(buttonBit: 6)
     let rightStick = report(buttonBit: 7)
     let menu = report(buttonBit: 8)
@@ -41,7 +44,8 @@ struct Xbox360HIDReportFormatTests {
     #expect(leftStick[1] == 0x01)
     #expect(rightStick[1] == 0x02)
   }
-  @Test func testMapsDpadAsHatOnly() {
+  @Test
+  func testMapsDpadAsHatOnly() {
     let north = format().buildInputReport(
       from: VirtualGamepadState(
         buttons: GamepadHIDDescriptor.dpadButtonBits(for: .north),
@@ -62,7 +66,8 @@ struct Xbox360HIDReportFormatTests {
     #expect(east[2] == 0x03)
     #expect(neutral[2] == 0x00)
   }
-  @Test func testPacksSticks() {
+  @Test
+  func testPacksSticks() {
     let full = format().buildInputReport(
       from: VirtualGamepadState(
         leftStickX: 32_767,
@@ -81,7 +86,8 @@ struct Xbox360HIDReportFormatTests {
     #expect(full[11] == 0x00)
     #expect(full[12] == 0xC0)
   }
-  @Test func testCombinesTriggersOnZ() {
+  @Test
+  func testCombinesTriggersOnZ() {
     let neutral = format().buildInputReport(from: VirtualGamepadState())
     let left = format().buildInputReport(from: VirtualGamepadState(leftTrigger: 32_767))
     let right = format().buildInputReport(from: VirtualGamepadState(rightTrigger: 32_767))
@@ -98,7 +104,8 @@ struct Xbox360HIDReportFormatTests {
     #expect(both[7] == 0x00)
     #expect(both[8] == 0x00)
   }
-  @Test func testIgnoresGuide() {
+  @Test
+  func testIgnoresGuide() {
     let guide = report(buttonBit: 10)
 
     #expect(guide[0] == 0x00)
@@ -108,7 +115,8 @@ struct Xbox360HIDReportFormatTests {
 
 struct Xbox360MacHIDReportFormatTests {
   private func format() -> Xbox360MacHIDReportFormat { Xbox360MacHIDReportFormat() }
-  @Test func testSelectsTopLevelUsage() {
+  @Test
+  func testSelectsTopLevelUsage() {
     let joystick = Xbox360MacHIDReportFormat()
     let gamePad = Xbox360MacHIDReportFormat(topLevelUsage: UInt8(kHIDUsage_GD_GamePad))
 
@@ -116,7 +124,8 @@ struct Xbox360MacHIDReportFormatTests {
     #expect(gamePad.descriptor[3] == UInt8(kHIDUsage_GD_GamePad))
     #expect(Array(joystick.descriptor[4...]) == Array(gamePad.descriptor[4...]))
   }
-  @Test func testExposesIndependentTriggers() throws {
+  @Test
+  func testExposesIndependentTriggers() throws {
     let f = format()
     let parsed = try HIDDescriptorReportFormat(descriptor: f.descriptor)
     let neutral = f.buildInputReport(from: VirtualGamepadState())
@@ -134,13 +143,15 @@ struct Xbox360MacHIDReportFormatTests {
     #expect(right[4] == 0)
     #expect(right[5] == 255)
   }
-  @Test func testStatePacketCarriesXbox360Header() {
+  @Test
+  func testStatePacketCarriesXbox360Header() {
     let neutral = format().buildInputReport(from: VirtualGamepadState())
 
     #expect(neutral[0] == 0x00)
     #expect(neutral[1] == 0x14)
   }
-  @Test func testDescriptorFieldsMatchReportPacking() throws {
+  @Test
+  func testDescriptorFieldsMatchReportPacking() throws {
     let state = VirtualGamepadState(
       buttons: GamepadHIDDescriptor.dpadButtonBits(for: .north)
         | (1 << GamepadHIDDescriptor.ButtonBit.guide.rawValue)
@@ -159,7 +170,8 @@ struct Xbox360MacHIDReportFormatTests {
 
     #expect(Array(descriptorPacked.dropFirst(2)) == Array(bespokePacked.dropFirst(2)))
   }
-  @Test func testMapsXInputButtonOrder() {
+  @Test
+  func testMapsXInputButtonOrder() {
     let buttons =
       GamepadHIDDescriptor.dpadButtonBits(for: .north)
       | (1 << GamepadHIDDescriptor.ButtonBit.start.rawValue)
@@ -176,7 +188,8 @@ struct Xbox360MacHIDReportFormatTests {
     #expect(report[2] == 0xF1)
     #expect(report[3] == 0xF4)
   }
-  @Test func testShoulderReleaseClearsHighButtonByte() {
+  @Test
+  func testShoulderReleaseClearsHighButtonByte() {
     let pressed = format().buildInputReport(
       from: VirtualGamepadState(
         buttons: (1 << GamepadHIDDescriptor.ButtonBit.leftBumper.rawValue)

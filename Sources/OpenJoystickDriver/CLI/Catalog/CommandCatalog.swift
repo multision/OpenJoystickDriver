@@ -162,7 +162,7 @@ enum InstalledCommandCatalog {
       group: CLILocalized.text("cli.catalog.group.support", "Support"),
       sideEffect: .networkRead,
       outputs: [.text, .json]
-    )
+    ),
   ]
 
   private static func command(
@@ -195,7 +195,7 @@ enum InstalledCLIHelpRenderer {
       CLILocalized.text(
         "cli.help.usage",
         "Usage: OpenJoystickDriver --headless [--timeout <seconds>] <command>"
-      ), ""
+      ), "",
     ]
     var currentGroup: String?
     for command in commands {
@@ -221,7 +221,7 @@ enum InstalledCLIHelpRenderer {
       CLILocalized.text(
         "cli.help.device",
         "for controller-scoped operations. Output never relies on color alone."
-      )
+      ),
     ]
     return lines.joined(separator: "\n")
   }

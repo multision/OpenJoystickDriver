@@ -71,13 +71,11 @@ struct RemappingEngineState {
           at: uptimeNanoseconds
         )
     case .leftTriggerChanged(let value):
-      return processAdvancedTrigger(
-        .left, value: value, for: identifier, at: uptimeNanoseconds
-      ) + processAxes([(.leftTrigger, value)], for: identifier, at: uptimeNanoseconds)
+      return processAdvancedTrigger(.left, value: value, for: identifier, at: uptimeNanoseconds)
+        + processAxes([(.leftTrigger, value)], for: identifier, at: uptimeNanoseconds)
     case .rightTriggerChanged(let value):
-      return processAdvancedTrigger(
-        .right, value: value, for: identifier, at: uptimeNanoseconds
-      ) + processAxes([(.rightTrigger, value)], for: identifier, at: uptimeNanoseconds)
+      return processAdvancedTrigger(.right, value: value, for: identifier, at: uptimeNanoseconds)
+        + processAxes([(.rightTrigger, value)], for: identifier, at: uptimeNanoseconds)
     case .motionSample(let sample): return processMotion(sample, for: identifier)
     case .touchSample(let sample):
       return processTouch(sample, for: identifier, at: uptimeNanoseconds)

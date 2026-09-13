@@ -25,7 +25,8 @@ struct SteamTouchSamplesTests {
     }
   }
 
-  @Test func independentPadsPreserveSignedCoordinatesAndReleaseFrames() throws {
+  @Test
+  func independentPadsPreserveSignedCoordinatesAndReleaseFrames() throws {
     let parser = SteamControllerParser()
     let events = try parser.parse(data: packet(counter: 1, flags: 0x18, x: -32_768, y: 32_767))
     let frames = touches(events)
@@ -46,16 +47,27 @@ struct SteamTouchSamplesTests {
     #expect(released.allSatisfy { !$0.contacts[0].isActive })
   }
 
-  @Test func interleavedPadAndStickPacketsDoNotOverwriteEachOther() throws {
+  @Test
+  func interleavedPadAndStickPacketsDoNotOverwriteEachOther() throws {
     let parser = SteamControllerParser()
     _ = try parser.parse(data: packet(counter: 1, flags: 0, x: 16_384, y: 0))
     let pad = try parser.parse(data: packet(counter: 2, flags: 0x88, x: -12_000, y: 8000))
-    #expect(!pad.contains { if case .leftStickChanged = $0 { return true }; return false })
+    #expect(
+      !pad.contains {
+        if case .leftStickChanged = $0 { return true }
+        return false
+      }
+    )
     let stick = try parser.parse(data: packet(counter: 3, flags: 0x80, x: 20_000, y: 0))
     let left = try #require(touches(stick).first)
     #expect(left.contacts[0].isActive)
     #expect(left.contacts[0].x == -12_000 && left.contacts[0].y == 8000)
-    #expect(stick.contains { if case .leftStickChanged = $0 { return true }; return false })
+    #expect(
+      stick.contains {
+        if case .leftStickChanged = $0 { return true }
+        return false
+      }
+    )
     let padOnly = try parser.parse(data: packet(counter: 4, flags: 8, x: 100, y: 200))
     #expect(padOnly.contains(.leftStickChanged(x: 0, y: 0)))
   }

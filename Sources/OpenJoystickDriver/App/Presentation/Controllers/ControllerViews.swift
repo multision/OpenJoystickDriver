@@ -8,9 +8,11 @@
   // MARK: - Controllers
 
   struct ControllersView: View {
-    @ObservedObject var viewModel: RuntimeViewModel
+    @ObservedObject
+    var viewModel: RuntimeViewModel
     let openInputTest: @MainActor (ApplicationServiceDeviceDescription) -> Void
-    @State private var selectedRuntimeIdentifier: String?
+    @State
+    private var selectedRuntimeIdentifier: String?
 
     var body: some View {
       GeometryReader { proxy in
@@ -144,7 +146,8 @@
       }
     }
 
-    @ViewBuilder private var controllerDetail: some View {
+    @ViewBuilder
+    private var controllerDetail: some View {
       if let selectedDevice {
         ControllerDetailView(
           device: selectedDevice,
@@ -203,9 +206,9 @@
 
     private func refresh() { Task { @MainActor in await viewModel.refreshControllerInventory() } }
 
-    private func activeProfileState(for device: ApplicationServiceDeviceDescription)
-      -> RuntimeActiveProfileState
-    {
+    private func activeProfileState(
+      for device: ApplicationServiceDeviceDescription
+    ) -> RuntimeActiveProfileState {
       switch viewModel.remappingState {
       case .loading: return .loading
       case .unavailable(let message): return .unavailable(message)
@@ -225,7 +228,8 @@
     let device: ApplicationServiceDeviceDescription
     let activeProfile: RuntimeActiveProfileState
     let retry: () -> Void
-    @ObservedObject var viewModel: RuntimeViewModel
+    @ObservedObject
+    var viewModel: RuntimeViewModel
     let openInputTest: @MainActor (ApplicationServiceDeviceDescription) -> Void
 
     var body: some View {
@@ -286,7 +290,8 @@
       }
     }
 
-    @ViewBuilder private var activeProfileRow: some View {
+    @ViewBuilder
+    private var activeProfileRow: some View {
       switch activeProfile {
       case .loading:
         KeyValueRow(
@@ -493,8 +498,7 @@
   extension ControllerProtocolVariant {
     var displayLabel: String {
       switch self {
-      case .xid:
-        return OJDLocalized.string("controller.xboxOriginal", fallback: "Xbox (original)")
+      case .xid: return OJDLocalized.string("controller.xboxOriginal", fallback: "Xbox (original)")
       case .xbox360: return OJDLocalized.string("controller.xbox360", fallback: "Xbox 360")
       case .xbox360Wireless:
         return OJDLocalized.string("controller.xbox360Wireless", fallback: "Xbox 360 wireless")

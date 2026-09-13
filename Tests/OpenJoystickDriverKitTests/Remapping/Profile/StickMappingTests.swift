@@ -3,7 +3,8 @@ import Testing
 @testable import OpenJoystickDriverKit
 
 struct StickMappingTests {
-  @Test func defaultsAndAllModesRoundTrip() throws {
+  @Test
+  func defaultsAndAllModesRoundTrip() throws {
     let minimal = Data(#"{"source":"right"}"#.utf8)
     let decoded = try JSONDecoder().decode(RemappingStickMapping.self, from: minimal)
     #expect(decoded == RemappingStickMapping(source: .right))
@@ -14,7 +15,8 @@ struct StickMappingTests {
     }
   }
 
-  @Test func rejectsNonfiniteRatesAndInvertedHysteresis() {
+  @Test
+  func rejectsNonfiniteRatesAndInvertedHysteresis() {
     #expect(throws: RemappingStickMappingError.self) {
       try RemappingStickMapping(source: .left, aimDegreesPerSecond: .infinity).validate()
     }
@@ -22,9 +24,8 @@ struct StickMappingTests {
       try RemappingStickMapping(source: .left, flickThreshold: 0.1, flickHysteresis: 0.2).validate()
     }
     #expect(throws: RemappingStickTuningError.self) {
-      try RemappingStickMapping(
-        source: .left, tuning: RemappingStickTuning(responseExponent: -1)
-      ).validate()
+      try RemappingStickMapping(source: .left, tuning: RemappingStickTuning(responseExponent: -1))
+        .validate()
     }
   }
 }

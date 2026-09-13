@@ -3,7 +3,8 @@ import Testing
 @testable import OpenJoystickDriverKit
 
 struct TriggerRuntimeTests {
-  @Test func simultaneousAndExclusiveModesOrderStageChanges() {
+  @Test
+  func simultaneousAndExclusiveModesOrderStageChanges() {
     var simultaneous = RemappingDualStageTriggerRuntime(mapping: mapping(.simultaneous))
     #expect(simultaneous.update(value: 0.2, at: 0) == [change(.soft, true)])
     #expect(simultaneous.update(value: 1, at: 1) == [change(.full, true)])
@@ -16,9 +17,7 @@ struct TriggerRuntimeTests {
   }
 
   @Test(arguments: [
-    RemappingDualStageTriggerMode.preferFull,
-    .preferFullCombined,
-    .responsivePreferFull,
+    RemappingDualStageTriggerMode.preferFull, .preferFullCombined, .responsivePreferFull,
     .responsivePreferFullCombined,
   ])
   func quickFullPullSuppressesSoftUntilCompleteRelease(mode: RemappingDualStageTriggerMode) {
@@ -27,7 +26,8 @@ struct TriggerRuntimeTests {
     #expect(started == (mode.emitsSoftWhileBuffered ? [change(.soft, true)] : []))
     #expect(runtime.deadline == 100_000_000)
     let full = runtime.update(value: 1, at: 50_000_000)
-    let expected = mode.emitsSoftWhileBuffered
+    let expected =
+      mode.emitsSoftWhileBuffered
       ? [change(.soft, false), change(.full, true)] : [change(.full, true)]
     #expect(full == expected)
     #expect(runtime.update(value: 0.5, at: 60_000_000) == [change(.full, false)])
@@ -36,14 +36,10 @@ struct TriggerRuntimeTests {
   }
 
   @Test(arguments: [
-    RemappingDualStageTriggerMode.preferFull,
-    .preferFullCombined,
-    .responsivePreferFull,
+    RemappingDualStageTriggerMode.preferFull, .preferFullCombined, .responsivePreferFull,
     .responsivePreferFullCombined,
   ])
-  func deadlineSelectsSoftAndOnlyCombinedModesPermitLateFull(
-    mode: RemappingDualStageTriggerMode
-  ) {
+  func deadlineSelectsSoftAndOnlyCombinedModesPermitLateFull(mode: RemappingDualStageTriggerMode) {
     var runtime = RemappingDualStageTriggerRuntime(mapping: mapping(mode))
     _ = runtime.update(value: 0.2, at: 0)
     let deadline = runtime.advance(at: 100_000_000)
@@ -63,10 +59,6 @@ struct TriggerRuntimeTests {
     )
   }
 
-  private func change(
-    _ stage: RemappingTriggerStage,
-    _ active: Bool
-  ) -> RemappingTriggerStageChange {
-    RemappingTriggerStageChange(stage: stage, isActive: active)
-  }
+  private func change(_ stage: RemappingTriggerStage, _ active: Bool) -> RemappingTriggerStageChange
+  { RemappingTriggerStageChange(stage: stage, isActive: active) }
 }

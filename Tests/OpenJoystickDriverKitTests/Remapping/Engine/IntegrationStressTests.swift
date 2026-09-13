@@ -12,28 +12,18 @@ struct RemappingIntegrationStressTests {
     let controllerCount = 256
 
     for location in 1...controllerCount {
-      let identifier = DeviceIdentifier(
-        vendorID: 1,
-        productID: 2,
-        locationID: UInt32(location)
-      )
-      actionCount += state.process(
-        events: [
-          .buttonPressed(.a),
-          .buttonPressed(.b),
-          .buttonPressed(.x),
-          .buttonPressed(.y),
-          .buttonPressed(.l1),
-          .buttonPressed(.r1),
-          .buttonPressed(.back),
-          .buttonPressed(.start),
-          .buttonPressed(.share),
-          .buttonPressed(.options),
-        ],
-        from: identifier,
-        profile: profile,
-        at: UInt64(location)
-      ).count
+      let identifier = DeviceIdentifier(vendorID: 1, productID: 2, locationID: UInt32(location))
+      actionCount +=
+        state.process(
+          events: [
+            .buttonPressed(.a), .buttonPressed(.b), .buttonPressed(.x), .buttonPressed(.y),
+            .buttonPressed(.l1), .buttonPressed(.r1), .buttonPressed(.back), .buttonPressed(.start),
+            .buttonPressed(.share), .buttonPressed(.options),
+          ],
+          from: identifier,
+          profile: profile,
+          at: UInt64(location)
+        ).count
     }
 
     #expect(state.devices.count == controllerCount)
@@ -96,10 +86,7 @@ struct RemappingIntegrationStressTests {
       name: "Stress",
       device: RemappingDeviceScope(vendorID: 1, productID: 2),
       applicationScope: .global,
-      outputPolicy: RemappingOutputPolicy(
-        virtualGamepad: .mapped,
-        physicalInput: .exclusive
-      ),
+      outputPolicy: RemappingOutputPolicy(virtualGamepad: .mapped, physicalInput: .exclusive),
       bindings: [
         RemappingBinding(
           source: .button(.south),

@@ -2,10 +2,15 @@ import Testing
 @testable import OpenJoystickDriverKit
 
 struct StickRuntimeTests {
-  @Test func aimIntegratesTimeAndStopsOnRelease() {
-    var stick = RemappingStickRuntime(mapping: RemappingStickMapping(
-      source: .right, aimDegreesPerSecond: 100, pointerPointsPerDegree: 2
-    ))
+  @Test
+  func aimIntegratesTimeAndStopsOnRelease() {
+    var stick = RemappingStickRuntime(
+      mapping: RemappingStickMapping(
+        source: .right,
+        aimDegreesPerSecond: 100,
+        pointerPointsPerDegree: 2
+      )
+    )
     let initial = stick.update(x: 1, y: 0, at: 0)
     #expect(initial == .zero)
     #expect(stick.needsTicks)
@@ -18,7 +23,8 @@ struct StickRuntimeTests {
     #expect(stopped == .zero)
   }
 
-  @Test func flickCompletesAfterStickReturnsToCenter() {
+  @Test
+  func flickCompletesAfterStickReturnsToCenter() {
     var stick = RemappingStickRuntime(mapping: RemappingStickMapping(source: .right, mode: .flick))
     _ = stick.update(x: 1, y: 0, at: 0)
     #expect(stick.needsTicks)
@@ -29,10 +35,11 @@ struct StickRuntimeTests {
     #expect(!stick.needsTicks)
   }
 
-  @Test func rotateOnlySkipsInitialFlickAndInvalidInputCancels() {
-    var stick = RemappingStickRuntime(mapping: RemappingStickMapping(
-      source: .right, mode: .rotateOnly
-    ))
+  @Test
+  func rotateOnlySkipsInitialFlickAndInvalidInputCancels() {
+    var stick = RemappingStickRuntime(
+      mapping: RemappingStickMapping(source: .right, mode: .rotateOnly)
+    )
     let first = stick.update(x: 1, y: 0, at: 0)
     #expect(first == .zero)
     let rotation = stick.update(x: 0, y: 1, at: 1)
@@ -42,58 +49,67 @@ struct StickRuntimeTests {
     #expect(!stick.needsTicks)
   }
 
-  @Test func areaAndRingReturnToTheirActivationAnchor() {
-    var area = RemappingStickRuntime(mapping: RemappingStickMapping(
-      source: .left,
-      mode: .pointerArea,
-      tuning: RemappingStickTuning(innerDeadzone: 0),
-      pointerRadiusPoints: 100
-    ))
+  @Test
+  func areaAndRingReturnToTheirActivationAnchor() {
+    var area = RemappingStickRuntime(
+      mapping: RemappingStickMapping(
+        source: .left,
+        mode: .pointerArea,
+        tuning: RemappingStickTuning(innerDeadzone: 0),
+        pointerRadiusPoints: 100
+      )
+    )
     #expect(area.update(x: 0.5, y: 0, at: 0).pointerDelta == SIMD2(50, 0))
     #expect(area.update(x: 0, y: 0, at: 1).pointerDelta == SIMD2(-50, 0))
 
-    var ring = RemappingStickRuntime(mapping: RemappingStickMapping(
-      source: .right,
-      mode: .pointerRing,
-      tuning: RemappingStickTuning(innerDeadzone: 0),
-      pointerRadiusPoints: 80
-    ))
+    var ring = RemappingStickRuntime(
+      mapping: RemappingStickMapping(
+        source: .right,
+        mode: .pointerRing,
+        tuning: RemappingStickTuning(innerDeadzone: 0),
+        pointerRadiusPoints: 80
+      )
+    )
     #expect(ring.update(x: 0.25, y: 0, at: 0).pointerDelta == SIMD2(80, 0))
     #expect(ring.update(x: 0, y: 0, at: 1).pointerDelta == SIMD2(-80, 0))
   }
 
-  @Test func scrollAccumulatesShortestAngularTravelAcrossWrap() {
-    var stick = RemappingStickRuntime(mapping: RemappingStickMapping(
-      source: .left,
-      mode: .scrollWheel,
-      tuning: RemappingStickTuning(innerDeadzone: 0),
-      scrollDegreesPerLine: 30,
-      rotationDirection: .counterclockwise
-    ))
+  @Test
+  func scrollAccumulatesShortestAngularTravelAcrossWrap() {
+    var stick = RemappingStickRuntime(
+      mapping: RemappingStickMapping(
+        source: .left,
+        mode: .scrollWheel,
+        tuning: RemappingStickTuning(innerDeadzone: 0),
+        scrollDegreesPerLine: 30,
+        rotationDirection: .counterclockwise
+      )
+    )
     _ = stick.update(x: -1, y: 0.01, at: 0)
     let wrapped = stick.update(x: -1, y: -1, at: 1)
     #expect(wrapped.scrollLines == SIMD2(0, 1))
     #expect(!stick.needsTicks)
   }
 
-  @Test func steeringWindsAndReturnsAtConfiguredRate() {
-    var stick = RemappingStickRuntime(mapping: RemappingStickMapping(
-      source: .left,
-      mode: .steering,
-      tuning: RemappingStickTuning(innerDeadzone: 0),
-      rotationDirection: .counterclockwise,
-      steeringDegreesAtFullScale: 180,
-      steeringReturnDegreesPerSecond: 90
-    ))
+  @Test
+  func steeringWindsAndReturnsAtConfiguredRate() {
+    var stick = RemappingStickRuntime(
+      mapping: RemappingStickMapping(
+        source: .left,
+        mode: .steering,
+        tuning: RemappingStickTuning(innerDeadzone: 0),
+        rotationDirection: .counterclockwise,
+        steeringDegreesAtFullScale: 180,
+        steeringReturnDegreesPerSecond: 90
+      )
+    )
     _ = stick.update(x: 1, y: 0, at: 0)
     let wound = stick.update(x: 0, y: 1, at: 1)
     #expect(wound.virtualAxes[.leftStickX] == 0.5)
     _ = stick.update(x: 0, y: 0, at: 1)
     #expect(stick.needsTicks)
     var returned = RemappingStickRuntimeOutput()
-    for step in 1...10 {
-      returned = stick.advance(at: UInt64(step) * 100_000_000 + 1)
-    }
+    for step in 1...10 { returned = stick.advance(at: UInt64(step) * 100_000_000 + 1) }
     #expect(returned.virtualAxes[.leftStickX] == 0)
     #expect(!stick.needsTicks)
   }

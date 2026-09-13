@@ -294,10 +294,8 @@ public protocol RemappingPhysicalOutputSink: AnyObject, Sendable {
 }
 
 extension RemappingGamepadSink {
-  public func send(
-    _ motion: RemappingVirtualMotionState?,
-    for identifier: DeviceIdentifier
-  ) throws { throw RemappingEventEngineError.sinkUnavailable }
+  public func send(_ motion: RemappingVirtualMotionState?, for identifier: DeviceIdentifier) throws
+  { throw RemappingEventEngineError.sinkUnavailable }
 }
 
 /// Preserves the order of transient presses, releases, and mixed destination actions.

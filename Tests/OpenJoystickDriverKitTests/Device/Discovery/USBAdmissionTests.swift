@@ -3,7 +3,8 @@ import Testing
 @testable import OpenJoystickDriverKit
 
 struct USBDetectionAdmissionTests {
-  @Test func unsupportedDeviceNeverInvokesProfileResolution() async {
+  @Test
+  func unsupportedDeviceNeverInvokesProfileResolution() async {
     let provider = USBDiscoveryRecordingProvider(devices: [])
     let manager = DeviceManager(
       dispatcher: LoggingOutputDispatcher(),
@@ -21,7 +22,8 @@ struct USBDetectionAdmissionTests {
     #expect(await provider.resolutionCount == 0)
   }
 
-  @Test func rejectedDeviceDoesNotReadOptionalDescriptorStrings() {
+  @Test
+  func rejectedDeviceDoesNotReadOptionalDescriptorStrings() {
     var didReadDescriptorStrings = false
 
     let admission = resolveRawUSBAdmission(
@@ -38,7 +40,8 @@ struct USBDetectionAdmissionTests {
     #expect(!didReadDescriptorStrings)
   }
 
-  @Test func admittedDeviceReadsDescriptorStringsAndBuildsItsRuntimeIdentity() throws {
+  @Test
+  func admittedDeviceReadsDescriptorStringsAndBuildsItsRuntimeIdentity() throws {
     var descriptorReadCount = 0
 
     let admission = try #require(
@@ -61,7 +64,8 @@ struct USBDetectionAdmissionTests {
     #expect(admission.productName == "Xbox Controller")
   }
 
-  @Test func duplicateTransportIdentityMatchesByModelAndSerialAcrossLocations() throws {
+  @Test
+  func duplicateTransportIdentityMatchesByModelAndSerialAcrossLocations() throws {
     let hidIdentifier = DeviceIdentifier(
       vendorID: 0x045E,
       productID: 0x0B12,
@@ -82,7 +86,8 @@ struct USBDetectionAdmissionTests {
     #expect(match == hidIdentifier)
   }
 
-  @Test func distinctControllerSerialsRemainSeparate() {
+  @Test
+  func distinctControllerSerialsRemainSeparate() {
     let first = DeviceIdentifier(
       vendorID: 0x045E,
       productID: 0x0B12,
@@ -99,7 +104,8 @@ struct USBDetectionAdmissionTests {
     #expect(DeviceManager.matchingPhysicalIdentifier(for: second, among: [first]) == nil)
   }
 
-  @Test func competingPhysicalUSBRouteSkipsDescriptorResolution() async {
+  @Test
+  func competingPhysicalUSBRouteSkipsDescriptorResolution() async {
     let direct = USBTransportDevice(
       route: .ioUSBHost,
       serviceID: 1,
@@ -135,7 +141,8 @@ struct USBDetectionAdmissionTests {
     await manager.stop()
   }
 
-  @Test func unresolvedServiceIsRetriedAfterItDisappears() async {
+  @Test
+  func unresolvedServiceIsRetriedAfterItDisappears() async {
     let device = USBTransportDevice(
       route: .ioUSBHost,
       serviceID: 11,
@@ -157,7 +164,8 @@ struct USBDetectionAdmissionTests {
     )
   }
 
-  @Test func serviceReuseWithChangedDeviceFactsRemainsUnacknowledged() async {
+  @Test
+  func serviceReuseWithChangedDeviceFactsRemainsUnacknowledged() async {
     let original = USBTransportDevice(
       route: .ioUSBHost,
       serviceID: 11,
@@ -181,7 +189,8 @@ struct USBDetectionAdmissionTests {
     #expect(await manager.handleUSBDeviceAdded(original, provider: provider) == .retry)
   }
 
-  @Test func competingClaimsRetryAfterPostAwaitRecheckAndLaterClaimWithoutReplug() async {
+  @Test
+  func competingClaimsRetryAfterPostAwaitRecheckAndLaterClaimWithoutReplug() async {
     let device = USBTransportDevice(
       route: .ioUSBHost,
       serviceID: 11,
@@ -233,16 +242,18 @@ private actor USBDiscoveryRecordingProvider: USBTransportProvider {
 
   func setDevices(_ devices: [USBTransportDevice]) { currentDevices = devices }
 
-  func resolveTransportProfile(for device: USBTransportDevice, configured: DeviceTransportProfile)
-    -> DeviceTransportProfile
-  {
+  func resolveTransportProfile(
+    for device: USBTransportDevice,
+    configured: DeviceTransportProfile
+  ) -> DeviceTransportProfile {
     resolutionCount += 1
     return configured
   }
 
-  func open(_ device: USBTransportDevice, options: USBTransportOpenOptions)
-    -> any USBTransportSession
-  { USBDiscoveryRecordingSession() }
+  func open(
+    _ device: USBTransportDevice,
+    options: USBTransportOpenOptions
+  ) -> any USBTransportSession { USBDiscoveryRecordingSession() }
 }
 
 private final class USBDiscoveryRecordingSession: USBTransportSession, @unchecked Sendable {
@@ -267,18 +278,20 @@ private actor USBResolutionRaceProvider: USBTransportProvider {
 
   func devices() -> [USBTransportDevice] { [device] }
 
-  func resolveTransportProfile(for device: USBTransportDevice, configured: DeviceTransportProfile)
-    async -> DeviceTransportProfile
-  {
+  func resolveTransportProfile(
+    for device: USBTransportDevice,
+    configured: DeviceTransportProfile
+  ) async -> DeviceTransportProfile {
     resolutionCount += 1
     signalWaiters(&resolutionWaiters, count: resolutionCount)
     if resolutionSuspended { await withCheckedContinuation { resolutionContinuations.append($0) } }
     return configured
   }
 
-  func open(_ device: USBTransportDevice, options: USBTransportOpenOptions)
-    -> any USBTransportSession
-  {
+  func open(
+    _ device: USBTransportDevice,
+    options: USBTransportOpenOptions
+  ) -> any USBTransportSession {
     openCount += 1
     signalWaiters(&openWaiters, count: openCount)
     return session

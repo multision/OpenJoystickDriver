@@ -4,7 +4,8 @@ import Testing
 @testable import OpenJoystickDriver
 
 struct ProfileMotionDraftTests {
-  @Test func numericEntryUsesCompleteTextAndPreservesUneditedFields() throws {
+  @Test
+  func numericEntryUsesCompleteTextAndPreservesUneditedFields() throws {
     let form = ProfileMotionDraft(.default)
     var text = form.numericText
     text["yawSensitivity"] = " 2,125 "
@@ -19,12 +20,11 @@ struct ProfileMotionDraftTests {
       }
     }
     text.removeValue(forKey: "yawSensitivity")
-    #expect(throws: RemappingMotionTuningError.self) {
-      try form.applyingNumericText(text)
-    }
+    #expect(throws: RemappingMotionTuningError.self) { try form.applyingNumericText(text) }
   }
 
-  @Test func formPreservesAllFieldsAndEditsRemainLocalUntilValidated() throws {
+  @Test
+  func formPreservesAllFieldsAndEditsRemainLocalUntilValidated() throws {
     let original = RemappingMotionTuning(
       space: .world,
       pitchSensitivity: 2.5,

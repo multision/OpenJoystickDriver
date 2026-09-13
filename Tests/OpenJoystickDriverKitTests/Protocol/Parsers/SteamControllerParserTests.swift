@@ -62,11 +62,12 @@ private func eventExists(_ events: [ControllerEvent], _ expected: ControllerEven
 }
 
 struct SteamControllerParserTests {
-  @Test func testSteamControllerProfilesExposeOperationalFlags() {
+  @Test
+  func testSteamControllerProfilesExposeOperationalFlags() {
     let registry = ParserRegistry()
     let identifiers = [
       DeviceIdentifier(vendorID: 10462, productID: 4354),
-      DeviceIdentifier(vendorID: 10462, productID: 4418)
+      DeviceIdentifier(vendorID: 10462, productID: 4418),
     ]
 
     let wired = registry.runtimeProfile(for: identifiers[0])
@@ -80,7 +81,8 @@ struct SteamControllerParserTests {
     #expect(wireless.quirks == ["lizardMode", "trackpads", "wirelessReceiver"])
   }
 
-  @Test func testSteamControllerReportParsesPrimaryControls() throws {
+  @Test
+  func testSteamControllerReportParsesPrimaryControls() throws {
     let parser = ParserRegistry().parser(for: DeviceIdentifier(vendorID: 10462, productID: 4354))
     _ = try parser.parse(data: makeSteamControllerReport())
 
@@ -115,7 +117,8 @@ struct SteamControllerParserTests {
     #expect(eventExists(events, .rightStickChanged(x: -1.0, y: -1.0)))
   }
 
-  @Test func testSteamGripBitsHaveDistinctSources() throws {
+  @Test
+  func testSteamGripBitsHaveDistinctSources() throws {
     let parser = SteamControllerParser()
     _ = try parser.parse(data: makeSteamControllerReport())
 
@@ -125,7 +128,8 @@ struct SteamControllerParserTests {
     #expect(releases == [.buttonReleased(.leftGrip), .buttonReleased(.rightGrip)])
   }
 
-  @Test func testLeftPadTouchDoesNotCreateVirtualLeftStickMotion() throws {
+  @Test
+  func testLeftPadTouchDoesNotCreateVirtualLeftStickMotion() throws {
     let parser = SteamControllerParser()
     _ = try parser.parse(data: makeSteamControllerReport())
 
@@ -136,7 +140,8 @@ struct SteamControllerParserTests {
     #expect(!eventExists(events, .leftStickChanged(x: 1.0, y: 1.0)))
   }
 
-  @Test func testLeftPadAndJoyBitDoesNotReplaceStickWithPadCoordinates() throws {
+  @Test
+  func testLeftPadAndJoyBitDoesNotReplaceStickWithPadCoordinates() throws {
     let parser = SteamControllerParser()
     _ = try parser.parse(data: makeSteamControllerReport())
 
@@ -147,7 +152,8 @@ struct SteamControllerParserTests {
     #expect(!eventExists(events, .leftStickChanged(x: 1.0, y: 1.0)))
   }
 
-  @Test func testLeftPadTouchStaysOmitted() throws {
+  @Test
+  func testLeftPadTouchStaysOmitted() throws {
     let parser = SteamControllerParser()
     _ = try parser.parse(data: makeSteamControllerReport())
 
@@ -156,7 +162,8 @@ struct SteamControllerParserTests {
     #expect(events.isEmpty)
   }
 
-  @Test func testSteamControllerReportParsesDpadDirections() throws {
+  @Test
+  func testSteamControllerReportParsesDpadDirections() throws {
     let parser = SteamControllerParser()
     _ = try parser.parse(data: makeSteamControllerReport())
 
@@ -171,7 +178,8 @@ struct SteamControllerParserTests {
     #expect(eventExists(leftEvents, .dpadChanged(.west)))
   }
 
-  @Test func testSteamControllerDisablesAndRestoresLizardModeWithFeatureReports() {
+  @Test
+  func testSteamControllerDisablesAndRestoresLizardModeWithFeatureReports() {
     let parser = SteamControllerParser()
 
     let startup = parser.hidStartupFeatureReports()
@@ -189,7 +197,8 @@ struct SteamControllerParserTests {
     #expect(shutdown[1].bytes[0] == 0x8E)
   }
 
-  @Test func testSteamControllerBrightnessMatchesSDLSettingReport() {
+  @Test
+  func testSteamControllerBrightnessMatchesSDLSettingReport() {
     let report = SteamControllerParser().physicalBrightnessReport(197)
 
     #expect(report.reportID == 0)
@@ -198,7 +207,8 @@ struct SteamControllerParserTests {
     #expect(report.bytes.dropFirst(5).allSatisfy { $0 == 0 })
   }
 
-  @Test func testSteamControllerHapticReportsMatchLinuxFeatureCommand() {
+  @Test
+  func testSteamControllerHapticReportsMatchLinuxFeatureCommand() {
     let reports = SteamControllerParser().physicalHapticReports(
       left: 255,
       right: 128,
@@ -212,7 +222,8 @@ struct SteamControllerParserTests {
     #expect(reports.flatMap { $0.bytes.dropFirst(10) }.allSatisfy { $0 == 0 })
   }
 
-  @Test func testSteamControllerHapticIntensityAndSafeHoldFallback() {
+  @Test
+  func testSteamControllerHapticIntensityAndSafeHoldFallback() {
     let low = SteamControllerParser().physicalHapticReports(left: 1, right: 0, durationMs: 0)
 
     #expect(low.count == 1)
@@ -222,7 +233,8 @@ struct SteamControllerParserTests {
     )
   }
 
-  @Test func testSteamWirelessHapticsRequireLogicalControllerConnection() throws {
+  @Test
+  func testSteamWirelessHapticsRequireLogicalControllerConnection() throws {
     let parser = SteamControllerParser(isWirelessReceiver: true)
     #expect(parser.physicalHapticReports(left: 255, right: 0, durationMs: 100).isEmpty)
 
@@ -233,7 +245,8 @@ struct SteamControllerParserTests {
     #expect(parser.physicalHapticReports(left: 255, right: 0, durationMs: 100).isEmpty)
   }
 
-  @Test func testSteamWirelessReceiverStatusRequestReport() {
+  @Test
+  func testSteamWirelessReceiverStatusRequestReport() {
     let wired = SteamControllerParser()
     #expect(wired.inputConnectionStatusRequestReport() == nil)
 
@@ -245,7 +258,8 @@ struct SteamControllerParserTests {
     #expect(report?.bytes.first == 0xB4)
   }
 
-  @Test func testSteamControllerTracksWirelessConnectDisconnectLifecycle() throws {
+  @Test
+  func testSteamControllerTracksWirelessConnectDisconnectLifecycle() throws {
     let parser = SteamControllerParser(isWirelessReceiver: true)
     #expect(parser.requiresInputConnectionBeforeOutput)
 
@@ -268,7 +282,8 @@ struct SteamControllerParserTests {
     #expect(postDisconnectEvents.isEmpty)
   }
 
-  @Test func testSteamWirelessStatusReportMarksReceiverConnectedWhenConnectEventWasMissed() throws {
+  @Test
+  func testSteamWirelessStatusReportMarksReceiverConnectedWhenConnectEventWasMissed() throws {
     let parser = SteamControllerParser(isWirelessReceiver: true)
 
     let statusEvents = try parser.parse(data: makeSteamStatusReport())
@@ -280,7 +295,8 @@ struct SteamControllerParserTests {
     #expect(eventExists(inputEvents, .buttonPressed(.a)))
   }
 
-  @Test func testSteamControllerIgnoresUnknownNonStateReports() throws {
+  @Test
+  func testSteamControllerIgnoresUnknownNonStateReports() throws {
     let parser = SteamControllerParser()
     var unknownEvent = Array(makeSteamControllerReport())
     unknownEvent[2] = 0x04
@@ -290,7 +306,8 @@ struct SteamControllerParserTests {
     #expect(events.isEmpty)
   }
 
-  @Test func rawMotionUsesReceiptTimeAndSuppressesDuplicateSequenceNumbers() throws {
+  @Test
+  func rawMotionUsesReceiptTimeAndSuppressesDuplicateSequenceNumbers() throws {
     let parser: any InputParser = SteamControllerParser()
     var report = Array(makeSteamControllerReport())
     report[4] = 255
@@ -330,7 +347,8 @@ struct SteamControllerParserTests {
     #expect(clamped.timestamp.elapsedNanoseconds == 20)
   }
 
-  @Test func receiverReconnectResetsMotionClockAndDuplicateTracking() throws {
+  @Test
+  func receiverReconnectResetsMotionClockAndDuplicateTracking() throws {
     let parser = SteamControllerParser(isWirelessReceiver: true)
     _ = try parser.parse(data: makeSteamWirelessReport(status: 2))
     _ = try parser.parse(data: makeSteamControllerReport(), receivedAtNanoseconds: 100)

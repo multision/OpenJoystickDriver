@@ -3,9 +3,7 @@ public struct ApplicationServiceMotionCalibrationArguments: Codable, Sendable {
   public let runtimeIdentifier: String
   public let command: RemappingMotionCalibrationCommand?
 
-  public init(
-    runtimeIdentifier: String, command: RemappingMotionCalibrationCommand? = nil
-  ) {
+  public init(runtimeIdentifier: String, command: RemappingMotionCalibrationCommand? = nil) {
     self.runtimeIdentifier = runtimeIdentifier
     self.command = command
   }

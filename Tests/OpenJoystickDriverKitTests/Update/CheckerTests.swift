@@ -3,10 +3,10 @@ import Testing
 
 @testable import OpenJoystickDriverKit
 
-@Suite("Update checker") struct UpdateCheckerTests {
-  @Test("stable channel selects the greatest stable SemVer tag") func stableChannelSelectsMaximum()
-    async throws
-  {
+@Suite("Update checker")
+struct UpdateCheckerTests {
+  @Test("stable channel selects the greatest stable SemVer tag")
+  func stableChannelSelectsMaximum() async throws {
     let checker = try Self.checker(path: "/mixed-tags")
 
     let state = await checker.check(currentVersion: "0.5.0-alpha.5")
@@ -14,9 +14,8 @@ import Testing
     #expect(state == .upToDate("v0.4.1"))
   }
 
-  @Test("prerelease channel selects the greatest SemVer tag") func prereleaseChannelSelectsMaximum()
-    async throws
-  {
+  @Test("prerelease channel selects the greatest SemVer tag")
+  func prereleaseChannelSelectsMaximum() async throws {
     let checker = try Self.checker(path: "/mixed-tags")
 
     let state = await checker.check(currentVersion: "0.5.0-alpha.5", includePrereleases: true)
@@ -41,7 +40,8 @@ import Testing
   @Test(
     "equal and installed-newer checks retain the selected remote tag",
     arguments: ["0.4.1", "0.5.0"]
-  ) func noUpdateRetainsSelectedTag(currentVersion: String) async throws {
+  )
+  func noUpdateRetainsSelectedTag(currentVersion: String) async throws {
     let checker = try Self.checker(path: "/mixed-tags")
 
     let state = await checker.check(currentVersion: currentVersion)
@@ -49,7 +49,8 @@ import Testing
     #expect(state == .upToDate("v0.4.1"))
   }
 
-  @Test("selection spans every linked tag page") func selectionSpansPagination() async throws {
+  @Test("selection spans every linked tag page")
+  func selectionSpansPagination() async throws {
     let checker = try Self.checker(path: "/paged-tags")
 
     let state = await checker.check(currentVersion: "1.0.0")
@@ -61,7 +62,8 @@ import Testing
     #expect(info.tagName == "v2.0.0")
   }
 
-  @Test("pagination cycles fail") func paginationCyclesFail() async throws {
+  @Test("pagination cycles fail")
+  func paginationCyclesFail() async throws {
     let checker = try Self.checker(path: "/cycle-tags")
 
     let state = await checker.check(currentVersion: "1.0.0")
@@ -73,7 +75,8 @@ import Testing
     #expect(message.contains("cycle"))
   }
 
-  @Test("unsafe pagination links fail") func unsafePaginationLinksFail() async throws {
+  @Test("unsafe pagination links fail")
+  func unsafePaginationLinksFail() async throws {
     let checker = try Self.checker(path: "/unsafe-tags")
 
     let state = await checker.check(currentVersion: "1.0.0")
@@ -85,7 +88,8 @@ import Testing
     #expect(message.contains("unsafe"))
   }
 
-  @Test("HTTP errors fail") func httpErrorsFail() async throws {
+  @Test("HTTP errors fail")
+  func httpErrorsFail() async throws {
     let checker = try Self.checker(path: "/http-error")
 
     let state = await checker.check(currentVersion: "1.0.0")
@@ -93,7 +97,8 @@ import Testing
     #expect(state == .failed("GitHub returned HTTP 503"))
   }
 
-  @Test("non-HTTP responses fail") func nonHTTPResponsesFail() async throws {
+  @Test("non-HTTP responses fail")
+  func nonHTTPResponsesFail() async throws {
     let checker = try Self.checker(path: "/non-http")
 
     let state = await checker.check(currentVersion: "1.0.0")

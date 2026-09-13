@@ -3,20 +3,25 @@ import Testing
 @testable import OpenJoystickDriverKit
 
 struct MotionTransformTests {
-  @Test func radialThresholdPrecedesIndependentSensitivityAndInversion() {
+  @Test
+  func radialThresholdPrecedesIndependentSensitivityAndInversion() {
     var transform = RemappingMotionTransform()
     let result = transform.apply(
       RemappingGyroProjection(pitchDegreesPerSecond: 3, yawDegreesPerSecond: 4),
       deltaTime: 0.01,
       tuning: RemappingMotionTuning(
-        pitchSensitivity: 2, yawSensitivity: 3, invertYaw: true, thresholdDegreesPerSecond: 1
+        pitchSensitivity: 2,
+        yawSensitivity: 3,
+        invertYaw: true,
+        thresholdDegreesPerSecond: 1
       )
     )
     #expect(abs((result?.pitchDegreesPerSecond ?? 0) - 4.8) < 1e-9)
     #expect(abs((result?.yawDegreesPerSecond ?? 0) + 9.6) < 1e-9)
   }
 
-  @Test func smoothingUsesElapsedTimeAndConfigurationChangeClearsHistory() {
+  @Test
+  func smoothingUsesElapsedTimeAndConfigurationChangeClearsHistory() {
     let tuning = RemappingMotionTuning(smoothingHalfTimeMs: 100)
     var first = RemappingMotionTransform()
     var second = RemappingMotionTransform()

@@ -20,14 +20,18 @@ struct NintendoCalibrationTests {
       let reading = try #require(sample.physicalReading)
       #expect(reading.calibrationSource == .deviceFactory)
       #expect(reading.calibrationRevision == 1)
-      #expect(reading.gyroscopeDegreesPerSecond
-        == ControllerMotionVector(x: right ? 20 : -20, y: right ? -30 : 30, z: -10))
-      #expect(reading.accelerationG
-        == ControllerMotionVector(x: right ? 2 : -2, y: right ? -3 : 3, z: -1))
+      #expect(
+        reading.gyroscopeDegreesPerSecond
+          == ControllerMotionVector(x: right ? 20 : -20, y: right ? -30 : 30, z: -10)
+      )
+      #expect(
+        reading.accelerationG == ControllerMotionVector(x: right ? 2 : -2, y: right ? -3 : 3, z: -1)
+      )
     }
   }
 
-  @Test func unrelatedMalformedAndUnsolicitedRepliesCannotInstallCalibration() throws {
+  @Test
+  func unrelatedMalformedAndUnsolicitedRepliesCannotInstallCalibration() throws {
     let parser = SwitchProParser()
     _ = try parser.parse(data: reply())
     #expect(try samples(parser).first?.physicalReading?.calibrationSource == .nominalDeviceScale)
@@ -73,8 +77,10 @@ struct NintendoCalibrationTests {
     let first = userFirst ? userReply() : reply()
     let second = userFirst ? reply() : userReply()
     _ = try parser.parse(data: first)
-    #expect(try samples(parser).first?.physicalReading?.calibrationSource
-      == (userFirst ? .nominalDeviceScale : .deviceFactory))
+    #expect(
+      try samples(parser).first?.physicalReading?.calibrationSource
+        == (userFirst ? .nominalDeviceScale : .deviceFactory)
+    )
     _ = try parser.parse(data: second)
     let reading = try #require(samples(parser).first?.physicalReading)
     #expect(reading.calibrationSource == .factoryWithUserOffsets)
@@ -82,26 +88,31 @@ struct NintendoCalibrationTests {
     // User offsets equal the fixture's raw gyro readings, so the calibrated rotation is zero.
     #expect(reading.gyroscopeDegreesPerSecond == ControllerMotionVector(x: 0, y: 0, z: 0))
     #expect(reading.accelerationG == ControllerMotionVector(x: -4, y: 6, z: -2))
-    #expect(try JSONDecoder().decode(
-      ControllerMotionReading.self, from: JSONEncoder().encode(reading)
-    ) == reading)
+    #expect(
+      try JSONDecoder().decode(ControllerMotionReading.self, from: JSONEncoder().encode(reading))
+        == reading
+    )
     // Duplicate replies cannot replace a completed acquisition's snapshot.
     _ = try parser.parse(data: userReply(invalid: true))
     #expect(try samples(parser).first?.physicalReading == reading)
   }
 
-  @Test func invalidUserRangesRetainFactoryAndNewParserStartsNominal() throws {
+  @Test
+  func invalidUserRangesRetainFactoryAndNewParserStartsNominal() throws {
     let parser = SwitchProParser()
     _ = parser.hidStartupReports(transport: "Bluetooth")
     _ = try parser.parse(data: reply())
     let factory = try #require(samples(parser).first?.physicalReading)
     _ = try parser.parse(data: userReply(invalid: true))
     #expect(try samples(parser).first?.physicalReading == factory)
-    #expect(try samples(SwitchProParser()).first?.physicalReading?.calibrationSource
-      == .nominalDeviceScale)
+    #expect(
+      try samples(SwitchProParser()).first?.physicalReading?.calibrationSource
+        == .nominalDeviceScale
+    )
   }
 
-  @Test func reacquisitionOnlyAdvancesForChangedCoefficients() throws {
+  @Test
+  func reacquisitionOnlyAdvancesForChangedCoefficients() throws {
     let parser = SwitchProParser()
     _ = parser.hidStartupReports(transport: "Bluetooth")
     _ = try parser.parse(data: reply())
@@ -116,7 +127,8 @@ struct NintendoCalibrationTests {
     #expect(try samples(parser).first?.physicalReading?.calibrationRevision == 2)
   }
 
-  @Test func recoveryOnlyRetriesPendingReadsAndExpiryRetainsAcceptedCalibration() throws {
+  @Test
+  func recoveryOnlyRetriesPendingReadsAndExpiryRetainsAcceptedCalibration() throws {
     let parser = SwitchProParser()
     _ = parser.hidStartupReports(transport: "Bluetooth")
     let retry = parser.pendingHIDStartupReports()
@@ -136,11 +148,13 @@ struct NintendoCalibrationTests {
     _ = try parser.parse(data: userReply())
     #expect(try samples(parser).first?.physicalReading == factory)
     _ = try parser.parse(data: reply())
-    #expect(try samples(parser).first?.physicalReading?.calibrationSource
-      == .factoryWithUserOffsets)
+    #expect(
+      try samples(parser).first?.physicalReading?.calibrationSource == .factoryWithUserOffsets
+    )
   }
 
-  @Test func pipelineStopExpiresOutstandingSPIReads() async {
+  @Test
+  func pipelineStopExpiresOutstandingSPIReads() async {
     let pipeline = DevicePipeline(
       identifier: DeviceIdentifier(vendorID: 0x057E, productID: 0x2009),
       transport: .hid(locationID: 84),

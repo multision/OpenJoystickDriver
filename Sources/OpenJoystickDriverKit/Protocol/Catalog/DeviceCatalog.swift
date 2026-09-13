@@ -105,9 +105,9 @@ struct DeviceCatalog: Sendable {
     return stem.enumerated().allSatisfy { offset, character in offset == 4 || character.isHexDigit }
   }
 
-  private static func makeRuntimeProfile(_ record: ControllerRecordDocument) throws
-    -> DeviceRuntimeProfile
-  {
+  private static func makeRuntimeProfile(
+    _ record: ControllerRecordDocument
+  ) throws -> DeviceRuntimeProfile {
     guard (1...65_535).contains(record.vendorID), (0...65_535).contains(record.productID) else {
       throw CatalogError("invalid controller identity \(record.vendorID):\(record.productID)")
     }

@@ -3,7 +3,8 @@
   import SwiftUI
 
   struct PhysicalOutputDestinationFields: View {
-    @Binding var destination: RemappingDestination
+    @Binding
+    var destination: RemappingDestination
 
     var body: some View {
       if case .physical(let output) = destination {
@@ -73,7 +74,8 @@
             if effect.kind == .resistance {
               unitSlider(
                 OJDLocalized.string(
-                  "profiles.physical.startPosition", fallback: "Resistance start"
+                  "profiles.physical.startPosition",
+                  fallback: "Resistance start"
                 ),
                 value: adaptiveStart(trigger, effect: effect)
               )
@@ -97,19 +99,17 @@
       )
     }
 
-    private func rumbleIntensity(
-      _ motor: PhysicalRumbleMotor,
-      intensity: Double
-    ) -> Binding<Double> {
+    private func rumbleIntensity(_ motor: PhysicalRumbleMotor, intensity: Double) -> Binding<Double>
+    {
       Binding(
         get: { intensity },
         set: { destination = .physical(.rumble(motor: motor, intensity: $0)) }
       )
     }
 
-    private func playerIndicator(_ indicator: PhysicalPlayerIndicator)
-      -> Binding<PhysicalPlayerIndicator>
-    {
+    private func playerIndicator(
+      _ indicator: PhysicalPlayerIndicator
+    ) -> Binding<PhysicalPlayerIndicator> {
       Binding(get: { indicator }, set: { destination = .physical(.playerIndicator($0)) })
     }
 
@@ -174,7 +174,9 @@
             .adaptiveTrigger(
               trigger,
               PhysicalAdaptiveTriggerEffect(
-                kind: .resistance, startPosition: $0, strength: effect.strength
+                kind: .resistance,
+                startPosition: $0,
+                strength: effect.strength
               )
             )
           )
@@ -193,7 +195,9 @@
             .adaptiveTrigger(
               trigger,
               PhysicalAdaptiveTriggerEffect(
-                kind: .resistance, startPosition: effect.startPosition, strength: $0
+                kind: .resistance,
+                startPosition: effect.startPosition,
+                strength: $0
               )
             )
           )

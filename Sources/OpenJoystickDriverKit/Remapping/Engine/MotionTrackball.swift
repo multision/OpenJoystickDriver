@@ -20,12 +20,18 @@ struct RemappingMotionTrackball {
     yawHeld: Bool,
     decayHalvingsPerSecond: Double
   ) -> Step? {
-    guard deltaTime.isFinite, (0...0.1).contains(deltaTime),
-      decayHalvingsPerSecond.isFinite, (0...1000).contains(decayHalvingsPerSecond),
-      input.pitchDegreesPerSecond.isFinite, input.yawDegreesPerSecond.isFinite,
+    guard deltaTime.isFinite, (0...0.1).contains(deltaTime), decayHalvingsPerSecond.isFinite,
+      (0...1000).contains(decayHalvingsPerSecond), input.pitchDegreesPerSecond.isFinite,
+      input.yawDegreesPerSecond.isFinite,
       max(abs(input.pitchDegreesPerSecond), abs(input.yawDegreesPerSecond)) <= 200_000_000
-    else { reset(); return nil }
-    guard deltaTime > 0 else { reset(); return nil }
+    else {
+      reset()
+      return nil
+    }
+    guard deltaTime > 0 else {
+      reset()
+      return nil
+    }
     let rate = decayHalvingsPerSecond * log(2)
     let decay = exp(-rate * deltaTime)
     // expm1 preserves small intervals; the zero-decay limit is constant velocity.
@@ -44,7 +50,8 @@ struct RemappingMotionTrackball {
     }
     return Step(
       velocity: RemappingGyroProjection(
-        pitchDegreesPerSecond: velocity.x, yawDegreesPerSecond: velocity.y
+        pitchDegreesPerSecond: velocity.x,
+        yawDegreesPerSecond: velocity.y
       ),
       pitchDegrees: degrees.x,
       yawDegrees: degrees.y

@@ -2,39 +2,23 @@ import OpenJoystickDriverKit
 
 extension MappingProfileEditor {
   static let motionOptions: Set<String> = [
-    "--motion-space",
-    "--motion-pitch-sensitivity",
-    "--motion-yaw-sensitivity",
-    "--motion-smoothing-half-time-ms",
-    "--motion-threshold-degrees-per-second",
-    "--motion-yaw-relaxation",
-    "--motion-side-reduction-threshold",
-    "--motion-gravity-correction-rate",
-    "--motion-invert-pitch",
-    "--motion-invert-yaw",
-    "--motion-automatic-bias",
-    "--motion-lean",
-    "--motion-lean-threshold-degrees",
-    "--motion-lean-hysteresis-degrees",
-    "--motion-steering-output",
-    "--motion-steering-deadzone-degrees",
-    "--motion-steering-full-scale-degrees",
-    "--motion-steering-response-exponent",
-    "--motion-steering-inverted",
-    "--gyro-output",
-    "--gyro-trackball-source",
-    "--gyro-trackball-axes",
-    "--gyro-trackball-decay",
-    "--gyro-trackball-consume",
-    "--gyro-activation",
-    "--gyro-activation-source",
-    "--gyro-consume-activation",
-    "--gyro-pointer-points-per-degree",
-    "--gyro-full-stick-degrees-per-second"
+    "--motion-space", "--motion-pitch-sensitivity", "--motion-yaw-sensitivity",
+    "--motion-smoothing-half-time-ms", "--motion-threshold-degrees-per-second",
+    "--motion-yaw-relaxation", "--motion-side-reduction-threshold",
+    "--motion-gravity-correction-rate", "--motion-invert-pitch", "--motion-invert-yaw",
+    "--motion-automatic-bias", "--motion-lean", "--motion-lean-threshold-degrees",
+    "--motion-lean-hysteresis-degrees", "--motion-steering-output",
+    "--motion-steering-deadzone-degrees", "--motion-steering-full-scale-degrees",
+    "--motion-steering-response-exponent", "--motion-steering-inverted", "--gyro-output",
+    "--gyro-trackball-source", "--gyro-trackball-axes", "--gyro-trackball-decay",
+    "--gyro-trackball-consume", "--gyro-activation", "--gyro-activation-source",
+    "--gyro-consume-activation", "--gyro-pointer-points-per-degree",
+    "--gyro-full-stick-degrees-per-second",
   ]
 
   static func motionTuning(
-    _ options: MappingOptions, defaultValue: RemappingMotionTuning = .default
+    _ options: MappingOptions,
+    defaultValue: RemappingMotionTuning = .default
   ) throws -> RemappingMotionTuning {
     let rawSpace = options["--motion-space"] ?? defaultValue.space.rawValue
     guard let space = RemappingMotionSpace(rawValue: rawSpace) else {
@@ -55,20 +39,16 @@ extension MappingProfileEditor {
       return raw == "true"
     }
     let lean: RemappingMotionLean?
-    let hasLeanOptions = options.contains("--motion-lean")
-      || options.contains("--motion-lean-threshold-degrees")
+    let hasLeanOptions =
+      options.contains("--motion-lean") || options.contains("--motion-lean-threshold-degrees")
       || options.contains("--motion-lean-hysteresis-degrees")
     if hasLeanOptions {
       let enabled = try boolean("--motion-lean", defaultValue.lean != nil)
       if enabled {
         let old = defaultValue.lean ?? RemappingMotionLean()
         lean = try RemappingMotionLean(
-          thresholdDegrees: number(
-            "--motion-lean-threshold-degrees", old.thresholdDegrees
-          ),
-          hysteresisDegrees: number(
-            "--motion-lean-hysteresis-degrees", old.hysteresisDegrees
-          )
+          thresholdDegrees: number("--motion-lean-threshold-degrees", old.thresholdDegrees),
+          hysteresisDegrees: number("--motion-lean-hysteresis-degrees", old.hysteresisDegrees)
         )
       } else {
         guard !options.contains("--motion-lean-threshold-degrees"),
@@ -86,8 +66,9 @@ extension MappingProfileEditor {
       "--motion-steering-inverted",
     ]
     if steeringOptions.contains(where: options.contains) {
-      let rawOutput = options["--motion-steering-output"]
-        ?? defaultValue.steering?.output.rawValue ?? "left_stick_x"
+      let rawOutput =
+        options["--motion-steering-output"] ?? defaultValue.steering?.output.rawValue
+        ?? "left_stick_x"
       if rawOutput == "none" {
         guard !steeringOptions.dropFirst().contains(where: options.contains) else {
           throw MappingCommandError.invalidArguments("Cannot tune disabled motion steering")
@@ -102,15 +83,9 @@ extension MappingProfileEditor {
         let old = defaultValue.steering ?? RemappingMotionSteering()
         steering = try RemappingMotionSteering(
           output: output,
-          deadzoneDegrees: number(
-            "--motion-steering-deadzone-degrees", old.deadzoneDegrees
-          ),
-          fullScaleDegrees: number(
-            "--motion-steering-full-scale-degrees", old.fullScaleDegrees
-          ),
-          responseExponent: number(
-            "--motion-steering-response-exponent", old.responseExponent
-          ),
+          deadzoneDegrees: number("--motion-steering-deadzone-degrees", old.deadzoneDegrees),
+          fullScaleDegrees: number("--motion-steering-full-scale-degrees", old.fullScaleDegrees),
+          responseExponent: number("--motion-steering-response-exponent", old.responseExponent),
           inverted: boolean("--motion-steering-inverted", old.inverted)
         )
       }
@@ -119,35 +94,27 @@ extension MappingProfileEditor {
     }
     let tuning = try RemappingMotionTuning(
       space: space,
-      pitchSensitivity: number(
-        "--motion-pitch-sensitivity", defaultValue.pitchSensitivity
-      ),
-      yawSensitivity: number(
-        "--motion-yaw-sensitivity", defaultValue.yawSensitivity
-      ),
-      invertPitch: boolean(
-        "--motion-invert-pitch", defaultValue.invertPitch
-      ),
-      invertYaw: boolean(
-        "--motion-invert-yaw", defaultValue.invertYaw
-      ),
+      pitchSensitivity: number("--motion-pitch-sensitivity", defaultValue.pitchSensitivity),
+      yawSensitivity: number("--motion-yaw-sensitivity", defaultValue.yawSensitivity),
+      invertPitch: boolean("--motion-invert-pitch", defaultValue.invertPitch),
+      invertYaw: boolean("--motion-invert-yaw", defaultValue.invertYaw),
       smoothingHalfTimeMs: number(
-        "--motion-smoothing-half-time-ms", defaultValue.smoothingHalfTimeMs
+        "--motion-smoothing-half-time-ms",
+        defaultValue.smoothingHalfTimeMs
       ),
       thresholdDegreesPerSecond: number(
-        "--motion-threshold-degrees-per-second", defaultValue.thresholdDegreesPerSecond
+        "--motion-threshold-degrees-per-second",
+        defaultValue.thresholdDegreesPerSecond
       ),
-      automaticBias: boolean(
-        "--motion-automatic-bias", defaultValue.automaticBias
-      ),
-      yawRelaxation: number(
-        "--motion-yaw-relaxation", defaultValue.yawRelaxation
-      ),
+      automaticBias: boolean("--motion-automatic-bias", defaultValue.automaticBias),
+      yawRelaxation: number("--motion-yaw-relaxation", defaultValue.yawRelaxation),
       sideReductionThreshold: number(
-        "--motion-side-reduction-threshold", defaultValue.sideReductionThreshold
+        "--motion-side-reduction-threshold",
+        defaultValue.sideReductionThreshold
       ),
       gravityCorrectionRate: number(
-        "--motion-gravity-correction-rate", defaultValue.gravityCorrectionRate
+        "--motion-gravity-correction-rate",
+        defaultValue.gravityCorrectionRate
       ),
       lean: lean,
       steering: steering

@@ -466,9 +466,10 @@ extension ApplicationServiceServer {
     }
   }
 
-  private func stageCompatibilityDispatcher(identity: CompatibilityIdentity, timeout: UInt64)
-    async throws -> UserSpaceDispatcherBuild
-  {
+  private func stageCompatibilityDispatcher(
+    identity: CompatibilityIdentity,
+    timeout: UInt64
+  ) async throws -> UserSpaceDispatcherBuild {
     try await withCompatibilityTimeout(
       timeout,
       clock: compatibilityTransitionClock,

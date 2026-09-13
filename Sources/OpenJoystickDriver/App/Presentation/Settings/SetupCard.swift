@@ -4,8 +4,10 @@
   import SwiftUI
 
   struct SystemExtensionSetupCard: View {
-    @ObservedObject var viewModel: RuntimeViewModel
-    @ObservedObject var navigation: SettingsNavigationModel
+    @ObservedObject
+    var viewModel: RuntimeViewModel
+    @ObservedObject
+    var navigation: SettingsNavigationModel
 
     var body: some View {
       GroupBox {
@@ -105,7 +107,7 @@
     private func openSettings() {
       let urls = [
         URL(string: "x-apple.systempreferences:com.apple.LoginItems-Settings.extension"),
-        URL(string: "x-apple.systempreferences:com.apple.preferences.extensions")
+        URL(string: "x-apple.systempreferences:com.apple.preferences.extensions"),
       ].compactMap { $0 }
       for url in urls where NSWorkspace.shared.open(url) { return }
       NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/System Settings.app"))

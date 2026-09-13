@@ -34,9 +34,9 @@ public enum RemappingButton: String, Codable, CaseIterable, Hashable, Sendable {
 
   public var supportsVirtualOutput: Bool {
     switch self {
-    case .leftFunction, .rightFunction, .leftPaddle, .rightPaddle,
-      .leftSL, .leftSR, .rightSL, .rightSR,
-      .leftGrip, .rightGrip, .leftPadClick, .rightPadClick: false
+    case .leftFunction, .rightFunction, .leftPaddle, .rightPaddle, .leftSL, .leftSR, .rightSL,
+      .rightSR, .leftGrip, .rightGrip, .leftPadClick, .rightPadClick:
+      false
     default: true
     }
   }
@@ -321,8 +321,7 @@ public enum RemappingDestination: Codable, Equatable, Hashable, Sendable {
   public init(from decoder: any Decoder) throws {
     let container = try decoder.container(keyedBy: CodingKeys.self)
     switch try container.decode(Kind.self, forKey: .type) {
-    case .gamepadAxis:
-      self = .gamepadAxis(try container.decode(RemappingAxis.self, forKey: .axis))
+    case .gamepadAxis: self = .gamepadAxis(try container.decode(RemappingAxis.self, forKey: .axis))
     case .gamepadDpad:
       self = .gamepadDpad(try container.decode(RemappingDpadDirection.self, forKey: .direction))
     case .gamepadButton:

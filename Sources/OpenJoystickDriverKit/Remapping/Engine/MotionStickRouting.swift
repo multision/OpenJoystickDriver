@@ -104,14 +104,10 @@ extension RemappingDeviceState {
     setLeanStates(left: false, right: false)
   }
 
-  private mutating func setLeanStates(
-    left: Bool,
-    right: Bool
-  ) -> [RemappingMotionLeanChange] {
+  private mutating func setLeanStates(left: Bool, right: Bool) -> [RemappingMotionLeanChange] {
     var changes: [RemappingMotionLeanChange] = []
     for (direction, active) in [
-      (RemappingMotionLeanDirection.left, left),
-      (RemappingMotionLeanDirection.right, right),
+      (RemappingMotionLeanDirection.left, left), (RemappingMotionLeanDirection.right, right),
     ] {
       let wasActive = activeMotionLeans.contains(direction)
       guard wasActive != active else { continue }
@@ -133,7 +129,5 @@ extension RemappingDeviceState {
     threshold: Double,
     hysteresis: Double,
     wasActive: Bool
-  ) -> Bool {
-    wasActive ? magnitude > threshold - hysteresis : magnitude >= threshold
-  }
+  ) -> Bool { wasActive ? magnitude > threshold - hysteresis : magnitude >= threshold }
 }

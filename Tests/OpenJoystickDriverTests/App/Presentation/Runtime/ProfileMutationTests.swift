@@ -4,8 +4,10 @@ import Testing
 
 @testable import OpenJoystickDriver
 
-@Suite(.serialized) struct ProfileMutationTests {
-  @Test func updatePreservesCompareAndSwapAndSurfacesConflict() async throws {
+@Suite(.serialized)
+struct ProfileMutationTests {
+  @Test
+  func updatePreservesCompareAndSwapAndSurfacesConflict() async throws {
     let original = makeProfile(name: "Original")
     let proposed = makeProfile(id: original.id, name: "Proposed")
     let gateway = GatewayStub(
@@ -34,7 +36,8 @@ import Testing
     )
   }
 
-  @Test func mutationSuccessIdentifiesUpdateButNotActivationAsDraftSave() async {
+  @Test
+  func mutationSuccessIdentifiesUpdateButNotActivationAsDraftSave() async {
     let original = makeProfile(name: "Original")
     let proposed = makeProfile(id: original.id, name: "Proposed")
     let gateway = GatewayStub(snapshotPayload: snapshot(profiles: [original]))
@@ -65,7 +68,8 @@ import Testing
     #expect(activatedID == original.id)
   }
 
-  @Test func deleteCallsGatewayAndImmediatelyPublishesTheReturnedProfileList() async {
+  @Test
+  func deleteCallsGatewayAndImmediatelyPublishesTheReturnedProfileList() async {
     let deleted = makeProfile(name: "Delete Me")
     let retained = makeProfile(name: "Keep Me")
     let gateway = GatewayStub(snapshotPayload: snapshot(profiles: [deleted, retained]))
@@ -90,7 +94,8 @@ import Testing
     #expect(profileID == deleted.id)
   }
 
-  @Test func importOverExistingIdentifierPublishesReplacementProfile() async {
+  @Test
+  func importOverExistingIdentifierPublishesReplacementProfile() async {
     let original = makeProfile(name: "Original")
     let replacement = makeProfile(id: original.id, name: "Imported")
     let gateway = GatewayStub(snapshotPayload: snapshot(profiles: [original]))
@@ -113,7 +118,8 @@ import Testing
     #expect(profileID == original.id)
   }
 
-  @Test func preflightValidationReturnsTheExactRequestWithoutStartingRuntime() async {
+  @Test
+  func preflightValidationReturnsTheExactRequestWithoutStartingRuntime() async {
     let original = makeProfile(name: "Original")
     let invalid = makeProfile(id: original.id, name: "")
     let request = RuntimeMutationRequest(operation: .update(profileID: original.id))
@@ -138,7 +144,8 @@ import Testing
     #expect(await MainActor.run { viewModel.lastMutationOperation == request.operation })
   }
 
-  @Test func createAndImportPreflightFailuresKeepTheirRequestIdentity() async {
+  @Test
+  func createAndImportPreflightFailuresKeepTheirRequestIdentity() async {
     let invalid = makeProfile(name: "")
     let gateway = GatewayStub()
     let viewModel = await MainActor.run { RuntimeViewModel(gateway: gateway) }
@@ -154,7 +161,8 @@ import Testing
     #expect(importResult.operation == importRequest.operation)
   }
 
-  @Test func failedDeleteReturnsTheExactRequestAndLeavesRuntimeIdle() async {
+  @Test
+  func failedDeleteReturnsTheExactRequestAndLeavesRuntimeIdle() async {
     let profile = makeProfile()
     let request = RuntimeMutationRequest(operation: .delete(profileID: profile.id))
     let gateway = GatewayStub(
@@ -175,7 +183,8 @@ import Testing
     #expect(await MainActor.run { viewModel.lastMutationID == request.id })
   }
 
-  @Test func overlappingMutationsRejectTheSecondRequestWhileSaving() async {
+  @Test
+  func overlappingMutationsRejectTheSecondRequestWhileSaving() async {
     let original = makeProfile(name: "Original")
     let proposed = makeProfile(id: original.id, name: "Proposed")
     let ignored = makeProfile(id: original.id, name: "Ignored")

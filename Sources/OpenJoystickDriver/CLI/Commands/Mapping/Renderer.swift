@@ -121,8 +121,7 @@ enum MappingRenderer {
     case .dpad(let value): "dpad:\(value.rawValue)"
     case .axis(let value): "axis:\(value.rawValue)"
     case .axisDirection(let axis, let direction): "axis:\(axis.rawValue):\(direction.rawValue)"
-    case .triggerStage(let trigger, let stage):
-      "trigger:\(trigger.rawValue):\(stage.rawValue)"
+    case .triggerStage(let trigger, let stage): "trigger:\(trigger.rawValue):\(stage.rawValue)"
     case .motionLean(let direction): "motion:lean:\(direction.rawValue)"
     case .touchContact(let surface): "touch:\(surface.rawValue):contact"
     case .touchGrid(let grid):
@@ -151,18 +150,13 @@ enum MappingRenderer {
 
   private static func physicalOutput(_ output: RemappingPhysicalOutput) -> String {
     switch output {
-    case .rumble(let motor, let intensity):
-      return "physical:rumble:\(motor.rawValue):\(intensity)"
-    case .playerIndicator(let indicator):
-      return "physical:player:\(indicator.rawValue)"
-    case .color(let red, let green, let blue):
-      return "physical:color:\(red):\(green):\(blue)"
-    case .brightness(let intensity):
-      return "physical:brightness:\(intensity)"
+    case .rumble(let motor, let intensity): return "physical:rumble:\(motor.rawValue):\(intensity)"
+    case .playerIndicator(let indicator): return "physical:player:\(indicator.rawValue)"
+    case .color(let red, let green, let blue): return "physical:color:\(red):\(green):\(blue)"
+    case .brightness(let intensity): return "physical:brightness:\(intensity)"
     case .adaptiveTrigger(let trigger, let effect):
       switch effect.kind {
-      case .off:
-        return "physical:adaptive:\(trigger.rawValue):off"
+      case .off: return "physical:adaptive:\(trigger.rawValue):off"
       case .resistance:
         return "physical:adaptive:\(trigger.rawValue):resistance:"
           + "\(effect.startPosition):\(effect.strength)"

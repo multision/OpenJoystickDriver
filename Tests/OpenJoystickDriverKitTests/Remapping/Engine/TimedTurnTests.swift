@@ -2,7 +2,8 @@ import Testing
 @testable import OpenJoystickDriverKit
 
 struct TimedTurnTests {
-  @Test func delayedAndRepeatedTicksDoNotChangeTotalTurn() {
+  @Test
+  func delayedAndRepeatedTicksDoNotChangeTotalTurn() {
     var turn = RemappingTimedTurn()
     let initial = turn.append(degrees: 90, durationNanoseconds: 100, at: 0)
     #expect(initial == 0)
@@ -17,7 +18,8 @@ struct TimedTurnTests {
     #expect(!turn.isActive)
   }
 
-  @Test func overlappingTurnsRetainUnemittedMovement() {
+  @Test
+  func overlappingTurnsRetainUnemittedMovement() {
     var turn = RemappingTimedTurn()
     _ = turn.append(degrees: 90, durationNanoseconds: 100, at: 0)
     let due = turn.append(degrees: 90, durationNanoseconds: 100, at: 50)
@@ -27,7 +29,8 @@ struct TimedTurnTests {
     #expect(!turn.isActive)
   }
 
-  @Test func zeroDurationEmitsOnceAndResetCancels() {
+  @Test
+  func zeroDurationEmitsOnceAndResetCancels() {
     var turn = RemappingTimedTurn()
     let immediate = turn.append(degrees: -90, durationNanoseconds: 0, at: 0)
     #expect(immediate == -90)

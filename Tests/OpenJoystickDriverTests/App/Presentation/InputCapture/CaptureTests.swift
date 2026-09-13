@@ -4,8 +4,10 @@ import Testing
 
 @testable import OpenJoystickDriver
 
-@Suite(.serialized) struct InputCaptureTests {
-  @Test func listensUntilItFindsAControllerControl() async {
+@Suite(.serialized)
+struct InputCaptureTests {
+  @Test
+  func listensUntilItFindsAControllerControl() async {
     let selector = RuntimeDeviceSelector(
       vendorID: 0x1234,
       productID: 0x5678,
@@ -30,7 +32,8 @@ import Testing
     #expect(RuntimePresentation.detectedSource(from: capturedState) == .button(.south))
   }
 
-  @Test func listenIgnoresAControlHeldBeforeListening() async {
+  @Test
+  func listenIgnoresAControlHeldBeforeListening() async {
     let selector = RuntimeDeviceSelector(
       vendorID: 0x1234,
       productID: 0x5678,
@@ -55,7 +58,8 @@ import Testing
     #expect(RuntimePresentation.detectedSource(from: state) == .button(.south))
   }
 
-  @Test func listenPublishesTheTransitionSourceWhenAnotherControlWasAlreadyHeld() async {
+  @Test
+  func listenPublishesTheTransitionSourceWhenAnotherControlWasAlreadyHeld() async {
     let selector = RuntimeDeviceSelector(
       vendorID: 0x1234,
       productID: 0x5678,
@@ -78,7 +82,8 @@ import Testing
     #expect(detectedSource == .button(.east))
   }
 
-  @Test func detectedSourceUsesCanonicalButtonDpadAndAxisOrder() {
+  @Test
+  func detectedSourceUsesCanonicalButtonDpadAndAxisOrder() {
     var state = DeviceInputState(vendorID: 0x1234, productID: 0x5678)
     state.pressedButtons = ["Circle", "A"]
     #expect(RuntimePresentation.detectedSource(from: state) == .button(.south))
@@ -102,7 +107,8 @@ import Testing
     #expect(RuntimePresentation.detectedSource(from: state) == nil)
   }
 
-  @Test func detectedTransitionCapturesNewTouchSurfaceButNotHeldContactMovement() {
+  @Test
+  func detectedTransitionCapturesNewTouchSurfaceButNotHeldContactMovement() {
     let previous = DeviceInputState(vendorID: 1, productID: 2)
     var touched = previous
     touched.touchSamples = [touchSample(surface: .right, x: 10)]
@@ -110,13 +116,13 @@ import Testing
     moved.touchSamples = [touchSample(surface: .right, x: 50)]
 
     #expect(
-      RuntimePresentation.detectedTransition(from: previous, to: touched)
-        == .touchContact(.right)
+      RuntimePresentation.detectedTransition(from: previous, to: touched) == .touchContact(.right)
     )
     #expect(RuntimePresentation.detectedTransition(from: touched, to: moved) == nil)
   }
 
-  @Test func detectedSourceIncludesNamedExtraAndDigitalControllerAliases() {
+  @Test
+  func detectedSourceIncludesNamedExtraAndDigitalControllerAliases() {
     var state = DeviceInputState(vendorID: 0x1234, productID: 0x5678)
     state.pressedButtons = ["left_function"]
     #expect(RuntimePresentation.detectedSource(from: state) == .button(.leftFunction))
@@ -152,7 +158,8 @@ import Testing
     #expect(RuntimePresentation.detectedSource(from: state) == .button(.rightTriggerClick))
   }
 
-  @Test func detectedSourceIgnoresReservedGuideAndHomeControls() {
+  @Test
+  func detectedSourceIgnoresReservedGuideAndHomeControls() {
     var state = DeviceInputState(vendorID: 0x1234, productID: 0x5678)
     state.pressedButtons = ["Guide"]
     #expect(RuntimePresentation.detectedSource(from: state) == nil)
@@ -161,7 +168,8 @@ import Testing
     #expect(RuntimePresentation.detectedSource(from: state) == nil)
   }
 
-  @Test func detectedTransitionUsesCanonicalAliasesAndAxisThresholds() {
+  @Test
+  func detectedTransitionUsesCanonicalAliasesAndAxisThresholds() {
     let previous = DeviceInputState(vendorID: 0x1234, productID: 0x5678)
     var current = previous
     current.pressedButtons = ["mute"]
@@ -185,7 +193,8 @@ import Testing
     )
   }
 
-  @Test func detectedTransitionIgnoresReleaseOnlyChanges() {
+  @Test
+  func detectedTransitionIgnoresReleaseOnlyChanges() {
     var previous = DeviceInputState(vendorID: 0x1234, productID: 0x5678)
     previous.pressedButtons = ["A", "B"]
     var current = previous

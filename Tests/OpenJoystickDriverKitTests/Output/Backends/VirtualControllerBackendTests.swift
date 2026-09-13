@@ -5,7 +5,8 @@ import Testing
 @testable import OpenJoystickDriverKit
 
 struct VirtualControllerBackendTests {
-  @Test func testGameControllerHIDBackendCapability() {
+  @Test
+  func testGameControllerHIDBackendCapability() {
     let capabilities = VirtualControllerBackendCatalog.gameControllerHIDCapabilities
 
     #expect(capabilities.isImplemented)
@@ -15,7 +16,8 @@ struct VirtualControllerBackendTests {
     #expect(!capabilities.notes.isEmpty)
   }
 
-  @Test func testCompatibilityIdentityIDs() {
+  @Test
+  func testCompatibilityIdentityIDs() {
     #expect(CompatibilityIdentity(rawValue: "generic-hid") == .genericHID)
     #expect(CompatibilityIdentity(rawValue: "sdl2-3") == .sdl2_3)
     #expect(CompatibilityIdentity(rawValue: "apple-gamecontroller") == .appleGameController)
@@ -30,18 +32,21 @@ struct VirtualControllerBackendTests {
     #expect(CompatibilityIdentity(rawValue: "not-a-profile") == nil)
   }
 
-  @Test func unknownPersistedIdentitySanitizesToAutomatic() {
+  @Test
+  func unknownPersistedIdentitySanitizesToAutomatic() {
     let persistence = CompatibilityIdentity.persisted(from: "xone-hid")
 
     #expect(persistence.identity == .automatic)
     #expect(persistence.didRewrite)
   }
 
-  @Test func unknownIdentityIsRejectedForNewMutation() {
+  @Test
+  func unknownIdentityIsRejectedForNewMutation() {
     #expect(CompatibilityIdentity.mutationDecision(for: "xone-hid") == .rejected(.unknownIdentity))
   }
 
-  @Test func selectableIdentitiesRemainAcceptedForMutation() {
+  @Test
+  func selectableIdentitiesRemainAcceptedForMutation() {
     for identity in CompatibilityIdentity.allCases {
       #expect(identity.mutationDecision() == .accepted(identity))
     }
@@ -50,7 +55,8 @@ struct VirtualControllerBackendTests {
     )
   }
 
-  @Test func testUserSpaceSerialUsesStableHashedPhysicalIdentity() {
+  @Test
+  func testUserSpaceSerialUsesStableHashedPhysicalIdentity() {
     let identifier = DeviceIdentifier(
       vendorID: 13623,
       productID: 4112,
@@ -64,7 +70,8 @@ struct VirtualControllerBackendTests {
     #expect(serial == UserSpaceVirtualDeviceConstants.serialNumber(for: identifier))
   }
 
-  @Test func testCompatibilityProfileCatalog() {
+  @Test
+  func testCompatibilityProfileCatalog() {
     let generic = CompatibilityOutputProfileCatalog.profile(for: .genericHID)
     let sdl = CompatibilityOutputProfileCatalog.profile(for: .sdl2_3)
     let apple = CompatibilityOutputProfileCatalog.profile(for: .appleGameController)
@@ -117,7 +124,8 @@ struct VirtualControllerBackendTests {
     #expect(CompatibilityEvidenceStatus.researchOnly != .sourceBacked)
   }
 
-  @Test func automaticResolverPreservesPhysicalFamilyBoundaries() {
+  @Test
+  func automaticResolverPreservesPhysicalFamilyBoundaries() {
     let xbox = ApplicationServiceDeviceDescription(
       name: "GameSir G7 SE",
       vendorID: 0x3537,
@@ -253,10 +261,7 @@ struct VirtualControllerBackendTests {
     #expect(
       CompatibilityOutputProfileCatalog.profile(for: gipSDL.identity).deviceProfile == .xboxSeries
     )
-    let g7Apple = AutomaticCompatibilityResolver.resolve(
-      for: xbox,
-      consumer: .appleGameController
-    )
+    let g7Apple = AutomaticCompatibilityResolver.resolve(for: xbox, consumer: .appleGameController)
     #expect(g7Apple.identity == .appleGameController)
     #expect(g7Apple.evidence == .hardwareVerified)
     #expect(g7Apple.reason == .selectedCatalogTuple)
@@ -290,7 +295,8 @@ struct VirtualControllerBackendTests {
     #expect(usbResolution.subfamily == .gip)
   }
 
-  @Test func compatibilityFactoryKeepsProtocolTuplesAtomic() throws {
+  @Test
+  func compatibilityFactoryKeepsProtocolTuplesAtomic() throws {
     let apple = try CompatibilityOutputCompositionFactory.make(identity: .appleGameController)
     let sdl = try CompatibilityOutputCompositionFactory.make(identity: .sdl2_3)
     let xbox360 = try CompatibilityOutputCompositionFactory.make(identity: .xbox360HID)
@@ -309,13 +315,17 @@ struct VirtualControllerBackendTests {
     )
   }
 
-  @Test func guideDispatchUsesXboxGuideReportContract() {
+  @Test
+  func guideDispatchUsesXboxGuideReportContract() {
     #expect(UserSpaceOutputDispatcher.xboxGuideReport(for: .buttonPressed(.guide)) == [0x02, 0x01])
-    #expect(UserSpaceOutputDispatcher.xboxGuideReport(for: .buttonReleased(.guide)) == [0x02, 0x00])
+    #expect(
+      UserSpaceOutputDispatcher.xboxGuideReport(for: .buttonReleased(.guide)) == [0x02, 0x00]
+    )
     #expect(UserSpaceOutputDispatcher.xboxGuideReport(for: .buttonPressed(.a)) == nil)
   }
 
-  @Test func nonStandardButtonsKeepDistinctNormalizedBits() {
+  @Test
+  func nonStandardButtonsKeepDistinctNormalizedBits() {
     let dispatcher = UserSpaceOutputDispatcher { _ in
       throw UserSpaceOutputDispatcher.CreationError.createFailed
     }
@@ -325,7 +335,8 @@ struct VirtualControllerBackendTests {
     #expect(dispatcher.buttonBit(for: .touchpad) == nil)
   }
 
-  @Test func testGenericReportDpadButtonPolicy() {
+  @Test
+  func testGenericReportDpadButtonPolicy() {
     let state = VirtualGamepadState(
       buttons: GamepadHIDDescriptor.dpadButtonBits(for: .north)
         | (1 << GamepadHIDDescriptor.ButtonBit.share.rawValue),
@@ -344,7 +355,8 @@ struct VirtualControllerBackendTests {
     #expect((sdl2_3[14] & 0x0F) == GamepadHIDDescriptor.Hat.north.rawValue)
   }
 
-  @Test func testSdlReportUsesButtonDpadAndNeutralTriggers() throws {
+  @Test
+  func testSdlReportUsesButtonDpadAndNeutralTriggers() throws {
     let parsed = try HIDDescriptorReportFormat(descriptor: OJDSDLGamepadFormat().descriptor)
     let neutral = OJDSDLGamepadFormat().buildInputReport(from: VirtualGamepadState())
     let dpad = OJDSDLGamepadFormat().buildInputReport(
@@ -364,14 +376,14 @@ struct VirtualControllerBackendTests {
       OJDSDLGamepadFormat().descriptor.containsSequence([
         0x09, 0x32,  // LT/Z
         0x15, 0x00,  // Logical Minimum: 0
-        0x26, 0xFF, 0x7F
+        0x26, 0xFF, 0x7F,
       ])
     )
     #expect(
       OJDSDLGamepadFormat().descriptor.containsSequence([
         0x09, 0x35,  // RT/Rz
         0x15, 0x00,  // Logical Minimum: 0
-        0x26, 0xFF, 0x7F
+        0x26, 0xFF, 0x7F,
       ])
     )
     #expect(neutral[6] == 0x00)
@@ -385,18 +397,20 @@ struct VirtualControllerBackendTests {
     #expect(triggers[13] == 0x40)
   }
 
-  @Test func testSdlRumbleOutputReportUsesVendorPayload() {
+  @Test
+  func testSdlRumbleOutputReportUsesVendorPayload() {
     #expect(SDLGamepadHIDDescriptor.maxOutputReportPayloadSize == 7)
     #expect(OJDSDLGamepadFormat().outputReportPayloadSize == 7)
     #expect(
       OJDSDLGamepadFormat().descriptor.containsSequence([
         0x06, 0x00, 0xFF,  // vendor-defined output page
-        0x09, 0x01, 0x15, 0x00, 0x26, 0xFF, 0x00, 0x75, 0x08, 0x95, 0x07, 0x91, 0x02
+        0x09, 0x01, 0x15, 0x00, 0x26, 0xFF, 0x00, 0x75, 0x08, 0x95, 0x07, 0x91, 0x02,
       ])
     )
   }
 
-  @Test func testUserSpaceSDLIdentityAdvertisesXbox360HIDAPIReportSizes() {
+  @Test
+  func testUserSpaceSDLIdentityAdvertisesXbox360HIDAPIReportSizes() {
     let format = Xbox360MacHIDReportFormat()
     let properties = UserSpaceOutputDispatcher.deviceProperties(
       profile: .xbox360Wired,
@@ -410,7 +424,9 @@ struct VirtualControllerBackendTests {
     #expect(outputSize == format.outputReportPayloadSize)
   }
 
-  @available(macOS 15, *) @Test func testCoreHIDPropertiesPreserveDescriptorAndIdentity() {
+  @available(macOS 15, *)
+  @Test
+  func testCoreHIDPropertiesPreserveDescriptorAndIdentity() {
     let format = Xbox360MacHIDReportFormat()
     let properties = UserSpaceOutputDispatcher.virtualDeviceProperties(
       profile: .xbox360Wired,
@@ -425,7 +441,8 @@ struct VirtualControllerBackendTests {
     #expect(properties.versionNumber != 0)
   }
 
-  @Test func testUserSpaceDispatcherFailsFastWithoutVirtualDeviceEntitlement() throws {
+  @Test
+  func testUserSpaceDispatcherFailsFastWithoutVirtualDeviceEntitlement() throws {
     guard !UserSpaceOutputDispatcher.hasRequiredVirtualDeviceEntitlement else { return }
 
     do {
@@ -436,14 +453,16 @@ struct VirtualControllerBackendTests {
     } catch { Issue.record("Unexpected error: \(error)") }
   }
 
-  @Test func testXbox360FormatDefaultsToJoystickPrimaryUsage() {
+  @Test
+  func testXbox360FormatDefaultsToJoystickPrimaryUsage() {
     #expect(
       UserSpaceOutputDispatcher.defaultPrimaryUsage(for: Xbox360MacHIDReportFormat())
         == kHIDUsage_GD_Joystick
     )
   }
 
-  @Test func testXbox360GamePadFormatDefaultsToGamePadPrimaryUsage() {
+  @Test
+  func testXbox360GamePadFormatDefaultsToGamePadPrimaryUsage() {
     #expect(
       UserSpaceOutputDispatcher.defaultPrimaryUsage(
         for: Xbox360MacHIDReportFormat(topLevelUsage: UInt8(kHIDUsage_GD_GamePad))
@@ -451,7 +470,8 @@ struct VirtualControllerBackendTests {
     )
   }
 
-  @Test func testXboxOneCompatibilityFormatDeclaresRumbleOutputSize() throws {
+  @Test
+  func testXboxOneCompatibilityFormatDeclaresRumbleOutputSize() throws {
     let format = try HIDDescriptorReportFormat(
       descriptor: XboxOneBluetoothHIDDescriptor.seriesDescriptor,
       outputReportID: VirtualRumbleOutputReportParser.xboxOneReportID,
@@ -465,7 +485,8 @@ struct VirtualControllerBackendTests {
     )
   }
 
-  @Test func testXboxGIPCompatibilityFormatAdvertisesFullOutputSize() throws {
+  @Test
+  func testXboxGIPCompatibilityFormatAdvertisesFullOutputSize() throws {
     let format = try HIDDescriptorReportFormat(
       descriptor: XboxOneBluetoothHIDDescriptor.seriesDescriptor,
       outputReportID: VirtualRumbleOutputReportParser.xboxGIPReportID,
@@ -482,7 +503,8 @@ struct VirtualControllerBackendTests {
     #expect(outputSize == 13)
   }
 
-  @Test func testFixedCompatibilityReportHasNoHatAxis() throws {
+  @Test
+  func testFixedCompatibilityReportHasNoHatAxis() throws {
     let parsed = try HIDDescriptorReportFormat(descriptor: OJDSDLGamepadFormat().descriptor)
     let full = OJDSDLGamepadFormat().buildInputReport(
       from: VirtualGamepadState(
@@ -508,7 +530,8 @@ struct VirtualControllerBackendTests {
     #expect(full[13] == 0x7F)
   }
 
-  @Test func testCompatibilityFormatsReturnFullyNeutralReportsAfterRelease() throws {
+  @Test
+  func testCompatibilityFormatsReturnFullyNeutralReportsAfterRelease() throws {
     let generic = OJDGenericGamepadFormat().buildInputReport(from: VirtualGamepadState())
     let sdl = OJDSDLGamepadFormat().buildInputReport(from: VirtualGamepadState())
     let apple = Xbox360MacHIDReportFormat(topLevelUsage: UInt8(kHIDUsage_GD_GamePad))
@@ -529,10 +552,11 @@ struct VirtualControllerBackendTests {
     #expect(xone.count == 17)
   }
 
-  @Test func userSpaceCreationErrorsDistinguishPermissionFromEntitlementAndCreation() {
+  @Test
+  func userSpaceCreationErrorsDistinguishPermissionFromEntitlementAndCreation() {
     let errors: [UserSpaceOutputDispatcher.CreationError] = [
       .inputMonitoringDenied, .accessibilityDenied, .createFailed, .missingEntitlement("test"),
-      .provisioningProfileExcludesHost
+      .provisioningProfileExcludesHost,
     ]
     for error in errors {
       switch error {
@@ -543,7 +567,8 @@ struct VirtualControllerBackendTests {
     }
   }
 
-  @Test func mapsCoreHIDNilCreateToAccessibilityDeniedWhenPostEventNotGranted() {
+  @Test
+  func mapsCoreHIDNilCreateToAccessibilityDeniedWhenPostEventNotGranted() {
     for accessibility: PermissionManager.AccessState in [.denied, .unknown] {
       let error = UserSpaceOutputDispatcher.mappedCoreHIDCreationFailure(
         provisioning: .includesHost,
@@ -556,9 +581,10 @@ struct VirtualControllerBackendTests {
     }
   }
 
-  @Test func mapsCoreHIDNilCreateToCreateFailedWhenAccessibilityGranted() {
+  @Test
+  func mapsCoreHIDNilCreateToCreateFailedWhenAccessibilityGranted() {
     for provisioning: VirtualHIDProvisioningHost.Authorization in [
-      .includesHost, .unrestricted, .unavailable
+      .includesHost, .unrestricted, .unavailable,
     ] {
       let error = UserSpaceOutputDispatcher.mappedCoreHIDCreationFailure(
         provisioning: provisioning,
@@ -571,7 +597,8 @@ struct VirtualControllerBackendTests {
     }
   }
 
-  @Test func mapsCoreHIDNilCreateToProvisioningExcludeBeforeAccessibility() {
+  @Test
+  func mapsCoreHIDNilCreateToProvisioningExcludeBeforeAccessibility() {
     let error = UserSpaceOutputDispatcher.mappedCoreHIDCreationFailure(
       provisioning: .excludesHost,
       accessibility: .denied

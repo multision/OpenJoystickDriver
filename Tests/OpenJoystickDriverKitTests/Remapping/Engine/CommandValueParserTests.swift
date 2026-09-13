@@ -4,7 +4,8 @@ import Testing
 @testable import OpenJoystickDriverKit
 
 struct CommandValueParserTests {
-  @Test func parsesControllerSourceAndSystemTarget() throws {
+  @Test
+  func parsesControllerSourceAndSystemTarget() throws {
     #expect(try RemappingCommandValueParser.source("button:south") == .button(.south))
     #expect(
       try RemappingCommandValueParser.destination("key:a:mods=command,shift")
@@ -12,10 +13,9 @@ struct CommandValueParserTests {
     )
   }
 
-  @Test func parsesTypedTouchSources() throws {
-    #expect(
-      try RemappingCommandValueParser.source("touch:left:contact") == .touchContact(.left)
-    )
+  @Test
+  func parsesTypedTouchSources() throws {
+    #expect(try RemappingCommandValueParser.source("touch:left:contact") == .touchContact(.left))
     #expect(
       try RemappingCommandValueParser.source("touch:right:grid:3:2:1:0")
         == .touchGrid(
@@ -25,9 +25,7 @@ struct CommandValueParserTests {
     #expect(
       try RemappingCommandValueParser.source("touch:primary:swipe:up:0.25")
         == .touchSwipe(
-          RemappingTouchSwipeSource(
-            surface: .primary, direction: .up, minimumDistance: 0.25
-          )
+          RemappingTouchSwipeSource(surface: .primary, direction: .up, minimumDistance: 0.25)
         )
     )
     #expect(throws: RemappingCommandValueError.invalidSource("touch:left:grid:2:2:0")) {
@@ -35,22 +33,22 @@ struct CommandValueParserTests {
     }
   }
 
-  @Test func parsesTriggerStagesAndMotionLeanSources() throws {
+  @Test
+  func parsesTriggerStagesAndMotionLeanSources() throws {
     #expect(
       try RemappingCommandValueParser.source("trigger:left:soft") == .triggerStage(.left, .soft)
     )
     #expect(
       try RemappingCommandValueParser.source("trigger:right:full") == .triggerStage(.right, .full)
     )
-    #expect(
-      try RemappingCommandValueParser.source("motion:lean:left") == .motionLean(.left)
-    )
+    #expect(try RemappingCommandValueParser.source("motion:lean:left") == .motionLean(.left))
     #expect(throws: RemappingCommandValueError.invalidSource("trigger:left:middle")) {
       try RemappingCommandValueParser.source("trigger:left:middle")
     }
   }
 
-  @Test func parsesBoundedPhysicalOutputTargets() throws {
+  @Test
+  func parsesBoundedPhysicalOutputTargets() throws {
     #expect(
       try RemappingCommandValueParser.destination("physical:rumble:leftMain:0.5")
         == .physical(.rumble(motor: .leftMain, intensity: 0.5))
@@ -60,20 +58,17 @@ struct CommandValueParserTests {
         == .physical(
           .adaptiveTrigger(
             .right,
-            PhysicalAdaptiveTriggerEffect(
-              kind: .resistance, startPosition: 0.4, strength: 0.8
-            )
+            PhysicalAdaptiveTriggerEffect(kind: .resistance, startPosition: 0.4, strength: 0.8)
           )
         )
     )
-    #expect(
-      throws: RemappingCommandValueError.invalidDestination("physical:brightness:1.1")
-    ) {
+    #expect(throws: RemappingCommandValueError.invalidDestination("physical:brightness:1.1")) {
       try RemappingCommandValueParser.destination("physical:brightness:1.1")
     }
   }
 
-  @Test func profileFileStoreValidatesAndRoundTrips() throws {
+  @Test
+  func profileFileStoreValidatesAndRoundTrips() throws {
     let profile = RemappingProfile(
       name: "Portable",
       device: RemappingDeviceScope(vendorID: 1118, productID: 654),

@@ -50,9 +50,10 @@ extension PassiveUSBRegistryFactParser {
     )
   }
 
-  static func speedValue(key: String, value: PassiveUSBRegistryNode.Value)
-    -> PassiveUSBNegotiatedSpeed?
-  {
+  static func speedValue(
+    key: String,
+    value: PassiveUSBRegistryNode.Value
+  ) -> PassiveUSBNegotiatedSpeed? {
     switch value {
     case .unsignedInteger(let raw):
       switch key {

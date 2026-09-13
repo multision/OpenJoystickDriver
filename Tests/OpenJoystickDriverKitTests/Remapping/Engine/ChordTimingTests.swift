@@ -8,43 +8,70 @@ struct RemappingChordTimingTests {
   func simultaneousWindowIncludesExactBoundary(delay: UInt64) {
     var state = RemappingEngineState()
     let profile = profile(mode: .simultaneous)
-    #expect(state.process(
-      events: [.buttonPressed(.a)], from: identifier, profile: profile, at: 0
-    ).isEmpty)
+    #expect(
+      state.process(events: [.buttonPressed(.a)], from: identifier, profile: profile, at: 0).isEmpty
+    )
     let actions = state.process(
-      events: [.buttonPressed(.b)], from: identifier, profile: profile, at: delay
+      events: [.buttonPressed(.b)],
+      from: identifier,
+      profile: profile,
+      at: delay
     )
     #expect(actions == (delay <= 50_000_000 ? [.system(.keyDown(.c))] : []))
   }
 
-  @Test func modifierDoesNotRequireSimultaneousPresses() {
+  @Test
+  func modifierDoesNotRequireSimultaneousPresses() {
     var state = RemappingEngineState()
     let profile = profile(mode: .modifier)
     _ = state.process(events: [.buttonPressed(.a)], from: identifier, profile: profile, at: 0)
-    #expect(state.process(
-      events: [.buttonPressed(.b)], from: identifier, profile: profile, at: 5_000_000_000
-    ) == [.system(.keyDown(.c))])
+    #expect(
+      state.process(
+        events: [.buttonPressed(.b)],
+        from: identifier,
+        profile: profile,
+        at: 5_000_000_000
+      ) == [.system(.keyDown(.c))]
+    )
   }
 
-  @Test func releaseAndRepressUsesFreshPressTime() {
+  @Test
+  func releaseAndRepressUsesFreshPressTime() {
     var state = RemappingEngineState()
     let profile = profile(mode: .simultaneous)
     _ = state.process(events: [.buttonPressed(.a)], from: identifier, profile: profile, at: 0)
     _ = state.process(
-      events: [.buttonPressed(.b)], from: identifier, profile: profile, at: 100_000_000
+      events: [.buttonPressed(.b)],
+      from: identifier,
+      profile: profile,
+      at: 100_000_000
     )
     _ = state.process(
-      events: [.buttonReleased(.a)], from: identifier, profile: profile, at: 110_000_000
+      events: [.buttonReleased(.a)],
+      from: identifier,
+      profile: profile,
+      at: 110_000_000
     )
-    #expect(state.process(
-      events: [.buttonPressed(.a)], from: identifier, profile: profile, at: 120_000_000
-    ) == [.system(.keyDown(.c))])
-    #expect(state.process(
-      events: [.buttonReleased(.b)], from: identifier, profile: profile, at: 130_000_000
-    ) == [.system(.keyUp(.c))])
+    #expect(
+      state.process(
+        events: [.buttonPressed(.a)],
+        from: identifier,
+        profile: profile,
+        at: 120_000_000
+      ) == [.system(.keyDown(.c))]
+    )
+    #expect(
+      state.process(
+        events: [.buttonReleased(.b)],
+        from: identifier,
+        profile: profile,
+        at: 130_000_000
+      ) == [.system(.keyUp(.c))]
+    )
   }
 
-  @Test func legacyChordDecodesWithoutTimingFields() throws {
+  @Test
+  func legacyChordDecodesWithoutTimingFields() throws {
     let chord = try #require(profile(mode: .modifier).chords.first)
     let data = try JSONEncoder().encode(chord)
     let object = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
@@ -62,23 +89,27 @@ struct RemappingChordTimingTests {
       device: RemappingDeviceScope(vendorID: 1, productID: 2),
       applicationScope: .global,
       bindings: [],
-      chords: [RemappingChord(
-        sources: [.button(.south), .button(.east)],
-        destination: .keyboard(key: .c, modifiers: []),
-        mode: .simultaneous,
-        windowMs: window
-      )]
+      chords: [
+        RemappingChord(
+          sources: [.button(.south), .button(.east)],
+          destination: .keyboard(key: .c, modifiers: []),
+          mode: .simultaneous,
+          windowMs: window
+        )
+      ]
     )
     #expect(throws: RemappingValidationError.chordWindowOutOfRange(index: 0)) {
       try invalid.validate()
     }
   }
 
-  @Test func chordModeSurvivesPersistence() throws {
+  @Test
+  func chordModeSurvivesPersistence() throws {
     let original = profile(mode: .simultaneous)
     try original.validate()
     let decoded = try JSONDecoder().decode(
-      RemappingProfile.self, from: JSONEncoder().encode(original)
+      RemappingProfile.self,
+      from: JSONEncoder().encode(original)
     )
     #expect(decoded == original)
   }
@@ -91,11 +122,13 @@ struct RemappingChordTimingTests {
       device: RemappingDeviceScope(vendorID: 1, productID: 2),
       applicationScope: .global,
       bindings: [],
-      chords: [RemappingChord(
-        sources: [.button(.south), .button(.east)],
-        destination: .keyboard(key: .c, modifiers: []),
-        mode: mode
-      )]
+      chords: [
+        RemappingChord(
+          sources: [.button(.south), .button(.east)],
+          destination: .keyboard(key: .c, modifiers: []),
+          mode: mode
+        )
+      ]
     )
   }
 }

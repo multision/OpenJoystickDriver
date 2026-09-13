@@ -5,7 +5,8 @@ import Testing
 @testable import OpenJoystickDriver
 
 struct RuntimeProfileActionTests {
-  @Test func cliCanReplaceAndClearNativeActionCollection() throws {
+  @Test
+  func cliCanReplaceAndClearNativeActionCollection() throws {
     let binding = RemappingBinding(source: .button(.south), destination: .gamepadButton(.north))
     let profile = RemappingProfile(
       name: "CLI actions",
@@ -14,9 +15,9 @@ struct RuntimeProfileActionTests {
       outputPolicy: RemappingOutputPolicy(virtualGamepad: .mapped),
       bindings: [binding]
     )
-    let actions = [RemappingAction(
-      destination: .keyboard(key: .a, modifiers: []), behavior: .toggle
-    )]
+    let actions = [
+      RemappingAction(destination: .keyboard(key: .a, modifiers: []), behavior: .toggle)
+    ]
     let json = try #require(String(data: JSONEncoder().encode(actions), encoding: .utf8))
     let authored = try MappingProfileEditor.replacingBinding(
       in: profile,
@@ -48,7 +49,10 @@ struct RuntimeProfileActionTests {
   func destinationEditsPreserveAdditionalActions(inLayer: Bool) throws {
     let binding = RemappingBinding(source: .button(.south), destination: .gamepadButton(.north))
     let layer = RemappingLayer(
-      name: "Layer", activationMode: .hold, activator: .button(.west), bindings: [binding]
+      name: "Layer",
+      activationMode: .hold,
+      activator: .button(.west),
+      bindings: [binding]
     )
     let profile = RemappingProfile(
       name: "Actions",
@@ -58,18 +62,26 @@ struct RuntimeProfileActionTests {
       bindings: inLayer ? [] : [binding],
       layers: inLayer ? [layer] : []
     )
-    let actions = [RemappingAction(
-      destination: .keyboard(key: .a, modifiers: []), behavior: .pulse, pulseDurationMs: 375
-    )]
+    let actions = [
+      RemappingAction(
+        destination: .keyboard(key: .a, modifiers: []),
+        behavior: .pulse,
+        pulseDurationMs: 375
+      )
+    ]
     let authored = try RuntimeProfileDraft(profile: profile).settingAdditionalActions(
-      actions, for: binding.id, layerID: inLayer ? layer.id : nil
+      actions,
+      for: binding.id,
+      layerID: inLayer ? layer.id : nil
     )
     let edited: RuntimeProfileDraft
     let cliEdited: RemappingProfile
     let options = try MappingOptions([])
     if inLayer {
       edited = try authored.settingLayerBinding(
-        layerID: layer.id, source: binding.source, destination: .gamepadButton(.east)
+        layerID: layer.id,
+        source: binding.source,
+        destination: .gamepadButton(.east)
       )
       cliEdited = try MappingProfileEditor.bindingInLayer(
         in: authored.profile,
@@ -87,8 +99,8 @@ struct RuntimeProfileActionTests {
         options: options
       )
     }
-    let nativeBinding = inLayer ? edited.profile.layers.first?.bindings.first
-      : edited.profile.bindings.first
+    let nativeBinding =
+      inLayer ? edited.profile.layers.first?.bindings.first : edited.profile.bindings.first
     let cliBinding = inLayer ? cliEdited.layers.first?.bindings.first : cliEdited.bindings.first
     #expect(nativeBinding?.additionalActions == actions)
     #expect(cliBinding?.additionalActions == actions)

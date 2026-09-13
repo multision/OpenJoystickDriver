@@ -5,7 +5,8 @@ import Testing
 @testable import OpenJoystickDriver
 
 struct ProbeTests {
-  @Test func distinguishesActiveInactiveAndAbsentRegistration() {
+  @Test
+  func distinguishesActiveInactiveAndAbsentRegistration() {
     let identifier = ExtensionProbe.bundleIdentifier
     let active = result(output: "* * ABC \(identifier) [activated enabled]")
     let inactive = result(output: "* * ABC \(identifier) [activated waiting for user]")
@@ -16,7 +17,8 @@ struct ProbeTests {
     #expect(ExtensionProbe.registration(from: absent) == .absent)
   }
 
-  @Test func queryFailuresNeverBecomeAbsence() {
+  @Test
+  func queryFailuresNeverBecomeAbsence() {
     let timeout = result(output: "", timedOut: true)
     let failed = result(output: "permission denied", terminationStatus: 1)
     let truncated = result(output: "unrelated", outputWasTruncated: true)
@@ -35,7 +37,8 @@ struct ProbeTests {
     }
   }
 
-  @Test func parsesInstalledShortAndBuildVersions() {
+  @Test
+  func parsesInstalledShortAndBuildVersions() {
     let output = "* * \(ExtensionProbe.bundleIdentifier) (0.5.0-beta.2/0.5.0b2) [activated enabled]"
     let facts = ExtensionProbe.installedFacts(from: output)
 
@@ -74,7 +77,8 @@ struct ProbeTests {
     )
   }
 
-  @Test func missingEmbeddedBundleRemainsSeparateFromOSRegistration() throws {
+  @Test
+  func missingEmbeddedBundleRemainsSeparateFromOSRegistration() throws {
     let temporary = FileManager.default.temporaryDirectory.appendingPathComponent(
       UUID().uuidString,
       isDirectory: true

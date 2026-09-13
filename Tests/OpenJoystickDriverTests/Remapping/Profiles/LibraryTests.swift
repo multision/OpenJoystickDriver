@@ -5,7 +5,8 @@ import Testing
 @testable import OpenJoystickDriver
 
 struct ProfileLibraryTests {
-  @Test func missingLibraryStartsEmpty() async throws {
+  @Test
+  func missingLibraryStartsEmpty() async throws {
     try await withLibrary { library, url in
       let profiles = try await library.profiles()
       #expect(profiles.isEmpty)
@@ -13,7 +14,8 @@ struct ProfileLibraryTests {
     }
   }
 
-  @Test func profilesPersistAcrossLibraryInstances() async throws {
+  @Test
+  func profilesPersistAcrossLibraryInstances() async throws {
     try await withLibrary { library, url in
       let profile = makeProfile(name: "Primary")
       try await library.create(profile)
@@ -24,7 +26,8 @@ struct ProfileLibraryTests {
     }
   }
 
-  @Test func createUpdateAndDeleteUseProfileIdentifiers() async throws {
+  @Test
+  func createUpdateAndDeleteUseProfileIdentifiers() async throws {
     try await withLibrary { library, _ in
       let original = makeProfile(name: "Primary")
       try await library.create(original)
@@ -51,7 +54,8 @@ struct ProfileLibraryTests {
     }
   }
 
-  @Test func namesAreUniqueWithoutCaseSensitivity() async throws {
+  @Test
+  func namesAreUniqueWithoutCaseSensitivity() async throws {
     try await withLibrary { library, _ in
       try await library.create(makeProfile(name: "Primary"))
       await #expect(throws: RemappingProfileLibraryError.duplicateName("primary")) {
@@ -60,7 +64,8 @@ struct ProfileLibraryTests {
     }
   }
 
-  @Test func staleExpectedProfileIsRejectedWithoutChangingBytesOrCache() async throws {
+  @Test
+  func staleExpectedProfileIsRejectedWithoutChangingBytesOrCache() async throws {
     try await withLibrary { library, url in
       let original = makeProfile(name: "Primary")
       let firstUpdate = makeProfile(id: original.id, name: "First update")
@@ -78,7 +83,8 @@ struct ProfileLibraryTests {
     }
   }
 
-  @Test func importPreservesActivationOnlyWhenModelIsUnchanged() async throws {
+  @Test
+  func importPreservesActivationOnlyWhenModelIsUnchanged() async throws {
     try await withLibrary { library, _ in
       let original = makeProfile(name: "Primary")
       try await library.create(original)
@@ -96,7 +102,8 @@ struct ProfileLibraryTests {
     }
   }
 
-  @Test func invalidProfilesAreRejectedWithoutMutation() async throws {
+  @Test
+  func invalidProfilesAreRejectedWithoutMutation() async throws {
     try await withLibrary { library, _ in
       let invalid = RemappingProfile(
         name: " ",
@@ -112,7 +119,8 @@ struct ProfileLibraryTests {
     }
   }
 
-  @Test func activationIsIsolatedByModelAndCanBeDeactivated() async throws {
+  @Test
+  func activationIsIsolatedByModelAndCanBeDeactivated() async throws {
     try await withLibrary { library, _ in
       let first = makeProfile(name: "First", vendorID: 1118, productID: 654)
       let replacement = makeProfile(name: "Replacement", vendorID: 1118, productID: 654)
@@ -137,7 +145,8 @@ struct ProfileLibraryTests {
     }
   }
 
-  @Test func deletingProfileClearsItsActiveSelection() async throws {
+  @Test
+  func deletingProfileClearsItsActiveSelection() async throws {
     try await withLibrary { library, _ in
       let profile = makeProfile(name: "Primary")
       try await library.create(profile)
@@ -148,7 +157,8 @@ struct ProfileLibraryTests {
     }
   }
 
-  @Test func corruptLibraryIsPreservedRatherThanOverwritten() async throws {
+  @Test
+  func corruptLibraryIsPreservedRatherThanOverwritten() async throws {
     try await withLibrary { library, url in
       let corrupt = Data("not json".utf8)
       try corrupt.write(to: url)
@@ -183,7 +193,8 @@ struct ProfileLibraryTests {
     }
   }
 
-  @Test func nonEmptyLegacyLibraryStillRejectsUnsupportedVersion() async throws {
+  @Test
+  func nonEmptyLegacyLibraryStillRejectsUnsupportedVersion() async throws {
     try await withLibrary { library, url in
       let profile = makeProfile(name: "Primary")
       let encodedProfile = try JSONEncoder().encode(profile)
@@ -191,7 +202,7 @@ struct ProfileLibraryTests {
         JSONSerialization.jsonObject(with: encodedProfile) as? [String: Any]
       )
       let legacyObject: [String: Any] = [
-        "schema_version": 1, "profiles": [profileObject], "active_profiles": []
+        "schema_version": 1, "profiles": [profileObject], "active_profiles": [],
       ]
       try JSONSerialization.data(withJSONObject: legacyObject).write(to: url)
 
@@ -201,7 +212,8 @@ struct ProfileLibraryTests {
     }
   }
 
-  @Test func olderProfileVersionIsReportedWithoutParsingItsFields() async throws {
+  @Test
+  func olderProfileVersionIsReportedWithoutParsingItsFields() async throws {
     try await withLibrary { library, url in
       var profileObject = try #require(
         JSONSerialization.jsonObject(with: JSONEncoder().encode(makeProfile(name: "Old")))
@@ -210,19 +222,18 @@ struct ProfileLibraryTests {
       profileObject["schema_version"] = 2
       profileObject["bindings"] = "must not be decoded"
       let object: [String: Any] = [
-        "schema_version": 2, "profiles": [profileObject], "active_profiles": []
+        "schema_version": 2, "profiles": [profileObject], "active_profiles": [],
       ]
       try JSONSerialization.data(withJSONObject: object).write(to: url)
 
       await #expect(
         throws: RemappingProfileLibraryError.invalidProfile(.unsupportedSchemaVersion(2))
-      ) {
-        _ = try await library.profiles()
-      }
+      ) { _ = try await library.profiles() }
     }
   }
 
-  @Test func listingUsesDeterministicNameThenIdentifierOrder() async throws {
+  @Test
+  func listingUsesDeterministicNameThenIdentifierOrder() async throws {
     try await withLibrary { library, _ in
       let alphaLast = makeProfile(id: identifier(last: 255), name: "alpha")
       let beta = makeProfile(id: identifier(last: 1), name: "Beta")
@@ -236,7 +247,8 @@ struct ProfileLibraryTests {
     }
   }
 
-  @Test func savedLibraryAndParentAreOwnerOnly() async throws {
+  @Test
+  func savedLibraryAndParentAreOwnerOnly() async throws {
     try await withLibrary { library, url in
       try await library.create(makeProfile(name: "Primary"))
       let attributes = try FileManager.default.attributesOfItem(atPath: url.path)
@@ -250,9 +262,9 @@ struct ProfileLibraryTests {
     }
   }
 
-  private func withLibrary(_ body: @Sendable (RemappingProfileLibrary, URL) async throws -> Void)
-    async throws
-  {
+  private func withLibrary(
+    _ body: @Sendable (RemappingProfileLibrary, URL) async throws -> Void
+  ) async throws {
     let directory = FileManager.default.temporaryDirectory.appendingPathComponent(
       UUID().uuidString,
       isDirectory: true

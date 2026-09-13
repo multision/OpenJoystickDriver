@@ -86,18 +86,22 @@ private actor InputTestGatewayStub: InputTestDeviceGateway {
     return outputResult
   }
 
-  func setPlayerIndicator(for selector: RuntimeDeviceSelector, indicator: PhysicalPlayerIndicator)
-    async throws -> Bool
-  {
+  func setPlayerIndicator(
+    for selector: RuntimeDeviceSelector,
+    indicator: PhysicalPlayerIndicator
+  ) async throws -> Bool {
     try await beginOutputCall()
     defer { finishOutputCall() }
     playerCalls.append((selector, indicator))
     return outputResult
   }
 
-  func setColor(for selector: RuntimeDeviceSelector, red: UInt8, green: UInt8, blue: UInt8)
-    async throws -> Bool
-  {
+  func setColor(
+    for selector: RuntimeDeviceSelector,
+    red: UInt8,
+    green: UInt8,
+    blue: UInt8
+  ) async throws -> Bool {
     try await beginOutputCall()
     defer { finishOutputCall() }
     colorCalls.append((selector, red, green, blue))
@@ -146,8 +150,11 @@ private actor InputTestGatewayStub: InputTestDeviceGateway {
   private func finishOutputCall() { activeOutputCalls -= 1 }
 }
 
-@Suite(.serialized) struct InputTestTests {
-  @Test @MainActor func calibrationSelectionFollowsDisconnectAndClose() {
+@Suite(.serialized)
+struct InputTestTests {
+  @Test
+  @MainActor
+  func calibrationSelectionFollowsDisconnectAndClose() {
     let model = InputTestViewModel(gateway: InputTestGatewayStub())
     let device = makeInputTestDevice()
     model.selectDevice(device)
@@ -160,7 +167,9 @@ private actor InputTestGatewayStub: InputTestDeviceGateway {
     #expect(model.motionCalibration.selector == nil)
   }
 
-  @Test @MainActor func selectingDeviceRemainsIdleUntilExplicitStart() async {
+  @Test
+  @MainActor
+  func selectingDeviceRemainsIdleUntilExplicitStart() async {
     let gateway = InputTestGatewayStub()
     let model = InputTestViewModel(gateway: gateway, sampleIntervalNanoseconds: 1_000_000)
 
@@ -171,7 +180,9 @@ private actor InputTestGatewayStub: InputTestDeviceGateway {
     #expect(await gateway.counts().input == 0)
   }
 
-  @Test @MainActor func startSamplesSequentiallyAndStopCancelsTheActiveLookup() async {
+  @Test
+  @MainActor
+  func startSamplesSequentiallyAndStopCancelsTheActiveLookup() async {
     var first = DeviceInputState(vendorID: 0x1234, productID: 0x5678)
     first.pressedButtons = ["A"]
     let gateway = InputTestGatewayStub(inputSequence: [first], inputDelayNanoseconds: 200_000_000)
@@ -191,7 +202,9 @@ private actor InputTestGatewayStub: InputTestDeviceGateway {
     #expect(await gateway.counts().input == 1)
   }
 
-  @Test @MainActor func liveSamplingPublishesNormalizedState() async {
+  @Test
+  @MainActor
+  func liveSamplingPublishesNormalizedState() async {
     var pressed = DeviceInputState(vendorID: 0x1234, productID: 0x5678)
     pressed.pressedButtons = ["A", "D-pad Up"]
     pressed.leftStickX = 0.75
@@ -209,7 +222,9 @@ private actor InputTestGatewayStub: InputTestDeviceGateway {
     model.stop()
   }
 
-  @Test @MainActor func unchangedSnapshotsDoNotRepublishInputState() async {
+  @Test
+  @MainActor
+  func unchangedSnapshotsDoNotRepublishInputState() async {
     let snapshot = DeviceInputState(vendorID: 0x1234, productID: 0x5678)
     let gateway = InputTestGatewayStub(
       inputSequence: Array(repeating: snapshot, count: 4),
@@ -229,7 +244,9 @@ private actor InputTestGatewayStub: InputTestDeviceGateway {
     withExtendedLifetime(observation) {}
   }
 
-  @Test @MainActor func liveInputUpdatesDoNotInvalidateTheSessionAndOutputModel() {
+  @Test
+  @MainActor
+  func liveInputUpdatesDoNotInvalidateTheSessionAndOutputModel() {
     let model = InputTestViewModel(gateway: InputTestGatewayStub())
     model.selectDevice(makeInputTestDevice())
     var broadInvalidations = 0
@@ -245,7 +262,9 @@ private actor InputTestGatewayStub: InputTestDeviceGateway {
     withExtendedLifetime(observation) {}
   }
 
-  @Test @MainActor func outputControlChangesDoNotInvalidateTheSessionModel() {
+  @Test
+  @MainActor
+  func outputControlChangesDoNotInvalidateTheSessionModel() {
     let model = InputTestViewModel(gateway: InputTestGatewayStub())
     model.selectDevice(makeInputTestDevice())
     var broadInvalidations = 0
@@ -259,7 +278,9 @@ private actor InputTestGatewayStub: InputTestDeviceGateway {
     withExtendedLifetime(observation) {}
   }
 
-  @Test @MainActor func repeatedUnavailableSamplesStopTheLoopWithoutUnboundedRetry() async {
+  @Test
+  @MainActor
+  func repeatedUnavailableSamplesStopTheLoopWithoutUnboundedRetry() async {
     let gateway = InputTestGatewayStub()
     let model = InputTestViewModel(gateway: gateway, sampleIntervalNanoseconds: 1_000_000)
     model.selectDevice(makeInputTestDevice())
@@ -274,7 +295,9 @@ private actor InputTestGatewayStub: InputTestDeviceGateway {
     #expect(await gateway.counts().input == callsAtStop)
   }
 
-  @Test @MainActor func repeatedFailuresRetainTheLastSnapshotAndFinishStale() async {
+  @Test
+  @MainActor
+  func repeatedFailuresRetainTheLastSnapshotAndFinishStale() async {
     var snapshot = DeviceInputState(vendorID: 0x1234, productID: 0x5678)
     snapshot.pressedButtons = [Button.a.rawValue]
     let gateway = InputTestGatewayStub(inputSequence: [snapshot])
@@ -292,13 +315,15 @@ private actor InputTestGatewayStub: InputTestDeviceGateway {
     #expect(await gateway.counts().input == 4)
   }
 
-  @Test func canonicalButtonsDriveTheStandardInputMap() {
+  @Test
+  func canonicalButtonsDriveTheStandardInputMap() {
     var state = DeviceInputState(vendorID: 1, productID: 2)
     state.pressedButtons = [
       Button.leftBumper.rawValue, Button.dpadUp.rawValue, Button.leftStick.rawValue,
       Button.l2Digital.rawValue, Button.leftFunction.rawValue, Button.rightFunction.rawValue,
       Button.leftPaddle.rawValue, Button.rightPaddle.rawValue, Button.leftSL.rawValue,
-      Button.leftSR.rawValue, Button.rightSL.rawValue, Button.rightSR.rawValue, Button.mute.rawValue
+      Button.leftSR.rawValue, Button.rightSL.rawValue, Button.rightSR.rawValue,
+      Button.mute.rawValue,
     ]
 
     #expect(InputTestButtonPresentation.isPressed([.leftBumper, .l1], in: state))
@@ -306,15 +331,15 @@ private actor InputTestGatewayStub: InputTestDeviceGateway {
     #expect(InputTestButtonPresentation.isPressed([.leftStick], in: state))
     #expect(InputTestButtonPresentation.isPressed([.l2Digital], in: state))
     #expect(
-      InputTestButtonPresentation.additionalButtons(in: state)
-        == [
-          "leftFunction", "leftPaddle", "leftSL", "leftSR", "mute", "rightFunction",
-          "rightPaddle", "rightSL", "rightSR"
-        ]
+      InputTestButtonPresentation.additionalButtons(in: state) == [
+        "leftFunction", "leftPaddle", "leftSL", "leftSR", "mute", "rightFunction", "rightPaddle",
+        "rightSL", "rightSR",
+      ]
     )
   }
 
-  @Test func controllerFamiliesSelectProtocolAppropriateInputSymbols() {
+  @Test
+  func controllerFamiliesSelectProtocolAppropriateInputSymbols() {
     let xbox = InputTestControllerSymbolSet.resolve(for: .xbox)
     #expect(xbox.leftShoulder.symbol == "lb.button.roundedbottom.horizontal")
     #expect(xbox.leftTrigger.symbol == "lt.button.roundedtop.horizontal")
@@ -338,7 +363,8 @@ private actor InputTestGatewayStub: InputTestDeviceGateway {
     #expect(generic.guide.symbol == "house.fill")
   }
 
-  @Test func xboxShareMappingUsesSeparateCenteredShareControl() {
+  @Test
+  func xboxShareMappingUsesSeparateCenteredShareControl() {
     let layout = InputTestSystemClusterLayout.resolve(for: .xboxSeries)
     #expect(layout == .xboxWithShare)
     #expect(layout.rows == [[.view, .guide, .menu], [.empty, .share, .empty]])
@@ -346,14 +372,17 @@ private actor InputTestGatewayStub: InputTestDeviceGateway {
     #expect(InputTestSystemClusterLayout.shareButtons == [.share])
   }
 
-  @Test func playStationLeftSystemControlRemainsShare() {
+  @Test
+  func playStationLeftSystemControlRemainsShare() {
     let layout = InputTestSystemClusterLayout.resolve(for: .dualSenseUSB)
     #expect(layout == .standard)
     #expect(layout.rows == [[.view, .guide, .menu]])
     #expect(InputTestSystemClusterLayout.viewButtons(for: .playstation) == [.share])
   }
 
-  @Test @MainActor func samplingNeverOverlapsInputRequests() async {
+  @Test
+  @MainActor
+  func samplingNeverOverlapsInputRequests() async {
     let snapshot = DeviceInputState(vendorID: 0x1234, productID: 0x5678)
     let gateway = InputTestGatewayStub(
       inputSequence: Array(repeating: snapshot, count: 8),
@@ -370,7 +399,9 @@ private actor InputTestGatewayStub: InputTestDeviceGateway {
     #expect(await gateway.counts().maximumConcurrentInput == 1)
   }
 
-  @Test @MainActor func switchingDevicesCancelsOldSamplingAndLeavesNewDeviceIdle() async {
+  @Test
+  @MainActor
+  func switchingDevicesCancelsOldSamplingAndLeavesNewDeviceIdle() async {
     let gateway = InputTestGatewayStub(inputDelayNanoseconds: 200_000_000)
     let model = InputTestViewModel(gateway: gateway)
     let oldDevice = makeInputTestDevice(runtimeIdentifier: "input-test-old")
@@ -388,7 +419,9 @@ private actor InputTestGatewayStub: InputTestDeviceGateway {
     #expect(await gateway.inputSelectors == [RuntimeDeviceSelector(device: oldDevice)])
   }
 
-  @Test @MainActor func unsupportedOutputControlsNeverDispatch() async {
+  @Test
+  @MainActor
+  func unsupportedOutputControlsNeverDispatch() async {
     let gateway = InputTestGatewayStub()
     let model = InputTestViewModel(gateway: gateway)
     model.selectDevice(makeInputTestDevice(capabilities: .none))
@@ -406,7 +439,9 @@ private actor InputTestGatewayStub: InputTestDeviceGateway {
     #expect(counts.brightness == 0)
   }
 
-  @Test @MainActor func rumbleMapsDeclaredMotorsAndBinaryValues() async {
+  @Test
+  @MainActor
+  func rumbleMapsDeclaredMotorsAndBinaryValues() async {
     let capabilities = PhysicalControllerOutputCapabilities(
       rumbleMotors: [.leftHaptic, .rightTrigger],
       binaryRumbleMotors: [.rightTrigger]
@@ -435,9 +470,11 @@ private actor InputTestGatewayStub: InputTestDeviceGateway {
     model.stopRumble()
   }
 
-  @Test @MainActor func lightingUsesExactRuntimeIdentifierAndDeclaredValues() async {
+  @Test
+  @MainActor
+  func lightingUsesExactRuntimeIdentifierAndDeclaredValues() async {
     let capabilities = PhysicalControllerOutputCapabilities(lightingFeatures: [
-      .playerIndicator, .programmableColor, .programmableBrightness
+      .playerIndicator, .programmableColor, .programmableBrightness,
     ])
     let gateway = InputTestGatewayStub()
     let model = InputTestViewModel(gateway: gateway)
@@ -468,9 +505,11 @@ private actor InputTestGatewayStub: InputTestDeviceGateway {
     #expect(await gateway.rumbleCalls.isEmpty)
   }
 
-  @Test @MainActor func outputOperationsRemainSerializedWhenAReplacementCancelsTheFirst() async {
+  @Test
+  @MainActor
+  func outputOperationsRemainSerializedWhenAReplacementCancelsTheFirst() async {
     let capabilities = PhysicalControllerOutputCapabilities(lightingFeatures: [
-      .programmableColor, .programmableBrightness
+      .programmableColor, .programmableBrightness,
     ])
     let gateway = InputTestGatewayStub(outputDelayNanoseconds: 100_000_000)
     let model = InputTestViewModel(gateway: gateway)
@@ -486,7 +525,9 @@ private actor InputTestGatewayStub: InputTestDeviceGateway {
     #expect(await gateway.brightnessCalls.count == 1)
   }
 
-  @Test @MainActor func stoppingDelayedRumbleSerializesAZeroCommandAfterCancellation() async {
+  @Test
+  @MainActor
+  func stoppingDelayedRumbleSerializesAZeroCommandAfterCancellation() async {
     let gateway = InputTestGatewayStub(outputDelayNanoseconds: 100_000_000)
     let model = InputTestViewModel(gateway: gateway)
     model.selectDevice(makeInputTestDevice())
@@ -503,7 +544,9 @@ private actor InputTestGatewayStub: InputTestDeviceGateway {
     #expect(model.outputState == .idle)
   }
 
-  @Test @MainActor func disconnectedDeviceRejectsEveryPhysicalOutputAction() async {
+  @Test
+  @MainActor
+  func disconnectedDeviceRejectsEveryPhysicalOutputAction() async {
     let capabilities = PhysicalControllerOutputCapabilities(
       rumbleMotors: [.leftMain],
       lightingFeatures: [.playerIndicator, .programmableColor, .programmableBrightness]
@@ -527,7 +570,9 @@ private actor InputTestGatewayStub: InputTestDeviceGateway {
     #expect(counts.brightness == 0)
   }
 
-  @Test @MainActor func rejectedOutputRetainsLatestInputAndReportsInlineFailure() async {
+  @Test
+  @MainActor
+  func rejectedOutputRetainsLatestInputAndReportsInlineFailure() async {
     var snapshot = DeviceInputState(vendorID: 0x1234, productID: 0x5678)
     snapshot.pressedButtons = ["A"]
     let gateway = InputTestGatewayStub(inputSequence: [snapshot])
@@ -546,7 +591,9 @@ private actor InputTestGatewayStub: InputTestDeviceGateway {
     model.stop()
   }
 
-  @Test @MainActor func disconnectCancelsSamplingAndRequiresExplicitRestart() async {
+  @Test
+  @MainActor
+  func disconnectCancelsSamplingAndRequiresExplicitRestart() async {
     let gateway = InputTestGatewayStub(inputDelayNanoseconds: 200_000_000)
     let model = InputTestViewModel(gateway: gateway)
     let device = makeInputTestDevice(connection: "HID")
@@ -564,7 +611,9 @@ private actor InputTestGatewayStub: InputTestDeviceGateway {
     #expect(!model.isSampling)
   }
 
-  @Test @MainActor func deniedInputMonitoringDoesNotBlockConnectedRawUSBInput() {
+  @Test
+  @MainActor
+  func deniedInputMonitoringDoesNotBlockConnectedRawUSBInput() {
     let gateway = InputTestGatewayStub()
     let model = InputTestViewModel(gateway: gateway)
     let device = makeInputTestDevice(connection: "USB")
@@ -585,7 +634,9 @@ private actor InputTestGatewayStub: InputTestDeviceGateway {
     #expect(model.isDeviceConnected)
   }
 
-  @Test @MainActor func deniedInputMonitoringStopsSamplingAndReportsPermissionRequirement() async {
+  @Test
+  @MainActor
+  func deniedInputMonitoringStopsSamplingAndReportsPermissionRequirement() async {
     let gateway = InputTestGatewayStub(inputDelayNanoseconds: 200_000_000)
     let model = InputTestViewModel(gateway: gateway)
     let device = makeInputTestDevice(connection: "USB", discoverySource: .hid)
@@ -629,7 +680,8 @@ private actor InputTestGatewayStub: InputTestDeviceGateway {
     )
   }
 
-  @MainActor private func waitUntil(
+  @MainActor
+  private func waitUntil(
     timeoutNanoseconds: UInt64 = 500_000_000,
     _ condition: @escaping @MainActor () -> Bool
   ) async {

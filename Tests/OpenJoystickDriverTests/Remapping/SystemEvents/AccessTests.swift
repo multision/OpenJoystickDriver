@@ -4,12 +4,14 @@ import Testing
 @testable import OpenJoystickDriver
 
 struct CoreGraphicsAccessTests {
-  @Test func preflightReportsOnlyGrantedOrNotAuthorized() {
+  @Test
+  func preflightReportsOnlyGrantedOrNotAuthorized() {
     #expect(makeAccess(preflight: [true]).currentState() == .granted)
     #expect(makeAccess(preflight: [false]).currentState() == .notAuthorized)
   }
 
-  @Test func requestReturnIsIgnoredAndGrantedStateIsReadBack() {
+  @Test
+  func requestReturnIsIgnoredAndGrantedStateIsReadBack() {
     let probe = AccessProbe(preflight: [false, true], requestResult: false)
     let access = CoreGraphicsPostEventAccess(probe: probe)
 
@@ -18,7 +20,8 @@ struct CoreGraphicsAccessTests {
     #expect(probe.preflightCount == 2)
   }
 
-  @Test func successfulRequestReturnIsNotTreatedAsGrant() {
+  @Test
+  func successfulRequestReturnIsNotTreatedAsGrant() {
     let probe = AccessProbe(preflight: [false], requestResult: true)
     let access = CoreGraphicsPostEventAccess(probe: probe)
 
@@ -27,7 +30,8 @@ struct CoreGraphicsAccessTests {
     #expect(probe.preflightCount == 2)
   }
 
-  @Test func alreadyGrantedAccessDoesNotRequestAgain() {
+  @Test
+  func alreadyGrantedAccessDoesNotRequestAgain() {
     let probe = AccessProbe(preflight: [true], requestResult: false)
     let access = CoreGraphicsPostEventAccess(probe: probe)
 

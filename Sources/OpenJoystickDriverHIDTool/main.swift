@@ -160,7 +160,7 @@ if monitor {
   IOHIDManagerSetDeviceMatching(
     mgr,
     AppleGameControllerSyntheticHID.ioHIDMatchingExcludingSynthetics([
-      kIOHIDVendorIDKey as String: vid, kIOHIDProductIDKey as String: pid
+      kIOHIDVendorIDKey as String: vid, kIOHIDProductIDKey as String: pid,
     ]) as CFDictionary
   )
 
@@ -265,7 +265,7 @@ if open {
   let vid = intArg("--vid", default: 0x045E)
   let pid = intArg("--pid", default: 0x028E)
   let devs = enumerateDevices(matching: [
-    kIOHIDVendorIDKey as String: vid, kIOHIDProductIDKey as String: pid
+    kIOHIDVendorIDKey as String: vid, kIOHIDProductIDKey as String: pid,
   ])
   print(
     "Opening \(devs.count) device(s), VID:0x\(String(vid, radix: 16))"
@@ -335,7 +335,7 @@ if dump {
     exit(2)
   }
   let devs = enumerateDevices(matching: [
-    kIOHIDVendorIDKey as String: vid, kIOHIDProductIDKey as String: pid
+    kIOHIDVendorIDKey as String: vid, kIOHIDProductIDKey as String: pid,
   ])
   guard let dev = devs.first else {
     fputs("ERROR: Device not found. Is it connected?\n", stderr)

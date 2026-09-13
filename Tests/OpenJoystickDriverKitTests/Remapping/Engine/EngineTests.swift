@@ -4,13 +4,14 @@ import Testing
 @testable import OpenJoystickDriverKit
 
 struct RemappingEngineTests {
-  @Test func xboxAndPlayStationAliasesReachTheSameFaceAndShoulderSources() async throws {
+  @Test
+  func xboxAndPlayStationAliasesReachTheSameFaceAndShoulderSources() async throws {
     let sink = RemappingTestSink()
     let engine = RemappingEventEngine(sink: sink)
     let aliases: [(Button, Button, RemappingSource)] = [
       (.a, .cross, .button(.south)), (.b, .circle, .button(.east)), (.x, .square, .button(.west)),
       (.y, .triangle, .button(.north)), (.leftBumper, .l1, .button(.leftShoulder)),
-      (.rightBumper, .r1, .button(.rightShoulder)), (.guide, .ps, .button(.guide))
+      (.rightBumper, .r1, .button(.rightShoulder)), (.guide, .ps, .button(.guide)),
     ]
 
     for (first, second, source) in aliases {
@@ -35,11 +36,12 @@ struct RemappingEngineTests {
     )
   }
 
-  @Test func packetMappedButtonsRemainReachable() async throws {
+  @Test
+  func packetMappedButtonsRemainReachable() async throws {
     let sink = RemappingTestSink()
     let engine = RemappingEventEngine(sink: sink)
     let cases: [(Button, RemappingButton)] = [
-      (.share, .share), (.options, .options), (.mute, .mute), (.touchpad, .touchpad)
+      (.share, .share), (.options, .options), (.mute, .mute), (.touchpad, .touchpad),
     ]
 
     for (button, source) in cases {
@@ -59,11 +61,12 @@ struct RemappingEngineTests {
     )
   }
 
-  @Test func dpadDiagonalTransitionsMaintainIndependentCardinalSources() async throws {
+  @Test
+  func dpadDiagonalTransitionsMaintainIndependentCardinalSources() async throws {
     let sink = RemappingTestSink()
     let engine = RemappingEventEngine(sink: sink)
     let currentProfile = profile(bindings: [
-      binding(source: .dpad(.up), key: .w), binding(source: .dpad(.right), key: .d)
+      binding(source: .dpad(.up), key: .w), binding(source: .dpad(.right), key: .d),
     ])
 
     try await engine.process(
@@ -88,7 +91,8 @@ struct RemappingEngineTests {
     #expect(sink.actions() == [.keyDown(.d), .keyDown(.w), .keyUp(.w), .keyUp(.d)])
   }
 
-  @Test func digitalThresholdUsesHysteresisAndSuppressesDuplicateAxisEvents() async throws {
+  @Test
+  func digitalThresholdUsesHysteresisAndSuppressesDuplicateAxisEvents() async throws {
     let sink = RemappingTestSink()
     let engine = RemappingEventEngine(sink: sink)
     let tuning = RemappingAxisTuning(deadzone: 0, gain: 1, digitalActivationThreshold: 0.5)
@@ -112,7 +116,8 @@ struct RemappingEngineTests {
     #expect(sink.actions() == [.keyDown(.arrowRight), .keyUp(.arrowRight)])
   }
 
-  @Test func continuousAxesApplyTuningClampAndStopAtNeutral() async throws {
+  @Test
+  func continuousAxesApplyTuningClampAndStopAtNeutral() async throws {
     let sink = RemappingTestSink()
     let engine = RemappingEventEngine(sink: sink)
     let currentProfile = profile(bindings: [
@@ -130,7 +135,7 @@ struct RemappingEngineTests {
           inverted: true,
           responseCurve: .easeIn
         )
-      )
+      ),
     ])
 
     try await engine.process(
@@ -159,12 +164,13 @@ struct RemappingEngineTests {
       sink.actions() == [
         .scrolled(axis: .y, amount: -0.125), .mouseMoved(axis: .x, amount: 1),
         .scrolled(axis: .y, amount: -0.125), .mouseMoved(axis: .x, amount: 0),
-        .scrolled(axis: .y, amount: 0)
+        .scrolled(axis: .y, amount: 0),
       ]
     )
   }
 
-  @Test func turboUsesInjectedRateAndDutyTicksAndCancelsWithoutDuplicateRelease() async throws {
+  @Test
+  func turboUsesInjectedRateAndDutyTicksAndCancelsWithoutDuplicateRelease() async throws {
     let sink = RemappingTestSink()
     let engine = RemappingEventEngine(sink: sink)
     let currentProfile = profile(bindings: [
@@ -202,16 +208,17 @@ struct RemappingEngineTests {
     #expect(
       sink.actions() == [
         .mouseButtonDown(.left), .mouseButtonUp(.left), .mouseButtonDown(.left),
-        .mouseButtonUp(.left)
+        .mouseButtonUp(.left),
       ]
     )
   }
 
-  @Test func sameDestinationIsReferenceCountedAcrossSourcesAndControllers() async throws {
+  @Test
+  func sameDestinationIsReferenceCountedAcrossSourcesAndControllers() async throws {
     let sink = RemappingTestSink()
     let engine = RemappingEventEngine(sink: sink)
     let currentProfile = profile(bindings: [
-      binding(source: .button(.south), key: .space), binding(source: .button(.east), key: .space)
+      binding(source: .button(.south), key: .space), binding(source: .button(.east), key: .space),
     ])
 
     try await engine.process(
@@ -242,12 +249,13 @@ struct RemappingEngineTests {
     #expect(sink.actions() == [.keyDown(.space), .keyUp(.space)])
   }
 
-  @Test func sharedModifiersRemainDownUntilTheLastChordReleases() async throws {
+  @Test
+  func sharedModifiersRemainDownUntilTheLastChordReleases() async throws {
     let sink = RemappingTestSink()
     let engine = RemappingEventEngine(sink: sink)
     let currentProfile = profile(bindings: [
       binding(source: .button(.south), key: .a, modifiers: [.shift, .command]),
-      binding(source: .button(.east), key: .b, modifiers: [.shift])
+      binding(source: .button(.east), key: .b, modifiers: [.shift]),
     ])
 
     try await engine.process(
@@ -266,12 +274,13 @@ struct RemappingEngineTests {
     #expect(
       sink.actions() == [
         .modifierDown(.command), .modifierDown(.shift), .keyDown(.a), .keyDown(.b), .keyUp(.a),
-        .modifierUp(.command), .keyUp(.b), .modifierUp(.shift)
+        .modifierUp(.command), .keyUp(.b), .modifierUp(.shift),
       ]
     )
   }
 
-  @Test func perControllerReleaseAndGlobalDrainAreReferenceSafeAndIdempotent() async throws {
+  @Test
+  func perControllerReleaseAndGlobalDrainAreReferenceSafeAndIdempotent() async throws {
     let sink = RemappingTestSink()
     let engine = RemappingEventEngine(sink: sink)
     let currentProfile = profile(bindings: [binding(source: .button(.south), key: .space)])
@@ -292,7 +301,8 @@ struct RemappingEngineTests {
     #expect(sink.actions() == [.keyDown(.space), .keyUp(.space)])
   }
 
-  @Test func profileReplacementAndDeactivationNeutralizeBeforeNewOutput() async throws {
+  @Test
+  func profileReplacementAndDeactivationNeutralizeBeforeNewOutput() async throws {
     let sink = RemappingTestSink()
     let engine = RemappingEventEngine(sink: sink)
     let first = profile(name: "First", bindings: [binding(source: .button(.south), key: .a)])

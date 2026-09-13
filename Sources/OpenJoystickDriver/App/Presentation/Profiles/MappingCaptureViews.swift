@@ -10,12 +10,18 @@
   struct AxisAdjustmentSheet: View {
     let binding: RemappingBinding
     let onSave: (RemappingAxisTuning) -> Void
-    @Environment(\.presentationMode) private var presentationMode
-    @State private var deadzone: Double
-    @State private var gain: Double
-    @State private var inverted: Bool
-    @State private var curve: RemappingResponseCurve
-    @State private var threshold: Double
+    @Environment(\.presentationMode)
+    private var presentationMode
+    @State
+    private var deadzone: Double
+    @State
+    private var gain: Double
+    @State
+    private var inverted: Bool
+    @State
+    private var curve: RemappingResponseCurve
+    @State
+    private var threshold: Double
 
     init(binding: RemappingBinding, onSave: @escaping (RemappingAxisTuning) -> Void) {
       self.binding = binding
@@ -97,7 +103,8 @@
 
   private struct SliderRow: View {
     let title: String
-    @Binding var value: Double
+    @Binding
+    var value: Double
     let range: ClosedRange<Double>
     let suffix: String
 
@@ -120,14 +127,21 @@
   }
 
   struct CaptureAssignmentSheet: View {
-    @ObservedObject var viewModel: RuntimeViewModel
+    @ObservedObject
+    var viewModel: RuntimeViewModel
     let onAdd: (RemappingSource, RemappingDestination) -> Void
-    @Environment(\.presentationMode) private var presentationMode
-    @State private var source: RemappingSource = .button(.south)
-    @State private var destination: RemappingDestination = .keyboard(key: .space, modifiers: [])
-    @State private var keyboardDestinationCleared = false
-    @State private var keyboardCaptureActive = false
-    @State private var selectedRuntimeIdentifier: String?
+    @Environment(\.presentationMode)
+    private var presentationMode
+    @State
+    private var source: RemappingSource = .button(.south)
+    @State
+    private var destination: RemappingDestination = .keyboard(key: .space, modifiers: [])
+    @State
+    private var keyboardDestinationCleared = false
+    @State
+    private var keyboardCaptureActive = false
+    @State
+    private var selectedRuntimeIdentifier: String?
 
     var body: some View {
       VStack(alignment: .leading, spacing: 15) {
@@ -212,13 +226,16 @@
       }
     }
 
-    @ViewBuilder private var touchSourceControls: some View {
+    @ViewBuilder
+    private var touchSourceControls: some View {
       switch source {
       case .touchGrid(let grid):
         VStack(alignment: .leading, spacing: 8) {
           Stepper(
             OJDLocalized.formatted(
-              "capture.touchColumns", fallback: "Grid columns: %d", grid.columns
+              "capture.touchColumns",
+              fallback: "Grid columns: %d",
+              grid.columns
             ),
             value: touchGridValue(\.columns),
             in: RemappingTouchGridSource.dimensionRange
@@ -230,7 +247,9 @@
           )
           Stepper(
             OJDLocalized.formatted(
-              "capture.touchColumn", fallback: "Cell column: %d", grid.column + 1
+              "capture.touchColumn",
+              fallback: "Cell column: %d",
+              grid.column + 1
             ),
             value: touchGridValue(\.column),
             in: 0...max(0, grid.columns - 1)
@@ -271,9 +290,7 @@
       }
     }
 
-    private func touchGridValue(_ keyPath: KeyPath<RemappingTouchGridSource, Int>)
-      -> Binding<Int>
-    {
+    private func touchGridValue(_ keyPath: KeyPath<RemappingTouchGridSource, Int>) -> Binding<Int> {
       Binding(
         get: {
           guard case .touchGrid(let grid) = source else { return 0 }
@@ -489,7 +506,8 @@
       )
     }
 
-    @ViewBuilder private var captureStatus: some View {
+    @ViewBuilder
+    private var captureStatus: some View {
       Group {
         switch viewModel.inputCaptureState {
         case .idle: EmptyView()
@@ -590,13 +608,20 @@
     let initialName: String
     let devices: [ApplicationServiceDeviceDescription]
     let onCreate: (String, RemappingDeviceScope, RemappingApplicationScope) -> Void
-    @Environment(\.presentationMode) private var presentationMode
-    @State private var name: String
-    @State private var selectedRuntimeIdentifier: String?
-    @State private var vendorID = ""
-    @State private var productID = ""
-    @State private var scopeKind = ProfileScopeKind.global
-    @State private var bundleIdentifier = ""
+    @Environment(\.presentationMode)
+    private var presentationMode
+    @State
+    private var name: String
+    @State
+    private var selectedRuntimeIdentifier: String?
+    @State
+    private var vendorID = ""
+    @State
+    private var productID = ""
+    @State
+    private var scopeKind = ProfileScopeKind.global
+    @State
+    private var bundleIdentifier = ""
 
     init(
       title: String,

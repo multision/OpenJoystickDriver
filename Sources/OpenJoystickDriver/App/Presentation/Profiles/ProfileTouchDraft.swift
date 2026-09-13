@@ -40,8 +40,7 @@ struct ProfileTouchDraft {
       RemappingTouchMapping.pointerSensitivityRange.contains(mapping.pointerSensitivity),
       mapping.stickRadius.isFinite,
       RemappingTouchMapping.stickRadiusRange.contains(mapping.stickRadius),
-      mapping.deadzone.isFinite,
-      RemappingTouchMapping.deadzoneRange.contains(mapping.deadzone)
+      mapping.deadzone.isFinite, RemappingTouchMapping.deadzoneRange.contains(mapping.deadzone)
     else { throw RemappingValidationError.invalidTouchMapping(surface) }
     return mapping
   }

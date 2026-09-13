@@ -4,14 +4,15 @@ import Testing
 @testable import OpenJoystickDriverKit
 
 struct RemappingValidationTests {
-  @Test func turboAcceptsKeyboardAndMouseButtons() throws {
+  @Test
+  func turboAcceptsKeyboardAndMouseButtons() throws {
     let turbo = RemappingTurbo(repeatRateHz: 12, dutyCycle: 0.4)
     let profile = makeProfile(bindings: [
       RemappingBinding(
         source: .button(.south),
         destination: .keyboard(key: .space, modifiers: []),
         turbo: turbo
-      ), RemappingBinding(source: .button(.east), destination: .mouseButton(.left), turbo: turbo)
+      ), RemappingBinding(source: .button(.east), destination: .mouseButton(.left), turbo: turbo),
     ])
 
     try profile.validate()
@@ -35,21 +36,24 @@ struct RemappingValidationTests {
     RemappingAxisTuning(deadzone: -0.01), RemappingAxisTuning(deadzone: 0.951),
     RemappingAxisTuning(gain: 0.09), RemappingAxisTuning(gain: 10.01),
     RemappingAxisTuning(digitalActivationThreshold: 0),
-    RemappingAxisTuning(digitalActivationThreshold: 1.01)
-  ]) func tuningRejectsOutOfRangeValues(tuning: RemappingAxisTuning) {
+    RemappingAxisTuning(digitalActivationThreshold: 1.01),
+  ])
+  func tuningRejectsOutOfRangeValues(tuning: RemappingAxisTuning) {
     let profile = axisProfile(tuning: tuning)
     #expect(throws: RemappingValidationError.self) { try profile.validate() }
   }
 
   @Test(arguments: [
     RemappingAxisTuning(deadzone: .nan), RemappingAxisTuning(gain: .infinity),
-    RemappingAxisTuning(digitalActivationThreshold: -.infinity)
-  ]) func tuningRejectsNonFiniteValues(tuning: RemappingAxisTuning) {
+    RemappingAxisTuning(digitalActivationThreshold: -.infinity),
+  ])
+  func tuningRejectsNonFiniteValues(tuning: RemappingAxisTuning) {
     let profile = axisProfile(tuning: tuning)
     #expect(throws: RemappingValidationError.self) { try profile.validate() }
   }
 
-  @Test func tuningAcceptsInclusiveBoundaryValues() throws {
+  @Test
+  func tuningAcceptsInclusiveBoundaryValues() throws {
     try axisProfile(
       tuning: RemappingAxisTuning(deadzone: 0, gain: 0.1, digitalActivationThreshold: 0.01)
     ).validate()
@@ -64,8 +68,9 @@ struct RemappingValidationTests {
     RemappingTurbo(repeatRateHz: 10, dutyCycle: 0.049),
     RemappingTurbo(repeatRateHz: 10, dutyCycle: 0.951),
     RemappingTurbo(repeatRateHz: .nan, dutyCycle: 0.5),
-    RemappingTurbo(repeatRateHz: 10, dutyCycle: .infinity)
-  ]) func turboRejectsInvalidNumericalValues(turbo: RemappingTurbo) {
+    RemappingTurbo(repeatRateHz: 10, dutyCycle: .infinity),
+  ])
+  func turboRejectsInvalidNumericalValues(turbo: RemappingTurbo) {
     let profile = makeProfile(bindings: [
       RemappingBinding(
         source: .button(.south),
@@ -76,7 +81,8 @@ struct RemappingValidationTests {
     #expect(throws: RemappingValidationError.self) { try profile.validate() }
   }
 
-  @Test func duplicateBindingIdentifiersAreRejected() {
+  @Test
+  func duplicateBindingIdentifiersAreRejected() {
     let id = UUID()
     let profile = makeProfile(bindings: [
       RemappingBinding(
@@ -88,12 +94,13 @@ struct RemappingValidationTests {
         id: id,
         source: .button(.east),
         destination: .keyboard(key: .b, modifiers: [])
-      )
+      ),
     ])
     #expect(throws: RemappingValidationError.duplicateBindingID(id)) { try profile.validate() }
   }
 
-  @Test func ambiguousDuplicateSourcesAreRejected() {
+  @Test
+  func ambiguousDuplicateSourcesAreRejected() {
     let source = RemappingSource.axisDirection(.leftStickY, .negative)
     let profile = makeProfile(bindings: [
       RemappingBinding(
@@ -105,15 +112,16 @@ struct RemappingValidationTests {
         source: source,
         destination: .keyboard(key: .arrowUp, modifiers: []),
         axisTuning: .default
-      )
+      ),
     ])
     #expect(throws: RemappingValidationError.duplicateSource(source)) { try profile.validate() }
   }
 
   @Test(arguments: [
     "Game", "com..example", ".com.example", "com.example.", "com.example.bad_value",
-    "com.-example.Game"
-  ]) func applicationScopeRequiresValidBundleIdentifier(identifier: String) {
+    "com.-example.Game",
+  ])
+  func applicationScopeRequiresValidBundleIdentifier(identifier: String) {
     let profile = RemappingProfile(
       name: "Invalid scope",
       device: RemappingDeviceScope(vendorID: 1, productID: 2),
@@ -125,7 +133,8 @@ struct RemappingValidationTests {
     }
   }
 
-  @Test func axisBindingsRequireTuningAndCompatibleDestinations() {
+  @Test
+  func axisBindingsRequireTuningAndCompatibleDestinations() {
     let missingTuning = makeProfile(bindings: [
       RemappingBinding(source: .axis(.leftStickX), destination: .mouseMovement(.x))
     ])
@@ -152,7 +161,8 @@ struct RemappingValidationTests {
     }
   }
 
-  @Test func profileMetadataBoundsAreEnforced() {
+  @Test
+  func profileMetadataBoundsAreEnforced() {
     let invalidName = RemappingProfile(
       name: " Padded ",
       device: RemappingDeviceScope(vendorID: 1, productID: 2),
@@ -185,7 +195,8 @@ struct RemappingValidationTests {
     ) { try oversized.validate() }
   }
 
-  @Test func persistedAuxiliaryButtonPayloadsAreRejected() {
+  @Test
+  func persistedAuxiliaryButtonPayloadsAreRejected() {
     #expect(throws: DecodingError.self) {
       _ = try JSONDecoder().decode(
         RemappingSource.self,
@@ -194,7 +205,8 @@ struct RemappingValidationTests {
     }
   }
 
-  @Test func physicalOutputDoesNotRequireVirtualOutputAndRejectsInvalidValues() throws {
+  @Test
+  func physicalOutputDoesNotRequireVirtualOutputAndRejectsInvalidValues() throws {
     let valid = makeProfile(bindings: [
       RemappingBinding(
         source: .button(.south),
@@ -204,10 +216,7 @@ struct RemappingValidationTests {
     try valid.validate()
 
     let invalid = makeProfile(bindings: [
-      RemappingBinding(
-        source: .button(.south),
-        destination: .physical(.brightness(.nan))
-      )
+      RemappingBinding(source: .button(.south), destination: .physical(.brightness(.nan)))
     ])
     #expect(throws: RemappingValidationError.invalidPhysicalOutput) { try invalid.validate() }
   }

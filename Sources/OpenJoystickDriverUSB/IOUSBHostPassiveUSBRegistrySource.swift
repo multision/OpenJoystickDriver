@@ -2,9 +2,10 @@ import Foundation
 import IOKit
 
 struct IOUSBHostPassiveUSBRegistrySource: PassiveUSBRegistrySource {
-  func matchingServices(className: String, numericProperties: [String: UInt64]) throws
-    -> [PassiveUSBRegistryNode]
-  {
+  func matchingServices(
+    className: String,
+    numericProperties: [String: UInt64]
+  ) throws -> [PassiveUSBRegistryNode] {
     try enumerate(className: className, numericProperties: numericProperties, includeChildren: true)
   }
 
@@ -39,22 +40,24 @@ struct IOUSBHostPassiveUSBRegistrySource: PassiveUSBRegistrySource {
     return nodes
   }
 
-  private func node(_ service: io_service_t, className: String, includeChildren: Bool) throws
-    -> PassiveUSBRegistryNode
-  {
+  private func node(
+    _ service: io_service_t,
+    className: String,
+    includeChildren: Bool
+  ) throws -> PassiveUSBRegistryNode {
     let numericKeys = [
       "idVendor", "idProduct", "locationID", "bDeviceClass", "bDeviceSubClass", "bDeviceProtocol",
       "bNumConfigurations", "kUSBCurrentConfiguration", "bInterfaceNumber", "bAlternateSetting",
       "bInterfaceClass", "bInterfaceSubClass", "bInterfaceProtocol", "bEndpointAddress",
-      "wMaxPacketSize", "bInterval", "USBSpeed", "Device Speed", "UsbLinkSpeed", "USB Speed"
+      "wMaxPacketSize", "bInterval", "USBSpeed", "Device Speed", "UsbLinkSpeed", "USB Speed",
     ]
     let stringKeys = [
       "USB Product Name", "Product Name", "transferType", "USBSpeed", "Device Speed",
-      "UsbLinkSpeed", "USB Speed"
+      "UsbLinkSpeed", "USB Speed",
     ]
     let byteKeys = [
       "Configuration Descriptor", "kUSBConfigurationDescriptor", "USB Configuration Descriptor",
-      "DescriptorBytes", "descriptorBytes"
+      "DescriptorBytes", "descriptorBytes",
     ]
     var properties: [String: PassiveUSBRegistryNode.Value] = [:]
     for key in numericKeys {

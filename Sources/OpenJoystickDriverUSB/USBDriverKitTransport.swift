@@ -17,9 +17,10 @@ public actor USBDriverKitTransportProvider: USBTransportProvider {
     return services.compactMap(Self.device)
   }
 
-  public func open(_ device: USBTransportDevice, options: USBTransportOpenOptions) async throws
-    -> any USBTransportSession
-  {
+  public func open(
+    _ device: USBTransportDevice,
+    options: USBTransportOpenOptions
+  ) async throws -> any USBTransportSession {
     guard device.route == .usbDriverKit else { throw USBTransportError.notSupported }
     let service: DriverService
     if let cached = servicesByID[device.serviceID] {

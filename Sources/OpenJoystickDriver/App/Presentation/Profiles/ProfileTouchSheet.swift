@@ -4,12 +4,18 @@
 
   struct ProfileTouchSheet: View {
     let onSave: ([RemappingTouchMapping]) throws -> Void
-    @Environment(\.presentationMode) private var presentationMode
-    @State private var primary: ProfileTouchDraft
-    @State private var left: ProfileTouchDraft
-    @State private var right: ProfileTouchDraft
-    @State private var selected: RemappingTouchSurface = .primary
-    @State private var errorMessage: String?
+    @Environment(\.presentationMode)
+    private var presentationMode
+    @State
+    private var primary: ProfileTouchDraft
+    @State
+    private var left: ProfileTouchDraft
+    @State
+    private var right: ProfileTouchDraft
+    @State
+    private var selected: RemappingTouchSurface = .primary
+    @State
+    private var errorMessage: String?
 
     init(
       mappings: [RemappingTouchMapping],
@@ -23,17 +29,22 @@
 
     var body: some View {
       VStack(alignment: .leading, spacing: 16) {
-        Text(OJDLocalized.string("profiles.touch.title", fallback: "Touch mappings"))
-          .font(.headline)
+        Text(OJDLocalized.string("profiles.touch.title", fallback: "Touch mappings")).font(
+          .headline
+        )
         Picker(
-          OJDLocalized.string("profiles.touch.surface", fallback: "Surface"), selection: $selected
+          OJDLocalized.string("profiles.touch.surface", fallback: "Surface"),
+          selection: $selected
         ) {
-          Text(OJDLocalized.string("mapping.touchSurfacePrimary", fallback: "Primary surface"))
-            .tag(RemappingTouchSurface.primary)
-          Text(OJDLocalized.string("mapping.touchSurfaceLeft", fallback: "Left surface"))
-            .tag(RemappingTouchSurface.left)
-          Text(OJDLocalized.string("mapping.touchSurfaceRight", fallback: "Right surface"))
-            .tag(RemappingTouchSurface.right)
+          Text(OJDLocalized.string("mapping.touchSurfacePrimary", fallback: "Primary surface")).tag(
+            RemappingTouchSurface.primary
+          )
+          Text(OJDLocalized.string("mapping.touchSurfaceLeft", fallback: "Left surface")).tag(
+            RemappingTouchSurface.left
+          )
+          Text(OJDLocalized.string("mapping.touchSurfaceRight", fallback: "Right surface")).tag(
+            RemappingTouchSurface.right
+          )
         }.pickerStyle(SegmentedPickerStyle())
         ScrollView { ProfileTouchFields(draft: selectedDraft).padding(.trailing, 8) }
         if let errorMessage { Text(errorMessage).foregroundColor(.red) }
@@ -79,7 +90,8 @@
     }
 
     private static func draft(
-      _ surface: RemappingTouchSurface, mappings: [RemappingTouchMapping]
+      _ surface: RemappingTouchSurface,
+      mappings: [RemappingTouchMapping]
     ) -> ProfileTouchDraft {
       ProfileTouchDraft(surface: surface, mapping: mappings.first { $0.surface == surface })
     }

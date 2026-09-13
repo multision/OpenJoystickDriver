@@ -53,7 +53,8 @@ final class DefaultSystemExtensionSetupClient: Sendable, SystemExtensionSetupCli
   }
 }
 
-@MainActor final class SystemExtensionSetupCoordinator {
+@MainActor
+final class SystemExtensionSetupCoordinator {
   private let client: any SystemExtensionSetupClient
   private var automaticAttempted = false
   private var requestInFlight = false

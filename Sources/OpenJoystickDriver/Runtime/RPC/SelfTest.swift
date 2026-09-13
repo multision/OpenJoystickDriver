@@ -56,16 +56,17 @@ extension ApplicationServiceServer {
     }
   }
 
-  func runVirtualDeviceSelfTestInternal(seconds: Int) async
-    -> ApplicationServiceVirtualDeviceSelfTestPayload
-  {
+  func runVirtualDeviceSelfTestInternal(
+    seconds: Int
+  ) async -> ApplicationServiceVirtualDeviceSelfTestPayload {
     if #available(macOS 15, *) { return await runCoreHIDSelfTest(seconds: seconds) }
     return await runIOHIDSelfTest(seconds: seconds)
   }
 
-  @available(macOS 15, *) private func runCoreHIDSelfTest(seconds: Int) async
-    -> ApplicationServiceVirtualDeviceSelfTestPayload
-  {
+  @available(macOS 15, *)
+  private func runCoreHIDSelfTest(
+    seconds: Int
+  ) async -> ApplicationServiceVirtualDeviceSelfTestPayload {
     let observer = CoreHIDSelfTestObserver()
     await observer.start()
     try? await Task.sleep(for: .milliseconds(100))
@@ -84,9 +85,10 @@ extension ApplicationServiceServer {
     )
   }
 
-  @available(macOS, introduced: 10.15, obsoleted: 15.0) private func runIOHIDSelfTest(seconds: Int)
-    async -> ApplicationServiceVirtualDeviceSelfTestPayload
-  {
+  @available(macOS, introduced: 10.15, obsoleted: 15.0)
+  private func runIOHIDSelfTest(
+    seconds: Int
+  ) async -> ApplicationServiceVirtualDeviceSelfTestPayload {
     let counter = SelfTestCounter()
     let counterPtr = Unmanaged.passRetained(counter).toOpaque()
 
@@ -180,7 +182,8 @@ extension ApplicationServiceServer {
 
 }
 
-@available(macOS 15, *) private actor CoreHIDSelfTestObserver {
+@available(macOS 15, *)
+private actor CoreHIDSelfTestObserver {
   private var managerTask: Task<Void, Never>?
   private var deviceTasks: [UInt64: Task<Void, Never>] = [:]
   private var valueEvents = 0
@@ -195,7 +198,7 @@ extension ApplicationServiceServer {
         ),
         AppleGameControllerSyntheticHID.coreHIDMatchingCriteria(
           primaryUsage: .genericDesktop(.joystick)
-        )
+        ),
       ]
       do {
         for try await notification in await manager.monitorNotifications(matchingCriteria: criteria)

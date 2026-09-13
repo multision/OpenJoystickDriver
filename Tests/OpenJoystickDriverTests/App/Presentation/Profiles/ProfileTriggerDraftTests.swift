@@ -4,7 +4,8 @@ import Testing
 @testable import OpenJoystickDriver
 
 struct ProfileTriggerDraftTests {
-  @Test func preservesAllFieldsAcceptsLocaleDecimalsAndCanDisable() throws {
+  @Test
+  func preservesAllFieldsAcceptsLocaleDecimalsAndCanDisable() throws {
     let mapping = RemappingTriggerMapping(
       source: .right,
       mode: .responsivePreferFullCombined,
@@ -26,15 +27,18 @@ struct ProfileTriggerDraftTests {
     #expect(try draft.validatedMapping() == nil)
   }
 
-  @Test func profileEditValidatesTheCompleteResult() throws {
+  @Test
+  func profileEditValidatesTheCompleteResult() throws {
     let profile = RemappingProfile(
       name: "Trigger",
       device: RemappingDeviceScope(vendorID: 1, productID: 2),
       applicationScope: .global,
-      bindings: [RemappingBinding(
-        source: .triggerStage(.left, .soft),
-        destination: .keyboard(key: .space, modifiers: [])
-      )]
+      bindings: [
+        RemappingBinding(
+          source: .triggerStage(.left, .soft),
+          destination: .keyboard(key: .space, modifiers: [])
+        )
+      ]
     )
     #expect(throws: RuntimeProfileDraftError.self) {
       try RuntimeProfileDraft(profile: profile).settingTriggerMappings([])

@@ -54,7 +54,11 @@ public enum RemappingCommandValueParser {
     {
       return .touchGrid(
         RemappingTouchGridSource(
-          surface: surface, columns: columns, rows: rows, column: column, row: row
+          surface: surface,
+          columns: columns,
+          rows: rows,
+          column: column,
+          row: row
         )
       )
     }
@@ -65,7 +69,9 @@ public enum RemappingCommandValueParser {
     {
       return .touchSwipe(
         RemappingTouchSwipeSource(
-          surface: surface, direction: direction, minimumDistance: minimumDistance
+          surface: surface,
+          direction: direction,
+          minimumDistance: minimumDistance
         )
       )
     }
@@ -122,8 +128,8 @@ public enum RemappingCommandValueParser {
     {
       return .physical(.playerIndicator(indicator))
     }
-    if parts.count == 5, parts[0] == "physical", parts[1] == "color",
-      let red = UInt8(parts[2]), let green = UInt8(parts[3]), let blue = UInt8(parts[4])
+    if parts.count == 5, parts[0] == "physical", parts[1] == "color", let red = UInt8(parts[2]),
+      let green = UInt8(parts[3]), let blue = UInt8(parts[4])
     {
       return .physical(.color(red: red, green: green, blue: blue))
     }

@@ -8,40 +8,56 @@ struct RemappingMixedOutputTests {
   func edgeTapFiresOnceAndDoesNotLeaveHeldOutput(behavior: RemappingBindingBehavior) async throws {
     let sink = MixedOutputRecorder()
     let engine = RemappingEventEngine(sink: sink, gamepadSink: sink)
-    let profile = makeProfile(bindings: [RemappingBinding(
-      source: .button(.south), destination: .gamepadButton(.north), behavior: behavior
-    )])
-    try await engine.process(
-      events: [.buttonReleased(.a)], from: device, using: profile, at: 0
-    )
+    let profile = makeProfile(bindings: [
+      RemappingBinding(
+        source: .button(.south),
+        destination: .gamepadButton(.north),
+        behavior: behavior
+      )
+    ])
+    try await engine.process(events: [.buttonReleased(.a)], from: device, using: profile, at: 0)
     #expect(sink.actions.isEmpty)
     try await engine.process(
-      events: [.buttonPressed(.a), .buttonPressed(.a)], from: device, using: profile, at: 1
+      events: [.buttonPressed(.a), .buttonPressed(.a)],
+      from: device,
+      using: profile,
+      at: 1
     )
     #expect(sink.actions.count == (behavior == .tapOnPress ? 2 : 0))
     try await engine.process(
-      events: [.buttonReleased(.a), .buttonReleased(.a)], from: device, using: profile, at: 2
+      events: [.buttonReleased(.a), .buttonReleased(.a)],
+      from: device,
+      using: profile,
+      at: 2
     )
-    #expect(sink.actions == [
-      .gamepad(RemappingGamepadState(buttons: [.north]), device), .gamepad(.neutral, device)
-    ])
+    #expect(
+      sink.actions == [
+        .gamepad(RemappingGamepadState(buttons: [.north]), device), .gamepad(.neutral, device),
+      ]
+    )
     try await engine.releaseAll(for: device)
     #expect(sink.actions.count == 2)
   }
 
-  @Test func lifecycleCancellationDoesNotFireAnArmedReleaseTap() async throws {
+  @Test
+  func lifecycleCancellationDoesNotFireAnArmedReleaseTap() async throws {
     let sink = MixedOutputRecorder()
     let engine = RemappingEventEngine(sink: sink, gamepadSink: sink)
-    let profile = makeProfile(bindings: [RemappingBinding(
-      source: .button(.south), destination: .gamepadButton(.north), behavior: .tapOnRelease
-    )])
+    let profile = makeProfile(bindings: [
+      RemappingBinding(
+        source: .button(.south),
+        destination: .gamepadButton(.north),
+        behavior: .tapOnRelease
+      )
+    ])
     try await engine.process(events: [.buttonPressed(.a)], from: device, using: profile, at: 0)
     try await engine.releaseAll(for: device)
     try await engine.process(events: [.buttonReleased(.a)], from: device, using: profile, at: 1)
     #expect(sink.actions.isEmpty)
   }
 
-  @Test func layerOverrideCancelsReleaseTapEvenWhenOriginalLayerReturns() async throws {
+  @Test
+  func layerOverrideCancelsReleaseTapEvenWhenOriginalLayerReturns() async throws {
     let sink = MixedOutputRecorder()
     let engine = RemappingEventEngine(sink: sink, gamepadSink: sink)
     let profile = RemappingProfile(
@@ -49,47 +65,67 @@ struct RemappingMixedOutputTests {
       device: RemappingDeviceScope(vendorID: 1, productID: 2),
       applicationScope: .global,
       outputPolicy: RemappingOutputPolicy(virtualGamepad: .mapped),
-      bindings: [RemappingBinding(
-        source: .button(.south), destination: .gamepadButton(.north), behavior: .tapOnRelease
-      )],
-      layers: [RemappingLayer(
-        name: "Override",
-        activationMode: .hold,
-        activator: .button(.east),
-        bindings: [RemappingBinding(
-          source: .button(.south), destination: .gamepadButton(.west), behavior: .tapOnRelease
-        )]
-      )]
+      bindings: [
+        RemappingBinding(
+          source: .button(.south),
+          destination: .gamepadButton(.north),
+          behavior: .tapOnRelease
+        )
+      ],
+      layers: [
+        RemappingLayer(
+          name: "Override",
+          activationMode: .hold,
+          activator: .button(.east),
+          bindings: [
+            RemappingBinding(
+              source: .button(.south),
+              destination: .gamepadButton(.west),
+              behavior: .tapOnRelease
+            )
+          ]
+        )
+      ]
     )
     try await engine.process(
-      events: [
-        .buttonPressed(.a), .buttonPressed(.b), .buttonReleased(.b), .buttonReleased(.a)
-      ],
+      events: [.buttonPressed(.a), .buttonPressed(.b), .buttonReleased(.b), .buttonReleased(.a)],
       from: device,
       using: profile,
       at: 0
     )
     #expect(sink.actions.isEmpty)
     try await engine.process(
-      events: [.buttonPressed(.a), .buttonReleased(.a)], from: device, using: profile, at: 1
+      events: [.buttonPressed(.a), .buttonReleased(.a)],
+      from: device,
+      using: profile,
+      at: 1
     )
-    #expect(sink.actions == [
-      .gamepad(RemappingGamepadState(buttons: [.north]), device), .gamepad(.neutral, device)
-    ])
+    #expect(
+      sink.actions == [
+        .gamepad(RemappingGamepadState(buttons: [.north]), device), .gamepad(.neutral, device),
+      ]
+    )
   }
 
-  @Test func toggleInputCanCompleteASequenceWithoutLosingItsHeldOutput() async throws {
+  @Test
+  func toggleInputCanCompleteASequenceWithoutLosingItsHeldOutput() async throws {
     let sink = MixedOutputRecorder()
     let engine = RemappingEventEngine(sink: sink, gamepadSink: sink)
     let profile = makeProfile(
-      bindings: [RemappingBinding(
-        source: .button(.south), destination: .gamepadButton(.north), behavior: .toggle
-      )],
-      sequences: [RemappingSequence(
-        sources: [.button(.west), .button(.south)],
-        windowMs: 500,
-        destination: .gamepadButton(.east)
-      )]
+      bindings: [
+        RemappingBinding(
+          source: .button(.south),
+          destination: .gamepadButton(.north),
+          behavior: .toggle
+        )
+      ],
+      sequences: [
+        RemappingSequence(
+          sources: [.button(.west), .button(.south)],
+          windowMs: 500,
+          destination: .gamepadButton(.east)
+        )
+      ]
     )
     try await engine.process(
       events: [.buttonPressed(.x), .buttonReleased(.x), .buttonPressed(.a)],
@@ -104,14 +140,20 @@ struct RemappingMixedOutputTests {
     try await engine.drain()
   }
 
-  @Test func togglePersistsThroughReleaseAndDrainsOnLifecycleChange() async throws {
+  @Test
+  func togglePersistsThroughReleaseAndDrainsOnLifecycleChange() async throws {
     let sink = MixedOutputRecorder()
     let engine = RemappingEventEngine(sink: sink, gamepadSink: sink)
-    let profile = makeProfile(bindings: [RemappingBinding(
-      source: .button(.south), destination: .gamepadButton(.north), behavior: .toggle
-    )])
+    let profile = makeProfile(bindings: [
+      RemappingBinding(
+        source: .button(.south),
+        destination: .gamepadButton(.north),
+        behavior: .toggle
+      )
+    ])
     let decoded = try JSONDecoder().decode(
-      RemappingProfile.self, from: JSONEncoder().encode(profile)
+      RemappingProfile.self,
+      from: JSONEncoder().encode(profile)
     )
     #expect(decoded == profile)
     try await engine.process(
@@ -145,21 +187,27 @@ struct RemappingMixedOutputTests {
       device: RemappingDeviceScope(vendorID: 1, productID: 2),
       applicationScope: .global,
       outputPolicy: RemappingOutputPolicy(virtualGamepad: .mapped),
-      bindings: [RemappingBinding(
-        source: .axis(.leftStickX),
-        destination: original,
-        axisTuning: RemappingAxisTuning(deadzone: 0, gain: 1)
-      )],
-      layers: [RemappingLayer(
-        name: "Hold",
-        activationMode: .hold,
-        activator: .button(.east),
-        bindings: [RemappingBinding(
+      bindings: [
+        RemappingBinding(
           source: .axis(.leftStickX),
-          destination: replacement,
+          destination: original,
           axisTuning: RemappingAxisTuning(deadzone: 0, gain: 1)
-        )]
-      )]
+        )
+      ],
+      layers: [
+        RemappingLayer(
+          name: "Hold",
+          activationMode: .hold,
+          activator: .button(.east),
+          bindings: [
+            RemappingBinding(
+              source: .axis(.leftStickX),
+              destination: replacement,
+              axisTuning: RemappingAxisTuning(deadzone: 0, gain: 1)
+            )
+          ]
+        )
+      ]
     )
     try await engine.process(
       events: [.leftStickChanged(x: 0.5, y: 0)],
@@ -169,8 +217,8 @@ struct RemappingMixedOutputTests {
     )
     try await engine.tick(at: 1)
     try await engine.process(events: [.buttonPressed(.b)], from: device, using: profile, at: 2)
-    let stopped: RemappingEngineAction = virtual
-      ? .gamepad(.neutral, device) : .system(.mouseMoved(axis: .x, amount: 0))
+    let stopped: RemappingEngineAction =
+      virtual ? .gamepad(.neutral, device) : .system(.mouseMoved(axis: .x, amount: 0))
     #expect(sink.actions.last == stopped)
     let count = sink.actions.count
     try await engine.tick(at: 3)
@@ -182,14 +230,16 @@ struct RemappingMixedOutputTests {
       at: 4
     )
     try await engine.tick(at: 5)
-    let resumed: RemappingEngineAction = virtual
+    let resumed: RemappingEngineAction =
+      virtual
       ? .gamepad(RemappingGamepadState(axes: [.rightStickY: 0.5]), device)
       : .system(.mouseMoved(axis: .y, amount: 0.5))
     #expect(sink.actions.last == resumed)
     try await engine.releaseAll(for: device)
   }
 
-  @Test func layerOverrideReleasesHeldVirtualButtonBeforeFreshInput() async throws {
+  @Test
+  func layerOverrideReleasesHeldVirtualButtonBeforeFreshInput() async throws {
     let sink = MixedOutputRecorder()
     let engine = RemappingEventEngine(sink: sink, gamepadSink: sink)
     let profile = RemappingProfile(
@@ -198,18 +248,22 @@ struct RemappingMixedOutputTests {
       applicationScope: .global,
       outputPolicy: RemappingOutputPolicy(virtualGamepad: .mapped),
       bindings: [RemappingBinding(source: .button(.south), destination: .gamepadButton(.north))],
-      layers: [RemappingLayer(
-        name: "Hold",
-        activationMode: .hold,
-        activator: .button(.east),
-        bindings: [RemappingBinding(source: .button(.south), destination: .gamepadButton(.west))]
-      )]
+      layers: [
+        RemappingLayer(
+          name: "Hold",
+          activationMode: .hold,
+          activator: .button(.east),
+          bindings: [RemappingBinding(source: .button(.south), destination: .gamepadButton(.west))]
+        )
+      ]
     )
     try await engine.process(events: [.buttonPressed(.a)], from: device, using: profile, at: 0)
     try await engine.process(events: [.buttonPressed(.b)], from: device, using: profile, at: 1)
-    #expect(sink.actions == [
-      .gamepad(RemappingGamepadState(buttons: [.north]), device), .gamepad(.neutral, device)
-    ])
+    #expect(
+      sink.actions == [
+        .gamepad(RemappingGamepadState(buttons: [.north]), device), .gamepad(.neutral, device),
+      ]
+    )
     try await engine.process(
       events: [.buttonReleased(.a), .buttonPressed(.a)],
       from: device,
@@ -244,10 +298,11 @@ struct RemappingMixedOutputTests {
           activationMode: .toggle,
           activator: .button(.east),
           bindings: [RemappingBinding(source: .button(.south), destination: .gamepadButton(.east))]
-        )
+        ),
       ]
     )
-    let activators: [ControllerEvent] = toggleLast
+    let activators: [ControllerEvent] =
+      toggleLast
       ? [.buttonPressed(.x), .buttonPressed(.b)] : [.buttonPressed(.b), .buttonPressed(.x)]
     try await engine.process(
       events: activators + [.buttonReleased(.b), .buttonPressed(.a)],
@@ -261,7 +316,8 @@ struct RemappingMixedOutputTests {
     #expect(sink.actions.last == .gamepad(.neutral, device))
   }
 
-  @Test func passthroughConsumesMappedControlsAndPreservesUnmappedControls() async throws {
+  @Test
+  func passthroughConsumesMappedControlsAndPreservesUnmappedControls() async throws {
     let sink = MixedOutputRecorder()
     let engine = RemappingEventEngine(sink: sink, gamepadSink: sink)
     let profile = RemappingProfile(
@@ -275,7 +331,7 @@ struct RemappingMixedOutputTests {
           source: .axis(.leftStickX),
           destination: .gamepadAxis(.rightStickX),
           axisTuning: RemappingAxisTuning(deadzone: 0, gain: 1)
-        )
+        ),
       ]
     )
     try await engine.process(
@@ -284,14 +340,24 @@ struct RemappingMixedOutputTests {
       using: profile,
       at: 0
     )
-    #expect(sink.actions.last == .gamepad(
-      RemappingGamepadState(buttons: [.east, .north], axes: [.rightStickX: 0.5, .leftStickY: 0.25]),
-      device
-    ))
+    #expect(
+      sink.actions.last
+        == .gamepad(
+          RemappingGamepadState(
+            buttons: [.east, .north],
+            axes: [.rightStickX: 0.5, .leftStickY: 0.25]
+          ),
+          device
+        )
+    )
     try await engine.process(events: [.buttonReleased(.a)], from: device, using: profile, at: 1)
-    #expect(sink.actions.last == .gamepad(
-      RemappingGamepadState(buttons: [.east], axes: [.rightStickX: 0.5, .leftStickY: 0.25]), device
-    ))
+    #expect(
+      sink.actions.last
+        == .gamepad(
+          RemappingGamepadState(buttons: [.east], axes: [.rightStickX: 0.5, .leftStickY: 0.25]),
+          device
+        )
+    )
     try await engine.releaseAll(for: device)
     #expect(sink.actions.last == .gamepad(.neutral, device))
   }
@@ -310,10 +376,11 @@ struct RemappingMixedOutputTests {
         source: .axis(.rightTrigger),
         destination: .gamepadAxis(destination),
         axisTuning: RemappingAxisTuning(deadzone: 0, gain: 1)
-      )
+      ),
     ])
     let decoded = try JSONDecoder().decode(
-      RemappingProfile.self, from: JSONEncoder().encode(profile)
+      RemappingProfile.self,
+      from: JSONEncoder().encode(profile)
     )
     #expect(decoded == profile)
     #expect(
@@ -336,15 +403,17 @@ struct RemappingMixedOutputTests {
     #expect(sink.actions.last == .gamepad(.neutral, device))
   }
 
-  @Test func opposingDpadBindingsRestoreTheRemainingHeldDirection() async throws {
+  @Test
+  func opposingDpadBindingsRestoreTheRemainingHeldDirection() async throws {
     let sink = MixedOutputRecorder()
     let engine = RemappingEventEngine(sink: sink, gamepadSink: sink)
     let profile = makeProfile(bindings: [
       RemappingBinding(source: .button(.south), destination: .gamepadDpad(.up)),
-      RemappingBinding(source: .button(.east), destination: .gamepadDpad(.down))
+      RemappingBinding(source: .button(.east), destination: .gamepadDpad(.down)),
     ])
     let decoded = try JSONDecoder().decode(
-      RemappingProfile.self, from: JSONEncoder().encode(profile)
+      RemappingProfile.self,
+      from: JSONEncoder().encode(profile)
     )
     #expect(decoded == profile)
     #expect(try RemappingCommandValueParser.destination("gamepad:dpad:up") == .gamepadDpad(.up))
@@ -353,13 +422,16 @@ struct RemappingMixedOutputTests {
     try await engine.process(events: [.buttonPressed(.b)], from: device, using: decoded, at: 1)
     try await engine.process(events: [.buttonReleased(.b)], from: device, using: decoded, at: 2)
     try await engine.releaseAll(for: device)
-    #expect(sink.actions == [
-      .gamepad(RemappingGamepadState(dpad: [.up]), device), .gamepad(.neutral, device),
-      .gamepad(RemappingGamepadState(dpad: [.up]), device), .gamepad(.neutral, device)
-    ])
+    #expect(
+      sink.actions == [
+        .gamepad(RemappingGamepadState(dpad: [.up]), device), .gamepad(.neutral, device),
+        .gamepad(RemappingGamepadState(dpad: [.up]), device), .gamepad(.neutral, device),
+      ]
+    )
   }
 
-  @Test func shutdownWaitsForAnAsynchronousVirtualSendBeforeNeutralization() async throws {
+  @Test
+  func shutdownWaitsForAnAsynchronousVirtualSendBeforeNeutralization() async throws {
     let system = MixedOutputRecorder()
     let virtual = SuspendedGamepadSink()
     let engine = RemappingEventEngine(sink: system, gamepadSink: virtual)
@@ -384,18 +456,17 @@ struct RemappingMixedOutputTests {
     #expect(await virtual.states == [RemappingGamepadState(buttons: [.north]), .neutral])
   }
 
-  @Test func sequenceTapPreservesBothVirtualTransitions() async throws {
+  @Test
+  func sequenceTapPreservesBothVirtualTransitions() async throws {
     let sink = MixedOutputRecorder()
     let engine = RemappingEventEngine(sink: sink, gamepadSink: sink)
-    let profile = makeProfile(
-      sequences: [
-        RemappingSequence(
-          sources: [.button(.south), .button(.east)],
-          windowMs: 500,
-          destination: .gamepadButton(.north)
-        )
-      ]
-    )
+    let profile = makeProfile(sequences: [
+      RemappingSequence(
+        sources: [.button(.south), .button(.east)],
+        windowMs: 500,
+        destination: .gamepadButton(.north)
+      )
+    ])
     try await engine.process(
       events: [.buttonPressed(.a), .buttonPressed(.b)],
       from: device,
@@ -404,19 +475,20 @@ struct RemappingMixedOutputTests {
     )
     #expect(
       sink.actions == [
-        .gamepad(RemappingGamepadState(buttons: [.north]), device), .gamepad(.neutral, device)
+        .gamepad(RemappingGamepadState(buttons: [.north]), device), .gamepad(.neutral, device),
       ]
     )
     try await engine.drain()
     #expect(sink.actions.count == 2)
   }
 
-  @Test func failedVirtualPressNeutralizesBothChannelsAndRequiresRecovery() async throws {
+  @Test
+  func failedVirtualPressNeutralizesBothChannelsAndRequiresRecovery() async throws {
     let sink = MixedOutputRecorder()
     let engine = RemappingEventEngine(sink: sink, gamepadSink: sink)
     let profile = makeProfile(bindings: [
       RemappingBinding(source: .button(.south), destination: .gamepadButton(.north)),
-      RemappingBinding(source: .button(.east), destination: .keyboard(key: .space, modifiers: []))
+      RemappingBinding(source: .button(.east), destination: .keyboard(key: .space, modifiers: [])),
     ])
     sink.rejectNextGamepadSend()
     await #expect(throws: RemappingEventEngineError.sinkUnavailable) {
@@ -430,7 +502,7 @@ struct RemappingMixedOutputTests {
     #expect(
       sink.actions == [
         .system(.keyDown(.space)), .gamepad(RemappingGamepadState(buttons: [.north]), device),
-        .system(.keyUp(.space)), .gamepad(.neutral, device)
+        .system(.keyUp(.space)), .gamepad(.neutral, device),
       ]
     )
     await #expect(throws: RemappingEventEngineError.faulted) {
@@ -443,7 +515,8 @@ struct RemappingMixedOutputTests {
     #expect(sink.actions.last == .gamepad(.neutral, device))
   }
 
-  @Test func gamepadDestinationRequiresAnEnabledOutputPolicy() throws {
+  @Test
+  func gamepadDestinationRequiresAnEnabledOutputPolicy() throws {
     let profile = RemappingProfile(
       name: "Disabled",
       device: RemappingDeviceScope(vendorID: 1, productID: 2),
@@ -461,7 +534,8 @@ struct RemappingMixedOutputTests {
   }
 
   private func makeProfile(
-    bindings: [RemappingBinding] = [], sequences: [RemappingSequence] = []
+    bindings: [RemappingBinding] = [],
+    sequences: [RemappingSequence] = []
   ) -> RemappingProfile {
     RemappingProfile(
       name: "Mixed",

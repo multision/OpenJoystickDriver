@@ -86,7 +86,8 @@ struct PhysicalHIDPolicyTests {
     #expect(!UserSpaceVirtualDeviceConstants.isAppleGameControllerSyntheticDevice(nil))
   }
 
-  @Test func physicalHIDAdmissionRejectsEveryIndependentVirtualDeviceMarker() {
+  @Test
+  func physicalHIDAdmissionRejectsEveryIndependentVirtualDeviceMarker() {
     let physicalLocation: UInt32 = 1_114_112
     let virtualLocation = UserSpaceVirtualDeviceConstants.locationID(
       for: DeviceIdentifier(vendorID: 0x3537, productID: 0x1010, locationID: physicalLocation)
@@ -118,7 +119,8 @@ struct PhysicalHIDPolicyTests {
     #expect(accepts(productName: "GamePad-1", syntheticProperty: nil))
   }
 
-  @Test func compatibilitySpoofRemainsExcludedWhenAppleOmitsSerialAndSyntheticProperties() {
+  @Test
+  func compatibilitySpoofRemainsExcludedWhenAppleOmitsSerialAndSyntheticProperties() {
     let physical = DeviceIdentifier(
       vendorID: 0x3537,
       productID: 0x1010,
@@ -138,9 +140,10 @@ struct PhysicalHIDPolicyTests {
     )
   }
 
-  @Test func syntheticFilteringPolicyCoversEveryPhysicalHIDBoundary() {
+  @Test
+  func syntheticFilteringPolicyCoversEveryPhysicalHIDBoundary() {
     let events: [UserSpaceVirtualDeviceConstants.PhysicalHIDEvent] = [
-      .deviceAdded, .inputReport, .inputValue, .deviceRemoved, .descriptorDiscovery, .feedback
+      .deviceAdded, .inputReport, .inputValue, .deviceRemoved, .descriptorDiscovery, .feedback,
     ]
     for event in events {
       #expect(
@@ -158,7 +161,8 @@ struct PhysicalHIDPolicyTests {
     }
   }
 
-  @Test func physicalHIDTrackingEngineModelsSyntheticAndPhysicalEventSequences() {
+  @Test
+  func physicalHIDTrackingEngineModelsSyntheticAndPhysicalEventSequences() {
     var engine = PhysicalHIDTrackingStateMachine()
     var disconnectCount = 0
     let synthetic = engine.register(deviceID: 1, locationID: 101, syntheticProperty: kCFBooleanTrue)
@@ -187,9 +191,10 @@ struct PhysicalHIDPolicyTests {
     #expect(disconnectCount == 1)
   }
 
-  @Test func bothProductionBackendsUseTheCentralSyntheticPolicy() {
+  @Test
+  func bothProductionBackendsUseTheCentralSyntheticPolicy() {
     let events: [UserSpaceVirtualDeviceConstants.PhysicalHIDEvent] = [
-      .deviceAdded, .inputReport, .inputValue, .deviceRemoved, .descriptorDiscovery, .feedback
+      .deviceAdded, .inputReport, .inputValue, .deviceRemoved, .descriptorDiscovery, .feedback,
     ]
     for event in events {
       #expect(
@@ -199,7 +204,8 @@ struct PhysicalHIDPolicyTests {
     }
   }
 
-  @Test func productionBackendAdaptersRejectSyntheticSharedLocationAndCleanPhysicalState() {
+  @Test
+  func productionBackendAdaptersRejectSyntheticSharedLocationAndCleanPhysicalState() {
     var ioHID = PhysicalHIDBackendEventAdapter()
     var coreHID = PhysicalHIDBackendEventAdapter()
 
@@ -240,7 +246,8 @@ struct PhysicalHIDPolicyTests {
     #expect(coreRemoval.shouldEmitDisconnect)
   }
 
-  @Test func synchronizedProductionAdapterSerializesConcurrentLifecycleAndFeedback() {
+  @Test
+  func synchronizedProductionAdapterSerializesConcurrentLifecycleAndFeedback() {
     let holder = SynchronizedPhysicalHIDBackendEventAdapter()
     let recorder = RemovalDecisionRecorder()
 

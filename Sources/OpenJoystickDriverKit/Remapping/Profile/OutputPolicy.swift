@@ -45,7 +45,6 @@ public struct RemappingOutputPolicy: Codable, Equatable, Hashable, Sendable {
   }
 }
 
-
 extension RemappingProfile {
   /// Whether this profile can synthesize keyboard, pointer, or scroll input.
   /// Includes inactive layers and alternate activation destinations so permission loss cannot
@@ -66,7 +65,9 @@ extension RemappingProfile {
   }
 
   private static func containsSystemInput(
-    bindings: [RemappingBinding], chords: [RemappingChord], sequences: [RemappingSequence]
+    bindings: [RemappingBinding],
+    chords: [RemappingChord],
+    sequences: [RemappingSequence]
   ) -> Bool {
     bindings.flatMap(\.expandedActions).contains {
       $0.destination.isSystemInput || $0.longHold?.destination.isSystemInput == true

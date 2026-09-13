@@ -143,7 +143,7 @@ public final class GenericHIDParser: InputParser, HIDElementValueParser, @unchec
     }
 
     let standard: [Button] = [
-      .a, .b, .x, .y, .leftBumper, .rightBumper, .back, .start, .leftStick, .rightStick, .guide
+      .a, .b, .x, .y, .leftBumper, .rightBumper, .back, .start, .leftStick, .rightStick, .guide,
     ]
     guard usage > 0, usage <= standard.count else { return nil }
     return standard[Int(usage - 1)]

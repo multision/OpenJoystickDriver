@@ -42,9 +42,11 @@ public enum VirtualRumbleOutputReportParser {
   private static let rumbleActivationRight: UInt8 = 0x08
   private static let rumbleDurationByteMultiplier = 10
 
-  public static func parse(type: IOHIDReportType, reportID: UInt32, bytes: [UInt8])
-    -> VirtualRumbleCommand?
-  {
+  public static func parse(
+    type: IOHIDReportType,
+    reportID: UInt32,
+    bytes: [UInt8]
+  ) -> VirtualRumbleCommand? {
     guard type == kIOHIDReportTypeOutput || type == kIOHIDReportTypeFeature else { return nil }
 
     if let command = parseXboxOneReport(reportID: reportID, bytes: bytes) { return command }

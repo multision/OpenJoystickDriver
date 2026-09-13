@@ -20,11 +20,10 @@ struct RemappingSequenceHistoryTests {
     #expect(state.hasScheduledOutput == hasSequence)
   }
 
-  @Test func idleSequenceHistoryExpiresWithoutRepeatedPastDeadlines() {
+  @Test
+  func idleSequenceHistoryExpiresWithoutRepeatedPastDeadlines() {
     var state = RemappingEngineState()
-    _ = state.process(
-      events: [.buttonPressed(.a)], from: identifier, profile: profile(), at: 0
-    )
+    _ = state.process(events: [.buttonPressed(.a)], from: identifier, profile: profile(), at: 0)
     #expect(state.nextScheduledTick(after: 0, continuousIntervalNanoseconds: 1) == 100_000_001)
     #expect(state.tick(at: 100_000_000).isEmpty)
     #expect(state.hasScheduledOutput)
@@ -33,14 +32,18 @@ struct RemappingSequenceHistoryTests {
     #expect(state.nextScheduledTick(after: 100_000_001, continuousIntervalNanoseconds: 1) == nil)
   }
 
-  @Test func sequenceCanFinishAtInclusiveWindowBoundary() {
+  @Test
+  func sequenceCanFinishAtInclusiveWindowBoundary() {
     var state = RemappingEngineState()
-    _ = state.process(
-      events: [.buttonPressed(.a)], from: identifier, profile: profile(), at: 0
+    _ = state.process(events: [.buttonPressed(.a)], from: identifier, profile: profile(), at: 0)
+    #expect(
+      state.process(
+        events: [.buttonPressed(.b)],
+        from: identifier,
+        profile: profile(),
+        at: 100_000_000
+      ) == [.system(.keyDown(.a)), .system(.keyUp(.a))]
     )
-    #expect(state.process(
-      events: [.buttonPressed(.b)], from: identifier, profile: profile(), at: 100_000_000
-    ) == [.system(.keyDown(.a)), .system(.keyUp(.a))])
   }
 
   private let identifier = DeviceIdentifier(vendorID: 1, productID: 2, locationID: 1)
@@ -53,12 +56,15 @@ struct RemappingSequenceHistoryTests {
       device: RemappingDeviceScope(vendorID: 1, productID: 2),
       applicationScope: .global,
       bindings: [],
-      sequences: hasSequence ? [RemappingSequence(
-        id: profileID,
-        sources: [.button(.south), .button(.east)],
-        windowMs: 100,
-        destination: .keyboard(key: .a, modifiers: [])
-      )] : []
+      sequences: hasSequence
+        ? [
+          RemappingSequence(
+            id: profileID,
+            sources: [.button(.south), .button(.east)],
+            windowMs: 100,
+            destination: .keyboard(key: .a, modifiers: [])
+          )
+        ] : []
     )
   }
 }

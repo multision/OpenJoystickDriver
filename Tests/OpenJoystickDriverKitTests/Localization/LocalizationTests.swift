@@ -4,7 +4,8 @@ import Testing
 @testable import OpenJoystickDriverKit
 
 struct LocalizationTests {
-  @Test func packagesTheCompleteLocaleInventory() {
+  @Test
+  func packagesTheCompleteLocaleInventory() {
     let localizations = Localization.availableLocalizations()
     #expect(localizations.count == 83)
     let normalized = Set(localizations.map { $0.lowercased() })
@@ -15,7 +16,8 @@ struct LocalizationTests {
     #expect(normalized.contains("c"))
   }
 
-  @Test func everyLocaleHasTheSameCurrentCatalogShape() {
+  @Test
+  func everyLocaleHasTheSameCurrentCatalogShape() {
     let sourceKeys = Localization.catalogKeys(for: Localization.sourceLocalization)
     let sourcePlaceholders = Localization.catalogPlaceholderSignatures(
       for: Localization.sourceLocalization
@@ -29,19 +31,21 @@ struct LocalizationTests {
     }
   }
 
-  @Test func packagedCatalogIncludesCLIAndInputTestProductKeys() {
+  @Test
+  func packagedCatalogIncludesCLIAndInputTestProductKeys() {
     let keys = Localization.catalogKeys(for: Localization.sourceLocalization)
     for required in [
       "cli.compat.usage", "cli.catalog.compat.summary", "cli.app_ready.not_ready",
       "inputTest.controls", "inputTest.additionalButtons", "compatibility.xbox360HID",
-      "setup.openSystemSettings"
+      "setup.openSystemSettings",
     ] { #expect(keys.contains(required)) }
     #expect(!keys.contains("compatibility.xboxOneLegacyHID"))
     #expect(keys.filter { $0.hasPrefix("cli.") }.count >= 200)
     #expect(keys.filter { $0.hasPrefix("inputTest.") }.count >= 20)
   }
 
-  @Test func pluralResourcesExposeNativeLocaleCategories() {
+  @Test
+  func pluralResourcesExposeNativeLocaleCategories() {
     let expectedCategories: Set<String> = ["zero", "one", "two", "few", "many", "other"]
     let sourceCategories = Localization.catalogPluralCategories()
     #expect(sourceCategories["status.controllerConnected"] == expectedCategories)
@@ -80,7 +84,8 @@ struct LocalizationTests {
     )
   }
 
-  @Test func preferredLanguageSelectionUsesTheLocaleCatalog() {
+  @Test
+  func preferredLanguageSelectionUsesTheLocaleCatalog() {
     let resolver = Localization(preferredLanguages: ["et-EE", "en-US"])
     #expect(resolver.resolvedLanguage?.lowercased() == "et-ee")
     #expect(resolver.string("common.refresh", defaultValue: "Refresh") == "Värskenda")
@@ -89,7 +94,8 @@ struct LocalizationTests {
     #expect(missing == "Source fallback")
   }
 
-  @Test func translatedLocalesDoNotKeepTheSourceRefreshLabel() {
+  @Test
+  func translatedLocalesDoNotKeepTheSourceRefreshLabel() {
     let source = Localization(preferredLanguages: ["en-US"]).string(
       "common.refresh",
       defaultValue: "Refresh"
@@ -101,7 +107,8 @@ struct LocalizationTests {
     }
   }
 
-  @Test func incompleteLocaleFallsBackToSourceEnglishResource() throws {
+  @Test
+  func incompleteLocaleFallsBackToSourceEnglishResource() throws {
     let root = FileManager.default.temporaryDirectory.appendingPathComponent(
       "OpenJoystickDriverLocalization-\(UUID().uuidString).bundle"
     )
@@ -141,7 +148,8 @@ struct LocalizationTests {
     #expect(resolver.string("missing", defaultValue: "Caller fallback") == "Caller fallback")
   }
 
-  @Test func resolverCachesLocaleDiscoveryAtInitialization() throws {
+  @Test
+  func resolverCachesLocaleDiscoveryAtInitialization() throws {
     let root = FileManager.default.temporaryDirectory.appendingPathComponent(
       "OpenJoystickDriverLocalizationCache-\(UUID().uuidString).bundle"
     )
@@ -177,7 +185,8 @@ struct LocalizationTests {
     #expect(Localization.availableLocalizations(in: bundle) == ["de-DE", "en-US", "fr-FR"])
   }
 
-  @Test func formattedValuesPreserveCatalogPlaceholders() {
+  @Test
+  func formattedValuesPreserveCatalogPlaceholders() {
     let resolver = Localization(preferredLanguages: ["en-US"])
     let value = resolver.plural(
       "status.controllerConnected",

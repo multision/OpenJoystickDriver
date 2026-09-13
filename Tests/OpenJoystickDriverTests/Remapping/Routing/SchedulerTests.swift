@@ -5,7 +5,8 @@ import Testing
 @testable import OpenJoystickDriver
 
 struct RemappingOutputSchedulerTests {
-  @Test func enabledTickerRemainsDormantWhenIdleOrHoldingOrdinaryKey() async throws {
+  @Test
+  func enabledTickerRemainsDormantWhenIdleOrHoldingOrdinaryKey() async throws {
     let probe = RemappingTickerProbe()
     let harness = try await RemappingRouterHarness.make(
       profile: remappingRouterProfile(),
@@ -31,7 +32,8 @@ struct RemappingOutputSchedulerTests {
     #expect(!harness.router.tickerIsRunning)
   }
 
-  @Test func turboStartsStopsAndReactivatesExactlyOneTicker() async throws {
+  @Test
+  func turboStartsStopsAndReactivatesExactlyOneTicker() async throws {
     let probe = RemappingTickerProbe()
     let profile = remappingRouterProfile(turbo: RemappingTurbo(repeatRateHz: 10, dutyCycle: 0.25))
     let harness = try await RemappingRouterHarness.make(
@@ -61,7 +63,8 @@ struct RemappingOutputSchedulerTests {
     #expect(harness.router.tickerIsRunning)
   }
 
-  @Test func tickerHonorsSixtyHertzFivePercentTurboDeadlines() async throws {
+  @Test
+  func tickerHonorsSixtyHertzFivePercentTurboDeadlines() async throws {
     let start: UInt64 = 1_000_000_000
     let clock = RemappingTickerClock(start)
     let probe = RemappingTickerProbe(clock: clock)
@@ -93,12 +96,13 @@ struct RemappingOutputSchedulerTests {
 
     #expect(
       Array(harness.recorder.snapshot().prefix(3)) == [
-        .system(.keyDown(.space)), .system(.keyUp(.space)), .system(.keyDown(.space))
+        .system(.keyDown(.space)), .system(.keyUp(.space)), .system(.keyDown(.space)),
       ]
     )
   }
 
-  @Test func continuousOutputStartsTickerAndNeutralAxisStopsIt() async throws {
+  @Test
+  func continuousOutputStartsTickerAndNeutralAxisStopsIt() async throws {
     let probe = RemappingTickerProbe()
     let profile = RemappingProfile(
       name: "Pointer",

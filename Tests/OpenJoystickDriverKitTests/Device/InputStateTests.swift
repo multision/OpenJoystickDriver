@@ -4,7 +4,8 @@ import Testing
 @testable import OpenJoystickDriverKit
 
 struct DeviceInputStateTests {
-  @Test func testInitialStateIsZero() {
+  @Test
+  func testInitialStateIsZero() {
     let state = DeviceInputState(vendorID: 100, productID: 200)
     #expect(state.pressedButtons.isEmpty)
     #expect(state.leftStickX == 0)
@@ -16,7 +17,8 @@ struct DeviceInputStateTests {
     #expect(state.touchSamples.isEmpty)
   }
 
-  @Test func touchSamplesRoundTripAndOlderSnapshotsDefaultToNoTouchCapability() throws {
+  @Test
+  func touchSamplesRoundTripAndOlderSnapshotsDefaultToNoTouchCapability() throws {
     var state = DeviceInputState(vendorID: 1, productID: 2)
     state.apply(events: [
       .touchSample(
@@ -39,9 +41,7 @@ struct DeviceInputStateTests {
         )
       )
     ])
-    let decoded = try JSONDecoder().decode(
-      DeviceInputState.self, from: JSONEncoder().encode(state)
-    )
+    let decoded = try JSONDecoder().decode(DeviceInputState.self, from: JSONEncoder().encode(state))
     #expect(decoded == state)
 
     var object = try #require(
@@ -49,11 +49,13 @@ struct DeviceInputStateTests {
     )
     object.removeValue(forKey: "touchSamples")
     let older = try JSONDecoder().decode(
-      DeviceInputState.self, from: JSONSerialization.data(withJSONObject: object)
+      DeviceInputState.self,
+      from: JSONSerialization.data(withJSONObject: object)
     )
     #expect(older.touchSamples.isEmpty)
   }
-  @Test func testCodableRoundTrip() throws {
+  @Test
+  func testCodableRoundTrip() throws {
     var state = DeviceInputState(vendorID: 0x3537, productID: 0x1010)
     state.pressedButtons = ["a", "b"]
     state.leftStickX = 0.5

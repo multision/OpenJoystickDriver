@@ -79,7 +79,8 @@ public actor PermissionManager {
     )
   }
 
-  @discardableResult public func refreshAccessState() -> Snapshot {
+  @discardableResult
+  public func refreshAccessState() -> Snapshot {
     let snapshot = checkAccess()
     updateState(
       name: "Input Monitoring",
@@ -103,7 +104,8 @@ public actor PermissionManager {
   /// short delay lets that registration complete before the second request.
   /// Return values from IOHIDRequestAccess are deliberately ignored. The
   /// authoritative post-request state comes from IOHIDCheckAccess.
-  @discardableResult public func requestRequiredAccess() async -> Snapshot {
+  @discardableResult
+  public func requestRequiredAccess() async -> Snapshot {
     var snapshot = checkAccess()
     if snapshot.inputMonitoring != .granted {
       await requestAccessOnMainActor(kIOHIDRequestTypeListenEvent)
@@ -120,7 +122,8 @@ public actor PermissionManager {
   ///
   /// The request result is never treated as a grant; the returned snapshot is
   /// read back through `IOHIDCheckAccess`.
-  @discardableResult public func requestAccess(_ requirement: Requirement) async -> Snapshot {
+  @discardableResult
+  public func requestAccess(_ requirement: Requirement) async -> Snapshot {
     let snapshot = checkAccess()
     switch requirement {
     case .inputMonitoring where snapshot.inputMonitoring != .granted:

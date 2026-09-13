@@ -16,8 +16,9 @@ struct NintendoMotionCalibration {
   static func factory(_ bytes: [UInt8], userOffsets: [UInt8]? = nil) -> Self? {
     guard bytes.count == 24 else { return nil }
     if let userOffsets {
-      guard userOffsets.count == 20, userOffsets[0] == 0xB2, userOffsets[1] == 0xA1
-      else { return nil }
+      guard userOffsets.count == 20, userOffsets[0] == 0xB2, userOffsets[1] == 0xA1 else {
+        return nil
+      }
     }
     func value(_ offset: Int, from data: [UInt8]) -> Double {
       Double(Int16(bitPattern: UInt16(data[offset]) | (UInt16(data[offset + 1]) << 8)))
@@ -27,10 +28,10 @@ struct NintendoMotionCalibration {
     var accelScales: [Double] = []
     for axis in 0..<3 {
       let offset = axis * 2
-      let gyroOffset = userOffsets.map { value(14 + offset, from: $0) }
-        ?? value(12 + offset, from: bytes)
-      let accelOffset = userOffsets.map { value(2 + offset, from: $0) }
-        ?? value(offset, from: bytes)
+      let gyroOffset =
+        userOffsets.map { value(14 + offset, from: $0) } ?? value(12 + offset, from: bytes)
+      let accelOffset =
+        userOffsets.map { value(2 + offset, from: $0) } ?? value(offset, from: bytes)
       let gyroRange = value(18 + offset, from: bytes) - gyroOffset
       let accelRange = value(6 + offset, from: bytes) - accelOffset
       // Reject erased flash, degenerate ranges, and reversed coefficients atomically.
@@ -49,7 +50,8 @@ struct NintendoMotionCalibration {
 
   func installed(after previous: Self) -> Self {
     var result = self
-    let changed = gyroOffsets != previous.gyroOffsets || gyroScales != previous.gyroScales
+    let changed =
+      gyroOffsets != previous.gyroOffsets || gyroScales != previous.gyroScales
       || accelScales != previous.accelScales || source != previous.source
     result.revision = previous.revision &+ (changed ? 1 : 0)
     return result
@@ -73,9 +75,10 @@ struct NintendoMotionCalibration {
     )
   }
 
-  private func canonical(_ values: [Double], layout: NintendoControllerLayout)
-    -> ControllerMotionVector
-  {
+  private func canonical(
+    _ values: [Double],
+    layout: NintendoControllerLayout
+  ) -> ControllerMotionVector {
     let side = layout == .rightJoyCon ? 1.0 : -1.0
     return ControllerMotionVector(x: values[1] * side, y: -values[2] * side, z: -values[0])
   }

@@ -10,7 +10,8 @@ struct InstalledCLIForwarderTests {
     fileURLWithPath: "/Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver"
   )
 
-  @Test func sourceBuildCLIUsesInstalledSignedExecutable() {
+  @Test
+  func sourceBuildCLIUsesInstalledSignedExecutable() {
     let resolution = InstalledCLIForwarder.resolve(
       currentExecutableURL: sourceExecutable,
       mainBundleURL: sourceBundle,
@@ -23,7 +24,8 @@ struct InstalledCLIForwarderTests {
     #expect(resolution == .forward(installedExecutable))
   }
 
-  @Test func applicationBundleExecutesItsOwnCLI() {
+  @Test
+  func applicationBundleExecutesItsOwnCLI() {
     let resolution = InstalledCLIForwarder.resolve(
       currentExecutableURL: installedExecutable,
       mainBundleURL: URL(fileURLWithPath: "/Applications/OpenJoystickDriver.app"),
@@ -34,7 +36,8 @@ struct InstalledCLIForwarderTests {
     #expect(resolution == .local)
   }
 
-  @Test func applicationLaunchWithoutCLIArgumentsIsNotForwarded() {
+  @Test
+  func applicationLaunchWithoutCLIArgumentsIsNotForwarded() {
     let resolution = InstalledCLIForwarder.resolve(
       currentExecutableURL: sourceExecutable,
       mainBundleURL: sourceBundle,
@@ -45,7 +48,8 @@ struct InstalledCLIForwarderTests {
     #expect(resolution == .local)
   }
 
-  @Test func sourceBuildRunsLocallyWhenNoInstalledCLIExists() {
+  @Test
+  func sourceBuildRunsLocallyWhenNoInstalledCLIExists() {
     let resolution = InstalledCLIForwarder.resolve(
       currentExecutableURL: sourceExecutable,
       mainBundleURL: sourceBundle,
@@ -56,7 +60,8 @@ struct InstalledCLIForwarderTests {
     #expect(resolution == .local)
   }
 
-  @Test func symlinkToInstalledExecutableDoesNotForwardRecursively() throws {
+  @Test
+  func symlinkToInstalledExecutableDoesNotForwardRecursively() throws {
     let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
     try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
     defer { try? FileManager.default.removeItem(at: directory) }
@@ -75,7 +80,8 @@ struct InstalledCLIForwarderTests {
     #expect(resolution == .local)
   }
 
-  @Test func staleInstalledCLIIsRejectedBeforeForwarding() {
+  @Test
+  func staleInstalledCLIIsRejectedBeforeForwarding() {
     let resolution = InstalledCLIForwarder.resolve(
       currentExecutableURL: sourceExecutable,
       mainBundleURL: sourceBundle,
@@ -88,7 +94,8 @@ struct InstalledCLIForwarderTests {
     #expect(resolution == .staleInstallation(installedExecutable))
   }
 
-  @Test func explicitRepositoryOverrideSkipsInstalledCLI() {
+  @Test
+  func explicitRepositoryOverrideSkipsInstalledCLI() {
     let resolution = InstalledCLIForwarder.resolve(
       currentExecutableURL: sourceExecutable,
       mainBundleURL: sourceBundle,
@@ -102,7 +109,8 @@ struct InstalledCLIForwarderTests {
     #expect(resolution == .local)
   }
 
-  @Test func repositorySourceFreshnessPreventsStaleForwarding() throws {
+  @Test
+  func repositorySourceFreshnessPreventsStaleForwarding() throws {
     let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
     defer { try? FileManager.default.removeItem(at: root) }
     let sourceDirectory = root.appendingPathComponent("Sources/OpenJoystickDriver")

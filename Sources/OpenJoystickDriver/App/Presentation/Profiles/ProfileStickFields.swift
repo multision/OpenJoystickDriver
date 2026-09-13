@@ -3,7 +3,8 @@
   import SwiftUI
 
   struct ProfileStickFields: View {
-    @Binding var draft: ProfileStickDraft
+    @Binding
+    var draft: ProfileStickDraft
 
     var body: some View {
       VStack(alignment: .leading, spacing: 12) {
@@ -39,7 +40,9 @@
             field("pointerRadius", "Pointer radius (points)", $draft.pointerRadiusPoints)
           } else if draft.mode == .scrollWheel {
             field(
-              "scrollDegrees", "Rotation per scroll line (degrees)", $draft.scrollDegreesPerLine
+              "scrollDegrees",
+              "Rotation per scroll line (degrees)",
+              $draft.scrollDegreesPerLine
             )
             Picker(label("scrollAxis", "Scroll axis"), selection: $draft.scrollAxis) {
               Text(label("horizontal", "Horizontal")).tag(RemappingStickScrollAxis.horizontal)
@@ -58,7 +61,8 @@
               $draft.steeringReturnDegreesPerSecond
             )
             Picker(
-              label("steeringOutput", "Virtual steering axis"), selection: $draft.steeringOutput
+              label("steeringOutput", "Virtual steering axis"),
+              selection: $draft.steeringOutput
             ) {
               Text(label("leftStickX", "Left stick horizontal")).tag(
                 RemappingStickSteeringOutput.leftStickX

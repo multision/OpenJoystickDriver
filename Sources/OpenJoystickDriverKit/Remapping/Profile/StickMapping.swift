@@ -106,12 +106,11 @@ public struct RemappingStickMapping: Codable, Equatable, Hashable, Sendable {
       ("aim_degrees_per_second", aimDegreesPerSecond, 0...10_000),
       ("pointer_points_per_degree", pointerPointsPerDegree, 0...1000),
       ("flick_duration_ms", flickDurationMs, 0...10_000),
-      ("flick_threshold", flickThreshold, 0.1...1),
-      ("flick_hysteresis", flickHysteresis, 0...0.5),
+      ("flick_threshold", flickThreshold, 0.1...1), ("flick_hysteresis", flickHysteresis, 0...0.5),
       ("pointer_radius_points", pointerRadiusPoints, 1...10_000),
       ("scroll_degrees_per_line", scrollDegreesPerLine, 1...360),
       ("steering_degrees_at_full_scale", steeringDegreesAtFullScale, 45...1440),
-      ("steering_return_degrees_per_second", steeringReturnDegreesPerSecond, 0...10_000)
+      ("steering_return_degrees_per_second", steeringReturnDegreesPerSecond, 0...10_000),
     ]
     for (field, value, range) in fields where !value.isFinite || !range.contains(value) {
       throw RemappingStickMappingError.invalidField(field)
@@ -147,7 +146,8 @@ public struct RemappingStickMapping: Codable, Equatable, Hashable, Sendable {
       aimDegreesPerSecond: try values.decodeIfPresent(Double.self, forKey: .aimDegreesPerSecond)
         ?? 360,
       pointerPointsPerDegree: try values.decodeIfPresent(
-        Double.self, forKey: .pointerPointsPerDegree
+        Double.self,
+        forKey: .pointerPointsPerDegree
       ) ?? 1,
       flickDurationMs: try values.decodeIfPresent(Double.self, forKey: .flickDurationMs) ?? 100,
       flickThreshold: try values.decodeIfPresent(Double.self, forKey: .flickThreshold) ?? 0.9,
@@ -159,16 +159,20 @@ public struct RemappingStickMapping: Codable, Equatable, Hashable, Sendable {
       scrollAxis: try values.decodeIfPresent(RemappingStickScrollAxis.self, forKey: .scrollAxis)
         ?? .vertical,
       rotationDirection: try values.decodeIfPresent(
-        RemappingStickRotationDirection.self, forKey: .rotationDirection
+        RemappingStickRotationDirection.self,
+        forKey: .rotationDirection
       ) ?? .clockwise,
       steeringDegreesAtFullScale: try values.decodeIfPresent(
-        Double.self, forKey: .steeringDegreesAtFullScale
+        Double.self,
+        forKey: .steeringDegreesAtFullScale
       ) ?? 360,
       steeringReturnDegreesPerSecond: try values.decodeIfPresent(
-        Double.self, forKey: .steeringReturnDegreesPerSecond
+        Double.self,
+        forKey: .steeringReturnDegreesPerSecond
       ) ?? 360,
       steeringOutput: try values.decodeIfPresent(
-        RemappingStickSteeringOutput.self, forKey: .steeringOutput
+        RemappingStickSteeringOutput.self,
+        forKey: .steeringOutput
       ) ?? .leftStickX,
       passthrough: try values.decodeIfPresent(Bool.self, forKey: .passthrough) ?? false
     )
@@ -176,6 +180,4 @@ public struct RemappingStickMapping: Codable, Equatable, Hashable, Sendable {
   }
 }
 
-public enum RemappingStickMappingError: Error, Equatable, Sendable {
-  case invalidField(String)
-}
+public enum RemappingStickMappingError: Error, Equatable, Sendable { case invalidField(String) }

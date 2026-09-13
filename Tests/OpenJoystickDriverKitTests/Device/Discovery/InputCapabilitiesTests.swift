@@ -39,7 +39,8 @@ struct InputCapabilitiesTests {
     await manager.stop()
   }
 
-  @Test func olderDevicePayloadDefaultsToNoSensorCapability() throws {
+  @Test
+  func olderDevicePayloadDefaultsToNoSensorCapability() throws {
     let description = ApplicationServiceDeviceDescription(
       name: "Test",
       vendorID: 1,
@@ -58,14 +59,16 @@ struct InputCapabilitiesTests {
     #expect(decoded.physicalInputCapabilities == .none)
   }
 
-  @Test func unsupportedParserDoesNotAdvertiseRawSamples() {
+  @Test
+  func unsupportedParserDoesNotAdvertiseRawSamples() {
     let parser = ParserRegistry().parser(for: DeviceIdentifier(vendorID: 1, productID: 2))
     #expect(parser.physicalInputCapabilities == .none)
   }
 }
 
 extension InputCapabilitiesTests {
-  @Test func olderSensorCapabilityPayloadDefaultsToNoAdditionalButtons() throws {
+  @Test
+  func olderSensorCapabilityPayloadDefaultsToNoAdditionalButtons() throws {
     let data = Data(#"{"rawMotion":true,"touchContactsPerFrame":2}"#.utf8)
     let decoded = try JSONDecoder().decode(PhysicalControllerInputCapabilities.self, from: data)
     #expect(decoded.rawMotion)
@@ -78,16 +81,21 @@ extension InputCapabilitiesTests {
     (UInt16(0x057E), UInt16(0x2006), [Button.leftSL, .leftSR]),
     (UInt16(0x057E), UInt16(0x2007), [Button.rightSL, .rightSR]),
     (UInt16(0x057E), UInt16(0x2009), [Button]()),
-    (UInt16(0x28DE), UInt16(0x1102), [Button.leftGrip, .rightGrip, .leftPadClick, .rightPadClick])
-  ]) func additionalButtonCapabilitiesFollowTheSelectedParser(
-    vendorID: UInt16, productID: UInt16, expected: [Button]
+    (UInt16(0x28DE), UInt16(0x1102), [Button.leftGrip, .rightGrip, .leftPadClick, .rightPadClick]),
+  ])
+  func additionalButtonCapabilitiesFollowTheSelectedParser(
+    vendorID: UInt16,
+    productID: UInt16,
+    expected: [Button]
   ) throws {
     let parser = ParserRegistry().parser(
       for: DeviceIdentifier(vendorID: vendorID, productID: productID)
     )
     #expect(parser.physicalInputCapabilities.additionalButtons == expected)
     let encoded = try JSONEncoder().encode(parser.physicalInputCapabilities)
-    #expect(try JSONDecoder().decode(PhysicalControllerInputCapabilities.self, from: encoded)
-      == parser.physicalInputCapabilities)
+    #expect(
+      try JSONDecoder().decode(PhysicalControllerInputCapabilities.self, from: encoded)
+        == parser.physicalInputCapabilities
+    )
   }
 }

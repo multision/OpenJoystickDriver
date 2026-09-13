@@ -7,7 +7,8 @@ import Testing
 @testable import OpenJoystickDriverKit
 
 struct AppleGameControllerSyntheticHIDTests {
-  @Test func matchingExclusionUsesAppleSyntheticPropertyKey() {
+  @Test
+  func matchingExclusionUsesAppleSyntheticPropertyKey() {
     #expect(AppleGameControllerSyntheticHID.propertyKey == "GCSyntheticDevice")
     let matching = AppleGameControllerSyntheticHID.ioHIDMatchingExcludingSynthetics([
       kIOHIDVendorIDKey as String: 0x045E
@@ -21,24 +22,20 @@ struct AppleGameControllerSyntheticHIDTests {
     )
   }
 
-  @Test func matchAllReplacementExcludesSyntheticsWithoutOpening() {
+  @Test
+  func matchAllReplacementExcludesSyntheticsWithoutOpening() {
     let matching = AppleGameControllerSyntheticHID.allHIDDevicesExcludingSynthetics
     #expect(matching[kIOProviderClassKey as String] as? String == kIOHIDDeviceKey as String)
     #expect(matching[AppleGameControllerSyntheticHID.propertyKey] as? Bool == false)
   }
 
-  @Test func signatureClassificationDoesNotOpenADevice() {
+  @Test
+  func signatureClassificationDoesNotOpenADevice() {
     #expect(AppleGameControllerSyntheticHID.ioClassName == "AppleGCSyntheticDevice")
     #expect(AppleGameControllerSyntheticHID.xbox360DeviceType == "Xbox360Controller")
-    #expect(
-      AppleGameControllerSyntheticHID.isSyntheticDevice(className: "AppleGCSyntheticDevice")
-    )
-    #expect(
-      AppleGameControllerSyntheticHID.isSyntheticDevice(deviceType: "Xbox360Controller")
-    )
-    #expect(
-      AppleGameControllerSyntheticHID.isSyntheticDevice(syntheticProperty: kCFBooleanTrue)
-    )
+    #expect(AppleGameControllerSyntheticHID.isSyntheticDevice(className: "AppleGCSyntheticDevice"))
+    #expect(AppleGameControllerSyntheticHID.isSyntheticDevice(deviceType: "Xbox360Controller"))
+    #expect(AppleGameControllerSyntheticHID.isSyntheticDevice(syntheticProperty: kCFBooleanTrue))
     #expect(
       AppleGameControllerSyntheticHID.isSyntheticDevice(
         pluginPath:
@@ -54,12 +51,14 @@ struct AppleGameControllerSyntheticHIDTests {
     #expect(!AppleGameControllerSyntheticHID.isSynthetic(service: 0))
   }
 
-  @Test func unknownRegistryEntryLookupDoesNotOpenAUserClient() {
+  @Test
+  func unknownRegistryEntryLookupDoesNotOpenAUserClient() {
     #expect(!AppleGameControllerSyntheticHID.isSyntheticRegistryEntry(id: 0))
     #expect(!AppleGameControllerSyntheticHID.isSyntheticRegistryEntry(id: 1))
   }
 
-  @Test func physicalAdmissionAcceptsGamePad1WithoutSyntheticMetadata() {
+  @Test
+  func physicalAdmissionAcceptsGamePad1WithoutSyntheticMetadata() {
     #expect(
       PhysicalHIDBackendEventPolicy.acceptsDevice(
         serialNumber: nil,
@@ -81,7 +80,8 @@ struct AppleGameControllerSyntheticHIDTests {
   }
 
   @available(macOS 15, *)
-  @Test func coreHIDMatchingCriteriaCarrySyntheticExclusion() {
+  @Test
+  func coreHIDMatchingCriteriaCarrySyntheticExclusion() {
     let criteria = AppleGameControllerSyntheticHID.coreHIDMatchingCriteria(
       primaryUsage: .genericDesktop(.gamepad)
     )

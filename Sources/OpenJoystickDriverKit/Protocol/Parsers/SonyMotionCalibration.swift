@@ -25,13 +25,14 @@ struct SonyMotionCalibration {
   }
 
   static func dualShock4Factory(_ bytes: [UInt8], bluetooth: Bool) -> Self? {
-    guard bytes.count == (bluetooth ? 41 : 37), bytes[0] == (bluetooth ? 5 : 2)
-    else { return nil }
+    guard bytes.count == (bluetooth ? 41 : 37), bytes[0] == (bluetooth ? 5 : 2) else { return nil }
     return factory(bytes, groupedGyroEndpoints: bluetooth, useBiasedGyroRange: true)
   }
 
   private static func factory(
-    _ bytes: [UInt8], groupedGyroEndpoints: Bool, useBiasedGyroRange: Bool
+    _ bytes: [UInt8],
+    groupedGyroEndpoints: Bool,
+    useBiasedGyroRange: Bool
   ) -> Self? {
     func value(_ offset: Int) -> Double {
       Double(Int16(bitPattern: UInt16(bytes[offset]) | (UInt16(bytes[offset + 1]) << 8)))
@@ -43,7 +44,8 @@ struct SonyMotionCalibration {
       let gyroBias = value(1 + index * 2)
       let gyroPlus = value(7 + index * (groupedGyroEndpoints ? 2 : 4))
       let gyroMinus = value(groupedGyroEndpoints ? 13 + index * 2 : 9 + index * 4)
-      let gyroRange = useBiasedGyroRange
+      let gyroRange =
+        useBiasedGyroRange
         ? abs(gyroPlus - gyroBias) + abs(gyroMinus - gyroBias) : gyroPlus - gyroMinus
       let accelPlus = value(23 + index * 4)
       let accelMinus = value(25 + index * 4)
@@ -52,8 +54,7 @@ struct SonyMotionCalibration {
       let gyroGain = speed / gyroRange
       let accelGain = 2 / accelRange
       let accelBias = (accelPlus + accelMinus) / 2
-      guard abs(gyroBias) <= 1024, abs(accelBias) <= 1024,
-        (0.5...1.5).contains(gyroGain * 16),
+      guard abs(gyroBias) <= 1024, abs(accelBias) <= 1024, (0.5...1.5).contains(gyroGain * 16),
         (0.5...1.5).contains(accelGain * 8192)
       else { return nil }
       gyro.append(Axis(bias: gyroBias, unitsPerCount: gyroGain))
@@ -70,14 +71,19 @@ struct SonyMotionCalibration {
   }
 
   func reading(
-    gyro rawGyro: ControllerRawSensorVector, accel rawAccel: ControllerRawSensorVector
+    gyro rawGyro: ControllerRawSensorVector,
+    accel rawAccel: ControllerRawSensorVector
   ) -> ControllerMotionReading? {
     ControllerMotionReading(
       gyroscopeDegreesPerSecond: ControllerMotionVector(
-        x: gyro[0].apply(rawGyro.x), y: gyro[1].apply(rawGyro.y), z: gyro[2].apply(rawGyro.z)
+        x: gyro[0].apply(rawGyro.x),
+        y: gyro[1].apply(rawGyro.y),
+        z: gyro[2].apply(rawGyro.z)
       ),
       accelerationG: ControllerMotionVector(
-        x: accel[0].apply(rawAccel.x), y: accel[1].apply(rawAccel.y), z: accel[2].apply(rawAccel.z)
+        x: accel[0].apply(rawAccel.x),
+        y: accel[1].apply(rawAccel.y),
+        z: accel[2].apply(rawAccel.z)
       ),
       calibrationSource: source,
       calibrationRevision: revision

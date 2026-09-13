@@ -26,15 +26,20 @@ struct TouchSurfaceCapabilityTests {
     let expected: [ControllerTouchSurface] = steam ? [.left, .right] : [.primary]
     #expect(frames.map(\.surface) == expected)
     #expect(parser.physicalInputCapabilities.touchSurfaces == expected)
-    #expect(frames.allSatisfy {
-      $0.contacts.count == Int(parser.physicalInputCapabilities.touchContactsPerFrame)
-    })
+    #expect(
+      frames.allSatisfy {
+        $0.contacts.count == Int(parser.physicalInputCapabilities.touchContactsPerFrame)
+      }
+    )
     let data = try JSONEncoder().encode(parser.physicalInputCapabilities)
-    #expect(try JSONDecoder().decode(PhysicalControllerInputCapabilities.self, from: data)
-      == parser.physicalInputCapabilities)
+    #expect(
+      try JSONDecoder().decode(PhysicalControllerInputCapabilities.self, from: data)
+        == parser.physicalInputCapabilities
+    )
   }
 
-  @Test func unavailableTouchHasNoInventedSurface() {
+  @Test
+  func unavailableTouchHasNoInventedSurface() {
     #expect(SwitchProParser().physicalInputCapabilities.touchSurfaces.isEmpty)
     #expect(PhysicalControllerInputCapabilities.none.touchSurfaces.isEmpty)
   }

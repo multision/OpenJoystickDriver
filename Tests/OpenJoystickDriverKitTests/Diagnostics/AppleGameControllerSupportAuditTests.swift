@@ -4,7 +4,8 @@ import Testing
 @testable import OpenJoystickDriverKit
 
 struct AppleGameControllerSupportAuditTests {
-  @Test func parsesDeduplicatesAndPreservesMatchConstraints() throws {
+  @Test
+  func parsesDeduplicatesAndPreservesMatchConstraints() throws {
     let first = try bundleInfo(
       version: "10.5.2",
       devices: [
@@ -14,7 +15,7 @@ struct AppleGameControllerSupportAuditTests {
           productID: 49_695,
           versionNumber: 773,
           transport: "USB"
-        ), device(identifier: "missing.pid", vendorID: 1_133, productID: nil)
+        ), device(identifier: "missing.pid", vendorID: 1_133, productID: nil),
       ]
     )
     let second = try bundleInfo(
@@ -46,7 +47,8 @@ struct AppleGameControllerSupportAuditTests {
     #expect(entry.versionNumbers == [773, 774])
   }
 
-  @Test func auditUsesExactPairsWithoutClaimingRuntimeSupport() {
+  @Test
+  func auditUsesExactPairsWithoutClaimingRuntimeSupport() {
     let snapshot = AppleGameControllerCatalogSnapshot(
       source: .preinstalledMobileAsset,
       bundleVersions: ["1.2.3"],
@@ -56,7 +58,7 @@ struct AppleGameControllerSupportAuditTests {
       snapshot: snapshot,
       records: [
         OJDControllerRecordIdentity(vendorID: 1, productID: 2, name: "Listed"),
-        OJDControllerRecordIdentity(vendorID: 1, productID: 3, name: "Not listed")
+        OJDControllerRecordIdentity(vendorID: 1, productID: 3, name: "Not listed"),
       ]
     )
 
@@ -69,7 +71,8 @@ struct AppleGameControllerSupportAuditTests {
     #expect(audit.records.count == 2)
   }
 
-  @Test func malformedBundlesRemainExplicitEvidence() {
+  @Test
+  func malformedBundlesRemainExplicitEvidence() {
     let snapshot = AppleGameControllerSupportAuditor.snapshot(
       bundleInfoData: [Data("not a plist".utf8)],
       source: .downloadedMobileAsset

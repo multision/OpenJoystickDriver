@@ -4,7 +4,8 @@ import Testing
 @testable import OpenJoystickDriverKit
 
 struct RemappingOutputPolicyTests {
-  @Test func alternateAndLayerDestinationsRequireSystemInputAccess() {
+  @Test
+  func alternateAndLayerDestinationsRequireSystemInputAccess() {
     let policy = RemappingOutputPolicy(virtualGamepad: .mapped)
     let system = RemappingDestination.keyboard(key: .space, modifiers: [])
     let virtual = RemappingDestination.gamepadButton(.south)
@@ -19,7 +20,7 @@ struct RemappingOutputPolicyTests {
         source: .button(.south),
         destination: virtual,
         doubleTap: RemappingDoubleTap(windowMs: 250, destination: system)
-      )
+      ),
     ]
     for binding in alternatives {
       #expect(makeProfile(outputPolicy: policy, bindings: [binding]).requiresSystemInputAccess)
@@ -31,11 +32,11 @@ struct RemappingOutputPolicyTests {
       )
       #expect(makeProfile(outputPolicy: policy, layers: [layer]).requiresSystemInputAccess)
     }
-    let chord = RemappingChord(
-      sources: [.button(.south), .button(.east)], destination: system
-    )
+    let chord = RemappingChord(sources: [.button(.south), .button(.east)], destination: system)
     let sequence = RemappingSequence(
-      sources: [.button(.south), .button(.east)], windowMs: 500, destination: system
+      sources: [.button(.south), .button(.east)],
+      windowMs: 500,
+      destination: system
     )
     #expect(makeProfile(outputPolicy: policy, chords: [chord]).requiresSystemInputAccess)
     #expect(makeProfile(outputPolicy: policy, sequences: [sequence]).requiresSystemInputAccess)
@@ -53,14 +54,16 @@ struct RemappingOutputPolicyTests {
     #expect(try JSONDecoder().decode(RemappingProfile.self, from: data) == profile)
   }
 
-  @Test func systemInputCanRequireExclusiveOwnership() {
+  @Test
+  func systemInputCanRequireExclusiveOwnership() {
     let policy = RemappingOutputPolicy(physicalInput: .exclusive)
     #expect(policy.virtualGamepad == .disabled)
     #expect(policy.requiresExclusiveInput)
     #expect(!RemappingOutputPolicy.systemInput.requiresExclusiveInput)
   }
 
-  @Test func virtualSteeringRequiresMappedVirtualOutput() throws {
+  @Test
+  func virtualSteeringRequiresMappedVirtualOutput() throws {
     let stick = RemappingProfile(
       name: "Stick steering",
       device: RemappingDeviceScope(vendorID: 1, productID: 2),
@@ -82,18 +85,18 @@ struct RemappingOutputPolicyTests {
     #expect(!motion.requiresSystemInputAccess)
   }
 
-  @Test func versionTwoIsRejectedAtValidationAndDecode() throws {
+  @Test
+  func versionTwoIsRejectedAtValidationAndDecode() throws {
     let profile = makeProfile(schemaVersion: 2)
-    #expect(throws: RemappingValidationError.unsupportedSchemaVersion(2)) {
-      try profile.validate()
-    }
+    #expect(throws: RemappingValidationError.unsupportedSchemaVersion(2)) { try profile.validate() }
     let data = try JSONEncoder().encode(profile)
     #expect(throws: RemappingValidationError.unsupportedSchemaVersion(2)) {
       try JSONDecoder().decode(RemappingProfile.self, from: data)
     }
   }
 
-  @Test func unknownOutputPolicyIsRejected() throws {
+  @Test
+  func unknownOutputPolicyIsRejected() throws {
     let data = try JSONEncoder().encode(makeProfile())
     var object = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
     object["output_policy"] = ["virtual_gamepad": "future", "physical_input": "shared"]

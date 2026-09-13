@@ -46,9 +46,9 @@ public protocol USBTransportObservationProvider: USBTransportProvider {
 }
 
 public enum USBControllerScanner {
-  public static func scanVendorSpecific(using provider: any USBTransportProvider) async throws
-    -> [USBControllerDescription]
-  {
+  public static func scanVendorSpecific(
+    using provider: any USBTransportProvider
+  ) async throws -> [USBControllerDescription] {
     let devices = try await provider.devices()
     let observations: [ControllerTransportObservation]
     if let observingProvider = provider as? any USBTransportObservationProvider {

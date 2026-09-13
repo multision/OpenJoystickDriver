@@ -207,14 +207,16 @@ extension DeviceManager {
         maximumAttempts: parser is any HIDFeatureReportConsumer ? 3 : 1
       ) {
         await self.attemptHIDStartupFeatureRead(
-          pipeline: pipeline, request: request, locationID: locationID, transport: transport
+          pipeline: pipeline,
+          request: request,
+          locationID: locationID,
+          transport: transport
         )
       }
       switch outcome {
       case .accepted: break
       case .stopped: return
-      case .retry:
-        print("[DeviceManager] HID startup feature read exhausted for loc=\(locationID)")
+      case .retry: print("[DeviceManager] HID startup feature read exhausted for loc=\(locationID)")
       }
     }
   }
@@ -231,7 +233,9 @@ extension DeviceManager {
     guard let data else { return .retry }
     guard pipeline.parser is any HIDFeatureReportConsumer else { return .accepted }
     let accepted = await pipeline.consumeHIDFeatureReport(
-      data, request: request, transport: transport
+      data,
+      request: request,
+      transport: transport
     )
     return accepted ? .accepted : .retry
   }
@@ -266,9 +270,7 @@ extension DeviceManager {
     }
     Task {
       for (index, report) in reports.enumerated() {
-        if index > 0 {
-          do { try await Task.sleep(nanoseconds: interval) } catch { return }
-        }
+        if index > 0 { do { try await Task.sleep(nanoseconds: interval) } catch { return } }
         guard !Task.isCancelled, await isCurrentHIDStartupPipeline(pipeline) else { return }
         let sent = await hidManager.setOutputReport(locationID: locationID, report: report)
         if !sent { print("[DeviceManager] HID startup output report failed for loc=\(locationID)") }
@@ -278,7 +280,9 @@ extension DeviceManager {
   }
 
   private func scheduleHIDStartupRecovery(
-    pipeline: DevicePipeline, locationID: UInt32, interval: UInt64
+    pipeline: DevicePipeline,
+    locationID: UInt32,
+    interval: UInt64
   ) {
     guard pipeline.parser is any HIDStartupRecoveryProvider else { return }
     Task {
@@ -291,9 +295,7 @@ extension DeviceManager {
         }
         let reports = await pipeline.pendingHIDStartupReports()
         for (index, report) in reports.enumerated() {
-          if index > 0 {
-            do { try await Task.sleep(nanoseconds: interval) } catch { return }
-          }
+          if index > 0 { do { try await Task.sleep(nanoseconds: interval) } catch { return } }
           guard !Task.isCancelled, await isCurrentHIDStartupPipeline(pipeline) else { return }
           _ = await hidManager.setOutputReport(locationID: locationID, report: report)
         }
@@ -308,9 +310,10 @@ extension DeviceManager {
       && deviceInfos[pipeline.identifier]?.hidInputOwnership != .ownedByAnotherClient
   }
 
-  private func requestHIDInputConnectionStatusIfNeeded(parser: any InputParser, locationID: UInt32)
-    async
-  {
+  private func requestHIDInputConnectionStatusIfNeeded(
+    parser: any InputParser,
+    locationID: UInt32
+  ) async {
     guard let requester = parser as? any HIDInputConnectionStatusRequester,
       let report = requester.inputConnectionStatusRequestReport()
     else { return }
@@ -320,9 +323,11 @@ extension DeviceManager {
     }
   }
 
-  private func handleHIDDeviceDisconnected(vendorID: UInt16, productID: UInt16, locationID: UInt32)
-    async
-  {
+  private func handleHIDDeviceDisconnected(
+    vendorID: UInt16,
+    productID: UInt16,
+    locationID: UInt32
+  ) async {
     if let key = pipelines.keys.first(where: { $0.locationID == locationID }) {
       let pipeline = pipelines.removeValue(forKey: key)
       if let pipeline { await neutralizePhysicalOutputs(for: key, pipeline: pipeline) }

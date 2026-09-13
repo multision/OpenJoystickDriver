@@ -133,9 +133,9 @@ public final class Xbox360Parser: InputParser, PhysicalRumbleOutput, PhysicalPla
     isWirelessReceiver ? [] : [[0x01, 0x03, Xbox360LEDPattern.player1On.rawValue]]
   }
 
-  public func usbInputConnectionOutputPackets(for state: ControllerInputConnectionState)
-    -> [[UInt8]]
-  {
+  public func usbInputConnectionOutputPackets(
+    for state: ControllerInputConnectionState
+  ) -> [[UInt8]] {
     guard isWirelessReceiver, state == .connected else { return [] }
     return [wirelessLEDPacket(pattern: .player1On)]
   }

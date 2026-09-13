@@ -5,7 +5,8 @@
   import OpenJoystickDriverKit
   import SwiftUI
 
-  @MainActor final class InputTestWindowController: NSWindowController, NSWindowDelegate {
+  @MainActor
+  final class InputTestWindowController: NSWindowController, NSWindowDelegate {
     private static let toolbarIdentifier = NSToolbar.Identifier(
       "OpenJoystickDriver.InputTestToolbar"
     )
@@ -45,9 +46,8 @@
       }
     }
 
-    @available(*, unavailable) required init?(coder: NSCoder) {
-      fatalError("init(coder:) has not been implemented")
-    }
+    @available(*, unavailable)
+    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 
     func show(device: ApplicationServiceDeviceDescription) {
       model.selectDevice(device)
@@ -107,11 +107,13 @@
       }
     }
 
-    @objc private func toggleSampling(_ sender: Any?) {
+    @objc
+    private func toggleSampling(_ sender: Any?) {
       if model.isSampling { model.stop() } else { model.start() }
     }
 
-    @objc private func refreshController(_ sender: Any?) {
+    @objc
+    private func refreshController(_ sender: Any?) {
       Task { @MainActor [weak self] in await self?.runtimeViewModel.refreshControllerInventory() }
     }
   }

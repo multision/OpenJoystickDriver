@@ -25,9 +25,8 @@ public struct RemappingStickTuning: Codable, Equatable, Hashable, Sendable {
   }
 
   public func validate() throws {
-    guard innerDeadzone.isFinite, outerDeadzone.isFinite,
-      (0...0.95).contains(innerDeadzone), (0...0.95).contains(outerDeadzone),
-      innerDeadzone + outerDeadzone < 1
+    guard innerDeadzone.isFinite, outerDeadzone.isFinite, (0...0.95).contains(innerDeadzone),
+      (0...0.95).contains(outerDeadzone), innerDeadzone + outerDeadzone < 1
     else { throw RemappingStickTuningError.invalidDeadzones }
     guard responseExponent.isFinite, (0.1...10).contains(responseExponent) else {
       throw RemappingStickTuningError.invalidExponent

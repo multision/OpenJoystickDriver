@@ -2,9 +2,8 @@ import OpenJoystickDriverKit
 
 extension MappingProfileEditor {
   static let triggerOptions: Set<String> = [
-    "--trigger-source", "--trigger-mode", "--trigger-soft-threshold",
-    "--trigger-full-threshold", "--trigger-hysteresis", "--trigger-skip-window-ms",
-    "--trigger-passthrough",
+    "--trigger-source", "--trigger-mode", "--trigger-soft-threshold", "--trigger-full-threshold",
+    "--trigger-hysteresis", "--trigger-skip-window-ms", "--trigger-passthrough",
   ]
 
   static func triggerMappings(
@@ -18,8 +17,10 @@ extension MappingProfileEditor {
     let old = defaultValue.first { $0.source == source } ?? RemappingTriggerMapping(source: source)
     let rawMode = options["--trigger-mode"] ?? old.mode.rawValue
     if rawMode == "none" {
-      guard !triggerOptions.subtracting(["--trigger-source", "--trigger-mode"])
-        .contains(where: options.contains)
+      guard
+        !triggerOptions.subtracting(["--trigger-source", "--trigger-mode"]).contains(
+          where: options.contains
+        )
       else { throw MappingCommandError.invalidArguments("Cannot tune a removed trigger mapping") }
       return defaultValue.filter { $0.source != source }
     }

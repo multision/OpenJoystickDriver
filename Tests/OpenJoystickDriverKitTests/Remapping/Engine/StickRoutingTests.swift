@@ -2,7 +2,8 @@ import Testing
 @testable import OpenJoystickDriverKit
 
 struct StickRoutingTests {
-  @Test func aimSchedulesAndConsumesOnlyMappedStick() {
+  @Test
+  func aimSchedulesAndConsumesOnlyMappedStick() {
     var engine = RemappingEngineState()
     let device = DeviceIdentifier(vendorID: 1, productID: 2)
     let profile = profile(mode: .aim)
@@ -12,12 +13,10 @@ struct StickRoutingTests {
       profile: profile,
       at: 0
     )
-    #expect(initial == [.gamepad(
-      RemappingGamepadState(axes: [.rightStickX: 0.5]), device
-    )])
-    #expect(engine.nextScheduledTick(
-      after: 0, continuousIntervalNanoseconds: 8_000_000
-    ) == 8_000_000)
+    #expect(initial == [.gamepad(RemappingGamepadState(axes: [.rightStickX: 0.5]), device)])
+    #expect(
+      engine.nextScheduledTick(after: 0, continuousIntervalNanoseconds: 8_000_000) == 8_000_000
+    )
     let movement = engine.tick(at: 10_000_000)
     #expect(movement == [.system(.pointerDelta(x: 1, y: 0))])
     let release = engine.process(
@@ -62,7 +61,8 @@ struct StickRoutingTests {
     #expect(after.isEmpty)
   }
 
-  @Test func centeredFlickFinishesWithoutFurtherInput() {
+  @Test
+  func centeredFlickFinishesWithoutFurtherInput() {
     var engine = RemappingEngineState()
     let device = DeviceIdentifier(vendorID: 1, productID: 2)
     let profile = profile(mode: .flickOnly)
@@ -79,7 +79,8 @@ struct StickRoutingTests {
     #expect(repeated.isEmpty)
   }
 
-  @Test func steeringOwnsOnlyItsVirtualAxisAndReplacementNeutralizesIt() {
+  @Test
+  func steeringOwnsOnlyItsVirtualAxisAndReplacementNeutralizesIt() {
     var engine = RemappingEngineState()
     let device = DeviceIdentifier(vendorID: 1, productID: 2)
     let steering = RemappingProfile(
@@ -87,23 +88,31 @@ struct StickRoutingTests {
       device: RemappingDeviceScope(vendorID: 1, productID: 2),
       applicationScope: .global,
       outputPolicy: RemappingOutputPolicy(virtualGamepad: .mapped),
-      stickMappings: [RemappingStickMapping(
-        source: .left,
-        mode: .steering,
-        tuning: RemappingStickTuning(innerDeadzone: 0),
-        rotationDirection: .counterclockwise,
-        steeringDegreesAtFullScale: 180,
-        steeringReturnDegreesPerSecond: 0,
-        steeringOutput: .rightStickX
-      )],
+      stickMappings: [
+        RemappingStickMapping(
+          source: .left,
+          mode: .steering,
+          tuning: RemappingStickTuning(innerDeadzone: 0),
+          rotationDirection: .counterclockwise,
+          steeringDegreesAtFullScale: 180,
+          steeringReturnDegreesPerSecond: 0,
+          steeringOutput: .rightStickX
+        )
+      ],
       bindings: []
     )
     _ = engine.process(
-      events: [.leftStickChanged(x: 1, y: 0)], from: device, profile: steering, at: 0
+      events: [.leftStickChanged(x: 1, y: 0)],
+      from: device,
+      profile: steering,
+      at: 0
     )
     #expect(
       engine.process(
-        events: [.leftStickChanged(x: 0, y: 1)], from: device, profile: steering, at: 1
+        events: [.leftStickChanged(x: 0, y: 1)],
+        from: device,
+        profile: steering,
+        at: 1
       ) == [.gamepad(RemappingGamepadState(axes: [.rightStickX: 0.5]), device)]
     )
     #expect(engine.setProfile(profile(mode: .aim), for: device) == [.gamepad(.neutral, device)])
@@ -115,9 +124,7 @@ struct StickRoutingTests {
       device: RemappingDeviceScope(vendorID: 1, productID: 2),
       applicationScope: .global,
       outputPolicy: RemappingOutputPolicy(virtualGamepad: .passthrough),
-      stickMappings: [RemappingStickMapping(
-        source: .left, mode: mode, aimDegreesPerSecond: 100
-      )],
+      stickMappings: [RemappingStickMapping(source: .left, mode: mode, aimDegreesPerSecond: 100)],
       bindings: []
     )
   }

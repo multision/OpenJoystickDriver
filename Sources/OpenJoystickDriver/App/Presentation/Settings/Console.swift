@@ -20,10 +20,14 @@
     }
   }
 
-  @MainActor final class ConsoleViewModel: ObservableObject {
-    @Published var selection: ConsoleStreamSelection = .all
-    @Published private(set) var snapshots: [ApplicationServiceLogSnapshot] = []
-    @Published private(set) var errorMessage: String?
+  @MainActor
+  final class ConsoleViewModel: ObservableObject {
+    @Published
+    var selection: ConsoleStreamSelection = .all
+    @Published
+    private(set) var snapshots: [ApplicationServiceLogSnapshot] = []
+    @Published
+    private(set) var errorMessage: String?
 
     var displayedLines: [String] {
       snapshots.flatMap { snapshot -> [String] in
@@ -99,7 +103,8 @@
   }
 
   struct ConsoleView: View {
-    @ObservedObject private var model: ConsoleViewModel
+    @ObservedObject
+    private var model: ConsoleViewModel
 
     init(model: ConsoleViewModel = ConsoleViewModel()) { self.model = model }
 
@@ -152,7 +157,8 @@
   }
 
   extension View {
-    @ViewBuilder func textSelectionIfAvailable() -> some View {
+    @ViewBuilder
+    func textSelectionIfAvailable() -> some View {
       if #available(macOS 12.0, *) { textSelection(.enabled) } else { self }
     }
   }

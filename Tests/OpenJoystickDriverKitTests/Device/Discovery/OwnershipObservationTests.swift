@@ -136,8 +136,9 @@ struct OwnershipObservationTests {
     (
       DeviceManager.DiscoverySource.rawUSB(route: .usbDriverKit),
       ControllerOwnershipObservation.driverKitOwnedUSB
-    )
-  ]) func discoverySourceDerivesOwnership(
+    ),
+  ])
+  func discoverySourceDerivesOwnership(
     source: DeviceManager.DiscoverySource,
     expected: ControllerOwnershipObservation
   ) {
@@ -151,14 +152,16 @@ struct OwnershipObservationTests {
     #expect(info.ownershipObservation == expected)
   }
 
-  @Test func missingDeviceLookupIsUnknown() async {
+  @Test
+  func missingDeviceLookupIsUnknown() async {
     let manager = DeviceManager(dispatcher: LoggingOutputDispatcher())
     let identifier = DeviceIdentifier(vendorID: 0x1234, productID: 0x5678)
 
     #expect(await manager.ownershipObservation(for: identifier) == .unknown)
   }
 
-  @Test func deviceDescriptionRoundTripSurfacesOwnershipAndDuplicateRisk() throws {
+  @Test
+  func deviceDescriptionRoundTripSurfacesOwnershipAndDuplicateRisk() throws {
     let description = ApplicationServiceDeviceDescription(
       name: "Test controller",
       vendorID: 0x1234,

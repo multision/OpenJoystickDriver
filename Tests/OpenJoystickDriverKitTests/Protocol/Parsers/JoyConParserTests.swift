@@ -29,10 +29,16 @@ struct JoyConParserTests {
       }
     }
     #expect(axes == [isLeft ? .leftStickChanged(x: 1, y: 0) : .rightStickChanged(x: 1, y: 0)])
-    #expect(events.filter { if case .motionSample = $0 { return true }; return false }.count == 3)
+    #expect(
+      events.filter {
+        if case .motionSample = $0 { return true }
+        return false
+      }.count == 3
+    )
   }
 
-  @Test func eachHalfIgnoresTheOtherHalfsButtonBits() throws {
+  @Test
+  func eachHalfIgnoresTheOtherHalfsButtonBits() throws {
     var bytes = [UInt8](repeating: 0, count: 12)
     bytes[0] = 0x30
     bytes[3] = 0xFF
@@ -91,22 +97,25 @@ struct JoyConParserTests {
     (NintendoControllerLayout.leftJoyCon, 5, UInt8(0x20), RemappingButton.leftSL),
     (NintendoControllerLayout.leftJoyCon, 5, UInt8(0x10), RemappingButton.leftSR),
     (NintendoControllerLayout.rightJoyCon, 3, UInt8(0x20), RemappingButton.rightSL),
-    (NintendoControllerLayout.rightJoyCon, 3, UInt8(0x10), RemappingButton.rightSR)
-  ]) func eachRailBitDrivesOnlyItsAssignedAction(
-    layout: NintendoControllerLayout, offset: Int, mask: UInt8, source: RemappingButton
+    (NintendoControllerLayout.rightJoyCon, 3, UInt8(0x10), RemappingButton.rightSR),
+  ])
+  func eachRailBitDrivesOnlyItsAssignedAction(
+    layout: NintendoControllerLayout,
+    offset: Int,
+    mask: UInt8,
+    source: RemappingButton
   ) throws {
     let parser = SwitchProParser(layout: layout)
     let identifier = DeviceIdentifier(
-      vendorID: 0x057E, productID: layout == .leftJoyCon ? 0x2006 : 0x2007
+      vendorID: 0x057E,
+      productID: layout == .leftJoyCon ? 0x2006 : 0x2007
     )
     let profile = RemappingProfile(
       name: "Rail mapping",
       device: RemappingDeviceScope(vendorID: identifier.vendorID, productID: identifier.productID),
       applicationScope: .global,
       outputPolicy: RemappingOutputPolicy(virtualGamepad: .passthrough),
-      bindings: [
-        RemappingBinding(source: .button(source), destination: .gamepadButton(.south))
-      ]
+      bindings: [RemappingBinding(source: .button(source), destination: .gamepadButton(.south))]
     )
     try profile.validate()
     var bytes = [UInt8](repeating: 0, count: 12)
@@ -117,24 +126,33 @@ struct JoyConParserTests {
     bytes[11] = 0x80
     bytes[offset] = mask
     var engine = RemappingEngineState()
-    #expect(engine.process(
-      events: try parser.parse(data: Data(bytes)), from: identifier, profile: profile, at: 0
-    ) == [.gamepad(RemappingGamepadState(buttons: [.south]), identifier)])
+    #expect(
+      engine.process(
+        events: try parser.parse(data: Data(bytes)),
+        from: identifier,
+        profile: profile,
+        at: 0
+      ) == [.gamepad(RemappingGamepadState(buttons: [.south]), identifier)]
+    )
     bytes[offset] = 0
-    #expect(engine.process(
-      events: try parser.parse(data: Data(bytes)), from: identifier, profile: profile, at: 1
-    ) == [.gamepad(.neutral, identifier)])
+    #expect(
+      engine.process(
+        events: try parser.parse(data: Data(bytes)),
+        from: identifier,
+        profile: profile,
+        at: 1
+      ) == [.gamepad(.neutral, identifier)]
+    )
   }
 
-  @Test func conflictingSideSelectionIsRejected() throws {
+  @Test
+  func conflictingSideSelectionIsRejected() throws {
     let record: [String: Any] = [
-      "$schema": ControllerRecordDocument.schemaID,
-      "vendor_id": 1406,
-      "product_id": 8198,
+      "$schema": ControllerRecordDocument.schemaID, "vendor_id": 1406, "product_id": 8198,
       "transport": "hid",
       "protocol": [
-        "driver": "SwitchPro", "variant": "switchPro", "quirks": ["joyConLeft", "joyConRight"]
-      ]
+        "driver": "SwitchPro", "variant": "switchPro", "quirks": ["joyConLeft", "joyConRight"],
+      ],
     ]
     let encoded = try JSONSerialization.data(withJSONObject: record)
     #expect(throws: DecodingError.self) {

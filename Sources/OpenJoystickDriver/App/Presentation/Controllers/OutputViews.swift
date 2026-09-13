@@ -6,15 +6,17 @@
   import SwiftUI
 
   struct ControllerIdentityView: View {
-    @ObservedObject var viewModel: RuntimeViewModel
+    @ObservedObject
+    var viewModel: RuntimeViewModel
     let embedded: Bool
     // Retain a failed request only so Try again can repeat it. The Picker must show the
     // authoritative runtime value, never an identity whose update failed.
-    @State private var retryIdentity: CompatibilityIdentity?
+    @State
+    private var retryIdentity: CompatibilityIdentity?
 
     private let outputIdentities: [CompatibilityIdentity] = [
       .automatic, .genericHID, .xbox360HID, .sdl2_3, .appleGameController, .dualShock4, .dualSense,
-      .switchPro
+      .switchPro,
     ]
 
     init(viewModel: RuntimeViewModel, embedded: Bool = false) {
@@ -22,9 +24,8 @@
       self.embedded = embedded
     }
 
-    @ViewBuilder var body: some View {
-      if embedded { content } else { GroupBox { content.padding(4) } }
-    }
+    @ViewBuilder
+    var body: some View { if embedded { content } else { GroupBox { content.padding(4) } } }
 
     private var content: some View {
       VStack(alignment: .leading, spacing: 10) {
@@ -115,7 +116,8 @@
       }
     }
 
-    @ViewBuilder private var identityChoices: some View {
+    @ViewBuilder
+    private var identityChoices: some View {
       GeometryReader { proxy in
         let spacing: CGFloat = 18
         let columnWidth = max(0, (proxy.size.width - spacing * 2) / 3)
@@ -216,7 +218,8 @@
 
       init(parent: IdentityRadioButton) { self.parent = parent }
 
-      @objc func select(_ sender: NSButton) { parent.selection.wrappedValue = parent.value }
+      @objc
+      func select(_ sender: NSButton) { parent.selection.wrappedValue = parent.value }
     }
   }
 
@@ -231,13 +234,12 @@
       NSLayoutConstraint.activate([
         button.leadingAnchor.constraint(equalTo: leadingAnchor),
         button.centerYAnchor.constraint(equalTo: centerYAnchor),
-        button.trailingAnchor.constraint(lessThanOrEqualTo: trailingAnchor)
+        button.trailingAnchor.constraint(lessThanOrEqualTo: trailingAnchor),
       ])
     }
 
-    @available(*, unavailable) required init?(coder: NSCoder) {
-      fatalError("init(coder:) has not been implemented")
-    }
+    @available(*, unavailable)
+    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 
     override var intrinsicContentSize: NSSize {
       NSSize(

@@ -4,24 +4,19 @@ import Testing
 @testable import OpenJoystickDriverKit
 
 struct RemappingTouchRoutingTests {
-  @Test func contactGridAndSwipeStayScopedToSurfaceAndDevice() async throws {
+  @Test
+  func contactGridAndSwipeStayScopedToSurfaceAndDevice() async throws {
     let recorder = TouchOutputRecorder()
     let engine = RemappingEventEngine(sink: recorder)
     let profile = makeProfile(bindings: [
       binding(.touchContact(.primary), .a),
       binding(
         .touchGrid(
-          RemappingTouchGridSource(
-            surface: .primary, columns: 2, rows: 2, column: 1, row: 0
-          )
+          RemappingTouchGridSource(surface: .primary, columns: 2, rows: 2, column: 1, row: 0)
         ),
         .b
-      ),
-      binding(
-        .touchSwipe(RemappingTouchSwipeSource(surface: .primary, direction: .right)),
-        .c
-      ),
-      binding(.touchContact(.left), .d)
+      ), binding(.touchSwipe(RemappingTouchSwipeSource(surface: .primary, direction: .right)), .c),
+      binding(.touchContact(.left), .d),
     ])
     let first = device(1)
     let second = device(2)
@@ -59,27 +54,22 @@ struct RemappingTouchRoutingTests {
 
     #expect(
       recorder.systemActions == [
-        .keyDown(.a), .keyDown(.d), .keyDown(.b), .keyUp(.a), .keyUp(.b),
-        .keyDown(.c), .keyUp(.c), .keyDown(.a)
+        .keyDown(.a), .keyDown(.d), .keyDown(.b), .keyUp(.a), .keyUp(.b), .keyDown(.c), .keyUp(.c),
+        .keyDown(.a),
       ]
     )
   }
 
-  @Test func pointerUsesSurfaceGeometryAndResetsBaselineOnGeometryOrContactChange() async throws {
+  @Test
+  func pointerUsesSurfaceGeometryAndResetsBaselineOnGeometryOrContactChange() async throws {
     let recorder = TouchOutputRecorder()
     let engine = RemappingEventEngine(sink: recorder)
-    let profile = makeProfile(
-      touchMappings: [
-        RemappingTouchMapping(
-          surface: .left, mode: .pointer, pointerSensitivity: 1_000
-        )
-      ]
-    )
+    let profile = makeProfile(touchMappings: [
+      RemappingTouchMapping(surface: .left, mode: .pointer, pointerSensitivity: 1_000)
+    ])
 
     for (index, event) in [
-      sample(
-        .left, id: 0, active: true, x: -32_768, y: -32_768, width: 65_536, height: 65_536
-      ),
+      sample(.left, id: 0, active: true, x: -32_768, y: -32_768, width: 65_536, height: 65_536),
       sample(.left, id: 0, active: true, x: 0, y: -16_384, width: 65_536, height: 65_536),
       sample(.right, id: 0, active: true, x: 90, y: 90),
       sample(.left, id: 0, active: true, x: 50, y: 50),
@@ -96,12 +86,12 @@ struct RemappingTouchRoutingTests {
     #expect(recorder.systemActions == [.pointerDelta(x: 500, y: 250)])
   }
 
-  @Test func physicalClickRemainsIndependentFromTouchContact() async throws {
+  @Test
+  func physicalClickRemainsIndependentFromTouchContact() async throws {
     let recorder = TouchOutputRecorder()
     let engine = RemappingEventEngine(sink: recorder)
     let profile = makeProfile(bindings: [
-      binding(.touchContact(.primary), .a),
-      binding(.button(.touchpad), .b)
+      binding(.touchContact(.primary), .a), binding(.button(.touchpad), .b),
     ])
 
     try await engine.process(
@@ -123,20 +113,17 @@ struct RemappingTouchRoutingTests {
       using: profile,
       at: 3
     )
-    #expect(recorder.systemActions == [
-      .keyDown(.a), .keyDown(.b), .keyUp(.b), .keyUp(.a)
-    ])
+    #expect(recorder.systemActions == [.keyDown(.a), .keyDown(.b), .keyUp(.b), .keyUp(.a)])
   }
 
-  @Test func touchStickOwnsVirtualAxesAndNeutralizesOnRelease() async throws {
+  @Test
+  func touchStickOwnsVirtualAxesAndNeutralizesOnRelease() async throws {
     let recorder = TouchOutputRecorder()
     let engine = RemappingEventEngine(sink: recorder, gamepadSink: recorder)
     let profile = makeProfile(
       outputPolicy: RemappingOutputPolicy(virtualGamepad: .mapped),
       touchMappings: [
-        RemappingTouchMapping(
-          surface: .primary, mode: .leftStick, stickRadius: 0.5, deadzone: 0
-        )
+        RemappingTouchMapping(surface: .primary, mode: .leftStick, stickRadius: 0.5, deadzone: 0)
       ]
     )
     let identifier = device(1)
@@ -160,20 +147,17 @@ struct RemappingTouchRoutingTests {
       at: 3
     )
 
-    #expect(recorder.gamepadStates == [
-      RemappingGamepadState(axes: [.leftStickX: 1]), .neutral
-    ])
+    #expect(recorder.gamepadStates == [RemappingGamepadState(axes: [.leftStickX: 1]), .neutral])
   }
 
-  @Test func disconnectReleasesTouchBindingAndVirtualContributionForOnlyThatDevice() async throws {
+  @Test
+  func disconnectReleasesTouchBindingAndVirtualContributionForOnlyThatDevice() async throws {
     let recorder = TouchOutputRecorder()
     let engine = RemappingEventEngine(sink: recorder, gamepadSink: recorder)
     let profile = makeProfile(
       outputPolicy: RemappingOutputPolicy(virtualGamepad: .mapped),
       touchMappings: [
-        RemappingTouchMapping(
-          surface: .primary, mode: .leftStick, stickRadius: 0.5, deadzone: 0
-        )
+        RemappingTouchMapping(surface: .primary, mode: .leftStick, stickRadius: 0.5, deadzone: 0)
       ],
       bindings: [binding(.touchContact(.primary), .a)]
     )
@@ -183,7 +167,7 @@ struct RemappingTouchRoutingTests {
       try await engine.process(
         events: [
           .touchSample(sample(.primary, id: 0, active: true, x: 25, y: 50)),
-          .touchSample(sample(.primary, id: 0, active: true, x: 75, y: 50))
+          .touchSample(sample(.primary, id: 0, active: true, x: 75, y: 50)),
         ],
         from: identifier,
         using: profile,
@@ -194,11 +178,12 @@ struct RemappingTouchRoutingTests {
     try await engine.releaseAll(for: first)
 
     #expect(recorder.systemActions == [.keyDown(.a)])
-    #expect(recorder.gamepadStates == [
-      RemappingGamepadState(axes: [.leftStickX: 1]),
-      RemappingGamepadState(axes: [.leftStickX: 1]),
-      .neutral
-    ])
+    #expect(
+      recorder.gamepadStates == [
+        RemappingGamepadState(axes: [.leftStickX: 1]),
+        RemappingGamepadState(axes: [.leftStickX: 1]), .neutral,
+      ]
+    )
     try await engine.releaseAll(for: second)
     #expect(recorder.systemActions == [.keyDown(.a), .keyUp(.a)])
     #expect(recorder.gamepadStates.last == .neutral)
@@ -219,9 +204,9 @@ struct RemappingTouchRoutingTests {
     )
   }
 
-  private func binding(_ source: RemappingSource, _ key: RemappingKeyboardKey)
-    -> RemappingBinding
-  { RemappingBinding(source: source, destination: .keyboard(key: key, modifiers: [])) }
+  private func binding(_ source: RemappingSource, _ key: RemappingKeyboardKey) -> RemappingBinding {
+    RemappingBinding(source: source, destination: .keyboard(key: key, modifiers: []))
+  }
 
   private func device(_ locationID: UInt32) -> DeviceIdentifier {
     DeviceIdentifier(vendorID: 1, productID: 2, locationID: locationID)

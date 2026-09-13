@@ -26,10 +26,8 @@
         return OJDLocalized.string("profiles.sectionTriggers", fallback: "Triggers")
       default: return OJDLocalized.string("profiles.sectionSticks", fallback: "Sticks")
       }
-    case .triggerStage:
-      return OJDLocalized.string("profiles.sectionTriggers", fallback: "Triggers")
-    case .motionLean:
-      return OJDLocalized.string("profiles.sectionMotion", fallback: "Motion")
+    case .triggerStage: return OJDLocalized.string("profiles.sectionTriggers", fallback: "Triggers")
+    case .motionLean: return OJDLocalized.string("profiles.sectionMotion", fallback: "Motion")
     case .touchContact, .touchGrid, .touchSwipe:
       return OJDLocalized.string("profiles.sectionTouch", fallback: "Touch")
     }
@@ -73,7 +71,8 @@
   struct AssignmentGroupView: View {
     let title: String
     let bindings: [RemappingBinding]
-    @Binding var draft: RuntimeProfileDraft
+    @Binding
+    var draft: RuntimeProfileDraft
     let isEditingDisabled: Bool
     let onRemove: (UUID) -> Void
     let onError: (String) -> Void
@@ -105,7 +104,8 @@
 
   private struct AssignmentRow: View {
     let binding: RemappingBinding
-    @Binding var draft: RuntimeProfileDraft
+    @Binding
+    var draft: RuntimeProfileDraft
     let isEditingDisabled: Bool
     let onRemove: (UUID) -> Void
     let onError: (String) -> Void

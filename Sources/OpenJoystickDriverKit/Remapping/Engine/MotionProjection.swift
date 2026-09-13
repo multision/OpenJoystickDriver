@@ -32,14 +32,15 @@ enum RemappingMotionProjection {
     sideReductionThreshold: Double = 0.125
   ) -> RemappingGyroProjection? {
     guard gyro.isFinite, max(abs(gyro.x), abs(gyro.y), abs(gyro.z)) <= 1_000_000,
-      yawRelaxation.isFinite, (0...10).contains(yawRelaxation),
-      sideReductionThreshold.isFinite, (0...1).contains(sideReductionThreshold)
+      yawRelaxation.isFinite, (0...10).contains(yawRelaxation), sideReductionThreshold.isFinite,
+      (0...1).contains(sideReductionThreshold)
     else { return nil }
     if space == .local {
       return RemappingGyroProjection(pitchDegreesPerSecond: gyro.x, yawDegreesPerSecond: gyro.y)
     }
-    guard gravity.isFinite, max(abs(gravity.x), abs(gravity.y), abs(gravity.z)) <= 1_000
-    else { return nil }
+    guard gravity.isFinite, max(abs(gravity.x), abs(gravity.y), abs(gravity.z)) <= 1_000 else {
+      return nil
+    }
     let length = sqrt(gravity.x * gravity.x + gravity.y * gravity.y + gravity.z * gravity.z)
     guard length > 1e-9 else { return nil }
     let gx = gravity.x / length
@@ -49,15 +50,20 @@ enum RemappingMotionProjection {
       let yaw = -(gy * gyro.y + gz * gyro.z)
       let magnitude = min(abs(yaw) * yawRelaxation, sqrt(gyro.y * gyro.y + gyro.z * gyro.z))
       return RemappingGyroProjection(
-        pitchDegreesPerSecond: gyro.x, yawDegreesPerSecond: yaw < 0 ? -magnitude : magnitude
+        pitchDegreesPerSecond: gyro.x,
+        yawDegreesPerSecond: yaw < 0 ? -magnitude : magnitude
       )
     }
     let pitchAxis = SIMD3(1 - gx * gx, -gy * gx, -gz * gx)
-    let pitchLength = sqrt(pitchAxis.x * pitchAxis.x + pitchAxis.y * pitchAxis.y
-      + pitchAxis.z * pitchAxis.z)
-    let reduction = sideReductionThreshold == 0 ? 1
+    let pitchLength = sqrt(
+      pitchAxis.x * pitchAxis.x + pitchAxis.y * pitchAxis.y + pitchAxis.z * pitchAxis.z
+    )
+    let reduction =
+      sideReductionThreshold == 0
+      ? 1
       : max(0, min(1, (max(abs(gy), abs(gz)) - sideReductionThreshold) / sideReductionThreshold))
-    let pitch = pitchLength > 1e-9
+    let pitch =
+      pitchLength > 1e-9
       ? reduction * (pitchAxis.x * gyro.x + pitchAxis.y * gyro.y + pitchAxis.z * gyro.z)
         / pitchLength : 0
     return RemappingGyroProjection(

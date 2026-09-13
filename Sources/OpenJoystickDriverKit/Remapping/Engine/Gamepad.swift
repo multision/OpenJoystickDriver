@@ -13,9 +13,7 @@ public struct RemappingGamepadState: Equatable, Sendable {
   ) {
     self.buttons = buttons.filter(\.supportsVirtualOutput)
     var directions = dpad
-    if directions.contains(.up), directions.contains(.down) {
-      directions.subtract([.up, .down])
-    }
+    if directions.contains(.up), directions.contains(.down) { directions.subtract([.up, .down]) }
     if directions.contains(.left), directions.contains(.right) {
       directions.subtract([.left, .right])
     }
@@ -45,9 +43,10 @@ struct RemappingGamepadAccumulator: Sendable {
   private(set) var state = RemappingGamepadState.neutral
 
   /// Returns a changed aggregate, including neutral; unchanged aggregates return nil.
-  mutating func update(_ contribution: RemappingGamepadState, for bindingID: UUID)
-    -> RemappingGamepadState?
-  {
+  mutating func update(
+    _ contribution: RemappingGamepadState,
+    for bindingID: UUID
+  ) -> RemappingGamepadState? {
     if contribution == .neutral {
       contributions.removeValue(forKey: bindingID)
     } else {
@@ -128,29 +127,31 @@ extension RemappingGamepadState {
   }
 
   private var canonicalButtons: Set<Button> {
-    Set(buttons.compactMap { button -> Button? in
-      switch button {
-      case .leftFunction, .rightFunction, .leftPaddle, .rightPaddle,
-      .leftSL, .leftSR, .rightSL, .rightSR,
-      .leftGrip, .rightGrip, .leftPadClick, .rightPadClick: nil
-      case .south: .a
-      case .east: .b
-      case .west: .x
-      case .north: .y
-      case .leftShoulder: .leftBumper
-      case .rightShoulder: .rightBumper
-      case .leftStick: .leftStick
-      case .rightStick: .rightStick
-      case .start, .options: .start
-      case .back: .back
-      case .share: .share
-      case .guide: .guide
-      case .touchpad: .touchpad
-      case .mute: .mute
-      case .leftTriggerClick: .l2Digital
-      case .rightTriggerClick: .r2Digital
+    Set(
+      buttons.compactMap { button -> Button? in
+        switch button {
+        case .leftFunction, .rightFunction, .leftPaddle, .rightPaddle, .leftSL, .leftSR, .rightSL,
+          .rightSR, .leftGrip, .rightGrip, .leftPadClick, .rightPadClick:
+          nil
+        case .south: .a
+        case .east: .b
+        case .west: .x
+        case .north: .y
+        case .leftShoulder: .leftBumper
+        case .rightShoulder: .rightBumper
+        case .leftStick: .leftStick
+        case .rightStick: .rightStick
+        case .start, .options: .start
+        case .back: .back
+        case .share: .share
+        case .guide: .guide
+        case .touchpad: .touchpad
+        case .mute: .mute
+        case .leftTriggerClick: .l2Digital
+        case .rightTriggerClick: .r2Digital
+        }
       }
-    })
+    )
   }
 
   private var dpadDirection: DpadDirection {

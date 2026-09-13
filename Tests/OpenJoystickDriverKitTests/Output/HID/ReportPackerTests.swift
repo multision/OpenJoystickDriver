@@ -13,10 +13,11 @@ struct HIDReportPackerTests {
     0x06, 0x00, 0xFF,  // Vendor page 0xFF00
     0x09, 0x01,  // Vendor usage 1
     0x15, 0x00, 0x25, 0x01, 0x75, 0x01, 0x95, 0x01, 0x81, 0x02, 0x75, 0x07, 0x95, 0x01, 0x81, 0x03,
-    0xC0
+    0xC0,
   ]
 
-  @Test func explicitDigitalUsageMapsARecognizedExtraButton() throws {
+  @Test
+  func explicitDigitalUsageMapsARecognizedExtraButton() throws {
     let format = try HIDDescriptorReportFormat(
       descriptor: descriptor,
       digitalUsageMap: [16: HIDInputUsage(page: 0xFF00, usage: 0x01)]
@@ -29,7 +30,8 @@ struct HIDReportPackerTests {
     #expect(extra == [0x00, 0x01])
   }
 
-  @Test func usagePageKeepsSameNumberedInputsDistinct() throws {
+  @Test
+  func usagePageKeepsSameNumberedInputsDistinct() throws {
     let format = try HIDDescriptorReportFormat(
       descriptor: descriptor,
       digitalUsageMap: [0: HIDInputUsage(page: 0xFF00, usage: 0x01)]
@@ -38,7 +40,8 @@ struct HIDReportPackerTests {
     #expect(format.buildInputReport(from: VirtualGamepadState(buttons: 1)) == [0x00, 0x01])
   }
 
-  @Test func missingExplicitUsageFailsFormatConstruction() {
+  @Test
+  func missingExplicitUsageFailsFormatConstruction() {
     #expect(
       throws: HIDDescriptorReportFormat.Error.missingExplicitInputUsage(
         HIDInputUsage(page: 0x0C, usage: 0xB2)
@@ -51,28 +54,34 @@ struct HIDReportPackerTests {
     }
   }
 
-  @Test func duplicateExplicitUsageFailsFormatConstruction() {
+  @Test
+  func duplicateExplicitUsageFailsFormatConstruction() {
     let usage = HIDInputUsage(page: 0xFF00, usage: 0x01)
     #expect(throws: HIDDescriptorReportFormat.Error.duplicateExplicitInputUsage(usage)) {
-      try HIDDescriptorReportFormat(descriptor: descriptor, digitalUsageMap: [16: usage, 17: usage])
+      try HIDDescriptorReportFormat(
+        descriptor: descriptor,
+        digitalUsageMap: [16: usage, 17: usage]
+      )
     }
   }
 
-  @Test func explicitUsageCannotReplaceAnotherNormalizedButton() {
+  @Test
+  func explicitUsageCannotReplaceAnotherNormalizedButton() {
     let usage = HIDInputUsage(page: 0x09, usage: 0x01)
     #expect(throws: HIDDescriptorReportFormat.Error.duplicateExplicitInputUsage(usage)) {
       try HIDDescriptorReportFormat(descriptor: descriptor, digitalUsageMap: [16: usage])
     }
   }
 
-  @Test func explicitUsageInMoreThanOneReportFailsFormatConstruction() {
+  @Test
+  func explicitUsageInMoreThanOneReportFailsFormatConstruction() {
     let usage = HIDInputUsage(page: 0xFF00, usage: 0x01)
     let descriptorWithRepeatedUsage =
       descriptor.dropLast() + [
         0x85, 0x02,  // Report ID 2
         0x06, 0x00, 0xFF,  // Vendor page 0xFF00
         0x09, 0x01,  // Vendor usage 1
-        0x15, 0x00, 0x25, 0x01, 0x75, 0x01, 0x95, 0x01, 0x81, 0x02, 0xC0
+        0x15, 0x00, 0x25, 0x01, 0x75, 0x01, 0x95, 0x01, 0x81, 0x02, 0xC0,
       ]
 
     #expect(throws: HIDDescriptorReportFormat.Error.ambiguousExplicitInputUsage(usage)) {

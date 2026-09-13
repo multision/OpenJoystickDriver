@@ -3,7 +3,8 @@ import Testing
 @testable import OpenJoystickDriverKit
 
 struct MotionProcessingTests {
-  @Test func manualCalibrationRequiresLiveSamplesAndCancelsOnDiscontinuity() throws {
+  @Test
+  func manualCalibrationRequiresLiveSamplesAndCancelsOnDiscontinuity() throws {
     var motion = RemappingMotionProcessor()
     let unavailable = motion.startCalibration()
     #expect(!unavailable)
@@ -54,7 +55,8 @@ struct MotionProcessingTests {
     )
   }
 
-  @Test func sampleTimeDrivesIntegrationAndDuplicatesCannotRotateTwice() throws {
+  @Test
+  func sampleTimeDrivesIntegrationAndDuplicatesCannotRotateTwice() throws {
     var motion = RemappingMotionProcessor()
     motion.process(sample(sequence: 0, time: 0))
     for index in 1...100 {
@@ -69,7 +71,8 @@ struct MotionProcessingTests {
     #expect(motion.latest?.fused.orientation == result.fused.orientation)
   }
 
-  @Test func changedCoefficientsResetEvenWhenCalibrationSourceIsUnchanged() throws {
+  @Test
+  func changedCoefficientsResetEvenWhenCalibrationSourceIsUnchanged() throws {
     var motion = RemappingMotionProcessor()
     motion.process(sample(sequence: 0, time: 0, revision: 1))
     motion.process(sample(sequence: 1, time: 10_000_000, revision: 1))
@@ -82,16 +85,17 @@ struct MotionProcessingTests {
     #expect(next?.deltaTime == 0.01)
   }
 
-  @Test func gapAndCalibrationChangeRebaselineWithoutIntegratingMissingTime() throws {
+  @Test
+  func gapAndCalibrationChangeRebaselineWithoutIntegratingMissingTime() throws {
     var motion = RemappingMotionProcessor()
     motion.process(sample(sequence: 0, time: 0))
     motion.process(sample(sequence: 1, time: 10_000_000))
     let gap = motion.process(sample(sequence: 2, time: 1_000_000_000))
     #expect(gap?.deltaTime == 0)
     #expect(gap?.fused.orientation == RemappingMotionQuaternion())
-    let changed = motion.process(sample(
-      sequence: 3, time: 1_010_000_000, source: .factoryWithUserOffsets
-    ))
+    let changed = motion.process(
+      sample(sequence: 3, time: 1_010_000_000, source: .factoryWithUserOffsets)
+    )
     #expect(changed?.deltaTime == 0)
     let invalid = motion.process(sample(sequence: 4, time: 1_020_000_000, yaw: 1e308))
     #expect(invalid == nil && motion.latest == nil)
@@ -99,7 +103,8 @@ struct MotionProcessingTests {
     #expect(recovered?.deltaTime == 0)
   }
 
-  @Test func engineOwnsIndependentMotionAndReleaseStartsFresh() throws {
+  @Test
+  func engineOwnsIndependentMotionAndReleaseStartsFresh() throws {
     var engine = RemappingEngineState()
     let first = DeviceIdentifier(vendorID: 1, productID: 1, locationID: 1)
     let second = DeviceIdentifier(vendorID: 1, productID: 1, locationID: 2)

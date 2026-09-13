@@ -116,7 +116,8 @@ private final class IdentifierSnapshotBox: @unchecked Sendable {
   }
 }
 
-@Suite(.serialized) struct CompatibilityTransitionTests {
+@Suite(.serialized)
+struct CompatibilityTransitionTests {
   private func transitionServer(
     factory: CompatibilityTransitionFactory,
     identifiers: [DeviceIdentifier],
@@ -171,7 +172,8 @@ private final class IdentifierSnapshotBox: @unchecked Sendable {
     }
   }
 
-  @Test func stageFailurePreservesLiveBackendAndPersistence() async {
+  @Test
+  func stageFailurePreservesLiveBackendAndPersistence() async {
     let defaults = UserDefaults.standard
     let key = ApplicationServiceServer.compatibilityIdentityDefaultsKey
     let prior = defaults.object(forKey: key)
@@ -195,7 +197,8 @@ private final class IdentifierSnapshotBox: @unchecked Sendable {
     #expect(defaults.string(forKey: key) == CompatibilityIdentity.genericHID.rawValue)
   }
 
-  @Test func successfulTransitionActivatesBeforeCommitAndClosesOldOnce() async {
+  @Test
+  func successfulTransitionActivatesBeforeCommitAndClosesOldOnce() async {
     let defaults = UserDefaults.standard
     let key = ApplicationServiceServer.compatibilityIdentityDefaultsKey
     let prior = defaults.object(forKey: key)
@@ -217,7 +220,8 @@ private final class IdentifierSnapshotBox: @unchecked Sendable {
     #expect(defaults.string(forKey: key) == CompatibilityIdentity.appleGameController.rawValue)
   }
 
-  @Test func candidateFailureRollsBackOneCoherentPriorBackend() async {
+  @Test
+  func candidateFailureRollsBackOneCoherentPriorBackend() async {
     let defaults = UserDefaults.standard
     let key = ApplicationServiceServer.compatibilityIdentityDefaultsKey
     let prior = defaults.object(forKey: key)
@@ -245,7 +249,8 @@ private final class IdentifierSnapshotBox: @unchecked Sendable {
     #expect(defaults.string(forKey: key) == CompatibilityIdentity.genericHID.rawValue)
   }
 
-  @Test func rollbackFailureLeavesOutputUnavailableWithoutAStaleBackend() async {
+  @Test
+  func rollbackFailureLeavesOutputUnavailableWithoutAStaleBackend() async {
     let defaults = UserDefaults.standard
     let key = ApplicationServiceServer.compatibilityIdentityDefaultsKey
     let retryKey = ApplicationServiceServer.compatibilityRetrySnapshotDefaultsKey
@@ -286,7 +291,8 @@ private final class IdentifierSnapshotBox: @unchecked Sendable {
     )
   }
 
-  @Test func persistedRetrySnapshotLoadsAfterRestartAndSameIntentCanRetry() async {
+  @Test
+  func persistedRetrySnapshotLoadsAfterRestartAndSameIntentCanRetry() async {
     let defaults = UserDefaults.standard
     let identityKey = ApplicationServiceServer.compatibilityIdentityDefaultsKey
     let retryKey = ApplicationServiceServer.compatibilityRetrySnapshotDefaultsKey
@@ -337,7 +343,8 @@ private final class IdentifierSnapshotBox: @unchecked Sendable {
     #expect(defaults.object(forKey: retryKey) == nil)
   }
 
-  @Test func automaticTransitionRequestsAreGenerationScopedAndCoalesced() async {
+  @Test
+  func automaticTransitionRequestsAreGenerationScopedAndCoalesced() async {
     let defaults = UserDefaults.standard
     let identityKey = ApplicationServiceServer.compatibilityIdentityDefaultsKey
     let priorIdentity = defaults.object(forKey: identityKey)
@@ -370,7 +377,8 @@ private final class IdentifierSnapshotBox: @unchecked Sendable {
     #expect(factory.values().count == 1)
   }
 
-  @Test func zeroControllerActivationUsesTheRemainingZeroDeviceBudget() async {
+  @Test
+  func zeroControllerActivationUsesTheRemainingZeroDeviceBudget() async {
     let activationGate = CompatibilityTransitionGate()
     let factory = CompatibilityTransitionFactory()
     factory.firstActivationGate = activationGate
@@ -402,7 +410,8 @@ private final class IdentifierSnapshotBox: @unchecked Sendable {
     await activationGate.open()
   }
 
-  @Test func zeroControllerActivationCommitsAnIdleBackendForFutureHotPlug() async {
+  @Test
+  func zeroControllerActivationCommitsAnIdleBackendForFutureHotPlug() async {
     let factory = CompatibilityTransitionFactory()
     let (server, old) = transitionServer(factory: factory, identifiers: [])
 
@@ -414,7 +423,8 @@ private final class IdentifierSnapshotBox: @unchecked Sendable {
     #expect(server.compatibilityLiveIdentity == .appleGameController)
   }
 
-  @Test func noncooperativeCandidateCloseCannotOverrunRollbackBudget() async {
+  @Test
+  func noncooperativeCandidateCloseCannotOverrunRollbackBudget() async {
     let defaults = UserDefaults.standard
     let identityKey = ApplicationServiceServer.compatibilityIdentityDefaultsKey
     let retryKey = ApplicationServiceServer.compatibilityRetrySnapshotDefaultsKey
@@ -461,7 +471,8 @@ private final class IdentifierSnapshotBox: @unchecked Sendable {
     #expect(factory.values().first?.closeCountValue == 1)
   }
 
-  @Test func rapidIdentityRequestsSerializeAndCommitLastRequest() async {
+  @Test
+  func rapidIdentityRequestsSerializeAndCommitLastRequest() async {
     let defaults = UserDefaults.standard
     let key = ApplicationServiceServer.compatibilityIdentityDefaultsKey
     let prior = defaults.object(forKey: key)
@@ -498,7 +509,8 @@ private final class IdentifierSnapshotBox: @unchecked Sendable {
     #expect(factory.values().last?.closeCountValue == 0)
   }
 
-  @Test func zeroActivationDeadlineFailsDeterministicallyBeforeCommit() async {
+  @Test
+  func zeroActivationDeadlineFailsDeterministicallyBeforeCommit() async {
     let defaults = UserDefaults.standard
     let key = ApplicationServiceServer.compatibilityIdentityDefaultsKey
     let retryKey = ApplicationServiceServer.compatibilityRetrySnapshotDefaultsKey
@@ -533,7 +545,8 @@ private final class IdentifierSnapshotBox: @unchecked Sendable {
     #expect(server.userSpaceEnabled == false)
   }
 
-  @Test func currentIdentityIsARealNoOp() async {
+  @Test
+  func currentIdentityIsARealNoOp() async {
     let factory = CompatibilityTransitionFactory()
     let (server, old) = transitionServer(
       factory: factory,
@@ -546,7 +559,8 @@ private final class IdentifierSnapshotBox: @unchecked Sendable {
     #expect(server.userSpaceDispatcher === old)
   }
 
-  @Test func hangingActivationTimesOutAndCannotReplaceSuccessfulRollbackLate() async {
+  @Test
+  func hangingActivationTimesOutAndCannotReplaceSuccessfulRollbackLate() async {
     let identifier = DeviceIdentifier(vendorID: 1, productID: 2)
     let gate = CompatibilityTransitionGate()
     let factory = CompatibilityTransitionFactory()
@@ -581,7 +595,8 @@ private final class IdentifierSnapshotBox: @unchecked Sendable {
     #expect(factory.values().first?.closeCountValue == 1)
   }
 
-  @Test func startupActivationUsesTransactionAndNeutralActivation() async {
+  @Test
+  func startupActivationUsesTransactionAndNeutralActivation() async {
     let identifier = DeviceIdentifier(vendorID: 1, productID: 2)
     let factory = CompatibilityTransitionFactory()
     let (server, old) = transitionServer(factory: factory, identifiers: [identifier])
@@ -594,7 +609,8 @@ private final class IdentifierSnapshotBox: @unchecked Sendable {
     #expect(server.userSpaceEnabled)
   }
 
-  @Test func removalDuringBreakBeforeMakeCannotCommitGhostIdentifiers() async {
+  @Test
+  func removalDuringBreakBeforeMakeCannotCommitGhostIdentifiers() async {
     let identifier = DeviceIdentifier(vendorID: 1, productID: 2)
     let snapshots = IdentifierSnapshotBox([[identifier], []])
     let factory = CompatibilityTransitionFactory()
@@ -610,7 +626,8 @@ private final class IdentifierSnapshotBox: @unchecked Sendable {
     #expect(factory.values().allSatisfy { $0.closeCountValue <= 1 })
   }
 
-  @Test func shutdownCancelsTransitionAndPreventsPostShutdownCommit() async {
+  @Test
+  func shutdownCancelsTransitionAndPreventsPostShutdownCommit() async {
     let identifier = DeviceIdentifier(vendorID: 1, productID: 2)
     let gate = CompatibilityTransitionGate()
     let factory = CompatibilityTransitionFactory()

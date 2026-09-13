@@ -5,7 +5,8 @@ import Testing
 struct GenericHIDParserTests {
   private let identifier = DeviceIdentifier(vendorID: 65_534, productID: 1)
 
-  @Test func mapsButtonsAndSuppressesDuplicateStates() {
+  @Test
+  func mapsButtonsAndSuppressesDuplicateStates() {
     let parser = GenericHIDParser(identifier: identifier)
     let pressed = value(page: 0x09, usage: 1, minimum: 0, maximum: 1, integer: 1)
     let released = value(page: 0x09, usage: 1, minimum: 0, maximum: 1, integer: 0)
@@ -16,7 +17,8 @@ struct GenericHIDParserTests {
     #expect(parser.parse(elementValue: released).isEmpty)
   }
 
-  @Test func normalizesAndPairsStandardStickAxes() {
+  @Test
+  func normalizesAndPairsStandardStickAxes() {
     let parser = GenericHIDParser(identifier: identifier)
 
     #expect(
@@ -35,7 +37,8 @@ struct GenericHIDParserTests {
     )
   }
 
-  @Test func mapsTriggersHatAndIgnoresUnknownUsages() {
+  @Test
+  func mapsTriggersHatAndIgnoresUnknownUsages() {
     let parser = GenericHIDParser(identifier: identifier)
 
     #expect(
@@ -61,7 +64,8 @@ struct GenericHIDParserTests {
     )
   }
 
-  @Test func rawReportsRemainUnusedForDescriptorDrivenFallback() throws {
+  @Test
+  func rawReportsRemainUnusedForDescriptorDrivenFallback() throws {
     let parser = GenericHIDParser(identifier: identifier)
     #expect(try parser.parse(data: Data([1, 2, 3])).isEmpty)
   }
@@ -70,9 +74,13 @@ struct GenericHIDParserTests {
     value(page: 0x01, usage: usage, minimum: 0, maximum: 255, integer: integer)
   }
 
-  private func value(page: UInt32, usage: UInt32, minimum: Int, maximum: Int, integer: Int)
-    -> HIDElementValue
-  {
+  private func value(
+    page: UInt32,
+    usage: UInt32,
+    minimum: Int,
+    maximum: Int,
+    integer: Int
+  ) -> HIDElementValue {
     HIDElementValue(
       usagePage: page,
       usage: usage,

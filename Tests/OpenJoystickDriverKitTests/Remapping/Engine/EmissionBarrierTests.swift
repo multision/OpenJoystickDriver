@@ -4,7 +4,8 @@ import Testing
 @testable import OpenJoystickDriverKit
 
 struct RemappingEmissionBarrierTests {
-  @Test func transactionAdmissionWaitsForAlreadyAdmittedLeaseAndRejectsNewWork() async throws {
+  @Test
+  func transactionAdmissionWaitsForAlreadyAdmittedLeaseAndRejectsNewWork() async throws {
     let barrier = RemappingEmissionBarrier()
     let lease = try #require(barrier.acquireLease())
     let owner = UUID()
@@ -28,7 +29,8 @@ struct RemappingEmissionBarrierTests {
     #expect(barrier.permits(permit))
   }
 
-  @Test func sinkCanQueryBarrierWithoutRecursiveLocking() async throws {
+  @Test
+  func sinkCanQueryBarrierWithoutRecursiveLocking() async throws {
     let barrier = RemappingEmissionBarrier()
     let sink = BarrierQueryingSink()
     sink.barrier = barrier
@@ -41,7 +43,8 @@ struct RemappingEmissionBarrierTests {
     #expect(sink.actions == [.keyDown(.space), .keyUp(.space)])
   }
 
-  @Test func completedTransactionPermanentlyInvalidatesPreviouslyAdmittedWork() async throws {
+  @Test
+  func completedTransactionPermanentlyInvalidatesPreviouslyAdmittedWork() async throws {
     let sink = RemappingTestSink()
     let barrier = RemappingEmissionBarrier()
     let engine = RemappingEventEngine(sink: sink, emissionBarrier: barrier)
@@ -83,7 +86,8 @@ struct RemappingEmissionBarrierTests {
     #expect(sink.actions() == [.keyDown(.space)])
   }
 
-  @Test func terminationAllowsOneDrainAndRejectsEveryLaterEngineMutation() async throws {
+  @Test
+  func terminationAllowsOneDrainAndRejectsEveryLaterEngineMutation() async throws {
     let sink = RemappingTestSink()
     let barrier = RemappingEmissionBarrier()
     let engine = RemappingEventEngine(sink: sink, emissionBarrier: barrier)

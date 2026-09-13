@@ -3,14 +3,16 @@ import Testing
 @testable import OpenJoystickDriverKit
 
 struct HIDFeatureReadRetryTests {
-  @Test func successfulReplyStopsRetries() async {
+  @Test
+  func successfulReplyStopsRetries() async {
     let attempts = FeatureAttemptRecorder([.retry, .accepted, .retry])
     let result = await HIDFeatureReadRetry.run(delayNanoseconds: 0) { await attempts.next() }
     #expect(result == .accepted)
     #expect(await attempts.count == 2)
   }
 
-  @Test func malformedOrUnavailableRepliesExhaustAtThreeAttempts() async {
+  @Test
+  func malformedOrUnavailableRepliesExhaustAtThreeAttempts() async {
     let attempts = FeatureAttemptRecorder([])
     let result = await HIDFeatureReadRetry.run(maximumAttempts: 100, delayNanoseconds: 0) {
       await attempts.next()
@@ -19,14 +21,16 @@ struct HIDFeatureReadRetryTests {
     #expect(await attempts.count == 3)
   }
 
-  @Test func pipelineLossStopsImmediately() async {
+  @Test
+  func pipelineLossStopsImmediately() async {
     let attempts = FeatureAttemptRecorder([.retry, .stopped, .accepted])
     let result = await HIDFeatureReadRetry.run(delayNanoseconds: 0) { await attempts.next() }
     #expect(result == .stopped)
     #expect(await attempts.count == 2)
   }
 
-  @Test func cancellationCannotSendAnotherAttempt() async {
+  @Test
+  func cancellationCannotSendAnotherAttempt() async {
     let attempts = FeatureAttemptRecorder([])
     let task = Task {
       await HIDFeatureReadRetry.run(delayNanoseconds: 0) {
@@ -39,11 +43,14 @@ struct HIDFeatureReadRetryTests {
     #expect(await attempts.count == 1)
   }
 
-  @Test func nonConsumerIsLimitedToOneRead() async {
+  @Test
+  func nonConsumerIsLimitedToOneRead() async {
     let attempts = FeatureAttemptRecorder([])
-    #expect(await HIDFeatureReadRetry.run(maximumAttempts: 1, delayNanoseconds: 0) {
-      await attempts.next()
-    } == .retry)
+    #expect(
+      await HIDFeatureReadRetry.run(maximumAttempts: 1, delayNanoseconds: 0) {
+        await attempts.next()
+      } == .retry
+    )
     #expect(await attempts.count == 1)
   }
 }

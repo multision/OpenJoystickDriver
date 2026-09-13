@@ -3,8 +3,10 @@ import Testing
 
 @testable import OpenJoystickDriver
 
-@MainActor struct SetupCoordinatorTests {
-  @Test func activeExtensionDoesNotSubmit() async {
+@MainActor
+struct SetupCoordinatorTests {
+  @Test
+  func activeExtensionDoesNotSubmit() async {
     let client = FakeSetupClient(status: Self.currentActiveStatus)
     let coordinator = SystemExtensionSetupCoordinator(client: client)
 
@@ -14,7 +16,8 @@ import Testing
     #expect(client.requestCount == 0)
   }
 
-  @Test func missingRegistrationSubmitsOnceAndWaitsForApproval() async {
+  @Test
+  func missingRegistrationSubmitsOnceAndWaitsForApproval() async {
     let client = FakeSetupClient(
       status: Self.inactiveStatus,
       result: SystemExtensionSetupRequestResult.awaitingApproval
@@ -29,7 +32,8 @@ import Testing
     #expect(client.requestCount == 1)
   }
 
-  @Test func repairRetriesAfterFailureAndReplacementUsesActivationRequest() async {
+  @Test
+  func repairRetriesAfterFailureAndReplacementUsesActivationRequest() async {
     let client = FakeSetupClient(status: Self.inactiveStatus, results: [.failed, .active])
     let coordinator = SystemExtensionSetupCoordinator(client: client)
 
@@ -41,7 +45,8 @@ import Testing
     #expect(client.requestCount == 2)
   }
 
-  @Test func invalidEmbeddedBundleNeverSubmits() async {
+  @Test
+  func invalidEmbeddedBundleNeverSubmits() async {
     let client = FakeSetupClient(
       status: ExtensionStatus(bundle: .invalid("wrong"), registration: .absent)
     )
@@ -53,7 +58,8 @@ import Testing
     #expect(client.requestCount == 0)
   }
 
-  @Test func unknownInstalledVersionFailsClosedWithoutSubmittingAgain() async {
+  @Test
+  func unknownInstalledVersionFailsClosedWithoutSubmittingAgain() async {
     let client = FakeSetupClient(
       status: ExtensionStatus(
         bundle: .present,
@@ -70,7 +76,8 @@ import Testing
     #expect(client.requestCount == 0)
   }
 
-  @Test func timedOutActivationIsTerminalUntilRepair() async {
+  @Test
+  func timedOutActivationIsTerminalUntilRepair() async {
     let client = FakeSetupClient(status: Self.inactiveStatus, result: .timedOut)
     let coordinator = SystemExtensionSetupCoordinator(client: client)
 
@@ -81,7 +88,8 @@ import Testing
     #expect(client.requestCount == 1)
   }
 
-  @Test func olderActiveExtensionRequestsOneReplacement() async {
+  @Test
+  func olderActiveExtensionRequestsOneReplacement() async {
     let client = FakeSetupClient(status: Self.olderActiveStatus)
     let coordinator = SystemExtensionSetupCoordinator(client: client)
 
@@ -91,7 +99,8 @@ import Testing
     #expect(coordinator.state == SystemExtensionSetupState.active)
   }
 
-  @Test func historicalIntegerBuildDoesNotCreateReplacementLoop() async {
+  @Test
+  func historicalIntegerBuildDoesNotCreateReplacementLoop() async {
     let client = FakeSetupClient(
       status: ExtensionStatus(
         bundle: .present,
@@ -113,7 +122,8 @@ import Testing
     #expect(client.requestCount == 1)
   }
 
-  @Test func currentActiveExtensionDoesNotRequestReplacement() async {
+  @Test
+  func currentActiveExtensionDoesNotRequestReplacement() async {
     let client = FakeSetupClient(status: Self.currentActiveStatus)
     let coordinator = SystemExtensionSetupCoordinator(client: client)
 
@@ -123,7 +133,8 @@ import Testing
     #expect(coordinator.state == SystemExtensionSetupState.active)
   }
 
-  @Test func cancelledActivationIsTerminalUntilExplicitRepair() async {
+  @Test
+  func cancelledActivationIsTerminalUntilExplicitRepair() async {
     let client = FakeSetupClient(status: Self.inactiveStatus, results: [.cancelled, .active])
     let coordinator = SystemExtensionSetupCoordinator(client: client)
 
@@ -137,7 +148,8 @@ import Testing
     #expect(client.requestCount == 2)
   }
 
-  @Test func submissionCompletionIsOneShotAcrossTerminalEvents() {
+  @Test
+  func submissionCompletionIsOneShotAcrossTerminalEvents() {
     let gate = SystemExtensionSubmissionCompletionGate()
 
     #expect(gate.accept())
@@ -145,7 +157,8 @@ import Testing
     #expect(!gate.accept())
   }
 
-  @Test func submissionCompletionGateWinsConcurrentRaces() async {
+  @Test
+  func submissionCompletionGateWinsConcurrentRaces() async {
     let gate = SystemExtensionSubmissionCompletionGate()
     let accepted = await withTaskGroup(of: Bool.self, returning: Int.self) { group in
       for _ in 0..<100 { group.addTask { gate.accept() } }
@@ -157,7 +170,8 @@ import Testing
     #expect(accepted == 1)
   }
 
-  @Test func cancellationBeforeStartPreventsSubmission() {
+  @Test
+  func cancellationBeforeStartPreventsSubmission() {
     let state = SystemExtensionRequestState()
     let submission = FakeSubmission()
 
@@ -168,7 +182,8 @@ import Testing
     #expect(submission.cancelCount == 0)
   }
 
-  @Test func actualSubmissionBoundaryCompletesOnceUnderConcurrentRaces() async {
+  @Test
+  func actualSubmissionBoundaryCompletesOnceUnderConcurrentRaces() async {
     let counter = LockedCount()
     let submission = SystemExtensionSubmission(mode: .activation) { _ in counter.increment() }
 

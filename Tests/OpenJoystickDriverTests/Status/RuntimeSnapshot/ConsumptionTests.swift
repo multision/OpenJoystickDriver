@@ -4,7 +4,8 @@ import Testing
 @testable import OpenJoystickDriver
 
 struct StatusConsumptionTests {
-  @Test func cliTextConsumesTheSameTypedErrorAndPermissionSemantics() {
+  @Test
+  func cliTextConsumesTheSameTypedErrorAndPermissionSemantics() {
     let payload = ApplicationServiceStatusPayload(
       inputMonitoring: "unknown",
       accessibility: "denied",
@@ -24,7 +25,8 @@ struct StatusConsumptionTests {
     #expect(lines.contains("  identity  : sdl2-3"))
   }
 
-  @Test func directModeRetainsLocallyObservedPermissionTruth() {
+  @Test
+  func directModeRetainsLocallyObservedPermissionTruth() {
     let permissions = StatusPermissions(inputMonitoring: .granted, accessibility: .denied)
     let lines = RuntimeStatusText.directModeLines(permissions)
 

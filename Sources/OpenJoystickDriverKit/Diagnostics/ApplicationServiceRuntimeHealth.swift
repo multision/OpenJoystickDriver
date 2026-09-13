@@ -320,7 +320,9 @@ public enum ApplicationServiceRuntimeHealthSampler {
     return summary
   }
 
-  private static func processUsage(processID: Int32) throws -> (
+  private static func processUsage(
+    processID: Int32
+  ) throws -> (
     residentBytes: UInt64, physicalFootprintBytes: UInt64, cpuNanoseconds: UInt64,
     fileDescriptorCount: Int, threadCount: Int
   ) {

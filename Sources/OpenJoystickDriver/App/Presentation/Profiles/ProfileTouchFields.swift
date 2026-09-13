@@ -3,7 +3,8 @@
   import SwiftUI
 
   struct ProfileTouchFields: View {
-    @Binding var draft: ProfileTouchDraft
+    @Binding
+    var draft: ProfileTouchDraft
 
     var body: some View {
       VStack(alignment: .leading, spacing: 12) {

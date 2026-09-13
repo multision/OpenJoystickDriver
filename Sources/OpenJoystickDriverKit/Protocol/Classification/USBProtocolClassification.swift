@@ -115,9 +115,9 @@ public struct ProtocolClassification: Equatable, Sendable {
 }
 
 public enum USBProtocolClassifier {
-  public static func classify(_ observation: ControllerTransportObservation)
-    -> ProtocolClassification
-  {
+  public static func classify(
+    _ observation: ControllerTransportObservation
+  ) -> ProtocolClassification {
     let interfaces = observation.interfaces
     let xid = interfaces.first(where: isXID)
     let xusb = interfaces.first(where: isXUSB)

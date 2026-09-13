@@ -4,8 +4,10 @@ import Testing
 
 @testable import OpenJoystickDriver
 
-@Suite(.serialized) struct RuntimeProfileDraftTests {
-  @Test func profileEditsPreserveOutputAndIsolationPolicy() throws {
+@Suite(.serialized)
+struct RuntimeProfileDraftTests {
+  @Test
+  func profileEditsPreserveOutputAndIsolationPolicy() throws {
     let policy = RemappingOutputPolicy(virtualGamepad: .passthrough, physicalInput: .exclusive)
     let profile = RemappingProfile(
       name: "Output",
@@ -15,14 +17,17 @@ import Testing
       bindings: []
     )
     var draft = try RuntimeProfileDraft(profile: profile).addingBinding(
-      source: .button(.south), destination: .keyboard(key: .a, modifiers: [])
+      source: .button(.south),
+      destination: .keyboard(key: .a, modifiers: [])
     )
     #expect(draft.profile.outputPolicy == policy)
     let binding = try #require(draft.profile.bindings.first)
     draft = try draft.settingDestination(.keyboard(key: .b, modifiers: []), for: binding.id)
     #expect(draft.profile.outputPolicy == policy)
     draft = try draft.settingMetadata(
-      name: "Renamed", device: profile.device, applicationScope: .global
+      name: "Renamed",
+      device: profile.device,
+      applicationScope: .global
     )
     #expect(draft.profile.outputPolicy == policy)
     draft = try draft.removingBinding(binding.id)
@@ -30,7 +35,8 @@ import Testing
     try draft.validatedProfile().validate()
   }
 
-  @Test func profileDraftRejectsInvalidSourceDuplication() throws {
+  @Test
+  func profileDraftRejectsInvalidSourceDuplication() throws {
     let profile = makeProfile()
     let draft = RuntimeProfileDraft(profile: profile)
 
@@ -48,7 +54,8 @@ import Testing
     }
   }
 
-  @Test func profileDraftPreservesCompatibleDestinationWhenChangingSource() throws {
+  @Test
+  func profileDraftPreservesCompatibleDestinationWhenChangingSource() throws {
     let binding = RemappingBinding(
       source: .button(.south),
       destination: .keyboard(key: .b, modifiers: [])
@@ -68,7 +75,8 @@ import Testing
     #expect(edited.profile.bindings[0].destination == binding.destination)
   }
 
-  @Test func destinationOptionsCurateModifiersAndPreserveCustomDestinations() {
+  @Test
+  func destinationOptionsCurateModifiersAndPreserveCustomDestinations() {
     let custom = RemappingDestination.keyboard(
       key: .a,
       modifiers: [.command, .control, .option, .shift]
@@ -78,7 +86,9 @@ import Testing
     #expect(options.first?.destination == .keyboard(key: .space, modifiers: []))
     #expect(options.count < 400)
     #expect(
-      options.contains { $0.destination == .keyboard(key: .arrowUp, modifiers: [.command, .shift]) }
+      options.contains {
+        $0.destination == .keyboard(key: .arrowUp, modifiers: [.command, .shift])
+      }
     )
     #expect(!options.contains { $0.destination == custom })
 
@@ -92,7 +102,8 @@ import Testing
     )
   }
 
-  @Test func profileDraftSwitchingToContinuousSourceUsesConventionalDestination() throws {
+  @Test
+  func profileDraftSwitchingToContinuousSourceUsesConventionalDestination() throws {
     let binding = RemappingBinding(
       source: .button(.south),
       destination: .keyboard(key: .b, modifiers: [])
@@ -112,7 +123,8 @@ import Testing
     #expect(edited.profile.bindings[0].axisTuning == .default)
   }
 
-  @Test func profileDraftSwitchingToDiscreteSourceUsesConventionalDestination() throws {
+  @Test
+  func profileDraftSwitchingToDiscreteSourceUsesConventionalDestination() throws {
     let binding = RemappingBinding(
       source: .axis(.leftStickX),
       destination: .mouseMovement(.y),
@@ -133,7 +145,8 @@ import Testing
     #expect(edited.profile.bindings[0].axisTuning == nil)
   }
 
-  @Test func profileDraftSettingSourceRejectsDuplicateSource() throws {
+  @Test
+  func profileDraftSettingSourceRejectsDuplicateSource() throws {
     let first = RemappingBinding(
       source: .button(.south),
       destination: .keyboard(key: .a, modifiers: [])
@@ -162,7 +175,8 @@ import Testing
     }
   }
 
-  @Test func sourceOptionsOmitGuideForCaptureButPreserveExistingGuide() {
+  @Test
+  func sourceOptionsOmitGuideForCaptureButPreserveExistingGuide() {
     let guide = RemappingSource.button(.guide)
     let ordinary = SourceOption.options()
     let preserving = SourceOption.options(including: guide)
@@ -173,7 +187,8 @@ import Testing
     #expect(SourceOption.options(including: .button(.south)).count == ordinary.count)
   }
 
-  @Test func identifierInputAcceptsTheSameDecimalAndHexFormsAsTheCLI() {
+  @Test
+  func identifierInputAcceptsTheSameDecimalAndHexFormsAsTheCLI() {
     #expect(ProfileIdentifierInput.parse("4660") == 0x1234)
     #expect(ProfileIdentifierInput.parse(" 0x1234 ") == 0x1234)
     #expect(ProfileIdentifierInput.parse("0XFFFF") == UInt16.max)
@@ -181,7 +196,8 @@ import Testing
     #expect(ProfileIdentifierInput.parse("controller") == nil)
   }
 
-  @Test func profileDraftSupportsCLIMetadataAndAdvancedBindingParity() throws {
+  @Test
+  func profileDraftSupportsCLIMetadataAndAdvancedBindingParity() throws {
     let original = makeProfile()
     let binding = try #require(original.bindings.first)
     var draft = RuntimeProfileDraft(profile: original)
@@ -205,7 +221,8 @@ import Testing
     #expect(draft.profile.bindings[0].doubleTap?.windowMs == 250)
   }
 
-  @Test func profileDraftSupportsCLIChordSequenceAndLayerParity() throws {
+  @Test
+  func profileDraftSupportsCLIChordSequenceAndLayerParity() throws {
     var draft = RuntimeProfileDraft(profile: makeProfile())
     draft = try draft.addingChord(
       sources: [.button(.east), .button(.west)],
@@ -253,7 +270,8 @@ import Testing
     #expect(draft.profile.layers.isEmpty)
   }
 
-  @Test func dirtyProfileEditorDefersImportUntilDiscardIsConfirmed() {
+  @Test
+  func dirtyProfileEditorDefersImportUntilDiscardIsConfirmed() {
     let imported = makeProfile(name: "Imported")
     var state = ProfileEditorTransitionState()
     state.setDirty(true)
@@ -267,7 +285,8 @@ import Testing
     #expect(state.pendingAction == nil)
   }
 
-  @Test func canceledProfileEditorTransitionKeepsDirtyDraftAndDropsPendingImport() {
+  @Test
+  func canceledProfileEditorTransitionKeepsDirtyDraftAndDropsPendingImport() {
     let imported = makeProfile(name: "Imported")
     var state = ProfileEditorTransitionState()
     state.setDirty(true)
@@ -279,7 +298,8 @@ import Testing
     #expect(state.pendingAction == nil)
   }
 
-  @Test func inFlightSameProfileImportBlocksEditingAndPreservesAConcurrentDraft() {
+  @Test
+  func inFlightSameProfileImportBlocksEditingAndPreservesAConcurrentDraft() {
     let profile = makeProfile()
     let request = RuntimeMutationRequest(operation: .importProfile(profileID: profile.id))
     var state = ProfileEditorTransitionState()
@@ -294,7 +314,8 @@ import Testing
     #expect(state.isDirty)
   }
 
-  @Test func activeImportBlocksSelectionWithoutQueueingAReplacementAction() {
+  @Test
+  func activeImportBlocksSelectionWithoutQueueingAReplacementAction() {
     let profile = makeProfile()
     let otherProfileID = UUID()
     let request = RuntimeMutationRequest(operation: .importProfile(profileID: profile.id))
@@ -306,7 +327,8 @@ import Testing
     #expect(state.isEditingBlocked)
   }
 
-  @Test func failedImportReleasesTheEditingBlock() {
+  @Test
+  func failedImportReleasesTheEditingBlock() {
     let profile = makeProfile()
     let request = RuntimeMutationRequest(operation: .importProfile(profileID: profile.id))
     var state = ProfileEditorTransitionState()
@@ -317,7 +339,8 @@ import Testing
     #expect(!state.isEditingBlocked)
   }
 
-  @Test func failedImportAfterDiscardConfirmationRestoresDirtyStateForLaterSelection() {
+  @Test
+  func failedImportAfterDiscardConfirmationRestoresDirtyStateForLaterSelection() {
     let imported = makeProfile(name: "Imported")
     let otherProfileID = UUID()
     let request = RuntimeMutationRequest(operation: .importProfile(profileID: imported.id))
@@ -337,7 +360,8 @@ import Testing
     #expect(state.pendingAction == .select(otherProfileID))
   }
 
-  @Test func confirmedImportSuccessKeepsTheEditorCleanAndRefreshable() {
+  @Test
+  func confirmedImportSuccessKeepsTheEditorCleanAndRefreshable() {
     let imported = makeProfile(name: "Imported")
     let request = RuntimeMutationRequest(operation: .importProfile(profileID: imported.id))
     var state = ProfileEditorTransitionState()
@@ -354,7 +378,8 @@ import Testing
     #expect(state.request(.select(UUID())) != .confirmDiscard)
   }
 
-  @Test func dirtyDeleteBlocksSelectionAndFailureRestoresDraftProtection() {
+  @Test
+  func dirtyDeleteBlocksSelectionAndFailureRestoresDraftProtection() {
     let profile = makeProfile()
     let otherProfileID = UUID()
     let request = RuntimeMutationRequest(operation: .delete(profileID: profile.id))
@@ -373,7 +398,8 @@ import Testing
     #expect(state.pendingAction == .select(otherProfileID))
   }
 
-  @Test func successfulDeleteReleasesOperationAndKeepsCleanEditorNavigable() {
+  @Test
+  func successfulDeleteReleasesOperationAndKeepsCleanEditorNavigable() {
     let profile = makeProfile()
     let request = RuntimeMutationRequest(operation: .delete(profileID: profile.id))
     var state = ProfileEditorTransitionState()
@@ -390,7 +416,8 @@ import Testing
     #expect(state.request(.select(UUID())) != .confirmDiscard)
   }
 
-  @Test func completedCreateSelectsTheCreatedProfileAfterTheOperationReleases() {
+  @Test
+  func completedCreateSelectsTheCreatedProfileAfterTheOperationReleases() {
     let createdProfileID = UUID()
     let request = RuntimeMutationRequest(operation: .create(profileID: createdProfileID))
     var state = ProfileEditorTransitionState()
@@ -406,7 +433,8 @@ import Testing
     )
   }
 
-  @Test func completedDuplicateSelectsTheDuplicateAfterTheOperationReleases() {
+  @Test
+  func completedDuplicateSelectsTheDuplicateAfterTheOperationReleases() {
     let duplicateProfileID = UUID()
     let request = RuntimeMutationRequest(operation: .create(profileID: duplicateProfileID))
     var state = ProfileEditorTransitionState()
@@ -422,7 +450,8 @@ import Testing
     )
   }
 
-  @Test func completedDifferentIDImportSelectsTheImportedProfileAfterTheOperationReleases() {
+  @Test
+  func completedDifferentIDImportSelectsTheImportedProfileAfterTheOperationReleases() {
     let importedProfileID = UUID()
     let request = RuntimeMutationRequest(operation: .importProfile(profileID: importedProfileID))
     var state = ProfileEditorTransitionState()
@@ -438,7 +467,8 @@ import Testing
     )
   }
 
-  @Test func mutationOwnershipRejectsDifferentAndDuplicateStarts() {
+  @Test
+  func mutationOwnershipRejectsDifferentAndDuplicateStarts() {
     let first = RuntimeMutationRequest(operation: .delete(profileID: UUID()))
     let second = RuntimeMutationRequest(operation: .importProfile(profileID: UUID()))
     var state = ProfileEditorTransitionState()
@@ -450,7 +480,8 @@ import Testing
     #expect(state.isEditingBlocked)
   }
 
-  @Test func mismatchedRuntimeCompletionCannotReleaseTheActiveMutation() {
+  @Test
+  func mismatchedRuntimeCompletionCannotReleaseTheActiveMutation() {
     let operation = RuntimeMutationOperation.delete(profileID: UUID())
     let ownerID = UUID()
     let unrelatedID = UUID()
@@ -467,7 +498,8 @@ import Testing
     #expect(!state.isEditingBlocked)
   }
 
-  @Test func matchingPreflightFailureReleasesTheExactOwnerAndKeepsDraftDirty() {
+  @Test
+  func matchingPreflightFailureReleasesTheExactOwnerAndKeepsDraftDirty() {
     let request = RuntimeMutationRequest(operation: .update(profileID: UUID()))
     var state = ProfileEditorTransitionState()
     state.setDirty(true)
@@ -494,7 +526,8 @@ import Testing
     #expect(!state.isEditingBlocked)
   }
 
-  @Test func activeOwnerIsReconciledBeforeProcessingAnOverlappingError() {
+  @Test
+  func activeOwnerIsReconciledBeforeProcessingAnOverlappingError() {
     let operation = RuntimeMutationOperation.update(profileID: UUID())
     let ownerID = UUID()
     let rejectedID = UUID()
@@ -509,7 +542,8 @@ import Testing
     #expect(state.isEditingBlocked)
   }
 
-  @Test func duplicateSaveStartDoesNotAcquireASecondOwner() {
+  @Test
+  func duplicateSaveStartDoesNotAcquireASecondOwner() {
     let operation = RuntimeMutationOperation.update(profileID: UUID())
     let first = RuntimeMutationRequest(operation: operation)
     let second = RuntimeMutationRequest(operation: operation)
@@ -523,7 +557,8 @@ import Testing
     #expect(state.mutationID == first.id)
   }
 
-  @Test func losingSameOperationSaveResolvesByItsOwnRejectedMutationID() {
+  @Test
+  func losingSameOperationSaveResolvesByItsOwnRejectedMutationID() {
     let operation = RuntimeMutationOperation.update(profileID: UUID())
     let request = RuntimeMutationRequest(operation: operation)
     let winner = RuntimeMutationRequest(operation: operation)
@@ -544,7 +579,8 @@ import Testing
     #expect(!state.isInFlight)
   }
 
-  @Test func matchingSaveCompletionResolvesSuccessfully() {
+  @Test
+  func matchingSaveCompletionResolvesSuccessfully() {
     let operation = RuntimeMutationOperation.update(profileID: UUID())
     let request = RuntimeMutationRequest(operation: operation)
     var state = ProfileEditorSaveState()

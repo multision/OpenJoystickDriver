@@ -8,9 +8,12 @@
   // MARK: - Native keyboard destination capture
 
   struct KeyboardDestinationCaptureView: View {
-    @Binding var destination: RemappingDestination
-    @Binding var isCleared: Bool
-    @Binding var isCapturing: Bool
+    @Binding
+    var destination: RemappingDestination
+    @Binding
+    var isCleared: Bool
+    @Binding
+    var isCapturing: Bool
 
     var body: some View {
       VStack(alignment: .leading, spacing: 7) {
@@ -116,9 +119,8 @@
       )
     }
 
-    @available(*, unavailable) required init?(coder: NSCoder) {
-      fatalError("init(coder:) has not been implemented")
-    }
+    @available(*, unavailable)
+    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 
     override var acceptsFirstResponder: Bool { true }
 
@@ -275,9 +277,8 @@
       startMonitoring()
     }
 
-    @available(*, unavailable) required init?(coder: NSCoder) {
-      fatalError("init(coder:) has not been implemented")
-    }
+    @available(*, unavailable)
+    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 
     override func viewDidMoveToWindow() {
       super.viewDidMoveToWindow()

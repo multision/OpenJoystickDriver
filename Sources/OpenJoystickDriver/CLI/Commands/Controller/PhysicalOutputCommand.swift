@@ -474,9 +474,11 @@ struct PhysicalOutputCommand {
     return status.connectedDevices
   }
 
-  private func requireDevice(vendorID: UInt16, productID: UInt16, runtimeIdentifier: String?)
-    -> ApplicationServiceDeviceDescription
-  {
+  private func requireDevice(
+    vendorID: UInt16,
+    productID: UInt16,
+    runtimeIdentifier: String?
+  ) -> ApplicationServiceDeviceDescription {
     do {
       return try ConnectedControllerSelection.resolve(
         devices: connectedDevices(),
@@ -487,9 +489,9 @@ struct PhysicalOutputCommand {
     } catch { fail(error.localizedDescription) }
   }
 
-  private func parseDeviceOption(_ arguments: [String]) -> (
-    arguments: [String], runtimeIdentifier: String?
-  ) {
+  private func parseDeviceOption(
+    _ arguments: [String]
+  ) -> (arguments: [String], runtimeIdentifier: String?) {
     var values: [String] = []
     var runtimeIdentifier: String?
     var index = 0

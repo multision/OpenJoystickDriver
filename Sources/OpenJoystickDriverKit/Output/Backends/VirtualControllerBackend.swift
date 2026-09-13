@@ -51,7 +51,8 @@ public protocol VirtualControllerBackend: OutputDispatcher {
   var backendID: VirtualControllerBackendID { get }
   var capabilities: VirtualControllerBackendCapabilities { get }
 
-  @discardableResult func startBackend() async -> VirtualControllerBackendStatus
+  @discardableResult
+  func startBackend() async -> VirtualControllerBackendStatus
   func stopBackend() async
   func backendStatus() -> VirtualControllerBackendStatus
 }

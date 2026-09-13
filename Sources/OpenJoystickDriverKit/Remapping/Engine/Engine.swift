@@ -286,9 +286,7 @@ public actor RemappingEventEngine {
       $0.runtimeIdentifier < $1.runtimeIdentifier
     }) {
       do {
-        guard let physicalOutputSink else {
-          throw RemappingEventEngineError.sinkUnavailable
-        }
+        guard let physicalOutputSink else { throw RemappingEventEngineError.sinkUnavailable }
         try await physicalOutputSink.releaseAll(for: identifier)
         uncertainPhysicalDevices.remove(identifier)
       } catch { failed = true }

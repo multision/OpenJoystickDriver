@@ -22,19 +22,32 @@
 
   extension UpdateChecker: ApplicationUpdateChecking {}
 
-  @MainActor final class SettingsPreferencesModel: ObservableObject {
-    @Published private(set) var startAtLogin: Bool
-    @Published private(set) var controllerNotifications: Bool
-    @Published private(set) var controllerDisconnectedNotifications: Bool
-    @Published private(set) var profileNotifications: Bool
-    @Published private(set) var profileDeactivatedNotifications: Bool
-    @Published private(set) var notificationSounds: Bool
-    @Published private(set) var notificationAuthorization: RuntimeNotificationAuthorizationState
-    @Published private(set) var notificationSystemSettings: RuntimeNotificationSettings
-    @Published private(set) var includePrereleaseUpdates: Bool
-    @Published private(set) var developerToolsEnabled: Bool
-    @Published private(set) var updateState: UpdateCheckState = .idle
-    @Published private(set) var errorMessage: String?
+  @MainActor
+  final class SettingsPreferencesModel: ObservableObject {
+    @Published
+    private(set) var startAtLogin: Bool
+    @Published
+    private(set) var controllerNotifications: Bool
+    @Published
+    private(set) var controllerDisconnectedNotifications: Bool
+    @Published
+    private(set) var profileNotifications: Bool
+    @Published
+    private(set) var profileDeactivatedNotifications: Bool
+    @Published
+    private(set) var notificationSounds: Bool
+    @Published
+    private(set) var notificationAuthorization: RuntimeNotificationAuthorizationState
+    @Published
+    private(set) var notificationSystemSettings: RuntimeNotificationSettings
+    @Published
+    private(set) var includePrereleaseUpdates: Bool
+    @Published
+    private(set) var developerToolsEnabled: Bool
+    @Published
+    private(set) var updateState: UpdateCheckState = .idle
+    @Published
+    private(set) var errorMessage: String?
 
     let launchAtLoginIsAvailable: Bool
 
@@ -307,7 +320,8 @@
   }
 
   struct ApplicationSettingsView: View {
-    @ObservedObject private var preferences: SettingsPreferencesModel
+    @ObservedObject
+    private var preferences: SettingsPreferencesModel
 
     init(preferences: SettingsPreferencesModel = SettingsPreferencesModel()) {
       self.preferences = preferences

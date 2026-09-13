@@ -13,16 +13,25 @@ struct RemappingFlickStick {
   mutating func reset() { previousAngle = nil }
 
   mutating func process(
-    x: Double, y: Double, threshold: Double = 0.9, hysteresis: Double = 0.1
+    x: Double,
+    y: Double,
+    threshold: Double = 0.9,
+    hysteresis: Double = 0.1
   ) -> Event? {
     guard x.isFinite, y.isFinite, threshold.isFinite, hysteresis.isFinite,
       (0.1...1).contains(threshold), (0...0.5).contains(hysteresis), hysteresis < threshold
-    else { reset(); return nil }
+    else {
+      reset()
+      return nil
+    }
     let x = max(-1, min(1, x))
     let y = max(-1, min(1, y))
     let magnitude = hypot(x, y)
     let required = previousAngle == nil ? threshold : threshold - hysteresis
-    guard magnitude >= required else { reset(); return nil }
+    guard magnitude >= required else {
+      reset()
+      return nil
+    }
     let angle = atan2(x, y) * 180 / .pi
     defer { previousAngle = angle }
     guard let previousAngle else { return .flick(degrees: angle) }

@@ -27,9 +27,7 @@ public struct RemappingGyroTrackball: Codable, Equatable, Sendable {
   }
 
   public func validate() throws {
-    if case .axis = source {
-      throw RemappingGyroOutputError.invalidField("trackball.source")
-    }
+    if case .axis = source { throw RemappingGyroOutputError.invalidField("trackball.source") }
     guard decayHalvingsPerSecond.isFinite, (0...1000).contains(decayHalvingsPerSecond) else {
       throw RemappingGyroOutputError.invalidField("trackball.decay_halvings_per_second")
     }
@@ -47,7 +45,8 @@ public struct RemappingGyroTrackball: Codable, Equatable, Sendable {
       source: try values.decode(RemappingSource.self, forKey: .source),
       axes: try values.decodeIfPresent(RemappingGyroTrackballAxes.self, forKey: .axes) ?? .both,
       decayHalvingsPerSecond: try values.decodeIfPresent(
-        Double.self, forKey: .decayHalvingsPerSecond
+        Double.self,
+        forKey: .decayHalvingsPerSecond
       ) ?? 1,
       consumesSource: try values.decodeIfPresent(Bool.self, forKey: .consumesSource) ?? true
     )

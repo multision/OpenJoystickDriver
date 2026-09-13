@@ -2,7 +2,8 @@ import Testing
 @testable import OpenJoystickDriverKit
 
 struct MotionTrackballTests {
-  @Test func decayAndTravelAreIndependentOfSampleRate() throws {
+  @Test
+  func decayAndTravelAreIndependentOfSampleRate() throws {
     func run(interval: Double, count: Int) throws -> (Double, Double) {
       var trackball = RemappingMotionTrackball()
       _ = trackball.process(
@@ -35,22 +36,35 @@ struct MotionTrackballTests {
     #expect(abs(fast.1 - 50) < 1e-9)
   }
 
-  @Test func axesAreIndependentAndResetDropsRetainedVelocity() throws {
+  @Test
+  func axesAreIndependentAndResetDropsRetainedVelocity() throws {
     var trackball = RemappingMotionTrackball()
     let first = RemappingGyroProjection(pitchDegreesPerSecond: 100, yawDegreesPerSecond: 50)
     _ = trackball.process(
-      first, deltaTime: 0.01, pitchHeld: false, yawHeld: false, decayHalvingsPerSecond: 0
+      first,
+      deltaTime: 0.01,
+      pitchHeld: false,
+      yawHeld: false,
+      decayHalvingsPerSecond: 0
     )
     let next = RemappingGyroProjection(pitchDegreesPerSecond: -100, yawDegreesPerSecond: -50)
     let result = trackball.process(
-      next, deltaTime: 0.01, pitchHeld: true, yawHeld: false, decayHalvingsPerSecond: 0
+      next,
+      deltaTime: 0.01,
+      pitchHeld: true,
+      yawHeld: false,
+      decayHalvingsPerSecond: 0
     )
     let step = try #require(result)
     #expect(step.pitchDegrees == 1)
     #expect(step.yawDegrees == -0.5)
     trackball.reset()
     let resetResult = trackball.process(
-      next, deltaTime: 0.01, pitchHeld: true, yawHeld: true, decayHalvingsPerSecond: 0
+      next,
+      deltaTime: 0.01,
+      pitchHeld: true,
+      yawHeld: true,
+      decayHalvingsPerSecond: 0
     )
     let reset = try #require(resetResult)
     #expect(reset.pitchDegrees == 0 && reset.yawDegrees == 0)

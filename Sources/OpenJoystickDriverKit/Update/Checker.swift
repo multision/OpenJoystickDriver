@@ -62,9 +62,10 @@ public struct UpdateChecker: Sendable {
     self.session = session
   }
 
-  public func check(currentVersion rawCurrentVersion: String, includePrereleases: Bool = false)
-    async -> UpdateCheckState
-  {
+  public func check(
+    currentVersion rawCurrentVersion: String,
+    includePrereleases: Bool = false
+  ) async -> UpdateCheckState {
     guard let currentVersion = SemanticVersion(rawCurrentVersion) else {
       return .failed("Current app version is not SemVer: \(rawCurrentVersion)")
     }

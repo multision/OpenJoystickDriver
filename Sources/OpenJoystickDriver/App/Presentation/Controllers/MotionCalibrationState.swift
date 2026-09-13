@@ -10,11 +10,16 @@
     ) async throws -> RemappingMotionCalibrationStatus
   }
 
-  @MainActor final class MotionCalibrationViewModel: ObservableObject {
-    @Published private(set) var status: RemappingMotionCalibrationStatus?
-    @Published private(set) var errorMessage: String?
-    @Published private(set) var isBusy = false
-    @Published private(set) var selector: RuntimeDeviceSelector?
+  @MainActor
+  final class MotionCalibrationViewModel: ObservableObject {
+    @Published
+    private(set) var status: RemappingMotionCalibrationStatus?
+    @Published
+    private(set) var errorMessage: String?
+    @Published
+    private(set) var isBusy = false
+    @Published
+    private(set) var selector: RuntimeDeviceSelector?
     private let gateway: any MotionCalibrationGateway
     private var generation: UInt64 = 0
 
@@ -59,7 +64,7 @@
         return OJDLocalized.string(
           "motion.calibration.motionUnavailable",
           fallback: "Enable a remapping profile for this controller "
-          + "and check that motion is available."
+            + "and check that motion is available."
         )
       case nil: return RuntimePresentation.userFacingError(error)
       }

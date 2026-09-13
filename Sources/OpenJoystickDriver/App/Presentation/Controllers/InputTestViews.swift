@@ -5,7 +5,8 @@
   import SwiftUI
 
   struct InputTestView: View {
-    @ObservedObject var model: InputTestViewModel
+    @ObservedObject
+    var model: InputTestViewModel
     let runtimeViewModel: RuntimeViewModel
 
     var body: some View {
@@ -13,10 +14,8 @@
         VStack(alignment: .leading, spacing: 12) {
           controllerHeader
           HStack(alignment: .top, spacing: 16) {
-            InputTestLiveInputView(
-              liveState: model.liveState,
-              publishedProfile: publishedProfile
-            ).frame(minWidth: 460, maxWidth: .infinity, alignment: .topLeading)
+            InputTestLiveInputView(liveState: model.liveState, publishedProfile: publishedProfile)
+              .frame(minWidth: 460, maxWidth: .infinity, alignment: .topLeading)
             diagnosticsColumn.frame(width: 330, alignment: .topLeading)
           }
         }.padding(18).frame(maxWidth: .infinity, alignment: .leading)
@@ -66,7 +65,8 @@
       }
     }
 
-    @ViewBuilder private var rumbleGroup: some View {
+    @ViewBuilder
+    private var rumbleGroup: some View {
       GroupBox {
         if model.capabilities.supportsRumble {
           VStack(alignment: .leading, spacing: 10) {
@@ -109,7 +109,8 @@
       }
     }
 
-    @ViewBuilder private var lightingGroup: some View {
+    @ViewBuilder
+    private var lightingGroup: some View {
       GroupBox {
         if model.capabilities.lightingFeatures.isEmpty {
           unavailableOutputLabel(
@@ -169,7 +170,8 @@
       }
     }
 
-    @ViewBuilder private var outputErrorView: some View {
+    @ViewBuilder
+    private var outputErrorView: some View {
       if let error = model.outputError {
         Text(error).font(.caption).foregroundColor(Color(NSColor.systemRed)).fixedSize(
           horizontal: false,
@@ -193,7 +195,8 @@
       }
     }
 
-    @ViewBuilder private func rumbleControl(for motor: PhysicalRumbleMotor) -> some View {
+    @ViewBuilder
+    private func rumbleControl(for motor: PhysicalRumbleMotor) -> some View {
       let value = Binding<Double>(
         get: { model.rumbleIntensities[motor] ?? 0 },
         set: { model.rumbleIntensities[motor] = $0 }
@@ -221,9 +224,8 @@
       ).frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    @ViewBuilder private func outputStatus(for operation: InputTestViewModel.OutputOperation)
-      -> some View
-    {
+    @ViewBuilder
+    private func outputStatus(for operation: InputTestViewModel.OutputOperation) -> some View {
       switch model.outputState {
       case .running(let current) where current == operation: OJDLoadingIndicator()
       case .succeeded(let current) where current == operation:
@@ -329,14 +331,17 @@
   }
 
   private struct InputTestOutputControlsView<Content: View>: View {
-    @ObservedObject var settings: InputTestOutputSettings
-    @ViewBuilder let content: () -> Content
+    @ObservedObject
+    var settings: InputTestOutputSettings
+    @ViewBuilder
+    let content: () -> Content
 
     var body: some View { content() }
   }
 
   private struct PhysicalColorWell: NSViewRepresentable {
-    @Binding var color: NSColor
+    @Binding
+    var color: NSColor
 
     func makeCoordinator() -> Coordinator { Coordinator(parent: self) }
 
@@ -357,7 +362,9 @@
 
       init(parent: PhysicalColorWell) { self.parent = parent }
 
-      @MainActor @objc func changed(_ sender: NSColorWell) { parent.color = sender.color }
+      @MainActor
+      @objc
+      func changed(_ sender: NSColorWell) { parent.color = sender.color }
     }
   }
 

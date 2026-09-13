@@ -4,7 +4,8 @@ import Testing
 @testable import OpenJoystickDriverKit
 
 struct DeviceIdentifierTests {
-  @Test func modelMatchesIgnoresSerialAndRejectsDifferentIdentities() {
+  @Test
+  func modelMatchesIgnoresSerialAndRejectsDifferentIdentities() {
     let first = DeviceIdentifier(vendorID: 1, productID: 2, serialNumber: "ABC123")
     let second = DeviceIdentifier(vendorID: 1, productID: 2, serialNumber: "XYZ789")
     let other = DeviceIdentifier(vendorID: 3, productID: 4)
@@ -14,7 +15,8 @@ struct DeviceIdentifierTests {
     #expect(!first.exactlyMatches(second))
   }
 
-  @Test func exactRuntimeIdentifiersAreOpaqueStableAndDistinct() throws {
+  @Test
+  func exactRuntimeIdentifiersAreOpaqueStableAndDistinct() throws {
     let serial = "Pad-Serial-42"
     let first = DeviceIdentifier(vendorID: 0x045E, productID: 0x028E, serialNumber: serial)
     let second = DeviceIdentifier(
@@ -30,7 +32,8 @@ struct DeviceIdentifierTests {
     try assertOpaqueExactToken(second.runtimeIdentifier, privateIdentity: "Pad-Serial-43")
   }
 
-  @Test func locationRuntimeIdentifiersAreOpaqueAndDistinct() throws {
+  @Test
+  func locationRuntimeIdentifiersAreOpaqueAndDistinct() throws {
     let first = DeviceIdentifier(vendorID: 0x045E, productID: 0x028E, locationID: 7)
     let second = DeviceIdentifier(vendorID: 0x045E, productID: 0x028E, locationID: 8)
 
@@ -39,7 +42,8 @@ struct DeviceIdentifierTests {
     try assertExactTokenShape(second.runtimeIdentifier)
   }
 
-  @Test func serialDisambiguatesDevicesThatReuseTheSameLocation() throws {
+  @Test
+  func serialDisambiguatesDevicesThatReuseTheSameLocation() throws {
     let first = DeviceIdentifier(
       vendorID: 0x045E,
       productID: 0x028E,
@@ -58,7 +62,8 @@ struct DeviceIdentifierTests {
     try assertOpaqueExactToken(second.runtimeIdentifier, privateIdentity: "second")
   }
 
-  @Test func modelRuntimeIdentifierIsExplicitlyDegraded() {
+  @Test
+  func modelRuntimeIdentifierIsExplicitlyDegraded() {
     let model = DeviceIdentifier(vendorID: 0x045E, productID: 0x028E)
     let exact = DeviceIdentifier(vendorID: 0x045E, productID: 0x028E, serialNumber: "private")
 
@@ -66,7 +71,8 @@ struct DeviceIdentifierTests {
     #expect(model.runtimeIdentifier != exact.runtimeIdentifier)
   }
 
-  @Test func applicationServiceEncodingsUseOpaqueSharedIdentifier() throws {
+  @Test
+  func applicationServiceEncodingsUseOpaqueSharedIdentifier() throws {
     let serial = "RPC-Private-Serial"
     let identifier = DeviceIdentifier(vendorID: 0x045E, productID: 0x028E, serialNumber: serial)
     let description = ApplicationServiceDeviceDescription(
@@ -103,7 +109,8 @@ struct DeviceIdentifierTests {
     }
   }
 
-  @Test func applicationServiceDeviceDescriptionRoundTripsDiscoverySource() throws {
+  @Test
+  func applicationServiceDeviceDescriptionRoundTripsDiscoverySource() throws {
     let description = ApplicationServiceDeviceDescription(
       name: "Controller",
       vendorID: 0x045E,
@@ -122,7 +129,8 @@ struct DeviceIdentifierTests {
     #expect(decoded.discoverySource == .hid)
   }
 
-  @Test func applicationServiceDeviceDescriptionRequiresDiscoverySource() throws {
+  @Test
+  func applicationServiceDeviceDescriptionRequiresDiscoverySource() throws {
     let description = ApplicationServiceDeviceDescription(
       name: "Controller",
       vendorID: 0x045E,

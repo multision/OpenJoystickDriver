@@ -6,11 +6,16 @@
     let showsGyroOutput: Bool
     let onInherit: (() -> Void)?
     let onSave: (RemappingMotionTuning, RemappingGyroOutput) -> Void
-    @Environment(\.presentationMode) private var presentationMode
-    @State private var draft: ProfileMotionDraft
-    @State private var errorMessage: String?
-    @State private var numericText: [String: String]
-    @State private var gyro: ProfileGyroDraft
+    @Environment(\.presentationMode)
+    private var presentationMode
+    @State
+    private var draft: ProfileMotionDraft
+    @State
+    private var errorMessage: String?
+    @State
+    private var numericText: [String: String]
+    @State
+    private var gyro: ProfileGyroDraft
 
     init(
       tuning: RemappingMotionTuning,
@@ -100,13 +105,11 @@
                 maximum: 30
               )
             }
-            Toggle(
-              label("steeringEnabled", "Enable motion steering"),
-              isOn: $draft.steeringEnabled
-            )
+            Toggle(label("steeringEnabled", "Enable motion steering"), isOn: $draft.steeringEnabled)
             if draft.steeringEnabled {
               Picker(
-                label("steeringOutput", "Virtual steering axis"), selection: $draft.steeringOutput
+                label("steeringOutput", "Virtual steering axis"),
+                selection: $draft.steeringOutput
               ) {
                 Text(label("steeringLeft", "Left stick horizontal")).tag(
                   RemappingMotionSteeringOutput.leftStickX
@@ -158,7 +161,8 @@
           Button(OJDLocalized.string("common.save", fallback: "Save")) {
             do {
               let edited = try draft.applyingNumericText(
-                numericText, decimalSeparator: Locale.current.decimalSeparator ?? "."
+                numericText,
+                decimalSeparator: Locale.current.decimalSeparator ?? "."
               )
               onSave(
                 try edited.validatedTuning(),
@@ -176,28 +180,41 @@
     }
 
     private func slider(
-      _ key: String, _ fallback: String, value: Binding<Double>, maximum: Double
+      _ key: String,
+      _ fallback: String,
+      value: Binding<Double>,
+      maximum: Double
     ) -> some View {
       VStack(alignment: .leading, spacing: 4) {
         HStack {
           Text(label(key, fallback))
           Spacer()
-          TextField(label(key, fallback), text: Binding(
-            get: { numericText[key] ?? String(value.wrappedValue) },
-            set: { text in
-              numericText[key] = text
-              if let parsed = ProfileMotionDraft.numericValue(
-                text, decimalSeparator: Locale.current.decimalSeparator ?? "."
-              ), (0...maximum).contains(parsed) {
-                value.wrappedValue = parsed
+          TextField(
+            label(key, fallback),
+            text: Binding(
+              get: { numericText[key] ?? String(value.wrappedValue) },
+              set: { text in
+                numericText[key] = text
+                if let parsed = ProfileMotionDraft.numericValue(
+                  text,
+                  decimalSeparator: Locale.current.decimalSeparator ?? "."
+                ), (0...maximum).contains(parsed) {
+                  value.wrappedValue = parsed
+                }
               }
-            }
-          )).frame(width: 100).ojdAccessibilityLabel(label(key, fallback))
+            )
+          ).frame(width: 100).ojdAccessibilityLabel(label(key, fallback))
         }
-        Slider(value: Binding(
-          get: { value.wrappedValue },
-          set: { value.wrappedValue = $0; numericText[key] = String($0) }
-        ), in: 0...maximum).ojdAccessibilityLabel(label(key, fallback))
+        Slider(
+          value: Binding(
+            get: { value.wrappedValue },
+            set: {
+              value.wrappedValue = $0
+              numericText[key] = String($0)
+            }
+          ),
+          in: 0...maximum
+        ).ojdAccessibilityLabel(label(key, fallback))
       }
     }
   }

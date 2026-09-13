@@ -6,7 +6,8 @@ import Testing
 @testable import OpenJoystickDriverUSB
 
 struct USBDriverKitExtensionConfigurationTests {
-  @Test func productionConfigurationUsesOnlyApplesApprovedMicrosoftPairs() throws {
+  @Test
+  func productionConfigurationUsesOnlyApplesApprovedMicrosoftPairs() throws {
     let configuration = USBDriverKitExtensionConfiguration.driver
     let usb = try #require(configuration.usbDevice)
 
@@ -22,14 +23,15 @@ struct USBDriverKitExtensionConfigurationTests {
     #expect(configuration.matchingProperties["bInterfaceProtocol"] == .unsignedInteger(0xD0))
   }
 
-  @Test func registryServiceBecomesStableKitOwnedDeviceValue() throws {
+  @Test
+  func registryServiceBecomesStableKitOwnedDeviceValue() throws {
     let service = DriverService(
       id: 42,
       name: "XboxUSBDevice",
       properties: [
         "idVendor": .unsignedInteger(0x3537), "idProduct": .integer(0x1010),
         "locationID": .unsignedInteger(77), "USB Product Name": .string("GameSir G7 SE"),
-        "USB Serial Number": .string("serial")
+        "USB Serial Number": .string("serial"),
       ]
     )
 
@@ -48,7 +50,8 @@ struct USBDriverKitExtensionConfigurationTests {
     )
   }
 
-  @Test func driverKitFailuresMapToStableTransportCategories() {
+  @Test
+  func driverKitFailuresMapToStableTransportCategories() {
     #expect(
       USBDriverKitTransportProvider.transportError(
         DriverKitError(kind: .ioReturn(kIOReturnTimeout), operation: "read")

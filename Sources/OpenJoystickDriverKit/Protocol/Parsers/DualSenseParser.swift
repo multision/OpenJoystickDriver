@@ -40,9 +40,8 @@ public enum DualSenseParserError: Error, Equatable { case invalidBluetoothCRC }
 /// common input report after its two-byte header and is accepted only when
 /// its Linux-compatible CRC32 validates.
 public final class DualSenseParser: InputParser, HIDStartupFeatureReadRequestProvider,
-  HIDFeatureReportConsumer, PhysicalHIDRumbleOutput,
-  PhysicalHIDPlayerIndicatorOutput, PhysicalHIDColorOutput, PhysicalHIDAdaptiveTriggerOutput,
-  @unchecked Sendable
+  HIDFeatureReportConsumer, PhysicalHIDRumbleOutput, PhysicalHIDPlayerIndicatorOutput,
+  PhysicalHIDColorOutput, PhysicalHIDAdaptiveTriggerOutput, @unchecked Sendable
 {
 
   public var physicalInputCapabilities: PhysicalControllerInputCapabilities {
@@ -104,15 +103,18 @@ public final class DualSenseParser: InputParser, HIDStartupFeatureReadRequestPro
   }
 
   public func consumeHIDFeatureReport(
-    _ data: Data, request: PhysicalHIDFeatureReadRequest, transport: String?
+    _ data: Data,
+    request: PhysicalHIDFeatureReadRequest,
+    transport: String?
   ) -> Bool {
     guard request.reportID == 5, request.length == 41, data.count == 41 else { return false }
     let bytes = Array(data)
     if transport == "Bluetooth" || connectionMode == .bluetooth {
       var crc = updateCRC32(0xFFFF_FFFF, byte: 0xA3)
       for byte in bytes.dropLast(4) { crc = updateCRC32(crc, byte: byte) }
-      let expected = UInt32(bytes[37]) | (UInt32(bytes[38]) << 8)
-        | (UInt32(bytes[39]) << 16) | (UInt32(bytes[40]) << 24)
+      let expected =
+        UInt32(bytes[37]) | (UInt32(bytes[38]) << 8) | (UInt32(bytes[39]) << 16)
+        | (UInt32(bytes[40]) << 24)
       guard ~crc == expected else { return false }
     }
     guard let calibrated = SonyMotionCalibration.dualSenseFactory(bytes) else { return false }
@@ -161,23 +163,30 @@ public final class DualSenseParser: InputParser, HIDStartupFeatureReadRequestPro
     prevRSX = rsxRaw
     prevRSY = rsyRaw
 
-    events.append(contentsOf: SonySensorSamples.dualSense(
-      bytes, clock: &sensorClock, calibration: motionCalibration
-    ))
+    events.append(
+      contentsOf: SonySensorSamples.dualSense(
+        bytes,
+        clock: &sensorClock,
+        calibration: motionCalibration
+      )
+    )
     return events
   }
 
-  public func physicalRumbleReport(left: UInt8, right: UInt8, lt _: UInt8, rt _: UInt8)
-    -> PhysicalHIDOutputReport
-  {
+  public func physicalRumbleReport(
+    left: UInt8,
+    right: UInt8,
+    lt _: UInt8,
+    rt _: UInt8
+  ) -> PhysicalHIDOutputReport {
     outputReport(validFlag0: dualSenseCompatibleVibrationFlags, motorRight: right, motorLeft: left)
   }
 
-  public func physicalPlayerIndicatorReport(_ indicator: PhysicalPlayerIndicator)
-    -> PhysicalHIDOutputReport
-  {
+  public func physicalPlayerIndicatorReport(
+    _ indicator: PhysicalPlayerIndicator
+  ) -> PhysicalHIDOutputReport {
     let patterns: [PhysicalPlayerIndicator: UInt8] = [
-      .off: 0, .player1: 0x04, .player2: 0x0A, .player3: 0x15, .player4: 0x1B
+      .off: 0, .player1: 0x04, .player2: 0x0A, .player3: 0x15, .player4: 0x1B,
     ]
     return outputReport(
       validFlag1: dualSensePlayerIndicatorFlag,
@@ -315,9 +324,9 @@ public final class DualSenseParser: InputParser, HIDStartupFeatureReadRequestPro
     return crc
   }
 
-  private func parseSticks(bytes: [UInt8]) -> (
-    events: [ControllerEvent], raws: (UInt8, UInt8, UInt8, UInt8)
-  ) {
+  private func parseSticks(
+    bytes: [UInt8]
+  ) -> (events: [ControllerEvent], raws: (UInt8, UInt8, UInt8, UInt8)) {
     let lsxRaw = bytes[ReportOffset.leftStickX]
     let lsyRaw = bytes[ReportOffset.leftStickY]
     let rsxRaw = bytes[ReportOffset.rightStickX]
@@ -366,7 +375,7 @@ public final class DualSenseParser: InputParser, HIDStartupFeatureReadRequestPro
       curr: shoulders,
       mapping: [
         (0x01, .l1), (0x02, .r1), (0x04, .l2Digital), (0x08, .r2Digital), (0x10, .share),
-        (0x20, .options), (0x40, .leftStick), (0x80, .rightStick)
+        (0x20, .options), (0x40, .leftStick), (0x80, .rightStick),
       ]
     )
     return (events, shoulders)
@@ -374,7 +383,8 @@ public final class DualSenseParser: InputParser, HIDStartupFeatureReadRequestPro
 
   private func parseSystemButtons(bytes: [UInt8]) -> (events: [ControllerEvent], value: UInt8) {
     let system = bytes[ReportOffset.buttons2]
-    let extra: [(UInt8, Button)] = hasEdgeButtons
+    let extra: [(UInt8, Button)] =
+      hasEdgeButtons
       ? [(0x10, .leftFunction), (0x20, .rightFunction), (0x40, .leftPaddle), (0x80, .rightPaddle)]
       : []
     let events = diffButtons(
@@ -407,9 +417,11 @@ public final class DualSenseParser: InputParser, HIDStartupFeatureReadRequestPro
     }
   }
 
-  private func diffButtons(prev: UInt8, curr: UInt8, mapping: [(UInt8, Button)])
-    -> [ControllerEvent]
-  {
+  private func diffButtons(
+    prev: UInt8,
+    curr: UInt8,
+    mapping: [(UInt8, Button)]
+  ) -> [ControllerEvent] {
     var events: [ControllerEvent] = []
     for (mask, button) in mapping {
       let wasPressed = (prev & mask) != 0

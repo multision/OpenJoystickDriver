@@ -4,12 +4,13 @@ import Testing
 @testable import OpenJoystickDriverKit
 
 struct RemappingChordTests {
-  @Test func chordFiresWhenAllSourcesAreActive() async throws {
+  @Test
+  func chordFiresWhenAllSourcesAreActive() async throws {
     let sink = RemappingTestSink()
     let engine = RemappingEventEngine(sink: sink)
     let currentProfile = profile(
       bindings: [
-        binding(source: .button(.south), key: .a), binding(source: .button(.east), key: .b)
+        binding(source: .button(.south), key: .a), binding(source: .button(.east), key: .b),
       ],
       chords: [
         RemappingChord(

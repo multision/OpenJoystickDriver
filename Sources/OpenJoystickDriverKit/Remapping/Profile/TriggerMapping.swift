@@ -34,8 +34,8 @@ public enum RemappingDualStageTriggerMode: String, Codable, CaseIterable, Hashab
 
   public var buffersSoftPull: Bool {
     switch self {
-    case .preferFull, .preferFullCombined, .responsivePreferFull,
-      .responsivePreferFullCombined: true
+    case .preferFull, .preferFullCombined, .responsivePreferFull, .responsivePreferFullCombined:
+      true
     case .simultaneous, .exclusive: false
     }
   }
@@ -78,10 +78,8 @@ public struct RemappingTriggerMapping: Codable, Equatable, Hashable, Sendable {
 
   public func validate() throws {
     let fields: [(String, Double, ClosedRange<Double>)] = [
-      ("soft_threshold", softThreshold, 0.01...0.95),
-      ("full_threshold", fullThreshold, 0.05...1),
-      ("hysteresis", hysteresis, 0...0.25),
-      ("skip_window_ms", skipWindowMs, 1...1000),
+      ("soft_threshold", softThreshold, 0.01...0.95), ("full_threshold", fullThreshold, 0.05...1),
+      ("hysteresis", hysteresis, 0...0.25), ("skip_window_ms", skipWindowMs, 1...1000),
     ]
     for (field, value, range) in fields where !value.isFinite || !range.contains(value) {
       throw RemappingTriggerMappingError.invalidField(field)
@@ -114,6 +112,4 @@ public struct RemappingTriggerMapping: Codable, Equatable, Hashable, Sendable {
   }
 }
 
-public enum RemappingTriggerMappingError: Error, Equatable, Sendable {
-  case invalidField(String)
-}
+public enum RemappingTriggerMappingError: Error, Equatable, Sendable { case invalidField(String) }

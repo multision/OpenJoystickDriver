@@ -56,7 +56,8 @@ struct PhysicalOutputOwnership {
     }
   }
 
-  @discardableResult mutating func setMapping(
+  @discardableResult
+  mutating func setMapping(
     _ output: RemappingPhysicalOutput,
     active: Bool,
     owner: UUID,
@@ -81,24 +82,22 @@ struct PhysicalOutputOwnership {
     return Set(claims.keys)
   }
 
-  @discardableResult mutating func setManual(
+  @discardableResult
+  mutating func setManual(
     _ output: RemappingPhysicalOutput,
     for identifier: DeviceIdentifier
   ) -> PhysicalOutputChannel {
     let channel = output.channel
     if output.isNeutral {
       manualOverrides[identifier]?[channel] = nil
-      if manualOverrides[identifier]?.isEmpty == true {
-        manualOverrides[identifier] = nil
-      }
+      if manualOverrides[identifier]?.isEmpty == true { manualOverrides[identifier] = nil }
     } else {
       manualOverrides[identifier, default: [:]][channel] = output
     }
     return channel
   }
 
-  mutating func releaseManualRumble(for identifier: DeviceIdentifier)
-    -> Set<PhysicalOutputChannel>
+  mutating func releaseManualRumble(for identifier: DeviceIdentifier) -> Set<PhysicalOutputChannel>
   {
     let existingChannels = manualOverrides[identifier].map { Array($0.keys) } ?? []
     let channels = Set(
@@ -117,8 +116,7 @@ struct PhysicalOutputOwnership {
     device identifier: DeviceIdentifier
   ) -> RemappingPhysicalOutput? {
     if let manual = manualOverrides[identifier]?[channel] { return manual }
-    return mappingClaims[identifier]?[channel]?.values.max { lhs, rhs in
-      lhs.sequence < rhs.sequence
+    return mappingClaims[identifier]?[channel]?.values.max { lhs, rhs in lhs.sequence < rhs.sequence
     }?.output
   }
 

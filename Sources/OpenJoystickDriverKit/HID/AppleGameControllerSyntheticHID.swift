@@ -21,9 +21,7 @@ public enum AppleGameControllerSyntheticHID: Sendable {
   public static let pluginPathToken = "AppleSyntheticGameController"
 
   /// IOHIDManager / IOService matching fragment that excludes synthetics before create/open.
-  public static var ioHIDMatchingExclusion: [String: Any] {
-    [propertyKey: kCFBooleanFalse as Any]
-  }
+  public static var ioHIDMatchingExclusion: [String: Any] { [propertyKey: kCFBooleanFalse as Any] }
 
   /// CoreHID `DeviceMatchingCriteria.extraProperties` equivalent of ``ioHIDMatchingExclusion``.
   public static var ioHIDMatchingExclusionObjects: [String: any AnyObject] {
@@ -32,9 +30,7 @@ public enum AppleGameControllerSyntheticHID: Sendable {
 
   /// Replacement for `IOHIDManagerSetDeviceMatching(nil)` that still skips Apple synthetics.
   public static var allHIDDevicesExcludingSynthetics: [String: Any] {
-    ioHIDMatchingExcludingSynthetics([
-      kIOProviderClassKey as String: kIOHIDDeviceKey as String
-    ])
+    ioHIDMatchingExcludingSynthetics([kIOProviderClassKey as String: kIOHIDDeviceKey as String])
   }
 
   /// Adds Apple's documented synthetic exclusion to an existing HID matching dictionary.
@@ -115,12 +111,8 @@ public enum AppleGameControllerSyntheticHID: Sendable {
   }
 
   private static func cfProperty(_ service: io_service_t, _ key: String) -> Any? {
-    IORegistryEntryCreateCFProperty(
-      service,
-      key as CFString,
-      kCFAllocatorDefault,
-      0
-    )?.takeRetainedValue()
+    IORegistryEntryCreateCFProperty(service, key as CFString, kCFAllocatorDefault, 0)?
+      .takeRetainedValue()
   }
 
   private static func stringProperty(_ service: io_service_t, _ key: String) -> String? {
@@ -128,9 +120,7 @@ public enum AppleGameControllerSyntheticHID: Sendable {
   }
 
   private static func pluginPaths(_ service: io_service_t) -> [String] {
-    guard let types = cfProperty(service, "IOCFPlugInTypes") as? [String: String] else {
-      return []
-    }
+    guard let types = cfProperty(service, "IOCFPlugInTypes") as? [String: String] else { return [] }
     return Array(types.values)
   }
 }

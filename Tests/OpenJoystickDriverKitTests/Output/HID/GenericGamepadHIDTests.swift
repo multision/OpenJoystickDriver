@@ -3,7 +3,8 @@ import Testing
 @testable import OpenJoystickDriverKit
 
 struct GenericGamepadHIDTests {
-  @Test func triggerAxesDeclareSignedLogicalRanges() {
+  @Test
+  func triggerAxesDeclareSignedLogicalRanges() {
     let descriptor = GamepadHIDDescriptor.descriptor
 
     #expect(
@@ -20,7 +21,8 @@ struct GenericGamepadHIDTests {
     )
   }
 
-  @Test func triggerReportsReturnToTheExactZeroIdleState() {
+  @Test
+  func triggerReportsReturnToTheExactZeroIdleState() {
     let format = OJDGenericGamepadFormat()
     let neutral = format.buildInputReport(from: VirtualGamepadState())
     let active = format.buildInputReport(
@@ -35,14 +37,17 @@ struct GenericGamepadHIDTests {
     #expect(released == neutral)
   }
 
-  @Test func signedAxisNormalizationKeepsTriggerIdleAtZero() {
+  @Test
+  func signedAxisNormalizationKeepsTriggerIdleAtZero() {
     #expect(chromiumAxisValue(raw: 0, logicalMinimum: -32_767, logicalMaximum: 32_767) == 0)
     #expect(chromiumAxisValue(raw: 32_767, logicalMinimum: -32_767, logicalMaximum: 32_767) == 1)
   }
 
-  private func chromiumAxisValue(raw: Double, logicalMinimum: Double, logicalMaximum: Double)
-    -> Double
-  { ((raw - logicalMinimum) / (logicalMaximum - logicalMinimum) * 2) - 1 }
+  private func chromiumAxisValue(
+    raw: Double,
+    logicalMinimum: Double,
+    logicalMaximum: Double
+  ) -> Double { ((raw - logicalMinimum) / (logicalMaximum - logicalMinimum) * 2) - 1 }
 
   private func containsSubsequence<T: Equatable>(in values: [T], expected: [T]) -> Bool {
     guard !expected.isEmpty, expected.count <= values.count else { return false }

@@ -16,8 +16,9 @@ struct RemappingMotionQuaternion: Equatable {
       y: w * rhs.y - x * rhs.z + y * rhs.w + z * rhs.x,
       z: w * rhs.z + x * rhs.y - y * rhs.x + z * rhs.w
     )
-    let norm = sqrt(result.w * result.w + result.x * result.x
-      + result.y * result.y + result.z * result.z)
+    let norm = sqrt(
+      result.w * result.w + result.x * result.x + result.y * result.y + result.z * result.z
+    )
     return Self(w: result.w / norm, x: result.x / norm, y: result.y / norm, z: result.z / norm)
   }
 
@@ -70,9 +71,8 @@ struct RemappingMotionFusion {
     deltaTime: Double,
     gravityCorrectionRate: Double = 2
   ) -> RemappingFusedMotion? {
-    guard gyro.isFinite, acceleration.isFinite, deltaTime.isFinite,
-      gravityCorrectionRate.isFinite, (0...100).contains(gravityCorrectionRate),
-      (0...0.1).contains(deltaTime),
+    guard gyro.isFinite, acceleration.isFinite, deltaTime.isFinite, gravityCorrectionRate.isFinite,
+      (0...100).contains(gravityCorrectionRate), (0...0.1).contains(deltaTime),
       max(abs(gyro.x), abs(gyro.y), abs(gyro.z)) <= 1_000_000,
       max(abs(acceleration.x), abs(acceleration.y), abs(acceleration.z)) <= 1_000
     else { return nil }
@@ -87,13 +87,15 @@ struct RemappingMotionFusion {
     } else if deltaTime > 0 {
       let speed = sqrt(gyro.x * gyro.x + gyro.y * gyro.y + gyro.z * gyro.z)
       let rotation = RemappingMotionQuaternion.rotation(
-        axis: gyroVector, angle: speed * .pi / 180 * deltaTime
+        axis: gyroVector,
+        angle: speed * .pi / 180 * deltaTime
       )
       orientation = orientation.multiplied(by: rotation)
       if trustedGravity {
         let referenceUp = orientation.rotate(accel / magnitude)
         let correction = RemappingMotionQuaternion.alignUp(
-          referenceUp, fraction: 1 - exp(-gravityCorrectionRate * deltaTime)
+          referenceUp,
+          fraction: 1 - exp(-gravityCorrectionRate * deltaTime)
         )
         orientation = correction.multiplied(by: orientation)
       }

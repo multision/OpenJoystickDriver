@@ -5,8 +5,10 @@
 
   /// High-frequency input state is isolated from the lower-frequency session and output model so
   /// controller reports do not invalidate the complete Input Test window at the polling rate.
-  @MainActor final class InputTestLiveState: ObservableObject {
-    @Published private(set) var snapshot: DeviceInputState
+  @MainActor
+  final class InputTestLiveState: ObservableObject {
+    @Published
+    private(set) var snapshot: DeviceInputState
 
     init(snapshot: DeviceInputState = DeviceInputState(vendorID: 0, productID: 0)) {
       self.snapshot = snapshot

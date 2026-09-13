@@ -75,10 +75,12 @@ struct ProfileStickDraft {
       scrollAxis: scrollAxis,
       rotationDirection: rotationDirection,
       steeringDegreesAtFullScale: number(
-        steeringDegreesAtFullScale, "steering_degrees_at_full_scale"
+        steeringDegreesAtFullScale,
+        "steering_degrees_at_full_scale"
       ),
       steeringReturnDegreesPerSecond: number(
-        steeringReturnDegreesPerSecond, "steering_return_degrees_per_second"
+        steeringReturnDegreesPerSecond,
+        "steering_return_degrees_per_second"
       ),
       steeringOutput: steeringOutput,
       passthrough: passthrough

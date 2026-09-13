@@ -19,7 +19,8 @@ struct ControllerExposureDecisionTests {
     }
   }
 
-  @Test func nativeHIDRemainsEligibleAndReportsDuplicateRisk() {
+  @Test
+  func nativeHIDRemainsEligibleAndReportsDuplicateRisk() {
     let decision = ControllerExposureDecision.decide(
       ownership: .nativeHIDVisible,
       intent: .automatic(resolvedIdentity: .genericHID)
@@ -30,7 +31,8 @@ struct ControllerExposureDecisionTests {
     #expect(decision.duplicateRisk == .nativeHIDVisible)
   }
 
-  @Test func unknownOwnershipPreservesOutputAndReportsUnknownRisk() {
+  @Test
+  func unknownOwnershipPreservesOutputAndReportsUnknownRisk() {
     let decision = ControllerExposureDecision.decide(
       ownership: .unknown,
       intent: .automatic(resolvedIdentity: .genericHID)
@@ -41,7 +43,8 @@ struct ControllerExposureDecisionTests {
     #expect(decision.duplicateRisk == .unknownOwnership)
   }
 
-  @Test func upstreamVirtualSourceIsNotRepublished() {
+  @Test
+  func upstreamVirtualSourceIsNotRepublished() {
     let decision = ControllerExposureDecision.decide(
       ownership: .upstreamVirtualDevice,
       intent: .automatic(resolvedIdentity: .genericHID)
@@ -60,7 +63,8 @@ struct ControllerExposureDecisionTests {
     #expect(decision.effectiveIdentity == nil)
   }
 
-  @Test func explicitIdentityRemainsAtomicAndAutomaticKeepsGenericSemantics() {
+  @Test
+  func explicitIdentityRemainsAtomicAndAutomaticKeepsGenericSemantics() {
     let explicit = ControllerExposureDecision.decide(
       ownership: .exclusiveRawUSB,
       intent: .explicit(.xbox360HID)
@@ -76,7 +80,8 @@ struct ControllerExposureDecisionTests {
     #expect(invalidAutomaticIdentity.effectiveIdentity == nil)
   }
 
-  @Test func automaticUsesResolverOutputWithoutGenericFallback() {
+  @Test
+  func automaticUsesResolverOutputWithoutGenericFallback() {
     let decision = ControllerExposureDecision.decide(
       ownership: .exclusiveRawUSB,
       intent: .automatic(resolvedIdentity: .xbox360HID)
@@ -86,7 +91,8 @@ struct ControllerExposureDecisionTests {
     #expect(decision.effectiveIdentity == .xbox360HID)
   }
 
-  @Test func unavailableProfileSuppressesPublication() {
+  @Test
+  func unavailableProfileSuppressesPublication() {
     let decision = ControllerExposureDecision.decide(
       ownership: .exclusiveRawUSB,
       intent: .explicit(.genericHID),
@@ -97,7 +103,8 @@ struct ControllerExposureDecisionTests {
     #expect(decision.effectiveIdentity == nil)
   }
 
-  @Test func decisionIsDeterministicAndNeverSelectsMoreThanOneIdentity() {
+  @Test
+  func decisionIsDeterministicAndNeverSelectsMoreThanOneIdentity() {
     let intent = CompatibilityIdentityIntent.automatic(resolvedIdentity: .genericHID)
     let first = ControllerExposureDecision.decide(ownership: .driverKitOwnedUSB, intent: intent)
     let second = ControllerExposureDecision.decide(ownership: .driverKitOwnedUSB, intent: intent)

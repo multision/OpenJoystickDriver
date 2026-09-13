@@ -106,15 +106,13 @@ public enum CompatibilityProfileAvailabilityPolicy {
     case .automatic: return .unavailable(reason: .automaticRequiresResolution)
     case .genericHID: return .available
     case .xbox360HID:
-      return subfamily == .xusb
-        ? .available : .unavailable(reason: .xusbIdentityRequiresXUSBFamily)
+      return subfamily == .xusb ? .available : .unavailable(reason: .xusbIdentityRequiresXUSBFamily)
     case .sdl2_3, .appleGameController, .dualShock4, .dualSense, .switchPro:
       // Automatic routing stays family-strict. Explicit picker/CLI may publish
       // a first-party packer identity so live consumer-bind can be collected.
       return .available
     }
   }
-
 
 }
 
@@ -197,7 +195,7 @@ public enum CompatibilityEvidenceCatalog {
       identity: .appleGameController,
       evidence: .sourceBacked,
       reason: .selectedCatalogTuple
-    )
+    ),
   ]
   public static func resolution(
     for device: ApplicationServiceDeviceDescription,
@@ -220,10 +218,7 @@ public enum CompatibilityEvidenceCatalog {
       )
     }
     if let route = CompatibilityProtocolBackendCatalog.route(for: subfamily) {
-      let explicit = route.containsExplicit(
-        vendorID: device.vendorID,
-        productID: device.productID
-      )
+      let explicit = route.containsExplicit(vendorID: device.vendorID, productID: device.productID)
       return AutomaticCompatibilityResolution(
         identity: route.selectableIdentity,
         subfamily: subfamily,
@@ -258,9 +253,9 @@ public enum CompatibilityEvidenceCatalog {
 }
 
 public enum AutomaticCompatibilityResolver {
-  public static func subfamily(for device: ApplicationServiceDeviceDescription)
-    -> PhysicalProtocolSubfamily
-  {
+  public static func subfamily(
+    for device: ApplicationServiceDeviceDescription
+  ) -> PhysicalProtocolSubfamily {
     switch device.protocolVariant {
     case .xid: return .xid
     case .xbox360, .xbox360Wireless: return .xusb
@@ -278,9 +273,9 @@ public enum AutomaticCompatibilityResolver {
     CompatibilityEvidenceCatalog.resolution(for: device, consumer: consumer)
   }
 
-  public static func resolve(for device: ApplicationServiceDeviceDescription)
-    -> AutomaticCompatibilityResolution
-  { resolve(for: device, consumer: .unknown) }
+  public static func resolve(
+    for device: ApplicationServiceDeviceDescription
+  ) -> AutomaticCompatibilityResolution { resolve(for: device, consumer: .unknown) }
 }
 
 public enum CompatibilityOutputProfileCatalog {
@@ -325,7 +320,7 @@ public enum CompatibilityOutputProfileCatalog {
         evidence: .sourceBacked,
         consumerFamily: .appleGameController,
         evidenceByConsumer: [
-          .appleGameController: .sourceBacked, .chromiumGamepad: .reportedFailure
+          .appleGameController: .sourceBacked, .chromiumGamepad: .reportedFailure,
         ]
       )
     case .xbox360HID:
@@ -352,9 +347,7 @@ public enum CompatibilityOutputProfileCatalog {
         emitsXboxGuideReport: false,
         evidence: .sourceBacked,
         consumerFamily: .sdlHIDAPI,
-        evidenceByConsumer: [
-          .sdlHIDAPI: .sourceBacked, .appleGameController: .sourceBacked,
-        ]
+        evidenceByConsumer: [.sdlHIDAPI: .sourceBacked, .appleGameController: .sourceBacked]
       )
     case .dualSense:
       return CompatibilityOutputProfile(
@@ -368,9 +361,7 @@ public enum CompatibilityOutputProfileCatalog {
         emitsXboxGuideReport: false,
         evidence: .sourceBacked,
         consumerFamily: .sdlHIDAPI,
-        evidenceByConsumer: [
-          .sdlHIDAPI: .sourceBacked, .appleGameController: .sourceBacked,
-        ]
+        evidenceByConsumer: [.sdlHIDAPI: .sourceBacked, .appleGameController: .sourceBacked]
       )
     case .switchPro:
       return CompatibilityOutputProfile(
@@ -385,9 +376,7 @@ public enum CompatibilityOutputProfileCatalog {
         emitsXboxGuideReport: false,
         evidence: .sourceBacked,
         consumerFamily: .sdlHIDAPI,
-        evidenceByConsumer: [
-          .sdlHIDAPI: .sourceBacked, .appleGameController: .sourceBacked,
-        ]
+        evidenceByConsumer: [.sdlHIDAPI: .sourceBacked, .appleGameController: .sourceBacked]
       )
     }
   }

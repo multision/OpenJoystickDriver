@@ -65,7 +65,8 @@ private final class UserSpaceDispatcherTestBackend: UserSpaceOutputDispatcher.Vi
 }
 
 struct UserSpaceOutputDispatcherLifecycleTests {
-  @Test func neutralRetryAfterRetirementDoesNotCreateAnotherDevice() async throws {
+  @Test
+  func neutralRetryAfterRetirementDoesNotCreateAnotherDevice() async throws {
     let creations = LockedCounter()
     let dispatcher = UserSpaceOutputDispatcher { _ in
       _ = creations.next()
@@ -81,7 +82,8 @@ struct UserSpaceOutputDispatcherLifecycleTests {
     await dispatcher.close()
   }
 
-  @Test func remappedReportsAndKeepaliveUseTheirOwnSuppressionGate() async throws {
+  @Test
+  func remappedReportsAndKeepaliveUseTheirOwnSuppressionGate() async throws {
     let backend = UserSpaceDispatcherTestBackend()
     let dispatcher = UserSpaceOutputDispatcher { _ in backend }
     let identifier = DeviceIdentifier(vendorID: 1, productID: 2)
@@ -109,12 +111,14 @@ struct UserSpaceOutputDispatcherLifecycleTests {
     await dispatcher.close()
   }
 
-  @Test func remappedStatePreservesSmallAxesAndDistinctShareThenReplacesHeldState() async throws {
+  @Test
+  func remappedStatePreservesSmallAxesAndDistinctShareThenReplacesHeldState() async throws {
     let backend = UserSpaceDispatcherTestBackend()
     let dispatcher = UserSpaceOutputDispatcher { _ in backend }
     let identifier = DeviceIdentifier(vendorID: 1, productID: 2)
     try await dispatcher.send(
-      RemappingGamepadState(buttons: [.share], axes: [.leftStickX: 0.01]), for: identifier
+      RemappingGamepadState(buttons: [.share], axes: [.leftStickX: 0.01]),
+      for: identifier
     )
     var expected = VirtualGamepadState()
     expected.buttons = 1 << 15
@@ -137,7 +141,8 @@ struct UserSpaceOutputDispatcherLifecycleTests {
     await dispatcher.close()
   }
 
-  @Test func remappingReceivesNativeDeliveryFailure() async {
+  @Test
+  func remappingReceivesNativeDeliveryFailure() async {
     let backend = UserSpaceDispatcherTestBackend(failsSend: true)
     let dispatcher = UserSpaceOutputDispatcher { _ in backend }
     await #expect(throws: UserSpaceDispatcherTestBackend.SendFailure.self) {
@@ -150,7 +155,8 @@ struct UserSpaceOutputDispatcherLifecycleTests {
     await dispatcher.close()
   }
 
-  @Test func activationCreatesAndNeutralizesEveryController() async throws {
+  @Test
+  func activationCreatesAndNeutralizesEveryController() async throws {
     let created = LockedBackends()
     let dispatcher = UserSpaceOutputDispatcher { _ in
       let backend = UserSpaceDispatcherTestBackend()
@@ -159,7 +165,7 @@ struct UserSpaceOutputDispatcherLifecycleTests {
     }
     let identifiers = [
       DeviceIdentifier(vendorID: 1, productID: 2), DeviceIdentifier(vendorID: 3, productID: 4),
-      DeviceIdentifier(vendorID: 5, productID: 6)
+      DeviceIdentifier(vendorID: 5, productID: 6),
     ]
 
     try await dispatcher.activate(for: identifiers)
@@ -170,7 +176,8 @@ struct UserSpaceOutputDispatcherLifecycleTests {
     await dispatcher.close()
   }
 
-  @Test func idleKeepalivePublishesRepeatInterruptReportsAndStateChanges() async throws {
+  @Test
+  func idleKeepalivePublishesRepeatInterruptReportsAndStateChanges() async throws {
     let backend = UserSpaceDispatcherTestBackend()
     let dispatcher = UserSpaceOutputDispatcher { _ in backend }
     let identifier = DeviceIdentifier(vendorID: 1, productID: 2)
@@ -195,10 +202,11 @@ struct UserSpaceOutputDispatcherLifecycleTests {
     #expect(backend.counts().close == 1)
   }
 
-  @Test func activationSendFailureClosesPartialDevicesForEveryFailurePosition() async {
+  @Test
+  func activationSendFailureClosesPartialDevicesForEveryFailurePosition() async {
     let identifiers = [
       DeviceIdentifier(vendorID: 1, productID: 2), DeviceIdentifier(vendorID: 3, productID: 4),
-      DeviceIdentifier(vendorID: 5, productID: 6)
+      DeviceIdentifier(vendorID: 5, productID: 6),
     ]
     for failureIndex in identifiers.indices {
       let created = LockedBackends()
@@ -221,10 +229,11 @@ struct UserSpaceOutputDispatcherLifecycleTests {
     }
   }
 
-  @Test func activationCreationFailureClosesPartialDevicesForEveryFailurePosition() async {
+  @Test
+  func activationCreationFailureClosesPartialDevicesForEveryFailurePosition() async {
     let identifiers = [
       DeviceIdentifier(vendorID: 1, productID: 2), DeviceIdentifier(vendorID: 3, productID: 4),
-      DeviceIdentifier(vendorID: 5, productID: 6)
+      DeviceIdentifier(vendorID: 5, productID: 6),
     ]
     for failureIndex in identifiers.indices {
       let created = LockedBackends()
@@ -247,7 +256,8 @@ struct UserSpaceOutputDispatcherLifecycleTests {
     }
   }
 
-  @Test func activationSurfacesNeutralReportSendFailure() async {
+  @Test
+  func activationSurfacesNeutralReportSendFailure() async {
     let backend = UserSpaceDispatcherTestBackend(failsSend: true)
     let dispatcher = UserSpaceOutputDispatcher { _ in backend }
 
@@ -260,7 +270,8 @@ struct UserSpaceOutputDispatcherLifecycleTests {
     } catch { Issue.record("Unexpected activation error") }
   }
 
-  @Test func closeDrainsCapturedDispatchBeforeReleasingBackend() async throws {
+  @Test
+  func closeDrainsCapturedDispatchBeforeReleasingBackend() async throws {
     let sendGate = UserSpaceDispatcherTestGate()
     let backend = UserSpaceDispatcherTestBackend(sendGate: sendGate)
     let dispatcher = UserSpaceOutputDispatcher { _ in backend }
@@ -285,7 +296,8 @@ struct UserSpaceOutputDispatcherLifecycleTests {
     #expect(dispatcher.status == "off")
   }
 
-  @Test func creationCompletionAfterCloseClosesUninstalledBackend() async {
+  @Test
+  func creationCompletionAfterCloseClosesUninstalledBackend() async {
     let creationGate = UserSpaceDispatcherTestGate()
     let backend = UserSpaceDispatcherTestBackend()
     let dispatcher = UserSpaceOutputDispatcher { _ in
@@ -310,7 +322,8 @@ struct UserSpaceOutputDispatcherLifecycleTests {
     #expect(backend.counts().close == 1)
   }
 
-  @Test func controllerStopRetiresBackendBeforeLifecycleCallback() async throws {
+  @Test
+  func controllerStopRetiresBackendBeforeLifecycleCallback() async throws {
     let backend = UserSpaceDispatcherTestBackend()
     let observedCloseCount = LockedCounter()
     let dispatcher = UserSpaceOutputDispatcher(
@@ -326,7 +339,8 @@ struct UserSpaceOutputDispatcherLifecycleTests {
     #expect(observedCloseCount.current() == 1)
   }
 
-  @Test func controllerStopWaitsForCancellationNoncooperativeCreationBeforeCallback() async {
+  @Test
+  func controllerStopWaitsForCancellationNoncooperativeCreationBeforeCallback() async {
     let creationGate = UserSpaceDispatcherTestGate()
     let backend = UserSpaceDispatcherTestBackend()
     let callbackCount = LockedCounter()

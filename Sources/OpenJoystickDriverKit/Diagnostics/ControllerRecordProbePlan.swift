@@ -101,8 +101,7 @@ public struct ControllerRecordProbePlan: Equatable, Sendable {
       postHandshakeSettleNanoseconds: settleNanoseconds
     )
     driver = parsedDriver
-    isWirelessReceiver =
-      parsedDriver == .xusb && document.protocolInfo.variant == "xbox360Wireless"
+    isWirelessReceiver = parsedDriver == .xusb && document.protocolInfo.variant == "xbox360Wireless"
     startupPackets = parsedStartupPackets
     keepAlivePolicy = parsedKeepAlivePolicy
   }
@@ -123,9 +122,10 @@ public struct ControllerRecordProbePlan: Equatable, Sendable {
     }
   }
 
-  private static func validateVariant(_ variant: String, for driver: ControllerRecordProbeDriver)
-    throws
-  {
+  private static func validateVariant(
+    _ variant: String,
+    for driver: ControllerRecordProbeDriver
+  ) throws {
     let supportedVariants: Set<String>
     switch driver {
     case .gip: supportedVariants = ["xboxOne", "unknown"]
@@ -138,9 +138,10 @@ public struct ControllerRecordProbePlan: Equatable, Sendable {
     }
   }
 
-  private static func parseStartupPackets(names: [String]?, driver: ControllerRecordProbeDriver)
-    throws -> [GIPStartupPacket]
-  {
+  private static func parseStartupPackets(
+    names: [String]?,
+    driver: ControllerRecordProbeDriver
+  ) throws -> [GIPStartupPacket] {
     switch driver {
     case .gip:
       let names = names ?? []
@@ -164,9 +165,10 @@ public struct ControllerRecordProbePlan: Equatable, Sendable {
     }
   }
 
-  private static func parseKeepAlivePolicy(enabled: Bool?, driver: ControllerRecordProbeDriver)
-    throws -> GIPKeepAlivePolicy
-  {
+  private static func parseKeepAlivePolicy(
+    enabled: Bool?,
+    driver: ControllerRecordProbeDriver
+  ) throws -> GIPKeepAlivePolicy {
     guard driver == .gip || enabled == nil else {
       throw ControllerRecordProbeError.invalidProfile(
         "protocol.keep_alive is only valid for GIP records"

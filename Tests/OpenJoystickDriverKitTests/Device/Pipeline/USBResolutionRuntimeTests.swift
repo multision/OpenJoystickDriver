@@ -4,7 +4,8 @@ import Testing
 @testable import OpenJoystickDriverKit
 
 struct USBResolutionRuntimeTests {
-  @Test func deviceManagerResolvedProfileReachesOpenStartupWriteAndFirstRead() async throws {
+  @Test
+  func deviceManagerResolvedProfileReachesOpenStartupWriteAndFirstRead() async throws {
     let identifier = DeviceIdentifier(vendorID: 0x045E, productID: 0x028E)
     let resolved = DeviceTransportProfile(
       inputEndpoint: 0x84,
@@ -47,7 +48,8 @@ struct USBResolutionRuntimeTests {
     await manager.stop()
   }
 
-  @Test func resolvedProfileReachesOpenHandshakeReadAndWrite() async throws {
+  @Test
+  func resolvedProfileReachesOpenHandshakeReadAndWrite() async throws {
     let identifier = DeviceIdentifier(vendorID: 0x045E, productID: 0x028E)
     let resolved = DeviceTransportProfile(
       inputEndpoint: 0x84,
@@ -104,9 +106,10 @@ private actor USBRuntimeRecordingProvider: USBTransportProvider {
 
   func devices() -> [USBTransportDevice] { [] }
 
-  func open(_ device: USBTransportDevice, options: USBTransportOpenOptions)
-    -> any USBTransportSession
-  {
+  func open(
+    _ device: USBTransportDevice,
+    options: USBTransportOpenOptions
+  ) -> any USBTransportSession {
     self.options = options
     return session
   }
@@ -132,13 +135,15 @@ private actor USBManagerResolutionProvider: USBTransportProvider {
 
   func devices() -> [USBTransportDevice] { [device] }
 
-  func resolveTransportProfile(for device: USBTransportDevice, configured: DeviceTransportProfile)
-    -> DeviceTransportProfile
-  { resolvedProfile }
+  func resolveTransportProfile(
+    for device: USBTransportDevice,
+    configured: DeviceTransportProfile
+  ) -> DeviceTransportProfile { resolvedProfile }
 
-  func open(_ device: USBTransportDevice, options: USBTransportOpenOptions)
-    -> any USBTransportSession
-  {
+  func open(
+    _ device: USBTransportDevice,
+    options: USBTransportOpenOptions
+  ) -> any USBTransportSession {
     self.options = options
     didOpen = true
     openContinuation?.resume()

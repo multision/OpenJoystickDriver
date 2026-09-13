@@ -73,8 +73,7 @@ enum SonySensorSamples {
     calibration: SonyMotionCalibration = .nominal
   ) -> [ControllerEvent] {
     guard bytes.count >= 40 else { return [] }
-    let counter = UInt32(unsigned16(bytes, at: 27))
-      | (UInt32(unsigned16(bytes, at: 29)) << 16)
+    let counter = UInt32(unsigned16(bytes, at: 27)) | (UInt32(unsigned16(bytes, at: 29)) << 16)
     let timestamp = clock.timestamp(counter)
     return [
       motion(bytes, at: 15, timestamp: timestamp, calibration: calibration),
@@ -87,7 +86,7 @@ enum SonySensorSamples {
           height: 1080,
           contacts: contacts(bytes, at: 32)
         )
-      )
+      ),
     ]
   }
 

@@ -72,11 +72,12 @@ public final class SwitchProParser: InputParser, HIDStartupOutputReportProvider,
   }
 
   public func hidStartupReports() -> [PhysicalHIDOutputReport] {
-    let prefix = layout == .pro
+    let prefix =
+      layout == .pro
       ? [usbCommand(0x02), usbCommand(0x03), usbCommand(0x02), usbCommand(0x04)] : []
     return prefix + [
       subcommand(0x03, data: [0x30]), subcommand(0x40, data: [0x01]),
-      subcommand(0x48, data: [0x01])
+      subcommand(0x48, data: [0x01]),
     ] + motionCalibrationRequests()
   }
 
@@ -86,7 +87,7 @@ public final class SwitchProParser: InputParser, HIDStartupOutputReportProvider,
     case "Bluetooth":
       return [
         subcommand(0x03, data: [0x30]), subcommand(0x40, data: [0x01]),
-        subcommand(0x48, data: [0x01])
+        subcommand(0x48, data: [0x01]),
       ] + motionCalibrationRequests()
     default: return []
     }
@@ -96,9 +97,12 @@ public final class SwitchProParser: InputParser, HIDStartupOutputReportProvider,
     transport == "Bluetooth" ? 60_000_000 : 20_000_000
   }
 
-  public func physicalRumbleReport(left: UInt8, right: UInt8, lt _: UInt8, rt _: UInt8)
-    -> PhysicalHIDOutputReport
-  {
+  public func physicalRumbleReport(
+    left: UInt8,
+    right: UInt8,
+    lt _: UInt8,
+    rt _: UInt8
+  ) -> PhysicalHIDOutputReport {
     physicalRumbleData =
       SwitchProRumbleCodec.encode(intensity: layout == .rightJoyCon ? 0 : left)
       + SwitchProRumbleCodec.encode(intensity: layout == .leftJoyCon ? 0 : right)
@@ -109,11 +113,11 @@ public final class SwitchProParser: InputParser, HIDStartupOutputReportProvider,
     return PhysicalHIDOutputReport(reportID: 0x10, bytes: bytes)
   }
 
-  public func physicalPlayerIndicatorReport(_ indicator: PhysicalPlayerIndicator)
-    -> PhysicalHIDOutputReport
-  {
+  public func physicalPlayerIndicatorReport(
+    _ indicator: PhysicalPlayerIndicator
+  ) -> PhysicalHIDOutputReport {
     let patterns: [PhysicalPlayerIndicator: UInt8] = [
-      .off: 0x00, .player1: 0x01, .player2: 0x03, .player3: 0x07, .player4: 0x0F
+      .off: 0x00, .player1: 0x01, .player2: 0x03, .player3: 0x07, .player4: 0x0F,
     ]
     return subcommand(0x30, data: [patterns[indicator] ?? 0])
   }
@@ -147,9 +151,14 @@ public final class SwitchProParser: InputParser, HIDStartupOutputReportProvider,
     events.append(contentsOf: parseDpad(buttons))
     events.append(contentsOf: parseSticks(left: left, right: right))
 
-    events.append(contentsOf: sensorSamples.decode(
-      bytes, receivedAt: receivedAtNanoseconds, layout: layout, calibration: motionCalibration
-    ))
+    events.append(
+      contentsOf: sensorSamples.decode(
+        bytes,
+        receivedAt: receivedAtNanoseconds,
+        layout: layout,
+        calibration: motionCalibration
+      )
+    )
     prevButtons = buttons
     prevDpad = buttons & 0x000F_0000
     prevLX = left.x
@@ -174,9 +183,12 @@ public final class SwitchProParser: InputParser, HIDStartupOutputReportProvider,
   public func pendingHIDStartupReports() -> [PhysicalHIDOutputReport] {
     pendingMotionCalibration.sorted().map { address in
       let length: UInt8 = address == 0x6020 ? 24 : 20
-      return subcommand(0x10, data: [
-        UInt8(truncatingIfNeeded: address), UInt8(truncatingIfNeeded: address >> 8), 0, 0, length
-      ])
+      return subcommand(
+        0x10,
+        data: [
+          UInt8(truncatingIfNeeded: address), UInt8(truncatingIfNeeded: address >> 8), 0, 0, length,
+        ]
+      )
     }
   }
 
@@ -187,10 +199,10 @@ public final class SwitchProParser: InputParser, HIDStartupOutputReportProvider,
   }
 
   private func consumeMotionCalibrationReply(_ bytes: [UInt8]) {
-    guard bytes.count >= 20, bytes[13] & 0x80 != 0, bytes[14] == 0x10
-    else { return }
-    let address = UInt32(bytes[15]) | (UInt32(bytes[16]) << 8)
-      | (UInt32(bytes[17]) << 16) | (UInt32(bytes[18]) << 24)
+    guard bytes.count >= 20, bytes[13] & 0x80 != 0, bytes[14] == 0x10 else { return }
+    let address =
+      UInt32(bytes[15]) | (UInt32(bytes[16]) << 8) | (UInt32(bytes[17]) << 16)
+      | (UInt32(bytes[18]) << 24)
     guard pendingMotionCalibration.contains(address) else { return }
     let length = address == 0x6020 ? 24 : 20
     guard Int(bytes[19]) == length, bytes.count >= 20 + length else { return }
@@ -205,9 +217,10 @@ public final class SwitchProParser: InputParser, HIDStartupOutputReportProvider,
     guard let factoryMotionBytes,
       let factory = NintendoMotionCalibration.factory(factoryMotionBytes)
     else { return }
-    let calibrated = userMotionBytes.flatMap {
-      NintendoMotionCalibration.factory(factoryMotionBytes, userOffsets: $0)
-    } ?? factory
+    let calibrated =
+      userMotionBytes.flatMap {
+        NintendoMotionCalibration.factory(factoryMotionBytes, userOffsets: $0)
+      } ?? factory
     motionCalibration = calibrated.installed(after: motionCalibration)
   }
 
@@ -241,7 +254,7 @@ public final class SwitchProParser: InputParser, HIDStartupOutputReportProvider,
         (0x0040_0000, .leftBumper), (0x0000_0040, .rightBumper), (0x0080_0000, .l2Digital),
         (0x0000_0080, .r2Digital), (0x0000_0100, .back), (0x0000_0200, .start),
         (0x0000_0800, .leftStick), (0x0000_0400, .rightStick), (0x0000_1000, .guide),
-        (0x0000_2000, .share)
+        (0x0000_2000, .share),
       ]
     )
   }
@@ -256,9 +269,10 @@ public final class SwitchProParser: InputParser, HIDStartupOutputReportProvider,
     return [.dpadChanged(mapDpad(up: up, right: right, down: down, left: left))]
   }
 
-  private func parseSticks(left: (x: UInt16, y: UInt16), right: (x: UInt16, y: UInt16))
-    -> [ControllerEvent]
-  {
+  private func parseSticks(
+    left: (x: UInt16, y: UInt16),
+    right: (x: UInt16, y: UInt16)
+  ) -> [ControllerEvent] {
     var events: [ControllerEvent] = []
     if layout != .rightJoyCon, left.x != prevLX || left.y != prevLY {
       events.append(.leftStickChanged(x: normalizeStick(left.x), y: -normalizeStick(left.y)))
@@ -269,9 +283,11 @@ public final class SwitchProParser: InputParser, HIDStartupOutputReportProvider,
     return events
   }
 
-  private func diffButtons(prev: UInt32, curr: UInt32, mapping: [(UInt32, Button)])
-    -> [ControllerEvent]
-  {
+  private func diffButtons(
+    prev: UInt32,
+    curr: UInt32,
+    mapping: [(UInt32, Button)]
+  ) -> [ControllerEvent] {
     var events: [ControllerEvent] = []
     for (mask, button) in mapping {
       let wasPressed = (prev & mask) != 0

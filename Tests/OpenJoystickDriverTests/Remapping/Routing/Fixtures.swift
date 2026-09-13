@@ -22,8 +22,7 @@ final class RemappingRouterRecorder: @unchecked Sendable {
 }
 
 final class RemappingRouterCompatibility: OutputDispatcher, ControllerLifecycleListener,
-  RemappingGamepadSink, RemappingGamepadOutputControlling,
-  @unchecked Sendable
+  RemappingGamepadSink, RemappingGamepadOutputControlling, @unchecked Sendable
 {
   private let lock = NSLock()
   private let recorder: RemappingRouterRecorder
@@ -284,9 +283,13 @@ struct RemappingRouterHarness {
   }
 }
 
-func remappingRouterDevice(_ location: UInt32, vendorID: UInt16 = 1118, productID: UInt16 = 654)
-  -> DeviceIdentifier
-{ DeviceIdentifier(vendorID: vendorID, productID: productID, locationID: location) }
+func remappingRouterDevice(
+  _ location: UInt32,
+  vendorID: UInt16 = 1118,
+  productID: UInt16 = 654
+) -> DeviceIdentifier {
+  DeviceIdentifier(vendorID: vendorID, productID: productID, locationID: location)
+}
 
 func remappingRouterProfile(
   id: UUID = UUID(),

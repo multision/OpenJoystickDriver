@@ -5,14 +5,16 @@ import Testing
 struct RemappingTransformTests {
   @Test(arguments: [
     (RemappingResponseCurve.linear, 0.5), (RemappingResponseCurve.easeIn, 0.25),
-    (RemappingResponseCurve.easeOut, 0.75), (RemappingResponseCurve.smoothStep, 0.5)
-  ]) func responseCurvesAreAppliedAfterDeadzone(curve: RemappingResponseCurve, expected: Double) {
+    (RemappingResponseCurve.easeOut, 0.75), (RemappingResponseCurve.smoothStep, 0.5),
+  ])
+  func responseCurvesAreAppliedAfterDeadzone(curve: RemappingResponseCurve, expected: Double) {
     let tuning = RemappingAxisTuning(deadzone: 0, gain: 1, responseCurve: curve)
 
     #expect(RemappingTransform.value(0.5, tuning: tuning) == expected)
   }
 
-  @Test func deadzoneGainInversionAndBoundsComposeInOrder() {
+  @Test
+  func deadzoneGainInversionAndBoundsComposeInOrder() {
     let tuning = RemappingAxisTuning(deadzone: 0.2, gain: 3, inverted: true, responseCurve: .linear)
 
     #expect(abs(RemappingTransform.value(0.2, tuning: tuning)) < 0.000_001)

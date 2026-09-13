@@ -3,7 +3,8 @@ import Testing
 @testable import OpenJoystickDriverKit
 
 struct GyroTrackballTests {
-  @Test func defaultsAndRoundTrip() throws {
+  @Test
+  func defaultsAndRoundTrip() throws {
     let source = RemappingSource.button(.south)
     let trackball = RemappingGyroTrackball(source: source, axes: .yaw, consumesSource: false)
     let output = RemappingGyroOutput(mode: .mouse, trackball: trackball)
@@ -18,15 +19,16 @@ struct GyroTrackballTests {
     #expect(decoded.consumesSource)
   }
 
-  @Test func rejectsContinuousSourceAndInvalidDecay() {
+  @Test
+  func rejectsContinuousSourceAndInvalidDecay() {
     #expect(throws: RemappingGyroOutputError.self) {
       try RemappingGyroTrackball(source: .axis(.leftStickX)).validate()
     }
     for decay in [-1, Double.nan, Double.infinity, 1001] {
       #expect(throws: RemappingGyroOutputError.self) {
-        try RemappingGyroOutput(trackball: RemappingGyroTrackball(
-          source: .button(.south), decayHalvingsPerSecond: decay
-        )).validate()
+        try RemappingGyroOutput(
+          trackball: RemappingGyroTrackball(source: .button(.south), decayHalvingsPerSecond: decay)
+        ).validate()
       }
     }
   }

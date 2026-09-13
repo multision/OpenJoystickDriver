@@ -4,8 +4,10 @@ import Testing
 
 @testable import OpenJoystickDriver
 
-@Suite struct NotificationTests {
-  @Test func prefersApplicationIconOverTemplateSymbol() {
+@Suite
+struct NotificationTests {
+  @Test
+  func prefersApplicationIconOverTemplateSymbol() {
     let representation = NSBitmapImageRep(
       bitmapDataPlanes: nil,
       pixelsWide: 32,
@@ -28,7 +30,8 @@ import Testing
     #expect(image?.size == MenuBarStatusItemImage.statusItemSize)
   }
 
-  @Test func fallsBackToTemplateSymbolWhenApplicationIconIsMissing() {
+  @Test
+  func fallsBackToTemplateSymbolWhenApplicationIconIsMissing() {
     let image = MenuBarStatusItemImage.make(
       applicationIcon: nil,
       accessibilityDescription: "OpenJoystickDriver"
@@ -36,7 +39,9 @@ import Testing
     #expect(image?.isTemplate == true)
   }
 
-  @Test @MainActor func permissionModelPublishesTheResolvedAuthorizationState() async {
+  @Test
+  @MainActor
+  func permissionModelPublishesTheResolvedAuthorizationState() async {
     let authorization = NotificationPermissionAuthorizationStub(state: .allowed)
     let model = NotificationPermissionModel(authorization: authorization)
 
@@ -46,7 +51,9 @@ import Testing
     #expect(model.state == .allowed)
   }
 
-  @Test @MainActor func permissionModelPublishesBannerAndSoundSettings() async {
+  @Test
+  @MainActor
+  func permissionModelPublishesBannerAndSoundSettings() async {
     let authorization = NotificationPermissionAuthorizationStub(
       state: .allowed,
       alertStyle: .none,
@@ -61,7 +68,8 @@ import Testing
     #expect(model.settings.soundsEnabled == false)
   }
 
-  @Test func detectsControllerAndProfileTransitionsWithoutBootNoise() {
+  @Test
+  func detectsControllerAndProfileTransitionsWithoutBootNoise() {
     let before = RuntimeNotificationSnapshot(
       controllers: ["old": "Old Controller"],
       activeProfiles: ["1:2": "Desktop"]
@@ -74,12 +82,13 @@ import Testing
     #expect(
       RuntimeNotificationDiff.events(from: before, to: after) == [
         .controllerConnected("New Controller"), .controllerDisconnected("Old Controller"),
-        .activeProfileChanged(from: "Desktop", to: "Racing")
+        .activeProfileChanged(from: "Desktop", to: "Racing"),
       ]
     )
   }
 
-  @Test func detectsProfileDeactivation() {
+  @Test
+  func detectsProfileDeactivation() {
     let before = RuntimeNotificationSnapshot(controllers: [:], activeProfiles: ["1:2": "Desktop"])
     let after = RuntimeNotificationSnapshot(controllers: [:], activeProfiles: [:])
 
@@ -90,7 +99,8 @@ import Testing
     )
   }
 
-  @Test func unavailableSourceDoesNotBlockOrInventEventsForTheOtherSource() {
+  @Test
+  func unavailableSourceDoesNotBlockOrInventEventsForTheOtherSource() {
     let before = RuntimeNotificationSnapshot(
       controllers: ["old": "Old Controller"],
       activeProfiles: nil
@@ -102,12 +112,14 @@ import Testing
 
     #expect(
       RuntimeNotificationDiff.events(from: before, to: after) == [
-        .controllerConnected("New Controller"), .controllerDisconnected("Old Controller")
+        .controllerConnected("New Controller"), .controllerDisconnected("Old Controller"),
       ]
     )
   }
 
-  @Test @MainActor func monitorSuppressesBootNoiseAndHonorsPreferences() throws {
+  @Test
+  @MainActor
+  func monitorSuppressesBootNoiseAndHonorsPreferences() throws {
     let suiteName = "NotificationTests.\(UUID().uuidString)"
     let defaults = try #require(UserDefaults(suiteName: suiteName))
     defer { defaults.removePersistentDomain(forName: suiteName) }
@@ -168,7 +180,8 @@ private struct NotificationPermissionAuthorizationStub: NotificationAuthorizatio
     )
   }
 
-  @MainActor func openSystemSettings() {}
+  @MainActor
+  func openSystemSettings() {}
 }
 
 private final class NotificationDeliverySpy: RuntimeNotificationDelivering {

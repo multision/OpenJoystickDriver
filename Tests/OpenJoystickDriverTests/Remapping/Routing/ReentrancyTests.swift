@@ -4,8 +4,10 @@ import Testing
 
 @testable import OpenJoystickDriver
 
-@Suite(.serialized) struct RemappingRouterReentrancyTests {
-  @Test func beginWaitsForCompatibilityDispatchAdmittedBeforeSuppression() async throws {
+@Suite(.serialized)
+struct RemappingRouterReentrancyTests {
+  @Test
+  func beginWaitsForCompatibilityDispatchAdmittedBeforeSuppression() async throws {
     let gate = RoutingCheckpointGate(pausing: .dispatch)
     let harness = try await RemappingRouterHarness.make(
       profile: remappingRouterProfile(applicationScope: .global),
@@ -48,7 +50,7 @@ import Testing
     let transaction = try await begin.value
     #expect(
       harness.recorder.snapshot() == [
-        .compatibility([.buttonPressed(.b)], compatibility), .compatibilityStop(compatibility)
+        .compatibility([.buttonPressed(.b)], compatibility), .compatibilityStop(compatibility),
       ]
     )
 
@@ -57,7 +59,8 @@ import Testing
     try await harness.router.rollBackProfileTransaction(transaction)
   }
 
-  @Test func transactionAdmissionStopsAlreadySuspendedCompatibilityDispatch() async throws {
+  @Test
+  func transactionAdmissionStopsAlreadySuspendedCompatibilityDispatch() async throws {
     let gate = RoutingCheckpointGate(pausing: .dispatch)
     let checkpointHook: @Sendable () async -> Void = { await gate.checkpoint(.dispatch) }
     let harness = try await RemappingRouterHarness.make(
@@ -87,7 +90,8 @@ import Testing
     try await harness.router.rollBackProfileTransaction(transaction)
   }
 
-  @Test func transactionAdmissionClosesQueuedWindowAfterOuterApply() async throws {
+  @Test
+  func transactionAdmissionClosesQueuedWindowAfterOuterApply() async throws {
     let gate = RoutingCheckpointGate(pausing: .apply)
     let harness = try await makeHarness(gate: gate)
     defer {
@@ -113,7 +117,8 @@ import Testing
     try await harness.router.rollBackProfileTransaction(transaction)
   }
 
-  @Test func transactionAdmissionInvalidatesDispatchPausedBeforeEngineHop() async throws {
+  @Test
+  func transactionAdmissionInvalidatesDispatchPausedBeforeEngineHop() async throws {
     let gate = RoutingCheckpointGate(pausing: .dispatch)
     let harness = try await makeHarness(gate: gate)
     defer {
@@ -139,7 +144,8 @@ import Testing
     try await harness.router.rollBackProfileTransaction(transaction)
   }
 
-  @Test func transactionAdmissionInvalidatesTickPausedBeforeEngineHop() async throws {
+  @Test
+  func transactionAdmissionInvalidatesTickPausedBeforeEngineHop() async throws {
     let gate = RoutingCheckpointGate(pausing: .tick)
     let harness = try await makeHarness(
       gate: gate,
@@ -169,7 +175,8 @@ import Testing
     try await harness.router.rollBackProfileTransaction(transaction)
   }
 
-  @Test func shutdownInvalidatesDispatchPausedBeforeEngineHop() async throws {
+  @Test
+  func shutdownInvalidatesDispatchPausedBeforeEngineHop() async throws {
     let gate = RoutingCheckpointGate(pausing: .dispatch)
     let harness = try await makeHarness(gate: gate)
     defer {
@@ -198,7 +205,8 @@ import Testing
     }
   }
 
-  @Test func shutdownWaitsForCompatibilityDispatchAdmittedBeforeSuppression() async throws {
+  @Test
+  func shutdownWaitsForCompatibilityDispatchAdmittedBeforeSuppression() async throws {
     let gate = RoutingCheckpointGate(pausing: .dispatch)
     let harness = try await RemappingRouterHarness.make(
       profile: remappingRouterProfile(applicationScope: .global),
@@ -232,7 +240,7 @@ import Testing
     try await shutdown.value
     #expect(
       harness.recorder.snapshot() == [
-        .compatibility([.buttonPressed(.b)], compatibility), .compatibilityStop(compatibility)
+        .compatibility([.buttonPressed(.b)], compatibility), .compatibilityStop(compatibility),
       ]
     )
     await #expect(throws: RemappingOutputRoutingError.shutDown) {
@@ -241,7 +249,8 @@ import Testing
     #expect(harness.recorder.snapshot().count == 2)
   }
 
-  @Test func concurrentShutdownCallersJoinOneInProgressCleanup() async throws {
+  @Test
+  func concurrentShutdownCallersJoinOneInProgressCleanup() async throws {
     let sink = BlockingReleaseSink()
     let harness = try await RemappingRouterHarness.make(
       profile: remappingRouterProfile(applicationScope: .global),
@@ -275,7 +284,8 @@ import Testing
     #expect(sink.actions == [.keyDown(.space), .keyUp(.space)])
   }
 
-  @Test func failedTerminalCleanupRetriesWithoutReopeningOutput() async throws {
+  @Test
+  func failedTerminalCleanupRetriesWithoutReopeningOutput() async throws {
     let sink = TransientTerminalFailureSink(failingCalls: [2, 3])
     let harness = try await RemappingRouterHarness.make(
       profile: remappingRouterProfile(applicationScope: .global),
@@ -332,7 +342,8 @@ import Testing
     #expect(harness.compatibility.suppressOutput)
   }
 
-  @Test func shutdownPreventsPausedRecoveryFromInstallingOrReopeningRoutes() async throws {
+  @Test
+  func shutdownPreventsPausedRecoveryFromInstallingOrReopeningRoutes() async throws {
     let gate = RoutingCheckpointGate(pausing: .installRoutes)
     let harness = try await makeHarness(gate: gate)
     defer {

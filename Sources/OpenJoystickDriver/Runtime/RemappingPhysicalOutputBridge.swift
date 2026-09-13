@@ -5,9 +5,7 @@ final class RemappingPhysicalOutputBridge: RemappingPhysicalOutputSink, @uncheck
   private weak var manager: DeviceManager?
   private let lock = NSLock()
 
-  func attach(_ manager: DeviceManager) {
-    lock.withLock { self.manager = manager }
-  }
+  func attach(_ manager: DeviceManager) { lock.withLock { self.manager = manager } }
 
   func set(
     _ output: RemappingPhysicalOutput,
@@ -18,14 +16,9 @@ final class RemappingPhysicalOutputBridge: RemappingPhysicalOutputSink, @uncheck
     guard let manager = lock.withLock({ manager }) else {
       throw RemappingEventEngineError.sinkUnavailable
     }
-    guard await manager.setMappingPhysicalOutput(
-      output,
-      active: active,
-      owner: owner,
-      for: identifier
-    ) else {
-      throw RemappingEventEngineError.sinkUnavailable
-    }
+    guard
+      await manager.setMappingPhysicalOutput(output, active: active, owner: owner, for: identifier)
+    else { throw RemappingEventEngineError.sinkUnavailable }
   }
 
   func releaseAll(for identifier: DeviceIdentifier) async throws {

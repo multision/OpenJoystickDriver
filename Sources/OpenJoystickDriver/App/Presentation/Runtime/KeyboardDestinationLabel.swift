@@ -11,17 +11,17 @@
 
     var body: some View {
       switch destination {
-      case .keyboard(let key, let modifiers):
-        keyboardRow(key: key, modifiers: modifiers)
+      case .keyboard(let key, let modifiers): keyboardRow(key: key, modifiers: modifiers)
       case .mouseButton, .mouseMovement, .scroll, .gamepadButton, .gamepadDpad, .gamepadAxis,
         .physical:
         Text(RuntimePresentation.destinationLabel(destination))
       }
     }
 
-    private func keyboardRow(key: RemappingKeyboardKey, modifiers: Set<RemappingKeyModifier>)
-      -> some View
-    {
+    private func keyboardRow(
+      key: RemappingKeyboardKey,
+      modifiers: Set<RemappingKeyModifier>
+    ) -> some View {
       let ordered = modifiers.sorted { $0.rawValue < $1.rawValue }
       return HStack(spacing: 4) {
         ForEach(ordered, id: \.self) { modifier in
@@ -37,7 +37,8 @@
       )
     }
 
-    @ViewBuilder private func keyGlyph(_ key: RemappingKeyboardKey) -> some View {
+    @ViewBuilder
+    private func keyGlyph(_ key: RemappingKeyboardKey) -> some View {
       if let name = RuntimePresentation.keyboardSystemSymbolName(key) {
         OJDSystemSymbol(
           name: name,
