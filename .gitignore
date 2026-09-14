@@ -87,6 +87,8 @@ compile_commands.json
 
 .Python
 build/
+!Scripts/Build/
+!Scripts/Build/**
 dist/
 downloads/
 eggs/

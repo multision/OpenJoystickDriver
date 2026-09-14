@@ -21,6 +21,9 @@ class DispatcherTests(unittest.TestCase):
     def test_help_route_succeeds(self) -> None:
         self.assertEqual(self.run_ojd("--help").returncode, 0)
 
+    def test_build_help_route_succeeds(self) -> None:
+        self.assertEqual(self.run_ojd("build", "help").returncode, 0)
+
     def test_unknown_route_fails_with_usage_status(self) -> None:
         self.assertEqual(self.run_ojd("unknown").returncode, 2)
 
