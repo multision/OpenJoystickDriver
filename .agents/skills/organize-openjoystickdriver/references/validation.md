@@ -1,11 +1,10 @@
 # Topology validation
 
-From the repository root, use the canonical dispatcher path; `ojd` is not a
-separately installed executable:
+From the repository root, inspect the SwiftPM model and run standard tools
+directly:
 
 ```sh
-./scripts/ojd check swift-structure
-./scripts/ojd check scripts
+just lint
 swift package describe --type json
 ```
 

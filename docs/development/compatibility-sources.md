@@ -1,78 +1,73 @@
 # Compatibility source notes
 
-These projects informed OJD architecture. They are not runtime dependencies or
-support evidence. Snapshots of the relevant SDL discussions live under
-`docs/external/sdl/`.
+External projects are design or protocol evidence, not runtime dependencies and
+not proof that a device works on macOS. Relevant archived SDL discussions live
+under `docs/external/sdl/`.
 
-## Sources
+## Admission policy
 
-### InputFusion
+- Select Flydigi, GameSir, XID, XUSB, GIP, or another specialized parser only
+  for an exact cataloged VID/PID, transport, and protocol variant.
+- Keep uncataloged standards-compliant HID descriptor-driven and Generic HID.
+  Never infer a vendor protocol from a brand, vendor ID, or nearby product ID.
+- A historical device list can corroborate an identity but cannot admit it.
+  `0E4C:3240` and `FFFF:FFFF` remain unadmitted.
+- Derive physical output capabilities from the selected parser. Protocol byte
+  fixtures establish source-backed behavior; hardware verification requires a
+  matching physical run.
 
-Separates physical input, mapping, and virtual output. OJD follows the same boundary with `DeviceManager`, protocol parsers, normalized `ControllerEvent` values, and output dispatchers.
+## Pinned XID and XUSB evidence
 
-### Xb2XInput
+- [Xbox360Controller `9aa224a`](https://github.com/xdccrlz/Xbox360Controller/tree/9aa224a89732cc42d2955762b47d8a5a281de75f):
+  [`Controller.cpp`](https://github.com/xdccrlz/Xbox360Controller/blob/9aa224a89732cc42d2955762b47d8a5a281de75f/360Controller/Controller.cpp),
+  [`ControlStruct.h`](https://github.com/xdccrlz/Xbox360Controller/blob/9aa224a89732cc42d2955762b47d8a5a281de75f/360Controller/ControlStruct.h),
+  and [`LICENSE`](https://github.com/xdccrlz/Xbox360Controller/blob/9aa224a89732cc42d2955762b47d8a5a281de75f/LICENSE)
+  are the licensed implementation reference for original-Xbox input and rumble
+  framing. OJD's encoder is independent and covered by byte fixtures.
+- [Xb2XInput `8f4187a`](https://github.com/emoose/Xb2XInput/tree/8f4187a23ecd834961151fb68b7a17334820986b):
+  [`README.md`](https://github.com/emoose/Xb2XInput/blob/8f4187a23ecd834961151fb68b7a17334820986b/README.md),
+  [`XboxController.hpp`](https://github.com/emoose/Xb2XInput/blob/8f4187a23ecd834961151fb68b7a17334820986b/Xb2XInput/XboxController.hpp),
+  and [`XboxController.cpp`](https://github.com/emoose/Xb2XInput/blob/8f4187a23ecd834961151fb68b7a17334820986b/Xb2XInput/XboxController.cpp)
+  corroborate XID framing and historical IDs only; they are not implementation
+  or admission authority.
+- [ViGEmBus `d986e1d`](https://github.com/nefarius/ViGEmBus/tree/d986e1d93708ec9b11049542fa6027272cce716c):
+  [`README.md`](https://github.com/nefarius/ViGEmBus/blob/d986e1d93708ec9b11049542fa6027272cce716c/README.md)
+  and [`sys/XusbPdo.cpp`](https://github.com/nefarius/ViGEmBus/blob/d986e1d93708ec9b11049542fa6027272cce716c/sys/XusbPdo.cpp)
+  describe a virtual XUSB target, not physical admission.
+- [VDX `fb11124`](https://github.com/nefarius/VDX/tree/fb11124017f499adcc7c129822aef9bec80d3174):
+  [`README.md`](https://github.com/nefarius/VDX/blob/fb11124017f499adcc7c129822aef9bec80d3174/README.md)
+  and [`src/Main.cpp`](https://github.com/nefarius/VDX/blob/fb11124017f499adcc7c129822aef9bec80d3174/src/Main.cpp)
+  demonstrate input mirroring to selected virtual output.
+- [XInputHooker `f31d644`](https://github.com/nefarius/XInputHooker/tree/f31d64470831ac39644dc088e632898afa4dd926):
+  [`README.md`](https://github.com/nefarius/XInputHooker/blob/f31d64470831ac39644dc088e632898afa4dd926/README.md),
+  [`XUSB.h`](https://github.com/nefarius/XInputHooker/blob/f31d64470831ac39644dc088e632898afa4dd926/XInputHooker/XUSB.h),
+  and [`XInputHooker.cpp`](https://github.com/nefarius/XInputHooker/blob/f31d64470831ac39644dc088e632898afa4dd926/XInputHooker/XInputHooker.cpp)
+  describe Windows XUSB discovery and IOCTL capture, not an OJD route.
 
-Shows why connection lifecycle, guide-button handling, and controller slots belong to the transport layer. OJD keeps those concerns out of generic mapping code.
+## Current evidence boundaries
 
-### xinput-gui
+- Pinned Linux `xpad.c`, `hid-playstation.c`, `hid-sony.c`,
+  `hid-nintendo.c`, and `hid-steam.c` establish protocol or identity facts, not
+  macOS descriptors, endpoints, TCC behavior, or hardware success.
+- GameSir `3537` records combine exact Linux identities with
+  [`gamesir-linux-tools`](https://github.com/broroeror/gamesir-linux-tools/blob/main/RESEARCH.md)
+  packet research. Shared Microsoft Bluetooth IDs are not attributed to GameSir
+  without exact captures.
+- [Issue 33](https://github.com/xsyetopz/OpenJoystickDriver/issues/33) verifies
+  SCUF Envision Pro `2E95:434D` report-6 core input only. It does not establish
+  extra buttons, paddles, output, or wireless behavior; `2E95:0504` stays GIP.
+- SDL HIDAPI and mappings inform consumer identity and button order only.
 
-Provides a useful model for explicit device and control-plane diagnostics. OJD exposes typed state through the CLI and application runtime instead of hiding application-service decisions.
+## Gates
 
-### DualShock4-emulator
+```bash
+./Scripts/ojd catalog regenerate --check
+./Scripts/ojd check profiles
+./Scripts/ojd check schemas
+./Scripts/ojd test parsers-macos14
+swift test
+```
 
-Keeps Sony report parsing separate from the virtual Xbox-facing surface. OJD uses protocol parsers for physical reports and compatibility profiles for consumer identity.
-
-### Gopher360
-
-Demonstrates that desktop keyboard or mouse translation is a separate product behavior. OJD keeps
-that path in the CoreGraphics remapping sink. The Accessibility request authorizes
-`IOHIDUserDevice` compatibility output; CoreGraphics post-event access authorizes keyboard, mouse,
-pointer, and scroll events.
-
-### Joypad OS
-
-Reinforces the difference between controller state, client routing, and output ownership. OJD uses one pipeline per physical controller and explicit output backends.
-
-### Linux input drivers
-
-`xpad.c`, `hid-playstation.c`, `hid-sony.c`, `hid-nintendo.c`, and `hid-steam.c` provide protocol and device evidence. Linux recognition does not prove macOS descriptors, endpoints, TCC behavior, or Apple GameController support.
-
-### GameSir family
-
-The authored `3537` catalog records use exact identities from Linux
-[`xpad.c`](https://github.com/torvalds/linux/blob/master/drivers/input/joystick/xpad.c)
-and the packet/register research in
-[`gamesir-linux-tools`](https://github.com/broroeror/gamesir-linux-tools/blob/main/RESEARCH.md).
-Those sources establish identities and protocol bytes, not successful OJD use
-on matching hardware. `3537:1004`, `100F`, and `1010` retain their imported
-Linux routes. Shared Microsoft Bluetooth identities `045E:02FD` and
-`045E:02FF` are deliberately not attributed to GameSir without an exact
-hardware capture.
-
-### SCUF Envision Pro
-
-[OpenJoystickDriver issue 33](https://github.com/xsyetopz/OpenJoystickDriver/issues/33)
-contains the wired `2E95:434D` descriptor and IOHID element observations used
-for its report-6 Generic HID layout. That hardware record verifies the mapped
-core inputs. It does not establish buttons 11–19, paddles, rumble, lighting, or
-wireless behavior, so those surfaces remain unclaimed. `2E95:0504` remains on
-its existing GIP route.
-
-### SDL
-
-SDL mappings and HIDAPI code show how consumer identity affects naming, button order, and rumble. OJD keeps consumer mappings in compatibility profiles and diagnostic tools rather than embedding application quirks in physical parsers.
-
-## Architecture decisions
-
-1. A physical device has one input owner and one pipeline.
-2. Parsers emit normalized state; compatibility profiles choose consumer identity.
-3. Physical output capabilities come from the active protocol parser.
-4. Unknown standard HID devices may use descriptor-driven input; vendor protocols need records.
-5. Duplicate physical and virtual devices are an ownership bug, not a mapping fix.
-6. Hardware claims require observed evidence for the named path.
-
-## Gates for new work
-
-- Before adding a transport or backend, record the device lifecycle, report framing, ownership rules, and failure behavior.
-- Before adding a spoof identity, record the exact descriptor, report bytes, and consumer that needs it.
-- Before advertising output, add protocol fixtures and a hardware plan.
+Before adding transport or output, record lifecycle, framing, ownership,
+failure behavior, protocol fixtures, and a separate hardware plan. Before
+adding a spoof identity, record the exact descriptor, report bytes, and consumer.

@@ -179,12 +179,11 @@ stable presentation errors. It does not expose socket paths, CLI text, or raw RP
 Run the repository gates relevant to the change:
 
 ```bash
-./scripts/ojd catalog regenerate --check
-./scripts/ojd check profiles
-./scripts/ojd check scripts
-./scripts/ojd check swift-structure
-./scripts/ojd lint
-./scripts/ojd check driverkit
+./Scripts/ojd catalog regenerate --check
+./Scripts/ojd check profiles
+just lint
+python3 -m unittest discover -s Tests/RepositoryScripts
+./Scripts/ojd check driverkit
 swift test
 ```
 

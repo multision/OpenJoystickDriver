@@ -8,12 +8,12 @@ inputs.
 
 Verify committed output:
 
-    ./scripts/ojd catalog regenerate --check
+    ./Scripts/ojd catalog regenerate --check
 
 Rewrite it after an intentional lock or override change:
 
-    ./scripts/ojd catalog regenerate --write
-    ./scripts/ojd check profiles
+    ./Scripts/ojd catalog regenerate --write
+    ./Scripts/ojd check profiles
 
 The generator downloads every locked Linux source and verifies each SHA-256. It parses the complete xpad device/initialization tables and supported HID registration tables, normalizes supported rows, applies explicit local overrides, and writes deterministic VID/PID paths.
 
@@ -27,7 +27,7 @@ Supported Linux inputs map as follows:
 - `XTYPE_XBOXONE` becomes GIP/xboxOne.
 - Known mapping macros become protocol.quirks.
 - Supported PlayStation, Sony, Nintendo, and Steam HID registrations become HID records from their driver tables and hid-ids.h.
-- Non-default xboxone_init_packets become protocol.startup_packets.
+- Non-default `xboxone_init_packets` become `protocol.startupPackets`.
 
 Protocol-default endpoints and startup packets are omitted. The pinned source
 revision and hashes remain in `ControllerSources.lock.json`; generated runtime
@@ -60,7 +60,7 @@ and Git history. It is deliberately not copied into runtime controller records.
 The lower-level importer remains available for inspecting another exact Linux
 revision without changing runtime data:
 
-    ./scripts/ojd catalog xpad --github-ref <full-commit> \
+    ./Scripts/ojd catalog xpad --github-ref <full-commit> \
       --vid 0x1532 --pid 0x0a29 --output-dir /tmp/ojd-xpad
 
 Its manifest belongs only to the temporary inspection output. The runtime tree

@@ -36,6 +36,10 @@ behavior in Kit and product behavior tests in their matching owners.
 
 ## Non-negotiables
 
+- Follow the single unversioned lower-camel JSON contract in
+  `Resources/Schemas/README.md`. Follow the exact-device specialized-protocol
+  admission policy in `docs/development/compatibility-sources.md`; uncataloged
+  standards-compliant HID remains descriptor-driven Generic HID.
 - Read `AGENTS.md`, `docs/development/source-topology.md`, and the relevant
   presentation source/test owner before editing. `$apple-design-hig` owns the
   platform guidance; this skill maps it to this product.
@@ -78,7 +82,7 @@ behavior in Kit and product behavior tests in their matching owners.
 ## Reference map
 
 | Need | Load |
-|---|---|
+| --- | --- |
 | Product presentation owners and nearest tests | `$organize-openjoystickdriver` |
 | Shared package, generated, and product boundary contract | `$maintain-openjoystickdriver` |
 | Product-only test and gate contract | `$test-openjoystickdriver` |

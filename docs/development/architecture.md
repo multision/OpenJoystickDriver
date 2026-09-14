@@ -130,7 +130,7 @@ observations, entitlement scope, and why an Apple personality list is not OJD's 
 
 Every DriverKit build generates a fresh native project under `.build/driverkit/generated/` and
 builds under `.build/driverkit/derived-data/`. Generated output is ephemeral and is never edited or
-committed. `./scripts/ojd check driverkit` checks the entitlement, personality, determinism,
+committed. `./Scripts/ojd check driverkit` checks the entitlement, personality, determinism,
 dependency direction, and an unsigned universal build.
 
 ## Process and command lifecycle

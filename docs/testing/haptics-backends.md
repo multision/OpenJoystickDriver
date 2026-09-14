@@ -1,30 +1,30 @@
 # Probe macOS haptics backends
 
-Use the isolated package under `tools/haptics-backend-probe` to distinguish
-three different output routes. Run one route at a time and record physical
-behavior before changing identities:
+Use the supported diagnostics routes to distinguish backend inventory,
+GameController haptics, SDL output, and direct physical rumble. Run one route at
+a time and record physical behavior before changing identities:
 
 ```bash
-swift build --package-path tools/haptics-backend-probe
-swift run --package-path tools/haptics-backend-probe HapticsBackendProbe try force-feedback
-swift run --package-path tools/haptics-backend-probe HapticsBackendProbe try gamecontroller --pulse
-swift run --package-path tools/haptics-backend-probe HapticsBackendProbe try sdl2-3
+./Scripts/ojd diagnose backends --seconds 5
+./Scripts/ojd diagnose gamecontroller --seconds 5 --rumble
+./Scripts/ojd diagnose sdl3 --seconds 5 --rumble
+./Scripts/ojd diagnose rumble-motors <vid> <pid>
 ```
 
-The `sdl2-3` route changes OJD to first-party Microsoft Xbox 360 Wired
+The SDL route can exercise OJD's first-party Microsoft Xbox 360 Wired
 `045E:028E` with the Xbox 360 HIDAPI descriptor/report format. OJD publishes it through CoreHID on macOS 15 and later and through
 `IOHIDUserDevice` on macOS 10.15 through 14. The probe uses the installed OJD
 CLI to change identities so its application-service protocol always matches
 the running installed app.
 
-The Force Feedback route is different. Apple's legacy Force Feedback API takes
-an IOKit HID service and reports whether that service implements its PID-style
-interface. A nonzero HID output-report size is only a raw-report candidate; it
-does not imply Force Feedback compatibility or physical rumble.
+The retired isolated probe also tested Apple's legacy Force Feedback API. Its
+dated observations remain below as evidence, but that unsupported executable is
+no longer a live route. A nonzero HID output-report size is only a raw-report
+candidate; it does not imply Force Feedback compatibility or physical rumble.
 
-The GameController route changes OJD to `apple-gamecontroller`, waits for the
-virtual HID replacement, and checks for a public `GCController.haptics` engine.
-CoreHID virtual-device access alone does not synthesize that engine.
+The GameController diagnostic checks the supported public controller and
+haptics path. CoreHID virtual-device access alone does not synthesize a public
+`GCController.haptics` engine.
 
 ## GameSir G7 SE observations
 

@@ -72,7 +72,7 @@ swift run OpenJoystickDriverHIDTool --usb-monitor --vid 0x045e --pid 0x0000 --le
 ```
 
 The tool reports the selected route. If a required DEXT service does not appear,
-capture `./scripts/ojd diagnose dext`; there is no interface-detach fallback.
+capture `./Scripts/ojd diagnose dext`; there is no interface-detach fallback.
 
 If the sweep finds an endpoint, repeat with that endpoint while pressing one control at a time:
 

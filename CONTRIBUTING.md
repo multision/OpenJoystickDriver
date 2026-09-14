@@ -5,8 +5,8 @@
 ```bash
 git clone https://github.com/xsyetopz/OpenJoystickDriver.git
 cd OpenJoystickDriver
-./scripts/ojd setup
-./scripts/ojd check all
+./Scripts/ojd setup
+just check
 ```
 
 Invoke the command you need and follow its native prompts. The dispatcher creates
@@ -16,18 +16,18 @@ command. Homebrew, Xcode, Apple-issued assets, credentials, system permissions,
 publication, destructive writes, and hardware actions retain their official or
 explicit authorization flows. CI never prompts or installs host software.
 
-The pre-commit hook runs `./scripts/ojd check fast` against the exact staged snapshot.
-The pre-push hook runs `./scripts/ojd check all` in an isolated worktree for each commit tip
+The pre-commit hook runs `just check-fast` against the exact staged snapshot.
+The pre-push hook runs `just check` in an isolated worktree for each commit tip
 being pushed. Run either recipe directly to perform the same checks manually.
 
-Signing, DriverKit, and packaging: `scripts/README.md`. Dev install:
-`./scripts/ojd build install dev`. Do not edit `.build/driverkit/generated/`.
+Signing, DriverKit, and packaging: `Scripts/README.md`. Dev install:
+`./Scripts/ojd build install dev`. Do not edit `.build/driverkit/generated/`.
 SwifterKit comes from `Package.resolved`. `OJD_USE_LOCAL_SWIFTERKIT=1` is
 local-only.
 
 ```bash
-./scripts/ojd diagnose record /tmp/controller-candidate.json --validate-only
-./scripts/ojd diagnose backends --seconds 5
+./Scripts/ojd diagnose record /tmp/controller-candidate.json --validate-only
+./Scripts/ojd diagnose backends --seconds 5
 /Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver \
   --headless diagnose report
 ```
@@ -48,8 +48,8 @@ Open tasks: [issues](https://github.com/xsyetopz/OpenJoystickDriver/issues).
    display names, no protocol defaults. Then:
 
    ```bash
-   ./scripts/ojd catalog regenerate --write
-   ./scripts/ojd catalog regenerate --check
+   ./Scripts/ojd catalog regenerate --write
+   ./Scripts/ojd catalog regenerate --check
    ```
 
    Source rules: `docs/development/xpad-import.md`.
@@ -59,8 +59,8 @@ Open tasks: [issues](https://github.com/xsyetopz/OpenJoystickDriver/issues).
 4. Check:
 
    ```bash
-   ./scripts/ojd check profiles
-   ./scripts/ojd lint
+   ./Scripts/ojd check profiles
+   swiftlint lint --no-cache --strict
    swift test
    ```
 
@@ -70,8 +70,8 @@ Toolchain: `.swift-version` and `Package.swift`. Warnings are errors. Justify
 `nonisolated(unsafe)` on the same line.
 
 Style: `.swift-format` and `.swiftlint.yml`. Do not copy them here. Do not add
-SwiftLint rules that fight the formatter. `./scripts/ojd lint` is SwiftLint
-`--strict` on tracked Swift. No `// swiftlint:disable` except an `@objc`
+SwiftLint rules that fight the formatter. Run `swift-format` and SwiftLint
+directly, with SwiftLint `--no-cache --strict`. No `// swiftlint:disable` except an `@objc`
 callback that cannot comply, with the reason on that line.
 
 GUI and CLI copy: `LOCALIZATION.md`. Tests check codes, routes, identifiers,
@@ -84,9 +84,9 @@ paths, and structure — not help text, and not `.swift` source via
 - Deployment floor: macOS 10.15.
 - Kit has no SwifterKit. USB adapter:
   `Sources/OpenJoystickDriverUSB/`. Generator:
-  `Sources/DriverKitGenerator/` and `scripts/build-tools/driverkit.sh`.
+  `Sources/DriverKitGenerator/` and `Scripts/Build/driverkit.sh`.
 - No manual DriverKit build or post-generation patch.
-  `./scripts/ojd check driverkit`.
+  `./Scripts/ojd check driverkit`.
 - Host `com.apple.developer.driverkit.userclient-access` lists only
   `com.openjoystickdriver.XboxUSBDevice`.
 

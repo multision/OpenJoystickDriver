@@ -6,24 +6,22 @@ The signed app owns the runtime, virtual HID, and authenticated local CLI. Physi
 
 `OpenJoystickDriverKit` owns parsers, records, HID/USB ports, and policy. It must not import SwifterKit. `OpenJoystickDriverUSB` and `DriverKitGenerator` are the SwifterKit boundaries. `OpenJoystickDriver` composes the app, CLI, and adapters.
 
-Do not edit `Sources/OpenJoystickDriverKit/Resources/Controllers/` or `.build/driverkit/generated/`. Catalog write: `./scripts/ojd catalog regenerate --write`. DriverKit: `./scripts/ojd driverkit generate`. Controller JSON uses decimal numbers. Support status lives in `docs/user/compatibility.md`; do not duplicate it here.
+Do not edit `Sources/OpenJoystickDriverKit/Resources/Controllers/` or `.build/driverkit/generated/`. Catalog write: `./Scripts/ojd catalog regenerate --write`. DriverKit: `./Scripts/ojd driverkit generate`. Controller JSON uses decimal numbers. Support status lives in `docs/user/compatibility.md`; do not duplicate it here.
 
 Production and development USBDriverKit personalities match only Apple's approved Microsoft GIP pairs: `045E:02D1`, `045E:02DD`, `045E:02E3`, `045E:02EA`, `045E:0B00`, `045E:0B0A`, `045E:0B12`. Accessible third-party GIP devices such as GameSir G7 SE `3537:1010` stay on direct IOUSBHost. The host user-client allowlist is exactly `com.openjoystickdriver.XboxUSBDevice`. `com.apple.developer.hid.virtual.device` belongs only to the app.
 
 Generator inputs are `ControllerSources.lock.json` and `Resources/ControllerOverrides/`. Schemas are in `Resources/Schemas/`. `CLAUDE.md`, `GEMINI.md`, and `.github/copilot-instructions.md` are symlinks to `AGENTS.md`.
 
 ```bash
-./scripts/ojd catalog regenerate --check
-./scripts/ojd check profiles
-./scripts/ojd check schemas
-./scripts/ojd check scripts
-./scripts/ojd check swift-structure
-./scripts/ojd lint
-./scripts/ojd check driverkit
+./Scripts/ojd catalog regenerate --check
+./Scripts/ojd check profiles
+./Scripts/ojd check schemas
+just lint
+./Scripts/ojd check driverkit
 swift test
 ```
 
-Parser/protocol: `./scripts/ojd test parsers-macos14`. Cache: `./scripts/ojd repair swiftpm-module-cache`. Hardware, signing, notarization, and permission behavior need the focused local diagnostics in `docs/testing/` and `scripts/README.md`. Unsigned generation does not prove those facts.
+Parser/protocol: `./Scripts/ojd test parsers-macos14`. Cache: `./Scripts/ojd repair swiftpm-module-cache`. Hardware, signing, notarization, and permission behavior need the focused local diagnostics in `docs/testing/` and `Scripts/README.md`. Unsigned generation does not prove those facts.
 
 ## Docs
 
@@ -58,7 +56,7 @@ Parser/protocol: `./scripts/ojd test parsers-macos14`. Cache: `./scripts/ojd rep
 - [Implementation status](docs/development/implementation-status.md): remaining product gaps
 - [Issue audit](docs/development/issue-audit.md): tracked issue review
 - [Schema instructions](Resources/Schemas/AGENTS.md): JSON contract ownership
-- [Scripts](scripts/README.md): `./scripts/ojd` build, install, DriverKit, and release
+- [Scripts](Scripts/README.md): `./Scripts/ojd` build, install, DriverKit, and release
 - [Package graph](Package.swift): SwiftPM targets and deployment floor
 
 ## Testing

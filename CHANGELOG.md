@@ -29,6 +29,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- BREAKING: Repository automation now uses the Apple-style `Scripts/` and
+  `Tools/` roots. `./Scripts/ojd` is the only supported script entrypoint; the
+  former lowercase developer paths have no compatibility aliases.
+- BREAKING: OpenJoystickDriver-owned JSON properties now use one unversioned
+  lowerCamelCase contract. Remapping libraries and profiles no longer carry or
+  accept schema-version tags or legacy snake-case property names.
 - Name physical wire families XID, XUSB, GIP, and HID. Catalog driver
   `Xbox360` is now `XUSB`. Automatic compatibility uses one spoof route per
   family: XUSB publishes `045E:028E`, GIP publishes `045E:0B13`, matching HID
@@ -58,6 +64,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Just and CI now invoke Ruff, Pyright, ShellCheck, swift-format, SwiftLint,
+  Python unittest, and SwiftPM directly. The repository dispatcher remains for
+  repository-specific artifact and operational behavior.
+- Source-backed physical rumble for exact cataloged original-Xbox XID routes,
+  using the protocol's independent 16-bit left and right motor values. Physical
+  hardware verification remains outstanding.
 - Source-backed GameSir G7 Pro, Cyclone 2, and G7 Pro 8K PC input support with
   exact wired and dongle identities, protocol-specific heartbeats, documented
   extra controls, telemetry, and model-specific lighting output. G7 Pro
@@ -81,6 +93,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   by matching CoreHID snapshots to IOHID devices.
 - Report when CoreHID virtual HID creation fails because the Apple Development
   provisioning profile does not include this Mac.
+
+### Removed
+
+- Retire the standalone HID set-report, isolated haptics-backend, and DMG
+  background probes, plus the undispatched build `nuke` route. Supported
+  diagnostics remain available through `./Scripts/ojd diagnose ...`.
+- Retire repository-local source-layout, source-size, script-prose, and
+  SwiftLint-wrapper checks, along with the generic dispatcher lint, format,
+  aggregate-check, capability-test, and Swift-test routes.
 
 ## [0.5.0-beta.4] - 2026-09-05
 

@@ -23,8 +23,8 @@ product-only test rule and validation sequence into a repeatable contract.
   application-service, runtime, CLI, relay, generator, or status behavior.
 - Investigate a regression with a focused Swift test, the parser harness, or a
   supported `ojd` repository diagnostic/check.
-- Validate a product change through the catalog/profile/script/structure/lint/
-  DriverKit and full SwiftPM gates.
+- Validate a product change through direct standard-tool checks, repository
+  artifact routes, DriverKit, and full SwiftPM gates.
 - Review whether a proposed test observes a product contract rather than
   guarding source layout, formatting, documentation, or script prose.
 
@@ -51,6 +51,10 @@ product-only test rule and validation sequence into a repeatable contract.
 
 ## Non-negotiables
 
+- Follow the single unversioned lower-camel JSON contract in
+  `Resources/Schemas/README.md`. Follow the exact-device specialized-protocol
+  admission policy in `docs/development/compatibility-sources.md`; uncataloged
+  standards-compliant HID remains descriptor-driven Generic HID.
 - `Tests/` proves actual Swift code under `Sources/` (and the supported relay or
   generator product targets), never repository scripts. Keep each test beside
   its canonical capability owner; use the documented nearest-owner exception
@@ -85,8 +89,8 @@ product-only test rule and validation sequence into a repeatable contract.
    `test parsers-macos14` route documented in `references/validation.md`; this
    is the supported isolated parser harness, not a `Tests/Scripts` fixture.
 4. **Run repository gates.** Use the sequence in
-   [`references/validation.md`](references/validation.md): catalog, profiles,
-   scripts, Swift structure, lint, DriverKit, then `swift test`.
+   [`references/validation.md`](references/validation.md): direct standard tools,
+   catalog, profiles, DriverKit, then `swift test`.
 5. **Audit and report.** If tests fail, preserve the exact command and output,
    repair only attributable failures, and report environmental, signing,
    hardware, or module-cache blockers honestly. Review `git diff --check` and
@@ -95,7 +99,7 @@ product-only test rule and validation sequence into a repeatable contract.
 ## Reference map
 
 | Need | Load |
-|---|---|
+| --- | --- |
 | Focused tests, parser harness, gate order, and recovery | [`references/validation.md`](references/validation.md) |
 | Controller catalog authoring and deterministic record generation | `$add-controller-openjoystickdriver` |
 | Physical controller discovery, packet, and hardware evidence | `$debug-controller-openjoystickdriver` |
@@ -116,8 +120,8 @@ A testing task is complete only when all applicable conditions hold:
   are asserted only as observable values with a stable contract; assertions do
   not target human-readable messages or help prose. Prefer typed state, routes,
   status, return values, events, and structural invariants.
-- The focused test or parser harness ran first, followed by applicable catalog,
-  profile, script, Swift-structure, lint, DriverKit, and `swift test` gates.
+- The focused test or parser harness ran first, followed by applicable direct
+  standard-tool, catalog, profile, DriverKit, and `swift test` gates.
 - Topology changes have an architecture audit through `$architecture-enforce`
   with every warning/error resolved or named; UI changes have the routed design
   and Apple HIG evidence.

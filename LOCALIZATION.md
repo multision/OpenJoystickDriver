@@ -9,7 +9,7 @@ order picks the locale. No in-app switcher.
 - `Sources/OpenJoystickDriverKit/Resources/Localization/Localizable.template.stringsdict`
 - Shipped locales: `<locale>.lproj/Localizable.strings` and `.stringsdict`
 
-`Package.swift` default is `en-US`. `scripts/build-tools/bundles.sh` copies Kit
+`Package.swift` default is `en-US`. `Scripts/Build/bundles.sh` copies Kit
 locales into the app. Kit `Localization` falls back to `en-US`. App:
 `OJDLocalized`. CLI: `CLILocalized`.
 

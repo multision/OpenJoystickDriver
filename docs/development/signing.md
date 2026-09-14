@@ -55,7 +55,7 @@ are:
 
 The host development profile's device list must include this Mac. On macOS 15+ AMFI will
 otherwise ignore `com.apple.developer.hid.virtual.device` and `HIDVirtualDevice` returns
-nil. Regenerate the profile after adding the Mac, then `./scripts/ojd signing install-profiles`.
+nil. Regenerate the profile after adding the Mac, then `./Scripts/ojd signing install-profiles`.
 
 Regenerate profiles after changing capabilities. Xcode may otherwise reuse a stale profile. The
 development DEXT profile must contain exactly the seven approved Microsoft pairs; a wildcard or a
@@ -65,7 +65,7 @@ GameSir dictionary is a mismatch and the signing gate rejects it. The connected 
 Normally, invoke the desired signed operation and follow its prompts:
 
 ```bash
-./scripts/ojd build install dev
+./Scripts/ojd build install dev
 ```
 
 The command searches supported local profile locations, installs discovered
@@ -73,9 +73,9 @@ profiles, configures matching Keychain identities, and resumes. Use the
 following only to diagnose an automatic repair that reports an asset mismatch:
 
 ```bash
-./scripts/ojd signing audit
-./scripts/ojd signing configure
-./scripts/ojd signing doctor
+./Scripts/ojd signing audit
+./Scripts/ojd signing configure
+./Scripts/ojd signing doctor
 ```
 
 The doctor fails closed if the DEXT profile is missing, the host allowlist names the deleted
@@ -119,8 +119,8 @@ profile. Inspect Organizer's distribution log and the archived signing configura
 ## Verification
 
 ```bash
-./scripts/ojd check driverkit
-./scripts/ojd signing doctor
+./Scripts/ojd check driverkit
+./Scripts/ojd signing doctor
 codesign -d --entitlements - --xml /path/to/OpenJoystickDriver.app
 codesign -d --entitlements - --xml \
   /path/to/OpenJoystickDriver.app/Contents/Library/SystemExtensions/com.openjoystickdriver.XboxUSBDevice.dext

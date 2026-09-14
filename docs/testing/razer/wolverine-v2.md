@@ -15,7 +15,7 @@ DEXT experiment only if live ownership evidence requires it.
 From the repository root:
 
 ```bash
-./scripts/ojd diagnose record \
+./Scripts/ojd diagnose record \
   Sources/OpenJoystickDriverKit/Resources/Controllers/1532/1532-0a29.json \
   --validate-only
 ```
@@ -31,7 +31,7 @@ RECORD_VALIDATION result=valid
 Quit Steam, games, and controller utilities. Connect the controller directly by USB. Then run:
 
 ```bash
-./scripts/ojd diagnose record \
+./Scripts/ojd diagnose record \
   Sources/OpenJoystickDriverKit/Resources/Controllers/1532/1532-0a29.json \
   --seconds 45
 ```

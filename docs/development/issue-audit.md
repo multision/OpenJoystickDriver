@@ -38,13 +38,12 @@ Dependency baseline:
 The audit baseline passed:
 
 ```bash
-./scripts/ojd catalog regenerate --check
-./scripts/ojd check profiles
-./scripts/ojd check scripts
-./scripts/ojd check swift-structure
-./scripts/ojd lint
-./scripts/ojd test parsers-macos14
-./scripts/ojd check driverkit
+./Scripts/ojd catalog regenerate --check
+./Scripts/ojd check profiles
+just lint
+python3 -m unittest discover -s Tests/RepositoryScripts
+./Scripts/ojd test parsers-macos14
+./Scripts/ojd check driverkit
 MACOSX_DEPLOYMENT_TARGET=14.0 /usr/bin/xcrun swift test
 ```
 
@@ -53,8 +52,8 @@ The final Swift suite executed 393 tests in 68 suites with target
 `arm64` and `x86_64` extension.
 
 Focused issue filters also passed: #8 (17 tests), #9 (4), #10 (2), #11 (4),
-
-# 14 (1), #18 (4), #19 (1), #21 (record, probe, and GIP parser tests), and #22
+issue #14 (1), #18 (4), #19 (1), #21 (record, probe, and GIP parser tests),
+and #22.
 
 These filters prove the recorded parser, catalog, admission, and startup
 contracts; they do not replace the hardware procedures named in the matrix.
@@ -80,10 +79,10 @@ replacement DEXT development profile is absent. Current signing tooling requires
 the exact single-DEXT host grant. Install refreshed profiles and rerun:
 
 ```bash
-./scripts/ojd signing install-profiles
-./scripts/ojd signing configure
-./scripts/ojd signing doctor
-./scripts/ojd build install dev
+./Scripts/ojd signing install-profiles
+./Scripts/ojd signing configure
+./Scripts/ojd signing doctor
+./Scripts/ojd build install dev
 ```
 
 ### Remaining release blocker

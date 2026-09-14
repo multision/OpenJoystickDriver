@@ -5,7 +5,7 @@ macOS 10.15 can run the foreground app and headless CLI. Login-item registration
 Copy the signed universal app to the Catalina machine. Then run:
 
 ```bash
-./scripts/ojd diagnose catalina /Applications/OpenJoystickDriver.app
+./Scripts/ojd diagnose catalina /Applications/OpenJoystickDriver.app
 ```
 
 The check verifies:

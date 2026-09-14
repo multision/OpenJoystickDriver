@@ -47,7 +47,8 @@
 - [Compatibility sources](development/compatibility-sources.md)
 - [Xbox identities](development/xbox-identities.md)
 - [Wire protocols](development/wire-protocols.md)
-- DriverKit: `./scripts/ojd driverkit generate` / `./scripts/ojd check driverkit`
-- Commands: `./scripts/ojd help`
+- DriverKit: `./Scripts/ojd driverkit generate` / `./Scripts/ojd check driverkit`
+- Native tools: `./Scripts/ojd check tools`
+- Commands: `./Scripts/ojd help`
 
 Evidence, not instructions: `docs/external/`.

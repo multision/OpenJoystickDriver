@@ -46,6 +46,10 @@ product-test evidence, and Apple UI design. `AGENTS.md` remains authoritative.
 
 ## Non-negotiables
 
+- Follow the single unversioned lower-camel JSON contract in
+  `Resources/Schemas/README.md`. Follow the exact-device specialized-protocol
+  admission policy in `docs/development/compatibility-sources.md`; uncataloged
+  standards-compliant HID remains descriptor-driven Generic HID.
 - Read `AGENTS.md`, `Package.swift`, and the relevant canonical documentation
   before editing. Direct user instructions override repository guidance.
 - Preserve the existing capability owner and package target. If ownership must
@@ -84,7 +88,7 @@ product-test evidence, and Apple UI design. `AGENTS.md` remains authoritative.
 ## Reference map
 
 | Need | Load |
-|---|---|
+| --- | --- |
 | Existing package, import, and generated boundaries | `references/boundaries.md` |
 | Controller catalog authoring and deterministic record generation | `$add-controller-openjoystickdriver` |
 | Physical controller discovery, packet, and hardware evidence | `$debug-controller-openjoystickdriver` |

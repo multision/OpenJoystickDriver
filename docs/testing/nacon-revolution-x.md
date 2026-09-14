@@ -12,7 +12,7 @@ result is independent evidence, not an OJD USBDriverKit acceptance result.
 Run from the repository root:
 
 ```bash
-./scripts/ojd diagnose record \
+./Scripts/ojd diagnose record \
   Sources/OpenJoystickDriverKit/Resources/Controllers/3285/3285-0634.json \
   --validate-only
 ```
@@ -30,7 +30,7 @@ facade tries direct IOUSBHost. Quit games, Steam, and other controller utilities
 connect the controller directly by USB, then run:
 
 ```bash
-./scripts/ojd diagnose record \
+./Scripts/ojd diagnose record \
   Sources/OpenJoystickDriverKit/Resources/Controllers/3285/3285-0634.json \
   --seconds 45
 ```

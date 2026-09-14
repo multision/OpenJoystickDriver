@@ -6,13 +6,13 @@ Repository scripts load exactly one optional local file from the project root:
 - `.env.release` for publisher release, notarization, and packaging commands.
 
 `OJD_ENV` selects `dev` or `release`; other values fail immediately. Scripts do
-not load generic `.env` or `scripts/.env*` files. Signed build and package routes
+not load generic `.env` or `Scripts/.env*` files. Signed build and package routes
 create or repair the appropriate root file from discovered Apple assets.
 
 Audit the file structure without exposing values:
 
 ```bash
-./scripts/ojd env audit
+./Scripts/ojd env audit
 ```
 
 The examples are annotated output forms, not a source for identities,
@@ -21,7 +21,7 @@ creating either local file. Development configuration requires the two
 development profiles and an Apple Development identity; publisher-only
 Developer ID assets are optional and do not block `.env.dev` generation.
 
-Unsigned `swift build` and `./scripts/ojd check driverkit` do not load
+Unsigned `swift build` and `./Scripts/ojd check driverkit` do not load
 `.env.dev`. Signed local development installs create or repair `.env.dev`
 before building. Notarization keys belong only in
 `.env.release`; they are not inputs to unsigned or Apple Development builds.
@@ -52,7 +52,7 @@ GitHub does not allow reading those values back. The local analogues are:
   or `NOTARIZE_KEYCHAIN_PROFILE` after storing credentials in Keychain.
 
 Do not copy the CI-only `*_BASE64` / `CERTIFICATE_SECRET` / `KEYCHAIN_SECRET`
-keys into `.env.dev` or `.env.release`; `./scripts/ojd env audit` rejects them.
+keys into `.env.dev` or `.env.release`; `./Scripts/ojd env audit` rejects them.
 
 The GUI provisioning profile must authorize the host app's exact
 `com.apple.developer.driverkit.userclient-access` allowlist for

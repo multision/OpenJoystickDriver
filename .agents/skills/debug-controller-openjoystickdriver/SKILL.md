@@ -53,6 +53,10 @@ not turn a passing schema check or parser fixture into a hardware claim.
 
 ## Non-negotiables
 
+- Follow the single unversioned lower-camel JSON contract in
+  `Resources/Schemas/README.md`. Follow the exact-device specialized-protocol
+  admission policy in `docs/development/compatibility-sources.md`; uncataloged
+  standards-compliant HID remains descriptor-driven Generic HID.
 - Start with the exact device identity, transport (USB, HID, Bluetooth, or
   receiver), connection mode, OJD commit, macOS version, Mac model, and record
   path. Preserve unrelated work and inspect `git status --short --branch`.
@@ -96,7 +100,7 @@ not turn a passing schema check or parser fixture into a hardware claim.
    bundled records and run:
 
    ```bash
-   ./scripts/ojd diagnose record /tmp/controller-candidate.json --validate-only
+   ./Scripts/ojd diagnose record /tmp/controller-candidate.json --validate-only
    ```
 
    A valid raw-USB GIP/XUSB record ends with
@@ -113,7 +117,7 @@ not turn a passing schema check or parser fixture into a hardware claim.
    run the exact record for a bounded interval:
 
    ```bash
-   ./scripts/ojd diagnose record /tmp/controller-candidate.json --seconds 30
+   ./Scripts/ojd diagnose record /tmp/controller-candidate.json --seconds 30
    ```
 
    Inspect `RECORD`, `USB_DEVICE`, `USB_CLAIM`, `RECORD_HANDSHAKE`, `USB_TX`,
@@ -152,7 +156,7 @@ not turn a passing schema check or parser fixture into a hardware claim.
 ## Reference map
 
 | Need | Load |
-|---|---|
+| --- | --- |
 | Record schema, raw-USB scope, validation/probe output, detach policy | [`references/diagnosis.md`](references/diagnosis.md), `docs/testing/controller-record.md` |
 | Compatibility identities, output and evidence meanings | `docs/user/compatibility.md`, `docs/testing/physical-output.md` |
 | Experimental records and hardware limits | `docs/development/experimental-controllers.md` |

@@ -41,6 +41,10 @@ product-test evidence.
 
 ## Non-negotiables
 
+- Follow the single unversioned lower-camel JSON contract in
+  `Resources/Schemas/README.md`. Follow the exact-device specialized-protocol
+  admission policy in `docs/development/compatibility-sources.md`; uncataloged
+  standards-compliant HID remains descriptor-driven Generic HID.
 - Treat `ControllerSources.lock.json`, `Resources/ControllerOverrides/`, and
   `Resources/Schemas/` as authored inputs. Treat
   `Sources/OpenJoystickDriverKit/Resources/Controllers/` as generated runtime
@@ -83,7 +87,7 @@ product-test evidence.
 ## Reference map
 
 | Need | Load |
-|---|---|
+| --- | --- |
 | Canonical inputs, generated output, and evidence flow | `references/controller-data.md` |
 | Linux xpad translation and override rules | `docs/development/xpad-import.md` |
 | Candidate record validation and physical probe procedure | `docs/testing/controller-record.md` |
@@ -111,9 +115,9 @@ Run the global skill validator and canonical catalog gates:
 
 ```sh
 python3 "$HOME/.agents/scripts/validate_skill.py" .agents/skills/add-controller-openjoystickdriver
-./scripts/ojd catalog regenerate --check
-./scripts/ojd check profiles
-./scripts/ojd check swift-structure
+./Scripts/ojd catalog regenerate --check
+./Scripts/ojd check profiles
+just lint
 ```
 
 For an intentional input change, use the catalog write route documented in

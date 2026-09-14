@@ -37,6 +37,10 @@ shared repository contract; this skill owns topology decisions and migrations.
 
 ## Non-negotiables
 
+- Follow the single unversioned lower-camel JSON contract in
+  `Resources/Schemas/README.md`. Follow the exact-device specialized-protocol
+  admission policy in `docs/development/compatibility-sources.md`; uncataloged
+  standards-compliant HID remains descriptor-driven Generic HID.
 - Read `AGENTS.md`, `Package.swift`, and `docs/development/source-topology.md`
   before changing paths. The canonical architecture document and direct user
   instructions win over this skill.
@@ -71,8 +75,8 @@ shared repository contract; this skill owns topology decisions and migrations.
    resources, entitlements, stale paths, duplicate basenames, and target
    membership. Update `docs/development/source-topology.md` when the decision
    changes.
-6. **Run fail-closed proof.** Run the repository dispatcher’s
-   `check swift-structure` route, `$architecture-enforce`, focused product tests,
+6. **Run fail-closed proof.** Run `swift package dump-package`,
+   `$architecture-enforce`, focused product tests,
    and the applicable gates in
    `$test-openjoystickdriver`. Every architecture warning or error blocks
    completion; do not hide it with an exclusion.
@@ -80,7 +84,7 @@ shared repository contract; this skill owns topology decisions and migrations.
 ## Reference map
 
 | Need | Load |
-|---|---|
+| --- | --- |
 | Current capability map and nearest test owners | `references/topology.md` |
 | Canonical decision, forces, candidates, and rollback | `docs/development/source-topology.md` |
 | Shared package and generated-boundary contract | `$maintain-openjoystickdriver` |

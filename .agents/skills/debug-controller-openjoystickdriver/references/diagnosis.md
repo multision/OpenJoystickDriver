@@ -68,7 +68,7 @@ Candidate records should live outside the bundled records while being reviewed.
 Use decimal numbers in JSON. Validate before opening hardware:
 
 ```bash
-./scripts/ojd diagnose record /tmp/controller-candidate.json --validate-only
+./Scripts/ojd diagnose record /tmp/controller-candidate.json --validate-only
 ```
 
 Expected success is the machine-readable route marker:
@@ -85,7 +85,7 @@ device.
 Probe a direct USB connection with a bounded duration:
 
 ```bash
-./scripts/ojd diagnose record /tmp/controller-candidate.json --seconds 30
+./Scripts/ojd diagnose record /tmp/controller-candidate.json --seconds 30
 ```
 
 Look for these machine-readable lines:
@@ -122,7 +122,7 @@ record:
 Use the supported parser harness for source-level regression evidence:
 
 ```bash
-./scripts/ojd test parsers-macos14
+./Scripts/ojd test parsers-macos14
 ```
 
 The harness builds an isolated macOS-14 executable against the local OJD package

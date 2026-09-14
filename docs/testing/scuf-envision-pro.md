@@ -11,7 +11,7 @@ are not claimed. SCUF `2E95:0504` remains an independent GIP identity.
 Run from the repository root:
 
 ```bash
-./scripts/ojd diagnose record \
+./Scripts/ojd diagnose record \
   Sources/OpenJoystickDriverKit/Resources/Controllers/2e95/2e95-434d.json \
   --validate-only
 swift test --filter 'SCUFEnvisionParserTests|CoreHIDAccessBackendTests'

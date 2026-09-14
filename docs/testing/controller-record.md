@@ -32,7 +32,7 @@ Save the proposed controller JSON outside the bundled record directory until you
 /tmp/controller-candidate.json
 ```
 
-Use decimal numbers in the JSON. Before probing, review `protocol.startup_packets`. The command sends only the startup behavior already modeled by OJD:
+Use decimal numbers in the JSON. Before probing, review `protocol.startupPackets`. The command sends only the startup behavior already modeled by OJD:
 
 - GIP: the named startup sequence; profiles may disable the default keep-alive
   when hardware evidence requires it.
@@ -40,14 +40,14 @@ Use decimal numbers in the JSON. Before probing, review `protocol.startup_packet
 - Xbox 360 wireless receiver: no output until a logical controller connects, then the receiver-wrapped steady Player 1 packet.
 - A record containing `rumbleBegin` and `rumbleEnd` sends those brief initialization packets because they are part of that record's declared startup sequence.
 
-`protocol.keep_alive` is an optional boolean for GIP records. Omit it to keep
+`protocol.keepAlive` is an optional boolean for GIP records. Omit it to keep
 the default-enabled behavior. Set it to `false` only when device evidence
 requires periodic host output to be disabled.
 
 ## 2. Validate without opening hardware
 
 ```bash
-./scripts/ojd diagnose record /tmp/controller-candidate.json --validate-only
+./Scripts/ojd diagnose record /tmp/controller-candidate.json --validate-only
 ```
 
 Expected output ends with:
@@ -64,7 +64,7 @@ Quit games, Steam, and other controller tools first. Install and approve a signe
 development build, connect the controller directly by USB, then run:
 
 ```bash
-./scripts/ojd diagnose record /tmp/controller-candidate.json --seconds 30
+./Scripts/ojd diagnose record /tmp/controller-candidate.json --seconds 30
 ```
 
 During the capture, press one control at a time and return it to neutral. The probe prints:
@@ -78,7 +78,7 @@ During the capture, press one control at a time and return it to neutral. The pr
 - `RECORD_SUMMARY`: packet, parsed-event, and parse-error counts.
 
 If the interface is unavailable, preserve the selected route and live registry
-owner. Use `./scripts/ojd diagnose dext` when the selected model requires the
+owner. Use `./Scripts/ojd diagnose dext` when the selected model requires the
 restricted extension. There is no detach or cross-transport fallback.
 
 ## 4. Report results
@@ -93,7 +93,7 @@ and a source-built record probe are different test subjects:
   does not use the Swift sources in a checkout. The community tester package is
   notarized and stapled so it can replace the DriverKit extension with SIP enabled.
 - **Source-built record probe:** report the checkout commit and working-tree
-  state, the record path, and the complete `./scripts/ojd diagnose record ...`
+  state, the record path, and the complete `./Scripts/ojd diagnose record ...`
   command and output. This route builds/runs the probe from the current source
   checkout and is not evidence about the installed app or a shared DMG.
 

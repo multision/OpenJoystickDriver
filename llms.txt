@@ -21,7 +21,7 @@ Do not edit generated controller records or `.build/driverkit/generated/`. `Open
 - [Architecture](docs/development/architecture.md): runtime, HID/USB split, DriverKit boundary
 - [Source topology](docs/development/source-topology.md): package targets and capability owners
 - [Signing](docs/development/signing.md): Apple identities, profiles, entitlements
-- [Scripts](scripts/README.md): `./scripts/ojd` build, install, DriverKit, and release
+- [Scripts](Scripts/README.md): `./Scripts/ojd` build, install, DriverKit, and release
 - [xpad import](docs/development/xpad-import.md): catalog generation from locked Linux sources
 - [Schema instructions](Resources/Schemas/AGENTS.md): JSON contract ownership
 - [Package graph](Package.swift): SwiftPM targets and deployment floor

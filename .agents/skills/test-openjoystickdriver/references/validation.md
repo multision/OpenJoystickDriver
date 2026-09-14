@@ -15,10 +15,10 @@ Choose the smallest owning target and test first:
 
 | Change | First proof |
 | --- | --- |
-| Parser/protocol/HID | The affected `OpenJoystickDriverKitTests` filter, then `./scripts/ojd test parsers-macos14`. |
-| Controller record/catalog | The relevant Kit test filter, then `./scripts/ojd catalog regenerate --check` and `./scripts/ojd check profiles`. |
+| Parser/protocol/HID | The affected `OpenJoystickDriverKitTests` filter, then `./Scripts/ojd test parsers-macos14`. |
+| Controller record/catalog | The relevant Kit test filter, then `./Scripts/ojd catalog regenerate --check` and `./Scripts/ojd check profiles`. |
 | App CLI/remapping/runtime/status | The affected `OpenJoystickDriverTests` filter; exercise the public or `@testable` product seam. |
-| Relay/generator | The affected relay/generator test target, then `./scripts/ojd check driverkit`; never edit generated output. |
+| Relay/generator | The affected relay/generator test target, then `./Scripts/ojd check driverkit`; never edit generated output. |
 | Hardware/permissions/installation | Run the documented diagnostic or manual proof; state when local hardware, signing, or macOS access is unavailable. |
 
 Use SwiftPM filters against product targets, for example:
@@ -37,24 +37,22 @@ From the repository root, after focused proof, run the applicable gates in this
 order:
 
 ```sh
-./scripts/ojd catalog regenerate --check
-./scripts/ojd check profiles
-./scripts/ojd check scripts
-./scripts/ojd check swift-structure
-./scripts/ojd lint
-./scripts/ojd check driverkit
+./Scripts/ojd catalog regenerate --check
+./Scripts/ojd check profiles
+just lint
+python3 -m unittest discover -s Tests/RepositoryScripts
+./Scripts/ojd check driverkit
 swift test
 ```
 
-Not every change needs every gate, but explain omissions. `check scripts`
-validates script ownership, paths, modes, and shell syntax; it is the script test
-route, not a Swift test fixture. The parser harness is likewise a supported
+Not every change needs every gate, but explain omissions. `just lint` invokes
+the configured standard formatters, linters, and type checker directly. The parser harness is a supported
 `ojd` route and must remain outside `Tests/`.
 
 If `swift test` reports the documented SwiftPM module-cache mismatch, run:
 
 ```sh
-./scripts/ojd repair swiftpm-module-cache
+./Scripts/ojd repair swiftpm-module-cache
 swift test
 ```
 
@@ -64,8 +62,7 @@ Do not weaken the test command or silently ignore a failed gate.
 flowchart LR
   Focused[Focused product test] --> Parser[Parser harness when applicable]
   Parser --> Catalog[Catalog and profile checks]
-  Catalog --> Structure[Scripts and Swift structure]
-  Structure --> Lint[SwiftLint]
+  Catalog --> Lint[Direct standard tools]
   Lint --> DriverKit[DriverKit generation check]
   DriverKit --> Full[Full swift test]
 ```

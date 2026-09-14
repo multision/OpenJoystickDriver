@@ -59,5 +59,5 @@ Tests mirror their owners under `Tests/OpenJoystickDriverKitTests/`,
 - Keep CoreHID calls behind macOS 15 availability and IOKit HID calls behind the macOS 10.15–14
   implementation boundary.
 - Never edit or commit `.build/driverkit/generated/`; regenerate with
-  `./scripts/ojd driverkit generate` and validate with `./scripts/ojd check driverkit`.
+  `./Scripts/ojd driverkit generate` and validate with `./Scripts/ojd check driverkit`.
 - Add source behavior tests, not source-text substring tests.

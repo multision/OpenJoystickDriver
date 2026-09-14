@@ -21,8 +21,8 @@ Linux-backed `3537:100F` and `1010` routes are also unchanged.
 Run from the repository root:
 
 ```bash
-./scripts/ojd catalog regenerate --check
-./scripts/ojd test parsers-macos14
+./Scripts/ojd catalog regenerate --check
+./Scripts/ojd test parsers-macos14
 swift test --filter 'GameSirParserTests|GameSirCatalogTests'
 ```
 

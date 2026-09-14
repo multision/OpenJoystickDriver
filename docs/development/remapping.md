@@ -281,6 +281,7 @@ USB handshake prefix. Both the schema and runtime decoder reject conflicting sid
 Catalog records were generated from the locked Linux source. Constructed packet tests cover
 selection, side filtering, raw sample delivery, startup, and rumble isolation. See
 [Joy-Con validation](../testing/joy-con.md) for the exact source and hardware acceptance steps.
+
 ### Paired Joy-Con sessions
 
 Schema-3 profiles targeting the left Joy-Con model can opt into `joy_con_pair` and select the
@@ -468,7 +469,6 @@ retain their existing single-attempt behavior. CoreHID's existing two-second rea
 each dispatched request; this is not a hardware-measured startup latency guarantee. Nintendo SPI
 output/reply acquisition uses the separate recovery path below.
 
-
 ### Nintendo SPI recovery and expiry
 
 After the initial startup sequence, the manager schedules two recovery rounds, each following a
@@ -518,7 +518,6 @@ Synthetic tests cover 90-degree yaw and pitch, gravity removal, upside-down init
 freefall, high-acceleration tilt rejection, reset, and invalid/gap state preservation. This native
 complementary filter is not a numerical port of GamepadMotionHelpers. Per-device timestamps, bias,
 profile tuning, and motion actions integrate through the processing path below.
-
 
 ### Per-device motion processing
 
@@ -887,8 +886,8 @@ motion discontinuities, scheduled steering and trigger work, and manual-versus-m
 output arbitration. These tests establish deterministic ownership and storage bounds; they do not
 establish hard real-time guarantees, physical latency, actuator response, or consumer recognition.
 
-The software release gate is the repository's catalog, profile, schema, script structure, Swift
-structure, lint, DriverKit generation, macOS 14 parser, complete Swift test, and whitespace checks
+The software release gate is the repository's catalog, profile, and schema contracts, direct
+standard-tool checks, DriverKit generation, macOS 14 parser, complete Swift test, and whitespace checks
 listed in `AGENTS.md`. Current milestone state is recorded in
 [Beta.4 remapping status](remapping-status.md). Signed-runtime behavior, supported-controller USB
 and Bluetooth delivery, physical isolation, motion and touch feel, haptics and adaptive triggers,
