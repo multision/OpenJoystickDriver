@@ -8,13 +8,13 @@ import OpenJoystickDriverKit
 
 /// Keeps the signed application bundle alive while its in-process runtime owns
 /// controller discovery, output, and the authenticated local RPC endpoint.
+@MainActor
 final class HeadlessApplicationHost {
   private let runtime = ApplicationServiceRuntime()
   #if canImport(AppKit) && canImport(SwiftUI)
     private var presentation: MenuBarCoordinator?
   #endif
 
-  @MainActor
   func run() -> Never {
     registerForLoginIfNeeded()
     #if canImport(AppKit) && canImport(SwiftUI)

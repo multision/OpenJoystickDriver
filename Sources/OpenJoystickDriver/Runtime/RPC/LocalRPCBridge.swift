@@ -185,6 +185,27 @@ extension ApplicationServiceServer {
           blue: value.blue,
           reply: send
         )
+      case "previewPhysicalColor":
+        let value = try decode(LocalServiceRPCColorPreviewArguments.self)
+        previewPhysicalColor(
+          vendorID: value.vendorID,
+          productID: value.productID,
+          runtimeIdentifier: value.runtimeIdentifier,
+          token: value.token,
+          red: value.red,
+          green: value.green,
+          blue: value.blue,
+          reply: send
+        )
+      case "releasePhysicalColorPreview":
+        let value = try decode(LocalServiceRPCColorPreviewReleaseArguments.self)
+        releasePhysicalColorPreview(
+          vendorID: value.vendorID,
+          productID: value.productID,
+          runtimeIdentifier: value.runtimeIdentifier,
+          token: value.token,
+          reply: send
+        )
       case "setPhysicalBrightness":
         let value = try decode(LocalServiceRPCBrightnessArguments.self)
         setPhysicalBrightness(

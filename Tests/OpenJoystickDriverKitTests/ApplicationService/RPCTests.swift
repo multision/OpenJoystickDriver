@@ -173,6 +173,67 @@ struct LocalServiceRPCTests {
   }
 
   @Test
+  func colorPreviewPreservesSelectorAndOwnershipToken() async throws {
+    let socketPath = temporarySocketPath()
+    let token = UUID()
+    let server = LocalServiceRPCServer(
+      socketPath: socketPath,
+      authentication: { _ in true },
+      handler: { request, completion in
+        do {
+          if request.method == "previewPhysicalColor" {
+            let arguments = try JSONDecoder().decode(
+              LocalServiceRPCColorPreviewArguments.self,
+              from: request.arguments
+            )
+            #expect(arguments.vendorID == 0x054C)
+            #expect(arguments.productID == 0x0CE6)
+            #expect(arguments.runtimeIdentifier == "controller-1")
+            #expect(arguments.token == token)
+            #expect(arguments.red == 1)
+            #expect(arguments.green == 2)
+            #expect(arguments.blue == 3)
+          } else {
+            let arguments = try JSONDecoder().decode(
+              LocalServiceRPCColorPreviewReleaseArguments.self,
+              from: request.arguments
+            )
+            #expect(request.method == "releasePhysicalColorPreview")
+            #expect(arguments.token == token)
+          }
+          completion(LocalServiceRPCResponse(result: try JSONEncoder().encode(true), error: nil))
+        } catch {
+          completion(LocalServiceRPCResponse(result: nil, error: error.localizedDescription))
+        }
+      }
+    )
+    try server.start()
+    defer { server.stop() }
+
+    let client = ApplicationServiceClient(socketPath: socketPath)
+    client.connect()
+    #expect(
+      try await client.previewPhysicalColor(
+        vendorID: 0x054C,
+        productID: 0x0CE6,
+        runtimeIdentifier: "controller-1",
+        token: token,
+        red: 1,
+        green: 2,
+        blue: 3
+      )
+    )
+    #expect(
+      try await client.releasePhysicalColorPreview(
+        vendorID: 0x054C,
+        productID: 0x0CE6,
+        runtimeIdentifier: "controller-1",
+        token: token
+      )
+    )
+  }
+
+  @Test
   func cancellingHeldRequestClosesConnectionBeforeTimeoutAndNextCallWorks() async throws {
     let socketPath = temporarySocketPath()
     let requestReceived = DispatchSemaphore(value: 0)

@@ -28,8 +28,8 @@
     let model: InputTestViewModel
     private let runtimeViewModel: RuntimeViewModel
 
-    init(runtime: any InputTestDeviceGateway, runtimeViewModel: RuntimeViewModel) {
-      model = InputTestViewModel(gateway: runtime)
+    init(gateway: any InputTestDeviceGateway, runtimeViewModel: RuntimeViewModel) {
+      model = InputTestViewModel(gateway: gateway)
       self.runtimeViewModel = runtimeViewModel
       let rootView = InputTestView(model: model, runtimeViewModel: runtimeViewModel)
       let host = NSHostingView(rootView: rootView)

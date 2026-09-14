@@ -170,6 +170,46 @@ public final class ApplicationServiceClient: @unchecked Sendable {
     )
   }
 
+  public func previewPhysicalColor(
+    vendorID: UInt16,
+    productID: UInt16,
+    runtimeIdentifier: String? = nil,
+    token: UUID,
+    red: UInt8,
+    green: UInt8,
+    blue: UInt8
+  ) async throws -> Bool {
+    try await call(
+      "previewPhysicalColor",
+      LocalServiceRPCColorPreviewArguments(
+        vendorID: Int(vendorID),
+        productID: Int(productID),
+        runtimeIdentifier: runtimeIdentifier,
+        token: token,
+        red: Int(red),
+        green: Int(green),
+        blue: Int(blue)
+      )
+    )
+  }
+
+  public func releasePhysicalColorPreview(
+    vendorID: UInt16,
+    productID: UInt16,
+    runtimeIdentifier: String? = nil,
+    token: UUID
+  ) async throws -> Bool {
+    try await call(
+      "releasePhysicalColorPreview",
+      LocalServiceRPCColorPreviewReleaseArguments(
+        vendorID: Int(vendorID),
+        productID: Int(productID),
+        runtimeIdentifier: runtimeIdentifier,
+        token: token
+      )
+    )
+  }
+
   public func setPhysicalBrightness(
     vendorID: UInt16,
     productID: UInt16,

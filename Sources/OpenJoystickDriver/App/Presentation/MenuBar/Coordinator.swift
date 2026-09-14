@@ -38,6 +38,8 @@
   final class MenuBarCoordinator: NSObject, NSApplicationDelegate {
     let runtime: ApplicationServiceRuntime
     let viewModel: RuntimeViewModel
+    private let menuBarViewModel: MenuBarViewModel
+    private let gateway: any ApplicationServiceGateway & InputTestDeviceGateway
 
     private var statusItem: NSStatusItem?
     private var statusMenu: NSMenu?
@@ -46,13 +48,17 @@
     private var liveStatusTimer: Timer?
     private let notificationMonitor = RuntimeNotificationMonitor()
     private let notificationPresenter = RuntimeNotificationCenterDelegate()
-    private var liveStatusRefreshInFlight = false
     private let termination = MenuBarTermination()
     private static weak var activeCoordinator: MenuBarCoordinator?
 
-    init(runtime: ApplicationServiceRuntime, gateway: any ApplicationServiceGateway) {
+    init(
+      runtime: ApplicationServiceRuntime,
+      gateway: any ApplicationServiceGateway & InputTestDeviceGateway
+    ) {
       self.runtime = runtime
+      self.gateway = gateway
       self.viewModel = RuntimeViewModel(gateway: gateway)
+      self.menuBarViewModel = MenuBarViewModel(runtime: self.viewModel)
       super.init()
     }
 
@@ -151,7 +157,7 @@
       }
     }
 
-    private func openSettings(pane: SettingsPane?) {
+    func openSettings(pane: SettingsPane?) {
       if settingsWindowController == nil {
         settingsWindowController = SettingsWindowController(
           viewModel: viewModel,
@@ -165,7 +171,7 @@
     private func openInputTest(for device: ApplicationServiceDeviceDescription) {
       if inputTestWindowController == nil {
         inputTestWindowController = InputTestWindowController(
-          runtime: runtime,
+          gateway: gateway,
           runtimeViewModel: viewModel
         )
       }
@@ -217,22 +223,18 @@
       updateStatusMenu()
       Task { @MainActor [weak self] in
         guard let self else { return }
-        await viewModel.refreshSystemExtensionSetup()
-        await viewModel.refresh()
+        await menuBarViewModel.refresh()
         notificationMonitor.observe(RuntimeNotificationSnapshot(viewModel: viewModel))
         updateStatusMenu()
       }
     }
 
     private func refreshLiveStatus() {
-      guard !liveStatusRefreshInFlight else { return }
-      liveStatusRefreshInFlight = true
       Task { @MainActor [weak self] in
         guard let self else { return }
-        let statusChanged = await viewModel.refreshLiveStatus()
+        guard let statusChanged = await menuBarViewModel.refreshLiveStatus() else { return }
         notificationMonitor.observe(RuntimeNotificationSnapshot(viewModel: viewModel))
         if statusChanged { updateStatusMenu() }
-        liveStatusRefreshInFlight = false
       }
     }
 
@@ -249,7 +251,7 @@
       menu.addItem(show)
       menu.addItem(.separator())
 
-      if needsPermissionAttention {
+      if menuBarViewModel.needsPermissionAttention {
         let request = NSMenuItem(
           title: OJDLocalized.string("menu.requestAccess", fallback: "Request Access..."),
           action: #selector(requestAccessFromStatus(_:)),
@@ -320,8 +322,8 @@
 
     private func makeControllersMenu() -> NSMenu {
       let menu = NSMenu(title: OJDLocalized.string("common.controllers", fallback: "Controllers"))
-      if case .available(let status) = viewModel.statusState, !status.devices.isEmpty {
-        for device in status.devices {
+      if !menuBarViewModel.devices.isEmpty {
+        for device in menuBarViewModel.devices {
           let item = NSMenuItem(
             title: device.name,
             action: #selector(openSettingsFromStatus(_:)),
@@ -412,7 +414,7 @@
       PermissionAccessActions.requestAccess(viewModel: viewModel)
     }
 
-    private func menuImage(symbol: String) -> NSImage? {
+    func menuImage(symbol: String) -> NSImage? {
       guard #available(macOS 11.0, *) else { return nil }
       let image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)
       image?.isTemplate = true
@@ -424,170 +426,6 @@
       return menuImage(symbol: presentation.controllerSymbolFallback)
     }
 
-    private var needsPermissionAttention: Bool {
-      switch viewModel.statusState {
-      case .available(let status):
-        let needsPostEventAccess =
-          status.requiresPostEventAccess == true && status.postEventAccess != .granted
-        return !status.permissions.isReady || needsPostEventAccess
-      case .loading, .unavailable, .error: return false
-      }
-    }
-
-    private func makeApplicationMenu() -> NSMenu {
-      let menu = NSMenu(title: OJDLocalized.string("app.name", fallback: "OpenJoystickDriver"))
-
-      let applicationMenu = NSMenu(
-        title: OJDLocalized.string("app.name", fallback: "OpenJoystickDriver")
-      )
-      let about = NSMenuItem(
-        title: OJDLocalized.string("menu.about", fallback: "About OpenJoystickDriver"),
-        action: #selector(showAbout(_:)),
-        keyEquivalent: ""
-      )
-      about.target = self
-      about.image = menuImage(symbol: "info.circle")
-      applicationMenu.addItem(about)
-      applicationMenu.addItem(.separator())
-      let settings = NSMenuItem(
-        title: OJDLocalized.string("menu.settings", fallback: "Settings..."),
-        action: #selector(openSettings(_:)),
-        keyEquivalent: ","
-      )
-      settings.target = self
-      settings.keyEquivalentModifierMask = [.command]
-      settings.image = menuImage(symbol: "gearshape")
-      applicationMenu.addItem(settings)
-      applicationMenu.addItem(.separator())
-      let quit = NSMenuItem(
-        title: OJDLocalized.string("menu.quit", fallback: "Quit OpenJoystickDriver"),
-        action: #selector(quit(_:)),
-        keyEquivalent: "q"
-      )
-      quit.target = self
-      quit.keyEquivalentModifierMask = [.command]
-      quit.image = menuImage(symbol: "power")
-      applicationMenu.addItem(quit)
-      let applicationItem = NSMenuItem()
-      applicationItem.submenu = applicationMenu
-      menu.addItem(applicationItem)
-
-      // Install real responder-chain menus rather than empty placeholders.  Text fields and the
-      // profile editor therefore retain the familiar macOS editing commands even though the app
-      // itself is primarily a menu-bar facade.
-      let editMenu = NSMenu(title: OJDLocalized.string("menu.edit", fallback: "Edit"))
-      editMenu.addItem(
-        withTitle: OJDLocalized.string("menu.undo", fallback: "Undo"),
-        action: #selector(UndoManager.undo),
-        keyEquivalent: "z"
-      )
-      editMenu.addItem(
-        withTitle: OJDLocalized.string("menu.redo", fallback: "Redo"),
-        action: #selector(UndoManager.redo),
-        keyEquivalent: "Z"
-      )
-      editMenu.addItem(.separator())
-      editMenu.addItem(
-        withTitle: OJDLocalized.string("menu.cut", fallback: "Cut"),
-        action: #selector(NSText.cut(_:)),
-        keyEquivalent: "x"
-      )
-      editMenu.addItem(
-        withTitle: OJDLocalized.string("menu.copy", fallback: "Copy"),
-        action: #selector(NSText.copy(_:)),
-        keyEquivalent: "c"
-      )
-      editMenu.addItem(
-        withTitle: OJDLocalized.string("menu.paste", fallback: "Paste"),
-        action: #selector(NSText.paste(_:)),
-        keyEquivalent: "v"
-      )
-      editMenu.addItem(
-        withTitle: OJDLocalized.string("menu.selectAll", fallback: "Select All"),
-        action: #selector(NSText.selectAll(_:)),
-        keyEquivalent: "a"
-      )
-      let editItem = NSMenuItem(
-        title: OJDLocalized.string("menu.edit", fallback: "Edit"),
-        action: nil,
-        keyEquivalent: ""
-      )
-      editItem.submenu = editMenu
-      menu.addItem(editItem)
-
-      let windowMenu = NSMenu(title: OJDLocalized.string("menu.window", fallback: "Window"))
-      windowMenu.addItem(
-        withTitle: OJDLocalized.string("menu.minimize", fallback: "Minimize"),
-        action: #selector(NSWindow.performMiniaturize(_:)),
-        keyEquivalent: "m"
-      )
-      windowMenu.addItem(
-        withTitle: OJDLocalized.string("menu.zoom", fallback: "Zoom"),
-        action: #selector(NSWindow.performZoom(_:)),
-        keyEquivalent: ""
-      )
-      windowMenu.addItem(.separator())
-      windowMenu.addItem(
-        withTitle: OJDLocalized.string("menu.bringAllToFront", fallback: "Bring All to Front"),
-        action: #selector(NSApplication.arrangeInFront(_:)),
-        keyEquivalent: ""
-      )
-      let windowItem = NSMenuItem(
-        title: OJDLocalized.string("menu.window", fallback: "Window"),
-        action: nil,
-        keyEquivalent: ""
-      )
-      windowItem.submenu = windowMenu
-      menu.addItem(windowItem)
-      NSApplication.shared.windowsMenu = windowMenu
-      return menu
-    }
-
-    @objc
-    private func saveSupportReport(_ sender: Any?) {
-      let panel = NSSavePanel()
-      panel.title = OJDLocalized.string("debug.saveReportPanel", fallback: "Save Debug Report")
-      panel.nameFieldStringValue = viewModel.defaultSupportReportFilename
-      panel.canCreateDirectories = true
-      panel.begin { [viewModel] response in
-        guard response == .OK, let outputURL = panel.url else { return }
-        Task { @MainActor in await viewModel.saveSupportReport(to: outputURL) }
-      }
-    }
-
-    @objc
-    private func saveSupportLogs(_ sender: Any?) {
-      let panel = NSSavePanel()
-      panel.title = OJDLocalized.string("debug.saveLogsPanel", fallback: "Save Debug Logs")
-      panel.nameFieldStringValue = viewModel.defaultSupportLogsFilename
-      panel.canCreateDirectories = true
-      panel.begin { [viewModel] response in
-        guard response == .OK, let outputURL = panel.url else { return }
-        Task { @MainActor in await viewModel.saveSupportLogs(to: outputURL) }
-      }
-    }
-
-    @objc
-    private func openProjectPage(_ sender: Any?) {
-      guard let url = URL(string: "https://github.com/xsyetopz/OpenJoystickDriver") else { return }
-      NSWorkspace.shared.open(url)
-    }
-
-    @objc
-    private func showAbout(_ sender: Any?) {
-      let repositoryTitle = OJDLocalized.string("menu.projectPage", fallback: "GitHub")
-      let credits = NSMutableAttributedString(string: repositoryTitle)
-      if let url = URL(string: "https://github.com/xsyetopz/OpenJoystickDriver") {
-        credits.addAttribute(.link, value: url, range: NSRange(location: 0, length: credits.length))
-      }
-      var options: [NSApplication.AboutPanelOptionKey: Any] = [
-        .applicationName: OJDLocalized.string("app.name", fallback: "OpenJoystickDriver"),
-        .applicationVersion: ApplicationVersion.display, .credits: credits,
-      ]
-      if let icon = NSImage(named: NSImage.applicationIconName) { options[.applicationIcon] = icon }
-      NSApplication.shared.orderFrontStandardAboutPanel(options: options)
-      NSApplication.shared.activate(ignoringOtherApps: true)
-    }
   }
 
 #else

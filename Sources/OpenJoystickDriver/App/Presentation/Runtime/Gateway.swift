@@ -2,7 +2,7 @@ import Combine
 import Foundation
 import OpenJoystickDriverKit
 
-protocol ApplicationServiceGateway: Sendable {
+protocol RuntimeStatusGateway: Sendable {
   func status() async throws -> ApplicationServiceStatusPayload
   func virtualDeviceDiagnostics() async throws -> ApplicationServiceVirtualDeviceDiagnosticsPayload
   func requestPermissions() async throws -> PermissionManager.Snapshot
@@ -10,8 +10,14 @@ protocol ApplicationServiceGateway: Sendable {
     _ requirement: PermissionManager.Requirement
   ) async throws -> PermissionManager.Snapshot
   func deviceInputState(for selector: RuntimeDeviceSelector) async throws -> DeviceInputState?
-  func packetLog(for selector: RuntimeDeviceSelector) async throws -> [PacketLogEntry]
+}
 
+protocol ControllerDiagnosticsGateway: Sendable {
+  func deviceInputState(for selector: RuntimeDeviceSelector) async throws -> DeviceInputState?
+  func packetLog(for selector: RuntimeDeviceSelector) async throws -> [PacketLogEntry]
+}
+
+protocol RemappingGateway: Sendable {
   func remappingSnapshot() async throws -> ApplicationServiceRemappingSnapshotPayload
   func remappingProfile(id: UUID) async throws -> RemappingProfile
   func createRemappingProfile(
@@ -43,10 +49,16 @@ protocol ApplicationServiceGateway: Sendable {
   func unpairRemappingJoyCons(
     sessionID: UUID
   ) async throws -> ApplicationServiceRemappingSnapshotPayload
+}
 
+protocol CompatibilityGateway: Sendable {
   func compatibilityIdentity() async throws -> CompatibilityIdentity
   func setCompatibilityIdentity(_ identity: CompatibilityIdentity) async throws -> Bool
 }
+
+protocol ApplicationServiceGateway: RuntimeStatusGateway, ControllerDiagnosticsGateway,
+  RemappingGateway, CompatibilityGateway
+{}
 
 enum ApplicationServiceGatewayError: Error, LocalizedError, Sendable, Equatable {
   case invalidCompatibilityIdentity(String)
@@ -68,8 +80,9 @@ enum ApplicationServiceGatewayError: Error, LocalizedError, Sendable, Equatable 
   }
 }
 
-final class ApplicationServiceClientGateway: @unchecked Sendable, ApplicationServiceGateway {
-  let client: ApplicationServiceClient
+actor ApplicationServiceClientGateway: ApplicationServiceGateway {
+  private let client: ApplicationServiceClient
+  private var connectionTask: Task<Void, Never>?
 
   init(client: ApplicationServiceClient = ApplicationServiceClient()) { self.client = client }
 
@@ -218,8 +231,108 @@ final class ApplicationServiceClientGateway: @unchecked Sendable, ApplicationSer
 
   private func ensureConnection() async {
     guard !client.isConnected else { return }
+    if let connectionTask {
+      await connectionTask.value
+      return
+    }
     let client = self.client
-    await Task.detached(priority: nil) { client.connect() }.value
+    let task = Task.detached(priority: nil) { client.connect() }
+    connectionTask = task
+    await task.value
+    connectionTask = nil
+  }
+}
+
+extension ApplicationServiceClientGateway: InputTestDeviceGateway {
+  func inputState(for selector: RuntimeDeviceSelector) async throws -> DeviceInputState? {
+    try await deviceInputState(for: selector)
+  }
+
+  func sendRumble(
+    for selector: RuntimeDeviceSelector,
+    left: UInt8,
+    right: UInt8,
+    leftTrigger: UInt8,
+    rightTrigger: UInt8,
+    durationMilliseconds: Int
+  ) async throws -> Bool {
+    await ensureConnection()
+    return try await client.sendPhysicalRumble(
+      vendorID: selector.vendorID,
+      productID: selector.productID,
+      runtimeIdentifier: selector.runtimeIdentifier,
+      left: left,
+      right: right,
+      lt: leftTrigger,
+      rt: rightTrigger,
+      durationMs: durationMilliseconds
+    )
+  }
+
+  func setPlayerIndicator(
+    for selector: RuntimeDeviceSelector,
+    indicator: PhysicalPlayerIndicator
+  ) async throws -> Bool {
+    await ensureConnection()
+    return try await client.setPhysicalPlayerIndicator(
+      vendorID: selector.vendorID,
+      productID: selector.productID,
+      runtimeIdentifier: selector.runtimeIdentifier,
+      indicator: indicator
+    )
+  }
+
+  func previewColor(
+    for selector: RuntimeDeviceSelector,
+    token: UUID,
+    red: UInt8,
+    green: UInt8,
+    blue: UInt8
+  ) async throws -> Bool {
+    await ensureConnection()
+    return try await client.previewPhysicalColor(
+      vendorID: selector.vendorID,
+      productID: selector.productID,
+      runtimeIdentifier: selector.runtimeIdentifier,
+      token: token,
+      red: red,
+      green: green,
+      blue: blue
+    )
+  }
+
+  func releaseColorPreview(for selector: RuntimeDeviceSelector, token: UUID) async throws -> Bool {
+    await ensureConnection()
+    return try await client.releasePhysicalColorPreview(
+      vendorID: selector.vendorID,
+      productID: selector.productID,
+      runtimeIdentifier: selector.runtimeIdentifier,
+      token: token
+    )
+  }
+
+  func setBrightness(for selector: RuntimeDeviceSelector, brightness: UInt8) async throws -> Bool {
+    await ensureConnection()
+    return try await client.setPhysicalBrightness(
+      vendorID: selector.vendorID,
+      productID: selector.productID,
+      runtimeIdentifier: selector.runtimeIdentifier,
+      brightness: brightness
+    )
+  }
+
+  func motionCalibration(
+    for selector: RuntimeDeviceSelector,
+    command: RemappingMotionCalibrationCommand?
+  ) async throws -> RemappingMotionCalibrationStatus {
+    guard let runtimeIdentifier = selector.runtimeIdentifier else {
+      throw RemappingMotionCalibrationError.controllerUnavailable
+    }
+    await ensureConnection()
+    return try await client.remappingMotionCalibration(
+      runtimeIdentifier: runtimeIdentifier,
+      command: command
+    )
   }
 }
 
