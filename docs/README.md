@@ -50,6 +50,7 @@ Choose the shortest path for your task.
 - [Local tester builds](development/tester-builds.md)
 - [Implementation status](development/implementation-status.md)
 - [Issue audit](development/issue-audit.md)
+- [Release reconciliation](development/releases.md)
 - [Experimental controllers](development/experimental-controllers.md)
 - [xpad import](development/xpad-import.md)
 - [Compatibility sources](development/compatibility-sources.md)
