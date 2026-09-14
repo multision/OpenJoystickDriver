@@ -31,6 +31,8 @@
     private let preferences: SettingsPreferencesModel
     private let console: ConsoleViewModel
     private let developerTools: DeveloperToolsViewModel
+    private let controllers: ControllersViewModel
+    private let profiles: ProfilesViewModel
     private var developerToolsObservation: AnyCancellable?
 
     init(
@@ -47,6 +49,8 @@
       )
       console = ConsoleViewModel()
       developerTools = DeveloperToolsViewModel(gateway: viewModel.gateway)
+      controllers = ControllersViewModel(runtime: viewModel)
+      profiles = ProfilesViewModel()
       let rootView = SettingsRootView(
         navigation: navigation,
         viewModel: viewModel,
@@ -54,6 +58,8 @@
         preferences: preferences,
         console: console,
         developerTools: developerTools,
+        controllers: controllers,
+        profiles: profiles,
         restartApplication: restartApplication,
         openInputTest: openInputTest
       )

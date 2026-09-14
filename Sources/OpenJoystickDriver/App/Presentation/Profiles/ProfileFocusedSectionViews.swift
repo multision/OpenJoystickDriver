@@ -20,17 +20,19 @@
           emptyMessage: OJDLocalized.string("profiles.noChords", fallback: "No chords configured."),
           add: { openSheet(.chord) },
           content: {
-          ForEach(profile.chords) { chord in
-            HStack {
-              Text(
-                chord.sources.map(RuntimePresentation.sourceLabel).sorted().joined(separator: " + ")
-              )
-              OJDSystemSymbol(name: "arrow.right", fallback: "->")
-              KeyboardDestinationLabel(destination: chord.destination)
-              Spacer()
-              removeButton { removeChord(chord.id) }
+            ForEach(profile.chords) { chord in
+              HStack {
+                Text(
+                  chord.sources.map(RuntimePresentation.sourceLabel).sorted().joined(
+                    separator: " + "
+                  )
+                )
+                OJDSystemSymbol(name: "arrow.right", fallback: "->")
+                KeyboardDestinationLabel(destination: chord.destination)
+                Spacer()
+                removeButton { removeChord(chord.id) }
+              }
             }
-          }
           }
         )
         combinationGroup(
@@ -43,18 +45,20 @@
           ),
           add: { openSheet(.sequence) },
           content: {
-          ForEach(profile.sequences) { sequence in
-            HStack {
-              Text(sequence.sources.map(RuntimePresentation.sourceLabel).joined(separator: " -> "))
-              Text(String(format: "(%.0f ms)", sequence.windowMs)).foregroundColor(
-                Color(NSColor.secondaryLabelColor)
-              )
-              OJDSystemSymbol(name: "arrow.right", fallback: "->")
-              KeyboardDestinationLabel(destination: sequence.destination)
-              Spacer()
-              removeButton { removeSequence(sequence.id) }
+            ForEach(profile.sequences) { sequence in
+              HStack {
+                Text(
+                  sequence.sources.map(RuntimePresentation.sourceLabel).joined(separator: " -> ")
+                )
+                Text(String(format: "(%.0f ms)", sequence.windowMs)).foregroundColor(
+                  Color(NSColor.secondaryLabelColor)
+                )
+                OJDSystemSymbol(name: "arrow.right", fallback: "->")
+                KeyboardDestinationLabel(destination: sequence.destination)
+                Spacer()
+                removeButton { removeSequence(sequence.id) }
+              }
             }
-          }
           }
         )
       }
