@@ -96,6 +96,32 @@ struct DeveloperToolsTests {
 
   @Test
   @MainActor
+  func preservesDS4BluetoothReportsAsActivityInOrderAndExport() async throws {
+    let report = try packetEntry(
+      timestamp: 1,
+      hex: "11 " + Array(repeating: "00", count: 77).joined(separator: " "),
+      length: 78
+    )
+    let next = try packetEntry(timestamp: 2, hex: "20", length: 1)
+    let model = DeveloperToolsViewModel(
+      gateway: GatewayStub(
+        statusPayload: statusPayload(device: device()),
+        inputState: inputState(button: nil),
+        packetEntries: [report, next]
+      )
+    )
+
+    await model.refresh()
+
+    #expect(model.displayedPackets.map(\.hex) == [report.hex, next.hex])
+    #expect(model.displayedPackets.first?.length == 78)
+    let exported = try JSONDecoder().decode([PacketLogEntry].self, from: model.encodedPacketLog())
+    #expect(exported.map(\.hex) == [report.hex, next.hex])
+    #expect(exported.map(\.length) == [78, 1])
+  }
+
+  @Test
+  @MainActor
   func captureIgnoresTheBaselineAndAppendsNewPackets() async throws {
     let first = try packetEntry(timestamp: 1, hex: "01")
     let second = try packetEntry(timestamp: 2, hex: "02")
@@ -193,6 +219,49 @@ struct DeveloperToolsTests {
     #expect(model.selectedDevice?.runtimeIdentifier == "controller-1")
   }
 
+  @Test
+  @MainActor
+  func repeatedSwitchingJoinsPredecessorsAndCloseLeavesNoOperation() async throws {
+    let firstDevice = device(runtimeIdentifier: "controller-1")
+    let secondDevice = device(runtimeIdentifier: "controller-2")
+    let firstPacket = try packetEntry(timestamp: 1, hex: "11")
+    let secondPacket = try packetEntry(timestamp: 2, hex: "12")
+    let gateway = GatewayStub(
+      statusPayload: statusPayload(devices: [firstDevice, secondDevice]),
+      inputStatesByRuntimeIdentifier: [
+        firstDevice.runtimeIdentifier: inputState(button: .mute),
+        secondDevice.runtimeIdentifier: inputState(button: .touchpad),
+      ],
+      packetEntriesByRuntimeIdentifier: [
+        firstDevice.runtimeIdentifier: [firstPacket],
+        secondDevice.runtimeIdentifier: [secondPacket],
+      ],
+      deviceReadDelaysNanoseconds: [
+        firstDevice.runtimeIdentifier: 5_000_000,
+        secondDevice.runtimeIdentifier: 5_000_000,
+      ]
+    )
+    let model = DeveloperToolsViewModel(gateway: gateway)
+    await model.refresh()
+
+    for index in 0..<20 {
+      model.selectDevice(
+        runtimeIdentifier: index.isMultiple(of: 2)
+          ? secondDevice.runtimeIdentifier : firstDevice.runtimeIdentifier
+      )
+    }
+    model.selectDevice(runtimeIdentifier: secondDevice.runtimeIdentifier)
+    await waitUntil { model.packets.map(\.hex) == [secondPacket.hex] }
+
+    #expect(await gateway.maximumConcurrentDeviceReads <= 2)
+    model.startCapture()
+    await waitUntil { model.isCapturing }
+    model.close()
+    await waitUntil { !model.hasActiveOperation }
+    #expect(!model.isCapturing)
+    #expect(!model.hasActiveOperation)
+  }
+
   private func device(
     runtimeIdentifier: String = "controller-1"
   ) -> ApplicationServiceDeviceDescription {
@@ -237,10 +306,11 @@ struct DeveloperToolsTests {
   private func packetEntry(
     timestamp: TimeInterval,
     direction: String = "rx",
-    hex: String
+    hex: String,
+    length: Int = 1
   ) throws -> PacketLogEntry {
     let data = try JSONSerialization.data(withJSONObject: [
-      "timestamp": timestamp, "direction": direction, "hex": hex, "length": 1,
+      "timestamp": timestamp, "direction": direction, "hex": hex, "length": length,
     ])
     return try JSONDecoder().decode(PacketLogEntry.self, from: data)
   }

@@ -46,7 +46,7 @@
     @Published
     var packetFilter = PacketFilter.activity
 
-    /// Packet filtering affects the console and copy action, while export retains ``packets``.
+    /// Packet filtering affects only the console; copy and export retain ``packets``.
     var displayedPackets: [PacketLogEntry] {
       switch packetFilter {
       case .activity: packets.filter { $0.classification == .activity }
@@ -66,10 +66,10 @@
     private let gateway: any ApplicationServiceGateway
     private let pollIntervalNanoseconds: UInt64
     private let sleep: Sleep
-    private var captureTask: Task<Void, Never>?
-    private var captureGeneration: UInt64 = 0
-    private var snapshotTask: Task<Void, Never>?
-    private var snapshotGeneration: UInt64 = 0
+    private var operationTask: Task<Void, Never>?
+    private var operationGeneration: UInt64 = 0
+
+    var hasActiveOperation: Bool { operationTask != nil }
 
     init(
       gateway: any ApplicationServiceGateway,
@@ -95,22 +95,21 @@
     }
 
     func requestRefresh() {
-      let generation = beginSnapshotRequest()
-      snapshotTask = Task { [weak self] in await self?.performRefresh(generation: generation) }
+      replaceOperation { model, generation in await model.performRefresh(generation: generation) }
     }
 
     func refresh() async {
-      let generation = beginSnapshotRequest()
-      await performRefresh(generation: generation)
+      await replaceOperation { model, generation in
+        await model.performRefresh(generation: generation)
+      }.value
     }
 
     private func performRefresh(generation: UInt64) async {
-      guard snapshotRequestIsCurrent(generation) else { return }
-      stopCapture(finalState: .idle)
+      guard operationIsCurrent(generation) else { return }
       loadState = .loading
       do {
         let status = try await gateway.status()
-        guard snapshotRequestIsCurrent(generation) else { return }
+        guard operationIsCurrent(generation) else { return }
         devices = status.connectedDevices
         guard !devices.isEmpty else {
           selectedDevice = nil
@@ -126,8 +125,7 @@
         loadState = .ready
         if let selectedDevice { await refreshSnapshot(for: selectedDevice, generation: generation) }
       } catch {
-        guard snapshotRequestIsCurrent(generation) else { return }
-        stopCapture(finalState: .idle)
+        guard operationIsCurrent(generation) else { return }
         loadState = .unavailable(RuntimePresentation.userFacingError(error))
       }
     }
@@ -136,34 +134,32 @@
       guard let device = devices.first(where: { $0.runtimeIdentifier == runtimeIdentifier }),
         device.runtimeIdentifier != selectedDevice?.runtimeIdentifier
       else { return }
-      let generation = beginSnapshotRequest()
-      stopCapture(finalState: .idle)
       selectedDevice = device
       latestInput = nil
       packets = []
       observedExtraInputs = []
-      snapshotTask = Task { [weak self] in
-        await self?.refreshSnapshot(for: device, generation: generation)
+      replaceOperation { model, generation in
+        await model.refreshSnapshot(for: device, generation: generation)
       }
     }
 
     func startCapture() {
       guard let device = selectedDevice, !isCapturing else { return }
-      beginSnapshotRequest()
-      stopCapture(finalState: .starting)
       packets = []
       observedExtraInputs = []
-      captureGeneration &+= 1
-      let generation = captureGeneration
-      let selector = RuntimeDeviceSelector(device: device)
-      captureTask = Task { [weak self] in
-        await self?.captureLoop(selector: selector, generation: generation)
+      captureState = .starting
+      replaceOperation { model, generation in
+        await model.captureLoop(device: device, generation: generation)
       }
     }
 
     func stopCapture() {
-      let state: CaptureState = packets.isEmpty ? .noPackets : .stopped
-      stopCapture(finalState: state)
+      let finalState: CaptureState = packets.isEmpty ? .noPackets : .stopped
+      captureState = finalState
+      replaceOperation { model, generation in
+        guard model.operationIsCurrent(generation) else { return }
+        model.captureState = finalState
+      }
     }
 
     func clearCapture() {
@@ -173,8 +169,11 @@
     }
 
     func close() {
-      beginSnapshotRequest()
-      stopCapture(finalState: .idle)
+      captureState = .idle
+      replaceOperation { model, generation in
+        guard model.operationIsCurrent(generation) else { return }
+        model.captureState = .idle
+      }
     }
 
     func encodedPacketLog() throws -> Data {
@@ -192,28 +191,30 @@
         async let input = gateway.deviceInputState(for: selector)
         async let packetLog = gateway.packetLog(for: selector)
         let (nextInput, nextPackets) = try await (input, packetLog)
-        guard snapshotRequestIsCurrent(generation, device: device) else { return }
+        guard operationIsCurrent(generation, device: device) else { return }
         latestInput = nextInput
         packets = nextPackets
         updateObservedExtraInputs(from: latestInput)
         captureState = packets.isEmpty ? .noPackets : .idle
       } catch {
-        guard snapshotRequestIsCurrent(generation, device: device) else { return }
+        guard operationIsCurrent(generation, device: device) else { return }
         captureState = .failed(RuntimePresentation.userFacingError(error))
       }
     }
 
-    private func captureLoop(selector: RuntimeDeviceSelector, generation: UInt64) async {
+    private func captureLoop(device: ApplicationServiceDeviceDescription, generation: UInt64) async
+    {
+      let selector = RuntimeDeviceSelector(device: device)
       do {
         var cursor = PacketLogSnapshotCursor(snapshot: try await gateway.packetLog(for: selector))
-        guard captureGeneration == generation else { return }
+        guard operationIsCurrent(generation, device: device) else { return }
         captureState = .capturing
 
-        while !Task.isCancelled, captureGeneration == generation {
+        while operationIsCurrent(generation, device: device) {
           async let input = gateway.deviceInputState(for: selector)
           async let packetLog = gateway.packetLog(for: selector)
           let (nextInput, snapshot) = try await (input, packetLog)
-          guard captureGeneration == generation else { return }
+          guard operationIsCurrent(generation, device: device) else { return }
           latestInput = nextInput
           updateObservedExtraInputs(from: nextInput)
           packets.append(contentsOf: cursor.consume(snapshot: snapshot))
@@ -221,32 +222,34 @@
           try await sleep(pollIntervalNanoseconds)
         }
       } catch is CancellationError { return } catch {
-        guard captureGeneration == generation else { return }
-        captureTask = nil
+        guard operationIsCurrent(generation, device: device) else { return }
         captureState = .failed(RuntimePresentation.userFacingError(error))
       }
     }
 
-    private func stopCapture(finalState: CaptureState) {
-      captureGeneration &+= 1
-      captureTask?.cancel()
-      captureTask = nil
-      captureState = finalState
-    }
-
     @discardableResult
-    private func beginSnapshotRequest() -> UInt64 {
-      snapshotGeneration &+= 1
-      snapshotTask?.cancel()
-      snapshotTask = nil
-      return snapshotGeneration
+    private func replaceOperation(
+      _ operation: @escaping @MainActor (DeveloperToolsViewModel, UInt64) async -> Void
+    ) -> Task<Void, Never> {
+      operationGeneration &+= 1
+      let generation = operationGeneration
+      let predecessor = operationTask
+      predecessor?.cancel()
+      let task = Task { [weak self, predecessor] in
+        if let predecessor { await predecessor.value }
+        guard let self, self.operationIsCurrent(generation) else { return }
+        await operation(self, generation)
+        if self.operationGeneration == generation { self.operationTask = nil }
+      }
+      operationTask = task
+      return task
     }
 
-    private func snapshotRequestIsCurrent(
+    private func operationIsCurrent(
       _ generation: UInt64,
       device: ApplicationServiceDeviceDescription? = nil
     ) -> Bool {
-      guard !Task.isCancelled, snapshotGeneration == generation else { return false }
+      guard !Task.isCancelled, operationGeneration == generation else { return false }
       guard let device else { return true }
       return selectedDevice?.runtimeIdentifier == device.runtimeIdentifier
     }

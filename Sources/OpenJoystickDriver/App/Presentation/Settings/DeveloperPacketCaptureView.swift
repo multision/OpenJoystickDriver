@@ -9,6 +9,7 @@
     var model: DeveloperToolsViewModel
 
     var body: some View {
+      let displayedPackets = model.displayedPackets
       GroupBox {
         VStack(alignment: .leading, spacing: 12) {
           HStack(spacing: 8) {
@@ -38,14 +39,14 @@
               action: model.clearCapture
             ).disabled(model.packets.isEmpty && model.observedExtraInputs.isEmpty)
             Button(OJDLocalized.string("common.copyAll", fallback: "Copy All"), action: copyAll)
-              .disabled(model.displayedPackets.isEmpty)
+              .disabled(model.packets.isEmpty)
             Button(
               OJDLocalized.string("common.export", fallback: "Export..."),
               action: presentSavePanel
             ).disabled(model.packets.isEmpty)
           }
 
-          packetList
+          packetList(displayedPackets)
 
           if model.hiddenIdlePacketCount > 0 {
             Text(
@@ -108,8 +109,8 @@
     }
 
     @ViewBuilder
-    private var packetList: some View {
-      if model.displayedPackets.isEmpty {
+    private func packetList(_ packets: [PacketLogEntry]) -> some View {
+      if packets.isEmpty {
         VStack(alignment: .leading, spacing: 6) {
           Text(
             model.isCapturing
@@ -132,32 +133,11 @@
           }
         }.padding(10).frame(maxWidth: .infinity, minHeight: 90, alignment: .topLeading)
       } else {
-        GeometryReader { geometry in
-          ScrollView([.horizontal, .vertical]) {
-            VStack(alignment: .leading, spacing: 3) {
-              Text(
-                OJDLocalized.string(
-                  "developer.packetColumns",
-                  fallback: "Time       Direction  Bytes  Data"
-                )
-              ).font(.system(.caption, design: .monospaced).weight(.semibold)).foregroundColor(
-                Color(NSColor.secondaryLabelColor)
-              )
-              ForEach(Array(model.displayedPackets.enumerated()), id: \.offset) { _, packet in
-                Text(packetLine(packet)).font(.system(.caption, design: .monospaced)).fixedSize(
-                  horizontal: true,
-                  vertical: false
-                ).textSelectionIfAvailable()
-              }
-            }.padding(10).frame(minWidth: geometry.size.width, alignment: .topLeading)
-          }
-        }.frame(minHeight: 160, maxHeight: 240).background(Color(NSColor.textBackgroundColor))
-          .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color(NSColor.separatorColor)))
+        DeveloperPacketTable(packets: packets).frame(minHeight: 160, maxHeight: 240)
       }
     }
 
-    private func packetLine(_ packet: PacketLogEntry) -> String {
-      let firstTimestamp = model.displayedPackets.first?.timestamp ?? packet.timestamp
+    private func packetLine(_ packet: PacketLogEntry, firstTimestamp: TimeInterval) -> String {
       let direction = packet.direction.uppercased().padding(
         toLength: 9,
         withPad: " ",
@@ -189,7 +169,8 @@
         "developer.packetColumns",
         fallback: "Time       Direction  Bytes  Data"
       )
-      let rows = [header] + model.displayedPackets.map(packetLine)
+      let firstTimestamp = model.packets.first?.timestamp ?? 0
+      let rows = [header] + model.packets.map { packetLine($0, firstTimestamp: firstTimestamp) }
       pasteboard.setString(rows.joined(separator: "\n"), forType: .string)
     }
 
@@ -207,6 +188,95 @@
         do { try model.encodedPacketLog().write(to: url, options: .atomic) } catch {
           NSAlert(error: error).runModal()
         }
+      }
+    }
+  }
+
+  private struct DeveloperPacketTable: NSViewRepresentable {
+    let packets: [PacketLogEntry]
+
+    func makeCoordinator() -> Coordinator { Coordinator() }
+
+    func makeNSView(context: Context) -> NSScrollView {
+      let table = NSTableView()
+      table.headerView = NSTableHeaderView()
+      table.usesAlternatingRowBackgroundColors = true
+      table.rowHeight = 20
+      table.delegate = context.coordinator
+      table.dataSource = context.coordinator
+      let column = NSTableColumn(identifier: NSUserInterfaceItemIdentifier("packet"))
+      column.title = OJDLocalized.string(
+        "developer.packetColumns",
+        fallback: "Time       Direction  Bytes  Data"
+      )
+      column.minWidth = 480
+      table.addTableColumn(column)
+      let scrollView = NSScrollView()
+      scrollView.documentView = table
+      scrollView.hasVerticalScroller = true
+      scrollView.hasHorizontalScroller = true
+      scrollView.autohidesScrollers = true
+      scrollView.borderType = .bezelBorder
+      scrollView.setAccessibilityLabel(
+        OJDLocalized.string("developer.packetCapture", fallback: "Raw Packet Capture")
+      )
+      return scrollView
+    }
+
+    func updateNSView(_ scrollView: NSScrollView, context: Context) {
+      context.coordinator.packets = packets
+      (scrollView.documentView as? NSTableView)?.reloadData()
+    }
+
+    final class Coordinator: NSObject, NSTableViewDataSource, NSTableViewDelegate {
+      var packets: [PacketLogEntry] = []
+
+      func numberOfRows(in tableView: NSTableView) -> Int { packets.count }
+
+      func tableView(
+        _ tableView: NSTableView,
+        viewFor tableColumn: NSTableColumn?,
+        row: Int
+      ) -> NSView? {
+        let identifier = NSUserInterfaceItemIdentifier("packet-cell")
+        let cell =
+          (tableView.makeView(withIdentifier: identifier, owner: nil) as? NSTableCellView)
+          ?? NSTableCellView()
+        cell.identifier = identifier
+        let textField: NSTextField
+        if let existing = cell.textField {
+          textField = existing
+        } else {
+          textField = NSTextField(labelWithString: "")
+          textField.translatesAutoresizingMaskIntoConstraints = false
+          textField.font = NSFont.monospacedSystemFont(
+            ofSize: NSFont.smallSystemFontSize,
+            weight: .regular
+          )
+          textField.lineBreakMode = .byClipping
+          cell.addSubview(textField)
+          cell.textField = textField
+          NSLayoutConstraint.activate([
+            textField.leadingAnchor.constraint(equalTo: cell.leadingAnchor, constant: 4),
+            textField.trailingAnchor.constraint(equalTo: cell.trailingAnchor, constant: -4),
+            textField.centerYAnchor.constraint(equalTo: cell.centerYAnchor),
+          ])
+        }
+        let packet = packets[row]
+        let firstTimestamp = packets.first?.timestamp ?? packet.timestamp
+        let direction = packet.direction.uppercased().padding(
+          toLength: 9,
+          withPad: " ",
+          startingAt: 0
+        )
+        textField.stringValue = String(
+          format: "+%7.3fs  %@  %5d  %@",
+          packet.timestamp - firstTimestamp,
+          direction,
+          packet.length,
+          packet.hex
+        )
+        return cell
       }
     }
   }
