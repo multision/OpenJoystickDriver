@@ -89,21 +89,33 @@ actor CompatibilityTransitionCoordinator {
 }
 
 final class CompatibilityFeedbackGate: @unchecked Sendable {
-  private let deviceManager: DeviceManager
+  typealias SendFeedback = @Sendable (DeviceIdentifier, VirtualRumbleCommand) async -> Void
+
+  private let sendFeedback: SendFeedback
   private let lock = NSLock()
   private var accepting = true
   private var generation: UInt64 = 0
-  private var active = 0
   private var cancellationHandlers: [UUID: @Sendable () -> Void] = [:]
-  private var waiters: [CheckedContinuation<Void, Never>] = []
 
-  init(deviceManager: DeviceManager) { self.deviceManager = deviceManager }
+  init(deviceManager: DeviceManager) {
+    sendFeedback = { identifier, command in
+      _ = await deviceManager.sendRumble(
+        for: identifier,
+        left: command.left,
+        right: command.right,
+        lt: command.leftTrigger,
+        rt: command.rightTrigger,
+        durationMs: command.durationMs
+      )
+    }
+  }
+
+  init(sendFeedback: @escaping SendFeedback) { self.sendFeedback = sendFeedback }
 
   func submit(identifier: DeviceIdentifier, command: VirtualRumbleCommand) {
     let token = UUID()
     let currentGeneration = lock.withLock { () -> UInt64? in
       guard accepting else { return nil }
-      active += 1
       return generation
     }
     guard let currentGeneration else { return }
@@ -112,14 +124,7 @@ final class CompatibilityFeedbackGate: @unchecked Sendable {
         self?.finish(token)
         return
       }
-      _ = await self.deviceManager.sendRumble(
-        for: identifier,
-        left: command.left,
-        right: command.right,
-        lt: command.leftTrigger,
-        rt: command.rightTrigger,
-        durationMs: command.durationMs
-      )
+      await self.sendFeedback(identifier, command)
       self.finish(token)
     }
     let shouldCancel = lock.withLock { () -> Bool in
@@ -141,32 +146,37 @@ final class CompatibilityFeedbackGate: @unchecked Sendable {
       generation &+= 1
       let cancellations = Array(cancellationHandlers.values)
       cancellationHandlers.removeAll()
-      if active == 0 {
-        let waiters = self.waiters
-        self.waiters.removeAll()
-        waiters.forEach { $0.resume() }
-      }
       return (wasAccepting, cancellations)
     }
     cancellations.forEach { $0() }
+
+    // A canceled HID/USB write is not required to cooperate with Swift task cancellation. Once
+    // admission advances to a new generation, quarantine those writes instead of waiting for
+    // their completion. Queue one neutral write per controller behind any late operation and
+    // bound only how long this transition waits for the neutralization attempt.
     do {
       try await withCompatibilityTimeout(timeout, clock: clock, error: .feedbackTimedOut) {
-        await self.waitForIdle()
-      }
-    } catch { return false }
-    for identifier in identifiers {
-      do {
-        try await withCompatibilityTimeout(timeout, clock: clock, error: .feedbackTimedOut) {
-          _ = await self.deviceManager.sendRumble(
-            for: identifier,
-            left: 0,
-            right: 0,
-            lt: 0,
-            rt: 0,
-            durationMs: 0
-          )
+        await withTaskGroup(of: Void.self) { group in
+          for identifier in identifiers {
+            group.addTask {
+              await self.sendFeedback(
+                identifier,
+                VirtualRumbleCommand(
+                  left: 0,
+                  right: 0,
+                  leftTrigger: 0,
+                  rightTrigger: 0,
+                  durationMs: 0
+                )
+              )
+            }
+          }
+          await group.waitForAll()
         }
-      } catch { return false }
+      }
+    } catch {
+      // The queued neutral writes remain owned by their transport workers. Their late completion
+      // cannot re-open feedback admission or mutate the compatibility publication.
     }
     if resumeWhenComplete && wasAccepting { resume() }
     return true
@@ -184,26 +194,7 @@ final class CompatibilityFeedbackGate: @unchecked Sendable {
   }
 
   private func finish(_ token: UUID) {
-    let waiters = lock.withLock { () -> [CheckedContinuation<Void, Never>] in
-      cancellationHandlers.removeValue(forKey: token)
-      active = max(0, active - 1)
-      guard active == 0 else { return [] }
-      let waiters = self.waiters
-      self.waiters.removeAll()
-      return waiters
-    }
-    waiters.forEach { $0.resume() }
-  }
-
-  private func waitForIdle() async {
-    await withCheckedContinuation { continuation in
-      let complete = lock.withLock { () -> Bool in
-        guard active > 0 else { return true }
-        waiters.append(continuation)
-        return false
-      }
-      if complete { continuation.resume() }
-    }
+    _ = lock.withLock { cancellationHandlers.removeValue(forKey: token) }
   }
 }
 
@@ -315,6 +306,7 @@ extension ApplicationServiceServer {
         requestedIdentity: identity,
         priorProfileIdentity: prior.liveIdentity ?? prior.requestedIdentity
       )
+      if prior.enabled, prior.dispatcher != nil { feedbackGate.resume() }
       return false
     }
     var zeroDeviceStarted: UInt64?

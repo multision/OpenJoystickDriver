@@ -39,6 +39,9 @@ public protocol HIDStartupOutputReportProvider: AnyObject {
 
   /// Whether startup output must be delivered before startup feature reads.
   var hidStartupOutputPrecedesFeatureReads: Bool { get }
+
+  /// Whether failed startup output must prevent virtual activation for this transport.
+  func requiresSuccessfulHIDStartupOutput(transport: String?) -> Bool
 }
 
 extension HIDStartupOutputReportProvider {
@@ -50,6 +53,13 @@ extension HIDStartupOutputReportProvider {
   public func hidStartupReportIntervalNanoseconds(transport _: String?) -> UInt64 { 0 }
 
   public var hidStartupOutputPrecedesFeatureReads: Bool { false }
+  public func requiresSuccessfulHIDStartupOutput(transport _: String?) -> Bool { false }
+}
+
+/// Parser-owned report liveness used when stale state can leave virtual controls held.
+public protocol ControllerInputReportLivenessProvider: AnyObject {
+  var inputReportLivenessTimeoutNanoseconds: UInt64 { get }
+  var latestInputReportIsNeutral: Bool { get }
 }
 
 /// Bounded follow-up reads for startup protocols whose replies arrive through the input stream.

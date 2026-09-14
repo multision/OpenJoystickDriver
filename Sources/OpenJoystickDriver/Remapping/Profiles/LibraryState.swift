@@ -4,6 +4,7 @@ import OpenJoystickDriverKit
 struct RemappingProfileLibrarySnapshot: Sendable {
   let profiles: [RemappingProfile]
   let activeProfiles: [RemappingActiveProfileSelection]
+  let issues: [ApplicationServiceRemappingProfileIssue]
 }
 
 struct RemappingActiveProfileSelection: Sendable {
@@ -34,6 +35,11 @@ struct RemappingProfileLibraryState: Codable, Sendable {
   }
 
   init() {}
+
+  init(profiles: [RemappingProfile], activeProfiles: [RemappingPersistedActiveProfile]) {
+    self.profiles = profiles
+    self.activeProfiles = activeProfiles
+  }
 
   init(from decoder: any Decoder) throws {
     let allKeys = try decoder.container(keyedBy: LibraryJSONKey.self).allKeys

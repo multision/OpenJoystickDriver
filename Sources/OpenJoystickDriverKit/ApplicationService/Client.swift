@@ -248,6 +248,57 @@ public final class ApplicationServiceClient: @unchecked Sendable {
     try await call("setCompatibilityIdentity", LocalServiceRPCStringArguments(value: raw))
   }
 
+  public func setCompatibilityIdentityDetailed(
+    _ raw: String
+  ) async throws -> CompatibilityIdentityTransitionResult {
+    let data: Data = try await call(
+      "setCompatibilityIdentityDetailed",
+      LocalServiceRPCStringArguments(value: raw)
+    )
+    guard
+      let result = try? JSONDecoder().decode(CompatibilityIdentityTransitionResult.self, from: data)
+    else { throw ApplicationServiceClientError.invalidResponse }
+    return result
+  }
+
+  public func suspendController(
+    vendorID: UInt16,
+    productID: UInt16,
+    runtimeIdentifier: String?
+  ) async throws -> ControllerSuspendResult {
+    let data: Data = try await call(
+      "suspendController",
+      LocalServiceRPCDeviceArguments(
+        vendorID: Int(vendorID),
+        productID: Int(productID),
+        runtimeIdentifier: runtimeIdentifier
+      )
+    )
+    guard let result = try? JSONDecoder().decode(ControllerSuspendResult.self, from: data) else {
+      throw ApplicationServiceClientError.invalidResponse
+    }
+    return result
+  }
+
+  public func resumeController(
+    vendorID: UInt16,
+    productID: UInt16,
+    runtimeIdentifier: String?
+  ) async throws -> ControllerResumeResult {
+    let data: Data = try await call(
+      "resumeController",
+      LocalServiceRPCDeviceArguments(
+        vendorID: Int(vendorID),
+        productID: Int(productID),
+        runtimeIdentifier: runtimeIdentifier
+      )
+    )
+    guard let result = try? JSONDecoder().decode(ControllerResumeResult.self, from: data) else {
+      throw ApplicationServiceClientError.invalidResponse
+    }
+    return result
+  }
+
   public func getCompatibilityIdentity() async throws -> String {
     try await call("getCompatibilityIdentity", LocalServiceRPCEmptyArguments())
   }
@@ -359,6 +410,24 @@ public final class ApplicationServiceClient: @unchecked Sendable {
     try await remappingCall(
       .deleteProfile,
       ApplicationServiceRemappingProfileIDArguments(profileID: id)
+    )
+  }
+
+  public func deleteDamagedRemappingProfile(
+    issueID: UUID
+  ) async throws -> ApplicationServiceRemappingSnapshotPayload {
+    try await remappingCall(
+      .deleteDamagedProfile,
+      ApplicationServiceRemappingProfileIssueArguments(issueID: issueID)
+    )
+  }
+
+  public func resetRemappingProfileLibrary(
+    issueID: UUID
+  ) async throws -> ApplicationServiceRemappingSnapshotPayload {
+    try await remappingCall(
+      .resetProfileLibrary,
+      ApplicationServiceRemappingProfileIssueArguments(issueID: issueID)
     )
   }
 

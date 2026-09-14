@@ -244,6 +244,8 @@ public actor DeviceManager {
           physicalOutputCapabilities: await pipeline?.physicalOutputCapabilities() ?? .none,
           physicalInputCapabilities: await pipeline?.physicalInputCapabilities() ?? .none,
           battery: await pipeline?.batteryTelemetry(),
+          sessionState: await pipeline?.controllerSessionState() ?? .active,
+          startupCommandStatus: await pipeline?.startupCommandStatus(),
           runtimeIdentifier: id.runtimeIdentifier
         )
       )
@@ -253,6 +255,61 @@ public actor DeviceManager {
 
   /// Returns live identifiers for connected controller pipelines.
   public func connectedDeviceIdentifiers() -> [DeviceIdentifier] { Array(pipelines.keys) }
+
+  public func suspendController(
+    vendorID: UInt16,
+    productID: UInt16,
+    runtimeIdentifier: String?
+  ) async -> ControllerSuspendResult {
+    let model = DeviceIdentifier(vendorID: vendorID, productID: productID)
+    guard
+      let identifier = connectedIdentifier(matching: model, runtimeIdentifier: runtimeIdentifier),
+      let pipeline = pipelines[identifier]
+    else { return ControllerSuspendResult(state: .active, failure: .notFound) }
+    guard await pipeline.controllerSessionState() == .active else {
+      return ControllerSuspendResult(state: .suspended, failure: .alreadySuspended)
+    }
+    await neutralizePhysicalOutputs(for: identifier, pipeline: pipeline)
+    guard await pipeline.suspendControllerSession() else {
+      return ControllerSuspendResult(state: .active, failure: .notFound)
+    }
+    return ControllerSuspendResult(state: .suspended)
+  }
+
+  public func resumeController(
+    vendorID: UInt16,
+    productID: UInt16,
+    runtimeIdentifier: String?
+  ) async -> ControllerResumeResult {
+    let model = DeviceIdentifier(vendorID: vendorID, productID: productID)
+    guard
+      let identifier = connectedIdentifier(matching: model, runtimeIdentifier: runtimeIdentifier),
+      let pipeline = pipelines[identifier]
+    else { return ControllerResumeResult(state: .suspended, failure: .notFound) }
+    guard await pipeline.controllerSessionState() == .suspended else {
+      return ControllerResumeResult(state: .active, failure: .alreadyActive)
+    }
+    guard await pipeline.restartUSBStartupOutputForResume() else {
+      return ControllerResumeResult(state: .suspended, failure: .notFound)
+    }
+    if let locationID = identifier.locationID,
+      await pipeline.requiresSuccessfulHIDStartupOutput(
+        transport: deviceInfos[identifier]?.connection
+      )
+    {
+      guard
+        await sendHIDStartupOutputReportsIfNeeded(
+          pipeline: pipeline,
+          locationID: locationID,
+          transport: deviceInfos[identifier]?.connection
+        )
+      else { return ControllerResumeResult(state: .suspended, failure: .notFound) }
+    }
+    guard await pipeline.resumeControllerSession() else {
+      return ControllerResumeResult(state: .suspended, failure: .notFound)
+    }
+    return ControllerResumeResult(state: .active)
+  }
 
   /// Stop all detection and pipelines.
   public func stop() async {

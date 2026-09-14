@@ -111,7 +111,9 @@ struct SonySensorSamplesTests {
       report[36 + index * 9] = UInt8(20 + index)
       report[37 + index * 9] = UInt8(index)
     }
-    let events = try DS4Parser().parse(data: Data([0xA1] + report))
+    var framed = [UInt8(0xA1)] + report
+    applyDS4BluetoothInputCRC(to: &framed, includesHIDTransaction: true)
+    let events = try DS4Parser().parse(data: Data(framed))
     let touches = events.compactMap { event -> ControllerTouchSample? in
       if case .touchSample(let sample) = event { return sample }
       return nil

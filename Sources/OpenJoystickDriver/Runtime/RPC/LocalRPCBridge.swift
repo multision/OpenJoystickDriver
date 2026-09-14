@@ -103,6 +103,12 @@ extension ApplicationServiceServer {
         case .deleteProfile:
           let value = try decodeRemapping(ApplicationServiceRemappingProfileIDArguments.self)
           deleteRemappingProfile(id: value.profileID, reply: sendRemapping)
+        case .deleteDamagedProfile:
+          let value = try decodeRemapping(ApplicationServiceRemappingProfileIssueArguments.self)
+          deleteDamagedRemappingProfile(value, reply: sendRemapping)
+        case .resetProfileLibrary:
+          let value = try decodeRemapping(ApplicationServiceRemappingProfileIssueArguments.self)
+          resetRemappingProfileLibrary(value, reply: sendRemapping)
         case .importProfile:
           let value = try decodeRemapping(ApplicationServiceRemappingProfileArguments.self)
           importRemappingProfile(value.profile, reply: sendRemapping)
@@ -220,7 +226,28 @@ extension ApplicationServiceServer {
       case "getVirtualDeviceDiagnostics": getVirtualDeviceDiagnostics(reply: send)
       case "setCompatibilityIdentity":
         setCompatibilityIdentity(try decode(LocalServiceRPCStringArguments.self).value, reply: send)
+      case "setCompatibilityIdentityDetailed":
+        setCompatibilityIdentityDetailed(
+          try decode(LocalServiceRPCStringArguments.self).value,
+          reply: send
+        )
       case "getCompatibilityIdentity": getCompatibilityIdentity(reply: send)
+      case "suspendController":
+        let value = try decode(LocalServiceRPCDeviceArguments.self)
+        suspendController(
+          vendorID: value.vendorID,
+          productID: value.productID,
+          runtimeIdentifier: value.runtimeIdentifier,
+          reply: send
+        )
+      case "resumeController":
+        let value = try decode(LocalServiceRPCDeviceArguments.self)
+        resumeController(
+          vendorID: value.vendorID,
+          productID: value.productID,
+          runtimeIdentifier: value.runtimeIdentifier,
+          reply: send
+        )
       case "runVirtualDeviceSelfTest":
         runVirtualDeviceSelfTest(
           seconds: try decode(LocalServiceRPCIntArguments.self).value,

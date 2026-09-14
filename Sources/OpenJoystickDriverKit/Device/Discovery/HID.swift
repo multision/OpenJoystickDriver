@@ -171,18 +171,22 @@ extension DeviceManager {
       transport: .hid(locationID: locationID),
       parser: parser,
       dispatcher: dispatcher,
-      externalOutputAllowed: externalOutputAllowed
+      externalOutputAllowed: false
     )
+    let requiresSuccessfulStartupOutput = await pipeline.requiresSuccessfulHIDStartupOutput(
+      transport: transport
+    )
+    if !requiresSuccessfulStartupOutput {
+      await pipeline.setExternalOutputAllowed(externalOutputAllowed)
+    }
     pipelines[identifier] = pipeline
     guard ownership != .ownedByAnotherClient else { return }
     await pipeline.start()
     guard pipelines[identifier] === pipeline else { return }
-    if !(await pipeline.requiresInputConnectionBeforeOutput()) {
-      await dispatcher.dispatch(events: [], from: identifier)
-    }
     let outputPrecedesFeatureReads = await pipeline.hidStartupOutputPrecedesFeatureReads()
+    var startupOutputSucceeded = true
     if outputPrecedesFeatureReads {
-      await sendHIDStartupOutputReportsIfNeeded(
+      startupOutputSucceeded = await sendHIDStartupOutputReportsIfNeeded(
         pipeline: pipeline,
         locationID: locationID,
         transport: transport
@@ -201,11 +205,21 @@ extension DeviceManager {
       )
     }
     if !outputPrecedesFeatureReads {
-      await sendHIDStartupOutputReportsIfNeeded(
+      startupOutputSucceeded = await sendHIDStartupOutputReportsIfNeeded(
         pipeline: pipeline,
         locationID: locationID,
         transport: transport
       )
+    }
+    if requiresSuccessfulStartupOutput {
+      guard startupOutputSucceeded else {
+        print("[DeviceManager] Required HID startup output failed for loc=\(locationID)")
+        return
+      }
+      await pipeline.setExternalOutputAllowed(externalOutputAllowed)
+    }
+    if !(await pipeline.requiresInputConnectionBeforeOutput()) {
+      await dispatcher.dispatch(events: [], from: identifier)
     }
     await requestHIDInputConnectionStatusIfNeeded(pipeline: pipeline, locationID: locationID)
     scheduleHIDPeriodicOutput(for: identifier, pipeline: pipeline, locationID: locationID)
@@ -289,29 +303,33 @@ extension DeviceManager {
     }
   }
 
-  private func sendHIDStartupOutputReportsIfNeeded(
+  func sendHIDStartupOutputReportsIfNeeded(
     pipeline: DevicePipeline,
     locationID: UInt32,
     transport: String?
-  ) async {
-    guard await isCurrentHIDStartupPipeline(pipeline) else { return }
+  ) async -> Bool {
+    guard await isCurrentHIDStartupPipeline(pipeline) else { return false }
     let (reports, interval) = await pipeline.hidStartupOutputPlan(transport: transport)
+    var succeeded = true
     if interval == 0 {
       for report in reports {
-        guard await isCurrentHIDStartupPipeline(pipeline) else { return }
+        guard await isCurrentHIDStartupPipeline(pipeline) else { return false }
         let sent = await hidManager.setOutputReport(locationID: locationID, report: report)
+        succeeded = succeeded && sent
         if !sent { print("[DeviceManager] HID startup output report failed for loc=\(locationID)") }
       }
       await runHIDStartupRecovery(pipeline: pipeline, locationID: locationID, interval: interval)
-      return
+      return succeeded
     }
     for (index, report) in reports.enumerated() {
-      if index > 0 { do { try await Task.sleep(nanoseconds: interval) } catch { return } }
-      guard !Task.isCancelled, await isCurrentHIDStartupPipeline(pipeline) else { return }
+      if index > 0 { do { try await Task.sleep(nanoseconds: interval) } catch { return false } }
+      guard !Task.isCancelled, await isCurrentHIDStartupPipeline(pipeline) else { return false }
       let sent = await hidManager.setOutputReport(locationID: locationID, report: report)
+      succeeded = succeeded && sent
       if !sent { print("[DeviceManager] HID startup output report failed for loc=\(locationID)") }
     }
     await runHIDStartupRecovery(pipeline: pipeline, locationID: locationID, interval: interval)
+    return succeeded
   }
 
   private func runHIDStartupRecovery(

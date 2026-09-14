@@ -84,6 +84,42 @@ private final class CancellableReportBackend: UserSpaceOutputDispatcher.VirtualD
   func close() {}
 }
 
+private actor NonCooperativeSendGate {
+  private var entered = false
+  private var released = false
+  private var entryWaiters: [CheckedContinuation<Void, Never>] = []
+  private var releaseWaiters: [CheckedContinuation<Void, Never>] = []
+
+  func wait() async {
+    entered = true
+    entryWaiters.forEach { $0.resume() }
+    entryWaiters.removeAll()
+    if !released { await withCheckedContinuation { releaseWaiters.append($0) } }
+  }
+
+  func waitForEntry() async {
+    if !entered { await withCheckedContinuation { entryWaiters.append($0) } }
+  }
+
+  func release() {
+    released = true
+    releaseWaiters.forEach { $0.resume() }
+    releaseWaiters.removeAll()
+  }
+}
+
+private final class NonCooperativeReportBackend: UserSpaceOutputDispatcher.VirtualDeviceBackend,
+  @unchecked Sendable
+{
+  private let lock = NSLock()
+  let gate = NonCooperativeSendGate()
+  private var closes = 0
+
+  func send(_ report: [UInt8]) async { await gate.wait() }
+  func close() { lock.withLock { closes += 1 } }
+  func closeCount() -> Int { lock.withLock { closes } }
+}
+
 private actor KeepaliveClock {
   private var ticks = 0
   private var cancelled = false
@@ -149,7 +185,7 @@ struct ReportSenderTests {
     try delegate.enqueueSetReport(type: .output, id: HIDReportID(rawValue: 1), data: Data(second))
     await gate.waitForEntry()
     await gate.open()
-    try await entry.sender.submit { [] }.value
+    try await entry.sender.submit { [] }.value()
 
     let reports = backend.snapshot().reports
     #expect(reports.count == 2)
@@ -170,11 +206,11 @@ struct ReportSenderTests {
     activity.set(false)
     let barrier = sender.submit { [] }
     await gate.open()
-    try await reports.value
-    try await barrier.value
+    try await reports.value()
+    try await barrier.value()
     #expect(backend.snapshot().reports == [[1]])
     activity.set(true)
-    try await sender.submit(whileActive: isActive) { [[3]] }.value
+    try await sender.submit(whileActive: isActive) { [[3]] }.value()
     #expect(backend.snapshot().reports == [[1], [3]])
     await sender.beginClose().value
   }
@@ -203,10 +239,10 @@ struct ReportSenderTests {
       bytes: [1, 0] + [UInt8](repeating: 0, count: 8) + [2]
     )
     await gate.open()
-    try await first.value
-    try await second.value
-    try await keepalive.value
-    try await reply.value
+    try await first.value()
+    try await second.value()
+    try await keepalive.value()
+    try await reply.value()
     let snapshot = backend.snapshot()
     #expect(snapshot.maxActive == 1)
     try #require(snapshot.reports.count == 4)
@@ -230,10 +266,10 @@ struct ReportSenderTests {
     let close = sender.beginClose()
     let repeatedClose = sender.beginClose()
     #expect(backend.snapshot().closes == 1)
-    await #expect(throws: CancellationError.self) { try await sender.submit { [[3]] }.value }
+    await #expect(throws: CancellationError.self) { try await sender.submit { [[3]] }.value() }
     await gate.open()
-    try await first.value
-    await #expect(throws: CancellationError.self) { try await queued.value }
+    try await first.value()
+    await #expect(throws: CancellationError.self) { try await queued.value() }
     await close.value
     await repeatedClose.value
     #expect(backend.snapshot().reports == [[1]])
@@ -249,6 +285,40 @@ struct ReportSenderTests {
     await backend.state.waitForEntry()
 
     await sender.beginClose().value
+  }
+
+  @Test(.timeLimit(.minutes(1)))
+  func closeCompletesWhenNativeSendIgnoresCancellation() async {
+    let backend = NonCooperativeReportBackend()
+    let sender = UserSpaceReportSender()
+    sender.attach(backend)
+    _ = sender.submit { [[1]] }
+    await backend.gate.waitForEntry()
+
+    await sender.beginClose().value
+    #expect(backend.closeCount() == 1)
+    await backend.gate.release()
+  }
+
+  @Test(.timeLimit(.minutes(1)))
+  func stalledControllerPublicationDoesNotBlockAnotherController() async throws {
+    let gate = ReportSendGate()
+    let stalledBackend = OrderedReportBackend(gate: gate)
+    let readyBackend = OrderedReportBackend()
+    let stalled = UserSpaceReportSender()
+    let ready = UserSpaceReportSender()
+    stalled.attach(stalledBackend)
+    ready.attach(readyBackend)
+
+    let blocked = stalled.submit { [[1]] }
+    await gate.waitForEntry()
+    try await ready.submit { [[2]] }.value()
+    #expect(readyBackend.snapshot().reports == [[2]])
+
+    await gate.open()
+    try await blocked.value()
+    await stalled.beginClose().value
+    await ready.beginClose().value
   }
 
   @Test(.timeLimit(.minutes(1)))

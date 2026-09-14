@@ -96,6 +96,148 @@ struct RemappingOutputPolicyTests {
     }
   }
 
+  @Test
+  func suppressesAllControllerInputClassifiesEveryOutputFamily() {
+    let policy = RemappingOutputPolicy(virtualGamepad: .mapped)
+    #expect(makeProfile(outputPolicy: policy).suppressesAllControllerInput)
+    #expect(
+      makeProfile(
+        outputPolicy: policy,
+        bindings: [
+          RemappingBinding(
+            source: .button(.south),
+            destination: .keyboard(key: .space, modifiers: [])
+          )
+        ]
+      ).suppressesAllControllerInput
+    )
+    #expect(
+      makeProfile(
+        outputPolicy: policy,
+        bindings: [
+          RemappingBinding(
+            source: .button(.south),
+            destination: .physical(.color(red: 1, green: 2, blue: 3))
+          )
+        ]
+      ).suppressesAllControllerInput
+    )
+    #expect(
+      !makeProfile(
+        outputPolicy: policy,
+        bindings: [RemappingBinding(source: .button(.south), destination: .gamepadButton(.south))]
+      ).suppressesAllControllerInput
+    )
+    #expect(
+      !RemappingProfile(
+        name: "Motion",
+        device: RemappingDeviceScope(vendorID: 1, productID: 2),
+        applicationScope: .global,
+        outputPolicy: policy,
+        gyroOutput: RemappingGyroOutput(mode: .leftStick),
+        bindings: []
+      ).suppressesAllControllerInput
+    )
+    #expect(
+      !RemappingProfile(
+        name: "Touch",
+        device: RemappingDeviceScope(vendorID: 1, productID: 2),
+        applicationScope: .global,
+        outputPolicy: policy,
+        touchMappings: [RemappingTouchMapping(surface: .primary, mode: .rightStick)],
+        bindings: []
+      ).suppressesAllControllerInput
+    )
+    #expect(
+      !RemappingProfile(
+        name: "Trigger",
+        device: RemappingDeviceScope(vendorID: 1, productID: 2),
+        applicationScope: .global,
+        outputPolicy: policy,
+        triggerMappings: [RemappingTriggerMapping(source: .left, passthrough: true)],
+        bindings: []
+      ).suppressesAllControllerInput
+    )
+    #expect(
+      !makeProfile(
+        outputPolicy: policy,
+        layers: [
+          RemappingLayer(
+            name: "Layer",
+            activationMode: .hold,
+            activator: .button(.leftShoulder),
+            bindings: [
+              RemappingBinding(source: .button(.south), destination: .gamepadButton(.south))
+            ]
+          )
+        ]
+      ).suppressesAllControllerInput
+    )
+  }
+
+  @Test
+  func restoringAndClearingInputPreserveOnlyTheRequiredProfileState() {
+    let profile = RemappingProfile(
+      id: UUID(uuidString: "00000000-0000-0000-0000-000000000001")!,
+      name: "Configured",
+      device: RemappingDeviceScope(vendorID: 1, productID: 2),
+      applicationScope: .application(bundleIdentifier: "com.example.Game"),
+      outputPolicy: RemappingOutputPolicy(virtualGamepad: .mapped, physicalInput: .exclusive),
+      physicalColor: RemappingPhysicalColor(red: 1, green: 2, blue: 3),
+      gyroOutput: RemappingGyroOutput(mode: .mouse),
+      stickMappings: [RemappingStickMapping(source: .left)],
+      triggerMappings: [RemappingTriggerMapping(source: .left)],
+      touchMappings: [RemappingTouchMapping(surface: .primary, mode: .pointer)],
+      bindings: [
+        RemappingBinding(
+          source: .button(.south),
+          destination: .keyboard(key: .space, modifiers: [])
+        )
+      ],
+      chords: [
+        RemappingChord(
+          sources: [.button(.south), .button(.east)],
+          destination: .keyboard(key: .a, modifiers: [])
+        )
+      ],
+      sequences: [
+        RemappingSequence(
+          sources: [.button(.south), .button(.east)],
+          windowMs: 200,
+          destination: .keyboard(key: .b, modifiers: [])
+        )
+      ],
+      layers: [
+        RemappingLayer(name: "Layer", activationMode: .hold, activator: .button(.leftShoulder))
+      ]
+    )
+
+    let restored = profile.restoringDefaultInput()
+    #expect(restored.outputPolicy.virtualGamepad == .passthrough)
+    #expect(restored.outputPolicy.physicalInput == .exclusive)
+    #expect(restored.id == profile.id)
+    #expect(restored.bindings == profile.bindings)
+    #expect(restored.physicalColor == profile.physicalColor)
+
+    let cleared = profile.clearingAllInput()
+    #expect(cleared.suppressesAllControllerInput)
+    #expect(cleared.outputPolicy.physicalInput == .exclusive)
+    #expect(cleared.id == profile.id)
+    #expect(cleared.name == profile.name)
+    #expect(cleared.device == profile.device)
+    #expect(cleared.applicationScope == profile.applicationScope)
+    #expect(cleared.physicalColor == profile.physicalColor)
+    #expect(cleared.motionTuning == .default)
+    #expect(cleared.gyroOutput == .default)
+    #expect(cleared.stickMappings.isEmpty)
+    #expect(cleared.triggerMappings.isEmpty)
+    #expect(cleared.touchMappings.isEmpty)
+    #expect(cleared.bindings.isEmpty)
+    #expect(cleared.chords.isEmpty)
+    #expect(cleared.sequences.isEmpty)
+    #expect(cleared.layers.isEmpty)
+  }
+
   private func makeProfile(
     outputPolicy: RemappingOutputPolicy = .systemInput,
     bindings: [RemappingBinding] = [],

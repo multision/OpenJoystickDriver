@@ -4,6 +4,21 @@ OpenJoystickDriver 0.5 uses a persistent application runtime. The signed app hos
 processing, virtual output, login registration, permission state, and the authenticated local RPC
 endpoint. No helper daemon or LaunchAgent is packaged.
 
+The beta.4 retirement audit keeps only current consumers: the foreground app owns the runtime and
+login item, the authenticated Unix socket remains the typed GUI/CLI service boundary, and the
+installed-CLI forwarder prevents an unsigned or stale repository executable from impersonating the
+signed client. Historical profile versions are rejected rather than migrated. Current profile
+formats, RPC payloads, macOS 10.15 platform fallbacks, hardware/parser fallbacks, and virtual
+compatibility identities remain active contracts. Packaging and source searches confirm that no
+helper daemon, LaunchAgent plist, daemon launcher, obsolete GUI registration, or alternate RPC route
+is shipped, so there is no consumer-free daemon-era resource to remove.
+
+Controller sessions distinguish physical connection from reversible OJD suspension. Compatibility
+transitions use bounded shutdown and retain the actual live identity after a failed replacement.
+Complete DualShock 4 Bluetooth reports require a valid CRC; stale non-neutral output is retired
+after one second and recovers at a fresh neutral report. GameSir G7 SE startup keeps the mandatory
+GIP LED-on command on every USB open and resume, with the latest startup result in diagnostics.
+
 Quit requests share one asynchronous teardown and leave the app stopped. TCC
 reopen remains a native system action. Profile-library versions other than the
 current schema return a typed unsupported-version error; loading an empty

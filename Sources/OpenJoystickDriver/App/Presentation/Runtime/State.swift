@@ -30,6 +30,8 @@ final class RuntimeViewModel: ObservableObject {
   @Published
   var mutationState: RuntimeMutationState = .idle
   @Published
+  var profileRecoveryInFlight = false
+  @Published
   var inputCaptureState: RuntimeInputCaptureState = .idle
   @Published
   var supportDiagnosticsState: RuntimeSupportDiagnosticsState = .idle
@@ -101,6 +103,11 @@ final class RuntimeViewModel: ObservableObject {
 
   func repairSystemExtension() async {
     await systemExtensionSetup.repair()
+    systemExtensionSetupState = systemExtensionSetup.state
+  }
+
+  func uninstallSystemExtension() async {
+    await systemExtensionSetup.uninstall()
     systemExtensionSetupState = systemExtensionSetup.state
   }
 

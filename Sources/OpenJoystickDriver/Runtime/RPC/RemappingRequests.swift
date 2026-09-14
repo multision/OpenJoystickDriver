@@ -127,6 +127,24 @@ actor RemappingRequestCoordinator {
   func delete(id: UUID) async -> RemappingRequestResult<ApplicationServiceRemappingSnapshotPayload>
   { await mutate { try await library.delete(id: id) } }
 
+  func deleteDamagedProfile(
+    issueID: UUID
+  ) async -> RemappingRequestResult<ApplicationServiceRemappingSnapshotPayload> {
+    await exclusively {
+      _ = try await library.deleteDamagedProfile(issueID: issueID)
+      return try await makeSnapshot()
+    }
+  }
+
+  func resetDamagedLibrary(
+    issueID: UUID
+  ) async -> RemappingRequestResult<ApplicationServiceRemappingSnapshotPayload> {
+    await exclusively {
+      _ = try await library.resetDamagedLibrary(issueID: issueID)
+      return try await makeSnapshot()
+    }
+  }
+
   func activate(
     id: UUID
   ) async -> RemappingRequestResult<ApplicationServiceRemappingSnapshotPayload> {
@@ -212,6 +230,7 @@ actor RemappingRequestCoordinator {
       activeProfiles: activeProfiles,
       routes: routes,
       joyConPairs: routerSnapshot.joyConPairs,
+      profileIssues: librarySnapshot.issues,
       postEventAccess: routerSnapshot.postEventAccessState
     )
     if validateResponse { try ensurePayloadFits(payload) }
@@ -399,6 +418,7 @@ actor RemappingRequestCoordinator {
     case .profileUpdateConflict: code = .profileUpdateConflict
     case .unreadableLibrary: code = .unreadableLibrary
     case .unwritableLibrary: code = .unwritableLibrary
+    case .profileRecoveryRequired, .profileIssueNotFound: code = .profileRecoveryRequired
     }
     return ApplicationServiceRemappingRPCError(code: code, message: error.localizedDescription)
   }

@@ -14,6 +14,7 @@ enum SystemExtensionSetupState: Sendable, Equatable {
 
 enum SystemExtensionSetupRequestResult: Sendable, Equatable {
   case active
+  case inactive
   case awaitingApproval
   case failed
   case cancelled
@@ -23,12 +24,21 @@ enum SystemExtensionSetupRequestResult: Sendable, Equatable {
 protocol SystemExtensionSetupClient: Sendable {
   func inspect() -> ExtensionStatus
   func requestActivation() async -> SystemExtensionSetupRequestResult
+  func requestDeactivation() async -> SystemExtensionSetupRequestResult
 }
 
 final class DefaultSystemExtensionSetupClient: Sendable, SystemExtensionSetupClient {
   func inspect() -> ExtensionStatus { ExtensionProbe.currentStatus() }
 
-  func requestActivation() async -> SystemExtensionSetupRequestResult {
+  func requestActivation() async -> SystemExtensionSetupRequestResult { await request(.activation) }
+
+  func requestDeactivation() async -> SystemExtensionSetupRequestResult {
+    await request(.deactivation)
+  }
+
+  private func request(
+    _ mode: SystemExtensionSubmission.Mode
+  ) async -> SystemExtensionSetupRequestResult {
     let requestState = SystemExtensionRequestState()
     return await withTaskCancellationHandler(
       operation: {
@@ -37,7 +47,7 @@ final class DefaultSystemExtensionSetupClient: Sendable, SystemExtensionSetupCli
             continuation.resume(returning: SystemExtensionSetupRequestResult.cancelled)
             return
           }
-          let submission = SystemExtensionSubmission(mode: .activation) {
+          let submission = SystemExtensionSubmission(mode: mode) {
             continuation.resume(returning: $0)
           }
           guard requestState.start(submission) else {
@@ -71,6 +81,18 @@ final class SystemExtensionSetupCoordinator {
   func refresh() async { await reconcile(trigger: .refresh) }
   func repair() async { await reconcile(trigger: .repair) }
 
+  func uninstall() async {
+    guard !requestInFlight else { return }
+    requestInFlight = true
+    defer { requestInFlight = false }
+    switch await client.requestDeactivation() {
+    case .inactive:
+      automaticAttempted = true
+      state = .needsActivation
+    case .active, .awaitingApproval, .failed, .cancelled, .timedOut: state = .failed
+    }
+  }
+
   private enum Trigger { case launch, foreground, refresh, repair }
 
   private func reconcile(trigger: Trigger) async {
@@ -90,6 +112,7 @@ final class SystemExtensionSetupCoordinator {
     defer { requestInFlight = false }
     switch await client.requestActivation() {
     case .active: state = .active
+    case .inactive: state = .failed
     case .awaitingApproval: state = .awaitingApproval
     case .failed: state = .failed
     case .cancelled: state = .failed

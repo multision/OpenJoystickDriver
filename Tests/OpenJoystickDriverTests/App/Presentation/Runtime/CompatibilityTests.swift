@@ -292,7 +292,7 @@ struct CompatibilityTests {
     #expect(probe.snapshot().2[0].counts().1 == 1)
   }
 
-  @Test
+  @Test(.timeLimit(.minutes(1)))
   func differentControllersBuildIndependently() async {
     let first = DeviceIdentifier(vendorID: 0x3537, productID: 0x1010)
     let second = DeviceIdentifier(vendorID: 0x3537, productID: 0x1011)
@@ -376,12 +376,12 @@ struct CompatibilityTests {
     let retirement = Task { await slot.retireAndWait() }
     #expect(backend.counts().1 == 0)
     await lease?.release()
-    await retirement.value
+    _ = await retirement.value
     #expect(backend.counts().1 == 1)
   }
 
   @Test
-  func suppressionForwardsToNewAndReusedBackends() async {
+  func suppressionRetiresPublicationThenRecreatesAndResumesOutput() async {
     let id = DeviceIdentifier(vendorID: 0x3537, productID: 0x1010)
     let probe = ConcurrentFactoryProbe()
     let dispatcher = AutomaticUserSpaceOutputDispatcher(
@@ -392,12 +392,23 @@ struct CompatibilityTests {
       observeConsumerChanges: false,
       descriptionsProvider: provider([description(id)])
     )
-    await dispatcher.setOutputSuppressed(true)
     await dispatcher.dispatch(events: [], from: id)
-    #expect(probe.snapshot().2.first?.suppressOutput == true)
+    #expect(probe.snapshot().0 == 1)
+    #expect(probe.snapshot().2.first?.counts().0 == 1)
+
+    await dispatcher.setOutputSuppressed(true)
+    #expect(probe.snapshot().2.first?.counts().1 == 1)
+    await dispatcher.dispatch(events: [], from: id)
+    #expect(probe.snapshot().0 == 1)
+
     await dispatcher.setOutputSuppressed(false)
-    #expect(probe.snapshot().2.first?.suppressOutput == false)
+    #expect(probe.snapshot().0 == 2)
+    #expect(probe.snapshot().2[1].counts().0 == 0)
+    await dispatcher.dispatch(events: [], from: id)
+    #expect(probe.snapshot().2[1].counts().0 == 1)
+
     await dispatcher.close()
+    #expect(probe.snapshot().2[1].counts().1 == 1)
   }
 
   @Test
@@ -552,8 +563,8 @@ struct CompatibilityTests {
     await viewModel.setCompatibilityIdentity(.appleGameController)
 
     let state = await MainActor.run { viewModel.compatibilityState }
-    guard case .error = state else {
-      Issue.record("Expected a rejected identity to produce an error")
+    guard case .available(.sdl2_3) = state else {
+      Issue.record("Expected a rejected identity to retain the live identity")
       return
     }
     #expect(await MainActor.run { viewModel.compatibilityError } != nil)

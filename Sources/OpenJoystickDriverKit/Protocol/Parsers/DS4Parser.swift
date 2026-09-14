@@ -17,9 +17,14 @@ private let ds4OutputValidFlagColor: UInt8 = 0x02
 private let ds4BluetoothOutputHIDAndCRCFlag: UInt8 = 0xC0
 private let ds4BluetoothOutputPollInterval: UInt8 = 0x04
 
-private enum DS4ConnectionMode {
+public enum DS4Transport: String, Codable, Equatable, Sendable {
   case usb
   case bluetooth
+}
+
+public enum DS4ParserError: Error, Equatable, Sendable {
+  case invalidReportFraming
+  case invalidBluetoothCRC
 }
 
 /// Parser for Sony DualShock 4 controllers.
@@ -31,7 +36,7 @@ private enum DS4ConnectionMode {
 /// transport/control prefix.
 public final class DS4Parser: InputParser, PhysicalHIDRumbleOutput, PhysicalHIDColorOutput,
   HIDStartupOutputReportProvider, HIDStartupFeatureReadRequestProvider, HIDFeatureReportConsumer,
-  ControllerBatteryTelemetryProvider
+  ControllerBatteryTelemetryProvider, ControllerInputReportLivenessProvider
 {
   public var physicalDefaultColor: (red: UInt8, green: UInt8, blue: UInt8) { (0, 0, 64) }
 
@@ -68,13 +73,13 @@ public final class DS4Parser: InputParser, PhysicalHIDRumbleOutput, PhysicalHIDC
   private var prevLSY = UInt8(ds4AxisCenter)
   private var prevRSX = UInt8(ds4AxisCenter)
   private var prevRSY = UInt8(ds4AxisCenter)
-  private var connectionMode: DS4ConnectionMode = .usb
+  public private(set) var transport: DS4Transport = .usb
   public private(set) var batteryTelemetry: ControllerBatteryTelemetry?
+  public let inputReportLivenessTimeoutNanoseconds: UInt64 = 1_000_000_000
+  public private(set) var latestInputReportIsNeutral = true
 
   /// Creates a new DS4Parser.
-  public init(prefersBluetooth: Bool = false) {
-    connectionMode = prefersBluetooth ? .bluetooth : .usb
-  }
+  public init(prefersBluetooth: Bool = false) { transport = prefersBluetooth ? .bluetooth : .usb }
 
   /// No-op because DS4 requires no handshake.
   public func hidStartupFeatureReadRequests() -> [PhysicalHIDFeatureReadRequest] {
@@ -82,7 +87,7 @@ public final class DS4Parser: InputParser, PhysicalHIDRumbleOutput, PhysicalHIDC
   }
 
   public func hidStartupFeatureReadRequests(transport: String?) -> [PhysicalHIDFeatureReadRequest] {
-    if transport == "Bluetooth" || connectionMode == .bluetooth {
+    if transport == "Bluetooth" || self.transport == .bluetooth {
       return [PhysicalHIDFeatureReadRequest(reportID: 5, length: 41)]
     }
     return [PhysicalHIDFeatureReadRequest(reportID: 2, length: 37)]
@@ -93,8 +98,12 @@ public final class DS4Parser: InputParser, PhysicalHIDRumbleOutput, PhysicalHIDC
   public func hidStartupReports() -> [PhysicalHIDOutputReport] { [] }
 
   public func hidStartupReports(transport: String?) -> [PhysicalHIDOutputReport] {
-    guard transport == "Bluetooth" || connectionMode == .bluetooth else { return [] }
+    guard transport == "Bluetooth" || self.transport == .bluetooth else { return [] }
     return [makeOutputReport(validFlags: ds4OutputValidFlagMotor)]
+  }
+
+  public func requiresSuccessfulHIDStartupOutput(transport: String?) -> Bool {
+    transport == "Bluetooth" || self.transport == .bluetooth
   }
 
   public func consumeHIDFeatureReport(
@@ -102,7 +111,7 @@ public final class DS4Parser: InputParser, PhysicalHIDRumbleOutput, PhysicalHIDC
     request: PhysicalHIDFeatureReadRequest,
     transport: String?
   ) -> Bool {
-    let bluetooth = transport == "Bluetooth" || connectionMode == .bluetooth
+    let bluetooth = transport == "Bluetooth" || self.transport == .bluetooth
     guard request.length == data.count, data.first == request.reportID else { return false }
     let bytes = Array(data)
     guard bytes.count == (bluetooth ? 41 : 37), request.reportID == (bluetooth ? 5 : 2) else {
@@ -124,8 +133,9 @@ public final class DS4Parser: InputParser, PhysicalHIDRumbleOutput, PhysicalHIDC
 
   /// Parses one DS4 HID input report and returns zero or more controller events.
   public func parse(data: Data) throws -> [ControllerEvent] {
-    let bytes = reportPayload(from: data)
+    let bytes = try reportPayload(from: data)
     guard bytes.count >= 9 else { return [] }
+    latestInputReportIsNeutral = Self.isNeutralInput(bytes)
     updateBatteryTelemetry(from: bytes)
     var events: [ControllerEvent] = []
 
@@ -167,12 +177,20 @@ public final class DS4Parser: InputParser, PhysicalHIDRumbleOutput, PhysicalHIDC
     events.append(
       contentsOf: SonySensorSamples.dualShock4(
         bytes,
-        bluetooth: connectionMode == .bluetooth,
+        bluetooth: transport == .bluetooth,
         clock: &sensorClock,
         calibration: motionCalibration
       )
     )
     return events
+  }
+
+  private static func isNeutralInput(_ bytes: [UInt8]) -> Bool {
+    guard bytes.count >= 9 else { return true }
+    let sticks = bytes[0...3].allSatisfy { abs(Int($0) - Int(ds4AxisCenter)) <= 4 }
+    let hatNeutral = bytes[4] & 0x0F == 0x08
+    let buttonsNeutral = bytes[4] & 0xF0 == 0 && bytes[5] == 0 && bytes[6] == 0
+    return sticks && hatNeutral && buttonsNeutral && bytes[7] == 0 && bytes[8] == 0
   }
 
   public func physicalRumbleReport(
@@ -195,7 +213,7 @@ public final class DS4Parser: InputParser, PhysicalHIDRumbleOutput, PhysicalHIDC
     green: UInt8 = 0,
     blue: UInt8 = 0
   ) -> PhysicalHIDOutputReport {
-    switch connectionMode {
+    switch transport {
     case .usb:
       var bytes = [UInt8](repeating: 0, count: ds4USBOutputReportLength)
       bytes[0] = ds4USBOutputReportID
@@ -225,33 +243,50 @@ public final class DS4Parser: InputParser, PhysicalHIDRumbleOutput, PhysicalHIDC
     }
   }
 
-  private func reportPayload(from data: Data) -> [UInt8] {
+  private func reportPayload(from data: Data) throws -> [UInt8] {
     let bytes = Array(data)
-    if bytes.first == ds4USBInputReportID, bytes.count >= 10 {
-      if connectionMode != .bluetooth { connectionMode = .usb }
+    if bytes.first == ds4USBInputReportID, (10...64).contains(bytes.count) {
+      if transport != .bluetooth { transport = .usb }
       return Array(bytes.dropFirst())
     }
     if bytes.first == ds4BluetoothHIDInputTransaction,
-      bytes.dropFirst().first == ds4USBInputReportID, bytes.count >= 12
+      bytes.dropFirst().first == ds4USBInputReportID, (11...65).contains(bytes.count)
     {
-      connectionMode = .bluetooth
+      transport = .bluetooth
       return Array(bytes.dropFirst(2))
     }
     if bytes.first == ds4BluetoothHIDInputTransaction,
-      bytes.dropFirst().first == ds4BluetoothInputReportID, bytes.count >= 79
+      bytes.dropFirst().first == ds4BluetoothInputReportID, bytes.count == 79
     {
-      connectionMode = .bluetooth
+      try validateBluetoothInputCRC(Array(bytes.dropFirst()))
+      transport = .bluetooth
       return Array(bytes.dropFirst(4).dropLast(4))
     }
-    if bytes.first == ds4BluetoothInputReportID, bytes.count >= 78 {
-      connectionMode = .bluetooth
+    if bytes.first == ds4BluetoothInputReportID, bytes.count == 78 {
+      try validateBluetoothInputCRC(bytes)
+      transport = .bluetooth
       return Array(bytes.dropFirst(3).dropLast(4))
     }
-    if bytes.first == ds4BluetoothOutputHIDAndCRCFlag, bytes.count >= 77 {
-      connectionMode = .bluetooth
+    if bytes.first == ds4BluetoothOutputHIDAndCRCFlag, bytes.count == 77 {
+      try validateBluetoothInputCRC([ds4BluetoothInputReportID] + bytes)
+      transport = .bluetooth
       return Array(bytes.dropFirst(2).dropLast(4))
     }
-    return bytes
+    if bytes.count == 63 {
+      if transport != .bluetooth { transport = .usb }
+      return bytes
+    }
+    throw DS4ParserError.invalidReportFraming
+  }
+
+  private func validateBluetoothInputCRC(_ report: [UInt8]) throws {
+    guard report.count == 78 else { throw DS4ParserError.invalidReportFraming }
+    var crc = updateCRC32(0xFFFF_FFFF, byte: ds4BluetoothHIDInputTransaction)
+    for byte in report.dropLast(4) { crc = updateCRC32(crc, byte: byte) }
+    let stored = report.suffix(4).enumerated().reduce(UInt32(0)) { value, element in
+      value | (UInt32(element.element) << UInt32(element.offset * 8))
+    }
+    guard ~crc == stored else { throw DS4ParserError.invalidBluetoothCRC }
   }
 
   private func updateBatteryTelemetry(from bytes: [UInt8]) {

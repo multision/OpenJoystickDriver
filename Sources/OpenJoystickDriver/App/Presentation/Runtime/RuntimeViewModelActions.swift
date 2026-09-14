@@ -108,6 +108,18 @@ extension RuntimeViewModel {
     }
   }
 
+  func deleteDamagedRemappingProfile(issueID: UUID) async -> String? {
+    await performProfileRecovery {
+      try await self.gateway.deleteDamagedRemappingProfile(issueID: issueID)
+    }
+  }
+
+  func resetRemappingProfileLibrary(issueID: UUID) async -> String? {
+    await performProfileRecovery {
+      try await self.gateway.resetRemappingProfileLibrary(issueID: issueID)
+    }
+  }
+
   @discardableResult
   func activateRemappingProfile(
     id: UUID,
@@ -214,15 +226,34 @@ extension RuntimeViewModel {
     compatibilityError = nil
     updateStatusCompatibilityIdentity(nil)
     do {
-      guard try await gateway.setCompatibilityIdentity(identity) else {
-        throw ApplicationServiceGatewayError.compatibilityIdentityChangeRejected(identity)
-      }
+      let result = try await gateway.setCompatibilityIdentityDetailed(identity)
       guard generation == compatibilityGeneration else { return }
-      authoritativeCompatibilityIdentity = identity
-      compatibilityState = .available(identity)
-      compatibilityError = nil
-      updateStatusCompatibilityIdentity(identity)
-      lastError = nil
+      if result.succeeded {
+        let live = result.liveIdentity ?? identity
+        authoritativeCompatibilityIdentity = live
+        compatibilityState = .available(live)
+        compatibilityError = nil
+        updateStatusCompatibilityIdentity(live)
+        lastError = nil
+      } else {
+        let live = result.liveIdentity ?? result.retainedIdentity
+        authoritativeCompatibilityIdentity = live
+        if let live {
+          compatibilityState = .available(live)
+          updateStatusCompatibilityIdentity(live)
+        }
+        let phase = result.failure?.phase.rawValue ?? "activation"
+        let cause = result.failure?.cause.rawValue ?? "unavailable"
+        let message = OJDLocalized.formatted(
+          "error.compatibilityTransitionDetailed",
+          fallback:
+            "Could not switch controller output (%@, %@). The previous output remains active.",
+          phase,
+          cause
+        )
+        compatibilityError = message
+        lastError = message
+      }
     } catch {
       guard generation == compatibilityGeneration else { return }
       let message = RuntimePresentation.userFacingError(error)
@@ -236,6 +267,26 @@ extension RuntimeViewModel {
   }
 
   func resetCompatibilityIdentity() async { await setCompatibilityIdentity(.automatic) }
+
+  func suspendController(_ device: ApplicationServiceDeviceDescription) async {
+    do {
+      let result = try await gateway.suspendController(RuntimeDeviceSelector(device: device))
+      guard result.succeeded || result.failure == .alreadySuspended else {
+        throw ApplicationServiceGatewayError.controllerSessionChangeRejected
+      }
+      await refreshControllerInventory()
+    } catch { lastError = RuntimePresentation.userFacingError(error) }
+  }
+
+  func resumeController(_ device: ApplicationServiceDeviceDescription) async {
+    do {
+      let result = try await gateway.resumeController(RuntimeDeviceSelector(device: device))
+      guard result.succeeded || result.failure == .alreadyActive else {
+        throw ApplicationServiceGatewayError.controllerSessionChangeRejected
+      }
+      await refreshControllerInventory()
+    } catch { lastError = RuntimePresentation.userFacingError(error) }
+  }
 
   private func locallyValid(
     _ profile: RemappingProfile,
@@ -309,6 +360,45 @@ extension RuntimeViewModel {
       mutationState = .error(message)
       lastError = message
       return .failed(id: mutationID, operation: operation, message: message)
+    }
+  }
+
+  private func performProfileRecovery(
+    request: @escaping @Sendable () async throws -> ApplicationServiceRemappingSnapshotPayload
+  ) async -> String? {
+    guard !profileRecoveryInFlight, !mutationInFlight else {
+      return OJDLocalized.string(
+        "error.operationInProgress",
+        fallback: "Another profile operation is already in progress."
+      )
+    }
+    await waitForScopedRefreshCompletion()
+    await waitForExclusiveOperationCompletion()
+    guard !profileRecoveryInFlight, !mutationInFlight else {
+      return OJDLocalized.string(
+        "error.operationInProgress",
+        fallback: "Another profile operation is already in progress."
+      )
+    }
+    profileRecoveryInFlight = true
+    defer {
+      profileRecoveryInFlight = false
+      resumeExclusiveOperationWaiters()
+      schedulePendingScopedRefresh()
+    }
+    do {
+      let snapshot = try await request()
+      remappingState = .available(snapshot)
+      postEventAccessState = .available(snapshot.postEventAccess)
+      authoritativePostEventAccess = snapshot.postEventAccess
+      postEventAccessGeneration += 1
+      updateStatusRemappingSnapshot(snapshot, postEventAccess: snapshot.postEventAccess)
+      lastError = nil
+      return nil
+    } catch {
+      let message = RuntimePresentation.userFacingError(error)
+      lastError = message
+      return message
     }
   }
 

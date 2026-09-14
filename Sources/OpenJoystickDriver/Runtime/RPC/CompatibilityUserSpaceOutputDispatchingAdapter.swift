@@ -83,6 +83,14 @@ final class CompatibilityUserSpaceOutputDispatchingAdapter: CompatibilityUserSpa
     await backend.dispatch(events: events, from: identifier)
   }
 
+  func dispatchReportingFailure(
+    events: [ControllerEvent],
+    from identifier: DeviceIdentifier
+  ) async throws {
+    guard await isEligible(identifier) else { return }
+    try await backend.dispatchReportingFailure(events: events, from: identifier)
+  }
+
   func controllerDidStop(_ identifier: DeviceIdentifier) async {
     if let listener = backend as? any ControllerLifecycleListener {
       await listener.controllerDidStop(identifier)

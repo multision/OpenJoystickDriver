@@ -112,9 +112,11 @@ extension DevicePipeline {
     for attempt in 0...retryDelays.count {
       do {
         try await sendUSBStartupOutputPackets(handle: handle)
+        startupOutputStatus = "succeeded"
         print("[DevicePipeline] Handshake complete:" + " \(identifier)")
         return true
       } catch {
+        startupOutputStatus = "failed: \(error)"
         print(
           "[DevicePipeline] Handshake attempt \(attempt + 1) failed for \(identifier): \(error)"
         )
@@ -335,6 +337,13 @@ extension DevicePipeline {
 
   func evaluateIdleSleep() async {
     guard isActive else { return }
+    if let liveness = parser as? any ControllerInputReportLivenessProvider,
+      let last = lastLiveInputReportNanoseconds,
+      DispatchTime.now().uptimeNanoseconds - last >= liveness.inputReportLivenessTimeoutNanoseconds,
+      !outputState.isEffectivelyNeutral
+    {
+      await retireOutputAfterLivenessLoss()
+    }
     guard
       sleepGate.idleTransition(
         currentState: currentInputState,
@@ -351,6 +360,23 @@ extension DevicePipeline {
   }
 
   func handleParsedEvents(_ events: [ControllerEvent], now: UInt64) async {
+    guard sessionState == .active else { return }
+    if let liveness = parser as? any ControllerInputReportLivenessProvider {
+      if let last = lastLiveInputReportNanoseconds,
+        now - last >= liveness.inputReportLivenessTimeoutNanoseconds
+      {
+        if !outputState.isEffectivelyNeutral { await retireOutputAfterLivenessLoss() }
+      }
+      lastLiveInputReportNanoseconds = now
+      if awaitingNeutralAfterLivenessLoss {
+        guard liveness.latestInputReportIsNeutral else { return }
+        resetObservedInputState()
+        outputState = currentInputState
+        awaitingNeutralAfterLivenessLoss = false
+        await dispatcher.dispatch(events: [], from: identifier)
+        return
+      }
+    }
     let previousState = currentInputState
     let normalizedEvents = ControllerEventNormalizer.normalize(events, from: previousState).events
     let nextState = previousState.applying(events: normalizedEvents)

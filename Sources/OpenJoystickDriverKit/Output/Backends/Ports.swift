@@ -12,6 +12,11 @@ public protocol CompatibilityUserSpaceOutputDispatching: OutputDispatcher {
   func setOutputSuppressed(_ suppressed: Bool) async
   /// Drains and tears down user-space virtual HID devices owned by this output.
   func close() async
+  /// Delivers input while preserving publication failures for recovery coordinators.
+  func dispatchReportingFailure(
+    events: [ControllerEvent],
+    from identifier: DeviceIdentifier
+  ) async throws
 }
 
 /// Optional activation surface used to enforce a deadline for each controller in a set.
@@ -37,6 +42,10 @@ public protocol ControllerInputOwnershipListener: AnyObject, Sendable {
 
 extension CompatibilityUserSpaceOutputDispatching {
   public func setOutputSuppressed(_ suppressed: Bool) { suppressOutput = suppressed }
+  public func dispatchReportingFailure(
+    events: [ControllerEvent],
+    from identifier: DeviceIdentifier
+  ) async throws { await dispatch(events: events, from: identifier) }
 }
 
 /// Takes parsed controller events and sends them to an output target.

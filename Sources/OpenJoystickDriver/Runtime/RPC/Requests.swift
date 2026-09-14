@@ -26,6 +26,8 @@ extension ApplicationServiceServer {
       + " out:0x\(String(device.outputEndpoint, radix: 16))"
       + " setConfig=\(device.needsSetConfiguration)" + " settleMs=\(device.postHandshakeSettleMs)"
       + " quirks=\(quirks)" + " backends=\(backends)" + " battery=\(battery)"
+      + " session=\(device.sessionState.rawValue)"
+      + " startup=\(device.startupCommandStatus ?? "not-required")"
   }
 
   private static func batteryDescription(_ battery: ControllerBatteryTelemetry) -> String {
@@ -269,6 +271,86 @@ extension ApplicationServiceServer {
     }
   }
 
+  public func setCompatibilityIdentityDetailed(_ raw: String, reply: @escaping (Data) -> Void) {
+    let callback = SendableReply(call: reply)
+    guard case .accepted(let identity) = CompatibilityIdentity.mutationDecision(for: raw) else {
+      let result = CompatibilityIdentityTransitionResult(
+        requestedIdentity: nil,
+        liveIdentity: userSpaceStatusSnapshot().liveIdentity,
+        retainedIdentity: userSpaceStatusSnapshot().liveIdentity,
+        failure: CompatibilityIdentityTransitionFailure(phase: .validation, cause: .invalidIdentity)
+      )
+      callback.call((try? JSONEncoder().encode(result)) ?? Data())
+      return
+    }
+    Task { [weak self] in
+      guard let self else { return }
+      let succeeded = await self.setCompatibilityIdentityAsync(identity)
+      let snapshot = self.userSpaceStatusSnapshot()
+      let result = CompatibilityIdentityTransitionResult(
+        requestedIdentity: identity,
+        liveIdentity: snapshot.liveIdentity,
+        retainedIdentity: succeeded ? nil : snapshot.liveIdentity,
+        failure: succeeded ? nil : self.compatibilityTransitionFailure(from: snapshot)
+      )
+      callback.call((try? JSONEncoder().encode(result)) ?? Data())
+    }
+  }
+
+  public func suspendController(
+    vendorID: Int,
+    productID: Int,
+    runtimeIdentifier: String?,
+    reply: @escaping (Data) -> Void
+  ) {
+    let callback = SendableReply(call: reply)
+    Task {
+      let result = await deviceManager.suspendController(
+        vendorID: UInt16(clamping: vendorID),
+        productID: UInt16(clamping: productID),
+        runtimeIdentifier: runtimeIdentifier
+      )
+      callback.call((try? JSONEncoder().encode(result)) ?? Data())
+    }
+  }
+
+  public func resumeController(
+    vendorID: Int,
+    productID: Int,
+    runtimeIdentifier: String?,
+    reply: @escaping (Data) -> Void
+  ) {
+    let callback = SendableReply(call: reply)
+    Task {
+      let result = await deviceManager.resumeController(
+        vendorID: UInt16(clamping: vendorID),
+        productID: UInt16(clamping: productID),
+        runtimeIdentifier: runtimeIdentifier
+      )
+      callback.call((try? JSONEncoder().encode(result)) ?? Data())
+    }
+  }
+
+  private func compatibilityTransitionFailure(
+    from snapshot: UserSpaceStatusSnapshot
+  ) -> CompatibilityIdentityTransitionFailure {
+    let phase =
+      snapshot.retrySnapshot.map { retry in
+        CompatibilityIdentityTransitionPhase(rawValue: retry.phase.rawValue) ?? .activation
+      } ?? .activation
+    let cause: CompatibilityIdentityTransitionCause
+    if isCompatibilityServerStopped() {
+      cause = .serverStopped
+    } else {
+      switch phase {
+      case .feedbackQuiescence, .candidateClose, .zeroDeviceInterval: cause = .timedOut
+      case .validation, .stage, .activation, .rollbackStage, .rollbackActivation:
+        cause = .unavailable
+      }
+    }
+    return CompatibilityIdentityTransitionFailure(phase: phase, cause: cause)
+  }
+
   public func getCompatibilityIdentity(reply: @escaping (String) -> Void) {
     reply(userSpaceStatusSnapshot().requestedIdentity.rawValue)
   }
@@ -337,6 +419,22 @@ extension ApplicationServiceServer {
   ) {
     let callback = SendableReply(call: reply)
     Task { callback.call(await remappingRequests.snapshot()) }
+  }
+
+  func deleteDamagedRemappingProfile(
+    _ arguments: ApplicationServiceRemappingProfileIssueArguments,
+    reply: @escaping (RemappingRequestResult<ApplicationServiceRemappingSnapshotPayload>) -> Void
+  ) {
+    let callback = SendableReply(call: reply)
+    Task { callback.call(await remappingRequests.deleteDamagedProfile(issueID: arguments.issueID)) }
+  }
+
+  func resetRemappingProfileLibrary(
+    _ arguments: ApplicationServiceRemappingProfileIssueArguments,
+    reply: @escaping (RemappingRequestResult<ApplicationServiceRemappingSnapshotPayload>) -> Void
+  ) {
+    let callback = SendableReply(call: reply)
+    Task { callback.call(await remappingRequests.resetDamagedLibrary(issueID: arguments.issueID)) }
   }
 
   func remappingMotionCalibration(

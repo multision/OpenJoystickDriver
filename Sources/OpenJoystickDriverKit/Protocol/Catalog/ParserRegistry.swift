@@ -112,6 +112,19 @@ public final class ParserRegistry: Sendable {
     catalog.runtimeProfile(for: identifier)
   }
 
+  /// Returns profile-editor capabilities only for an exact catalog identity.
+  public func profileCapabilities(
+    for identifier: DeviceIdentifier
+  ) -> ControllerProfileCapabilities? {
+    guard let profile = catalog.exactRuntimeProfile(for: identifier) else { return nil }
+    let parser = parser(
+      for: identifier,
+      transport: profile.catalogTransport,
+      transportProfile: profile.transportProfile
+    )
+    return ControllerProfileCapabilities(parser: parser, mappingOptions: profile.mappingOptions)
+  }
+
   /// Whether an exact catalog record maps this model to a supported raw-USB parser.
   func supportsRawUSBPipeline(for identifier: DeviceIdentifier) -> Bool {
     catalog.supportsRawUSBPipeline(for: identifier)

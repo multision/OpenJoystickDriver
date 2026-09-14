@@ -66,6 +66,10 @@ actor DevicePipeline {
   var consecutiveUSBIOErrors: Int = 0
   var lastUSBIOErrorLogNs: UInt64 = 0
   var inputConnectionActive: Bool
+  var sessionState: ControllerSessionState = .active
+  var lastLiveInputReportNanoseconds: UInt64?
+  var awaitingNeutralAfterLivenessLoss = false
+  var startupOutputStatus: String?
 
   init(
     identifier: DeviceIdentifier,
@@ -188,6 +192,12 @@ actor DevicePipeline {
     (parser as? any HIDStartupOutputReportProvider)?.hidStartupOutputPrecedesFeatureReads == true
   }
 
+  func requiresSuccessfulHIDStartupOutput(transport: String?) -> Bool {
+    (parser as? any HIDStartupOutputReportProvider)?.requiresSuccessfulHIDStartupOutput(
+      transport: transport
+    ) ?? false
+  }
+
   func hidStartupFeatureReadPlan(
     transport: String?
   ) -> (requests: [PhysicalHIDFeatureReadRequest], validatesReplies: Bool) {
@@ -240,33 +250,7 @@ actor DevicePipeline {
   }
 
   func physicalOutputCapabilities() -> PhysicalControllerOutputCapabilities {
-    let rumbleMotors: [PhysicalRumbleMotor]
-    if let usbOutput = parser as? PhysicalRumbleOutput {
-      rumbleMotors = usbOutput.physicalRumbleMotors
-    } else if let hidOutput = parser as? PhysicalHIDRumbleOutput {
-      rumbleMotors = hidOutput.physicalRumbleMotors
-    } else if let featureHaptics = parser as? PhysicalHIDFeatureHapticOutput {
-      rumbleMotors = featureHaptics.physicalRumbleMotors
-    } else {
-      rumbleMotors = []
-    }
-    let binaryRumbleMotors = (parser as? PhysicalHIDRumbleOutput)?.physicalBinaryRumbleMotors ?? []
-    var lighting: [PhysicalLightingFeature] = []
-    lighting += (parser as? PhysicalPlayerIndicatorOutput)?.physicalLightingFeatures ?? []
-    lighting += (parser as? PhysicalHIDPlayerIndicatorOutput)?.physicalLightingFeatures ?? []
-    lighting += (parser as? PhysicalHIDColorOutput)?.physicalLightingFeatures ?? []
-    lighting += (parser as? PhysicalHIDColorOutputPlan)?.physicalLightingFeatures ?? []
-    lighting += (parser as? PhysicalHIDFeatureBrightnessOutput)?.physicalLightingFeatures ?? []
-    lighting += (parser as? PhysicalHIDBrightnessOutputPlan)?.physicalLightingFeatures ?? []
-    lighting += (parser as? PhysicalUSBBrightnessOutputPlan)?.physicalLightingFeatures ?? []
-    let adaptiveTriggers =
-      (parser as? PhysicalHIDAdaptiveTriggerOutput)?.physicalAdaptiveTriggers ?? []
-    return PhysicalControllerOutputCapabilities(
-      rumbleMotors: rumbleMotors,
-      lightingFeatures: lighting,
-      binaryRumbleMotors: binaryRumbleMotors,
-      adaptiveTriggers: adaptiveTriggers
-    )
+    ControllerProfileCapabilities.physicalOutputCapabilities(for: parser)
   }
 
   func supportsPhysicalRumble() -> Bool { physicalOutputCapabilities().supportsRumble }
@@ -274,7 +258,9 @@ actor DevicePipeline {
   // MARK: - Input state and packet log
 
   func inputState() -> DeviceInputState { currentInputState }
+  func controllerSessionState() -> ControllerSessionState { sessionState }
   func batteryTelemetry() -> ControllerBatteryTelemetry? { currentBatteryTelemetry }
+  func startupCommandStatus() -> String? { startupOutputStatus }
   func getPacketLog() -> [PacketLogEntry] { packetLog.entries() }
 
   func setExternalOutputAllowed(_ allowed: Bool) async {
@@ -306,6 +292,36 @@ actor DevicePipeline {
     }
   }
 
+  func suspendControllerSession() async -> Bool {
+    guard isActive, sessionState == .active else { return false }
+    sessionState = .suspended
+    lastLiveInputReportNanoseconds = nil
+    awaitingNeutralAfterLivenessLoss = false
+    waitingForExternalNeutral = false
+    await neutralizeOutput()
+    resetObservedInputState()
+    if let listener = dispatcher as? any ControllerLifecycleListener {
+      await listener.controllerDidStop(identifier)
+    }
+    return true
+  }
+
+  func resumeControllerSession() async -> Bool {
+    guard isActive, sessionState == .suspended else { return false }
+    resetObservedInputState()
+    outputState = currentInputState
+    lastLiveInputReportNanoseconds = nil
+    awaitingNeutralAfterLivenessLoss = false
+    sessionState = .active
+    await dispatcher.dispatch(events: [], from: identifier)
+    return true
+  }
+
+  func restartUSBStartupOutputForResume() async -> Bool {
+    guard case .usb = transport, let handle = usbHandle else { return true }
+    return await performUSBHandshake(handle: handle)
+  }
+
   func updateObservedInputState(from events: [ControllerEvent]) {
     currentInputState.apply(events: events)
   }
@@ -315,7 +331,7 @@ actor DevicePipeline {
     currentBatteryTelemetry = provider.batteryTelemetry
   }
 
-  private func resetObservedInputState() {
+  func resetObservedInputState() {
     currentInputState = DeviceInputState(
       vendorID: identifier.vendorID,
       productID: identifier.productID
@@ -329,6 +345,15 @@ actor DevicePipeline {
     guard !neutralizingEvents.isEmpty else { return }
     await dispatcher.dispatch(events: neutralizingEvents, from: identifier)
     updateOutputState(from: neutralizingEvents)
+  }
+
+  func retireOutputAfterLivenessLoss() async {
+    guard !awaitingNeutralAfterLivenessLoss else { return }
+    await neutralizeOutput()
+    awaitingNeutralAfterLivenessLoss = true
+    if let listener = dispatcher as? any ControllerLifecycleListener {
+      await listener.controllerDidStop(identifier)
+    }
   }
 
   func handleInputConnectionStateChangeIfNeeded() async -> [PhysicalHIDOutputReport] {

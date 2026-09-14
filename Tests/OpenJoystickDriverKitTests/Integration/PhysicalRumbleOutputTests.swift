@@ -398,13 +398,7 @@ struct PhysicalRumbleOutputTests {
 
   @Test
   func testDs4PhysicalRumbleReportUsesBluetoothReportAfterBluetoothInput() throws {
-    let parser = DS4Parser()
-    _ = try parser.parse(
-      data: Data(
-        [0x11, 0xC0, 0x00, 128, 128, 128, 128, 0x08, 0, 0, 0, 0] + [UInt8](repeating: 0, count: 64)
-          + [0x7D, 0x0A, 0x5D, 0x0B]
-      )
-    )
+    let parser = DS4Parser(prefersBluetooth: true)
 
     let report = parser.physicalRumbleReport(left: 180, right: 90, lt: 255, rt: 64)
 

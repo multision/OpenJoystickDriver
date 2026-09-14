@@ -54,10 +54,20 @@ private func makeDS4BluetoothReport(
     leftStickX, leftStickY, rightStickX, rightStickY, buttons0, buttons1, buttons2, leftTrigger,
     rightTrigger,
   ])
-  report.append(contentsOf: [UInt8](repeating: 0, count: 64))
+  report.append(contentsOf: [UInt8](repeating: 0, count: 62))
   let commonOffset = (includesHIDTransaction ? 1 : 0) + (includesReportID ? 1 : 0) + 2
   report[commonOffset + 29] = status
-  report.append(contentsOf: [0x7D, 0x0A, 0x5D, 0x0B])
+  report.append(contentsOf: [0, 0, 0, 0])
+  let reportStart = includesHIDTransaction ? 1 : 0
+  var crc: UInt32 = 0xFFFF_FFFF
+  let framedReport =
+    (includesReportID ? [] : [UInt8(0x11)]) + Array(report[reportStart..<(report.count - 4)])
+  for byte in [UInt8(0xA1)] + framedReport {
+    crc ^= UInt32(byte)
+    for _ in 0..<8 { crc = (crc >> 1) ^ ((crc & 1) == 0 ? 0 : 0xEDB8_8320) }
+  }
+  crc = ~crc
+  for offset in 0..<4 { report[report.count - 4 + offset] = UInt8((crc >> (offset * 8)) & 0xFF) }
   return Data(report)
 }
 
@@ -190,22 +200,21 @@ struct DS4ParserTests {
     #expect(containsEvent(events, .buttonPressed(.cross)))
   }
   @Test
-  func testRawUSBReportWithReportIDParsesFaceButtons() throws {
-    let parser = DS4Parser()
-    _ = try parser.parse(data: makeDS4Report(includesReportID: true))
-
-    let events = try parser.parse(data: makeDS4Report(includesReportID: true, buttons0: 0x28))
-
-    #expect(containsEvent(events, .buttonPressed(.cross)))
+  func testUSBFaceButtonTransitionsRemainOrderedAcrossUnrelatedInput() throws {
+    try assertFaceButtonContinuity { buttons, leftStickX, rightStickX in
+      makeDS4Report(
+        includesReportID: true,
+        leftStickX: leftStickX,
+        rightStickX: rightStickX,
+        buttons0: buttons
+      )
+    }
   }
   @Test
-  func testBluetoothReport11ParsesFaceButtons() throws {
-    let parser = DS4Parser()
-    _ = try parser.parse(data: makeDS4BluetoothReport())
-
-    let events = try parser.parse(data: makeDS4BluetoothReport(buttons0: 0x28))
-
-    #expect(containsEvent(events, .buttonPressed(.cross)))
+  func testBluetoothFaceButtonTransitionsRemainOrderedAcrossUnrelatedInput() throws {
+    try assertFaceButtonContinuity { buttons, leftStickX, rightStickX in
+      makeDS4BluetoothReport(leftStickX: leftStickX, rightStickX: rightStickX, buttons0: buttons)
+    }
   }
   @Test
   func testBluetoothHIDTransactionReportParsesSticksTriggersAndSystemButtons() throws {
@@ -258,7 +267,7 @@ struct DS4ParserTests {
     #expect(containsEvent(events, .buttonPressed(.cross)))
   }
   @Test
-  func testObservedMacOSBluetoothReport11ParsesStickState() throws {
+  func testCompleteBluetoothReportRejectsInvalidCRC() throws {
     let parser = DS4Parser(prefersBluetooth: true)
     let observedPrefix: [UInt8] = [
       0x11, 0xC0, 0x00, 0x7A, 0x81, 0x81, 0x82, 0x08, 0x00, 0xCC, 0x00, 0x00, 0xF5, 0xD1, 0x0C,
@@ -266,17 +275,7 @@ struct DS4ParserTests {
     ]
     let observedReport = Data(observedPrefix + [UInt8](repeating: 0, count: 54))
 
-    let events = try parser.parse(data: observedReport)
-
-    #expect(containsEvent(events, .leftStickChanged(x: 0, y: 0)))
-    #expect(containsEvent(events, .rightStickChanged(x: 0, y: 0)))
-    #expect(containsEvent(events, .dpadChanged(.neutral)))
-    #expect(
-      !events.contains { event in
-        if case .buttonPressed = event { return true }
-        return false
-      }
-    )
+    #expect(throws: DS4ParserError.invalidBluetoothCRC) { try parser.parse(data: observedReport) }
   }
   @Test
   func testWiredIOHIDReportParsesSticksTriggersAndSystemButtons() throws {
@@ -336,6 +335,29 @@ struct DS4ParserTests {
 
     #expect(containsEvent(events, .leftStickChanged(x: 0, y: 0)))
     #expect(containsEvent(events, .rightStickChanged(x: 0, y: 0)))
+  }
+
+  private func assertFaceButtonContinuity(makeReport: (UInt8, UInt8, UInt8) -> Data) throws {
+    let faceButtons: [(mask: UInt8, button: Button)] = [
+      (0x10, .square), (0x20, .cross), (0x40, .circle), (0x80, .triangle),
+    ]
+
+    for faceButton in faceButtons {
+      let parser = DS4Parser()
+      _ = try parser.parse(data: makeReport(0x08, 128, 128))
+
+      let pressed = try parser.parse(data: makeReport(0x08 | faceButton.mask, 128, 128))
+      let held = try parser.parse(data: makeReport(0x08 | faceButton.mask, 255, 128))
+      let released = try parser.parse(data: makeReport(0x08, 255, 128))
+      let laterInput = try parser.parse(data: makeReport(0x08, 255, 0))
+
+      #expect(pressed.contains(.buttonPressed(faceButton.button)))
+      #expect(!held.contains(.buttonPressed(faceButton.button)))
+      #expect(!held.contains(.buttonReleased(faceButton.button)))
+      #expect(held.contains(.leftStickChanged(x: 127.0 / 128.0, y: 0)))
+      #expect(released.contains(.buttonReleased(faceButton.button)))
+      #expect(laterInput.contains(.rightStickChanged(x: -1, y: 0)))
+    }
   }
   @Test
   func testObservedDS4LeftStickXDriftIsNormalizedToIdle() throws {

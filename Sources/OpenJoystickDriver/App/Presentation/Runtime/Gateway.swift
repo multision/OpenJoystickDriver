@@ -31,6 +31,12 @@ protocol RemappingGateway: Sendable {
     _ profile: RemappingProfile
   ) async throws -> ApplicationServiceRemappingSnapshotPayload
   func deleteRemappingProfile(id: UUID) async throws -> ApplicationServiceRemappingSnapshotPayload
+  func deleteDamagedRemappingProfile(
+    issueID: UUID
+  ) async throws -> ApplicationServiceRemappingSnapshotPayload
+  func resetRemappingProfileLibrary(
+    issueID: UUID
+  ) async throws -> ApplicationServiceRemappingSnapshotPayload
   func activateRemappingProfile(id: UUID) async throws -> ApplicationServiceRemappingSnapshotPayload
   func deactivateRemappingProfile(
     vendorID: UInt16,
@@ -54,6 +60,38 @@ protocol RemappingGateway: Sendable {
 protocol CompatibilityGateway: Sendable {
   func compatibilityIdentity() async throws -> CompatibilityIdentity
   func setCompatibilityIdentity(_ identity: CompatibilityIdentity) async throws -> Bool
+  func setCompatibilityIdentityDetailed(
+    _ identity: CompatibilityIdentity
+  ) async throws -> CompatibilityIdentityTransitionResult
+  func suspendController(_ selector: RuntimeDeviceSelector) async throws -> ControllerSuspendResult
+  func resumeController(_ selector: RuntimeDeviceSelector) async throws -> ControllerResumeResult
+}
+
+extension CompatibilityGateway {
+  func setCompatibilityIdentityDetailed(
+    _ identity: CompatibilityIdentity
+  ) async throws -> CompatibilityIdentityTransitionResult {
+    let succeeded = try await setCompatibilityIdentity(identity)
+    let live = succeeded ? identity : try? await compatibilityIdentity()
+    return CompatibilityIdentityTransitionResult(
+      requestedIdentity: identity,
+      liveIdentity: live,
+      retainedIdentity: succeeded ? nil : live,
+      failure: succeeded
+        ? nil : CompatibilityIdentityTransitionFailure(phase: .activation, cause: .unavailable)
+    )
+  }
+
+  func suspendController(_ selector: RuntimeDeviceSelector) async throws -> ControllerSuspendResult
+  {
+    _ = try? await compatibilityIdentity()
+    return ControllerSuspendResult(state: .active, failure: .notFound)
+  }
+
+  func resumeController(_ selector: RuntimeDeviceSelector) async throws -> ControllerResumeResult {
+    _ = try? await compatibilityIdentity()
+    return ControllerResumeResult(state: .suspended, failure: .notFound)
+  }
 }
 
 protocol ApplicationServiceGateway: RuntimeStatusGateway, ControllerDiagnosticsGateway,
@@ -63,6 +101,8 @@ protocol ApplicationServiceGateway: RuntimeStatusGateway, ControllerDiagnosticsG
 enum ApplicationServiceGatewayError: Error, LocalizedError, Sendable, Equatable {
   case invalidCompatibilityIdentity(String)
   case compatibilityIdentityChangeRejected(CompatibilityIdentity)
+  case profileRecoveryUnavailable
+  case controllerSessionChangeRejected
 
   var errorDescription: String? {
     switch self {
@@ -75,6 +115,13 @@ enum ApplicationServiceGatewayError: Error, LocalizedError, Sendable, Equatable 
       return OJDLocalized.string(
         "error.selectedOutputEnableFailed",
         fallback: "The selected controller output could not be enabled."
+      )
+    case .profileRecoveryUnavailable:
+      return OJDLocalized.string("profiles.unavailable", fallback: "Profiles unavailable")
+    case .controllerSessionChangeRejected:
+      return OJDLocalized.string(
+        "error.controllerSessionChangeRejected",
+        fallback: "The controller session could not be changed."
       )
     }
   }
@@ -164,6 +211,20 @@ actor ApplicationServiceClientGateway: ApplicationServiceGateway {
     return try await client.deleteRemappingProfile(id: id)
   }
 
+  func deleteDamagedRemappingProfile(
+    issueID: UUID
+  ) async throws -> ApplicationServiceRemappingSnapshotPayload {
+    await ensureConnection()
+    return try await client.deleteDamagedRemappingProfile(issueID: issueID)
+  }
+
+  func resetRemappingProfileLibrary(
+    issueID: UUID
+  ) async throws -> ApplicationServiceRemappingSnapshotPayload {
+    await ensureConnection()
+    return try await client.resetRemappingProfileLibrary(issueID: issueID)
+  }
+
   func activateRemappingProfile(id: UUID) async throws -> ApplicationServiceRemappingSnapshotPayload
   {
     await ensureConnection()
@@ -229,6 +290,32 @@ actor ApplicationServiceClientGateway: ApplicationServiceGateway {
     return try await client.setCompatibilityIdentity(identity.rawValue)
   }
 
+  func setCompatibilityIdentityDetailed(
+    _ identity: CompatibilityIdentity
+  ) async throws -> CompatibilityIdentityTransitionResult {
+    await ensureConnection()
+    return try await client.setCompatibilityIdentityDetailed(identity.rawValue)
+  }
+
+  func suspendController(_ selector: RuntimeDeviceSelector) async throws -> ControllerSuspendResult
+  {
+    await ensureConnection()
+    return try await client.suspendController(
+      vendorID: selector.vendorID,
+      productID: selector.productID,
+      runtimeIdentifier: selector.runtimeIdentifier
+    )
+  }
+
+  func resumeController(_ selector: RuntimeDeviceSelector) async throws -> ControllerResumeResult {
+    await ensureConnection()
+    return try await client.resumeController(
+      vendorID: selector.vendorID,
+      productID: selector.productID,
+      runtimeIdentifier: selector.runtimeIdentifier
+    )
+  }
+
   private func ensureConnection() async {
     guard !client.isConnected else { return }
     if let connectionTask {
@@ -240,6 +327,22 @@ actor ApplicationServiceClientGateway: ApplicationServiceGateway {
     connectionTask = task
     await task.value
     connectionTask = nil
+  }
+}
+
+extension RemappingGateway {
+  func deleteDamagedRemappingProfile(
+    issueID: UUID
+  ) async throws -> ApplicationServiceRemappingSnapshotPayload {
+    await Task.yield()
+    throw ApplicationServiceGatewayError.profileRecoveryUnavailable
+  }
+
+  func resetRemappingProfileLibrary(
+    issueID: UUID
+  ) async throws -> ApplicationServiceRemappingSnapshotPayload {
+    await Task.yield()
+    throw ApplicationServiceGatewayError.profileRecoveryUnavailable
   }
 }
 

@@ -24,6 +24,7 @@ extension UserSpaceOutputDispatcher {
 
     func startInputReportKeepalive(
       isActive: @escaping @Sendable () -> Bool,
+      onFailure: @escaping @Sendable (Error) async -> Void = { _ in },
       sleep: @escaping @Sendable (UInt64) async throws -> Void = {
         try await Task.sleep(nanoseconds: $0)
       }
@@ -36,9 +37,14 @@ extension UserSpaceOutputDispatcher {
             guard !Task.isCancelled else { return }
             // Suppression pauses publication, not ownership of the keepalive task.
             guard isActive() else { continue }
-            _ = await sender.submit(whileActive: isActive) {
-              isActive() ? [inputReportState.currentReport()] : []
-            }.result
+            do {
+              try await sender.submit(whileActive: isActive) {
+                isActive() ? [inputReportState.currentReport()] : []
+              }.value()
+            } catch is CancellationError { return } catch {
+              await onFailure(error)
+              return
+            }
           }
         }
       }

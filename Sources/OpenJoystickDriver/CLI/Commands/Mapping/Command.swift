@@ -60,6 +60,8 @@ struct MappingInvocation {
     case "list": return try await renderSnapshot(client: client)
     case "show": return try await show(client: client)
     case "create": return try await create(client: client)
+    case "restore-default-input": return try await restoreDefaultInput(client: client)
+    case "clear-inputs": return try await clearInputs(client: client)
     case "update": return try await update(client: client)
     case "bind": return try await bind(client: client)
     case "unbind": return try await unbind(client: client)
@@ -116,7 +118,10 @@ struct MappingInvocation {
         productID: try MappingSyntax.identifier(options.required("--pid"), option: "--pid")
       ),
       applicationScope: try MappingProfileEditor.applicationScope(options),
-      outputPolicy: try MappingProfileEditor.outputPolicy(options),
+      outputPolicy: try MappingProfileEditor.outputPolicy(
+        options,
+        defaultValue: RemappingOutputPolicy(virtualGamepad: .passthrough)
+      ),
       motionTuning: try MappingProfileEditor.motionTuning(options),
       gyroOutput: try MappingProfileEditor.gyroOutput(options),
       joyConPair: try MappingProfileEditor.joyConPairSettings(options),
@@ -200,11 +205,51 @@ struct MappingInvocation {
   }
 
   internal func activate(client: any MappingServiceClient) async throws -> String {
-    let profile = try await resolve(
-      soleArgument(CLILocalized.text("cli.mapping.usage.enable", "map enable <uuid-or-name>")),
-      client: client
-    )
+    let (selector, trailing) = try selectorArguments()
+    let options = try MappingOptions(trailing, flags: ["--allow-empty"])
+    try options.validate(allowed: ["--allow-empty"])
+    let profile = try await resolve(selector, client: client)
+    guard !profile.suppressesAllControllerInput || options.contains("--allow-empty") else {
+      throw MappingCommandError.invalidArguments(
+        CLILocalized.text(
+          "cli.mapping.empty_profile_requires_confirmation",
+          "This profile suppresses all controller input. Pass --allow-empty to activate it."
+        )
+      )
+    }
     return MappingRenderer.snapshot(try await client.activate(id: profile.id))
+  }
+
+  internal func restoreDefaultInput(client: any MappingServiceClient) async throws -> String {
+    let selector = try soleArgument(
+      CLILocalized.text(
+        "cli.mapping.usage.restore_default_input",
+        "map restore-default-input <uuid-or-name>"
+      )
+    )
+    let profile = try await resolve(selector, client: client)
+    let restored = profile.restoringDefaultInput()
+    return render(
+      try await client.update(restored, expectedCurrent: profile),
+      profileID: profile.id
+    )
+  }
+
+  internal func clearInputs(client: any MappingServiceClient) async throws -> String {
+    let (selector, trailing) = try selectorArguments()
+    let options = try MappingOptions(trailing, flags: ["--confirm"])
+    try options.validate(allowed: ["--confirm"])
+    guard options.contains("--confirm") else {
+      throw MappingCommandError.invalidArguments(
+        CLILocalized.text(
+          "cli.mapping.clear_inputs_requires_confirmation",
+          "Pass --confirm to clear all profile input configuration."
+        )
+      )
+    }
+    let profile = try await resolve(selector, client: client)
+    let cleared = profile.clearingAllInput()
+    return render(try await client.update(cleared, expectedCurrent: profile), profileID: profile.id)
   }
 
   internal func deactivate(client: any MappingServiceClient) async throws -> String {
@@ -313,6 +358,8 @@ struct MappingInvocation {
         list [--json]
         show <profile> [--json]
         create <name> --vid <id> --pid <id> (--target-app <bundle-id> | --global)
+        restore-default-input <profile>
+        clear-inputs <profile> --confirm
         update <profile> [--name <name>] [--vid <id>] [--pid <id>]
           [--target-app <bundle-id> | --global]
         bind <profile> --source <source> --target <target> [binding options]
@@ -320,7 +367,7 @@ struct MappingInvocation {
         delete <profile>
         import <file>
         export <profile> [--output <file>]
-        enable <profile>
+        enable <profile> [--allow-empty]
         disable --vid <id> --pid <id> | --profile <uuid-or-name>
         permission status | request
         calibration status|start|pause|reset --controller <runtime-identifier>

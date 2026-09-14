@@ -21,6 +21,14 @@ private actor CompatibilityTransitionGate {
   }
 }
 
+private actor CompatibilityFeedbackProbe {
+  private var commands: [VirtualRumbleCommand] = []
+
+  func append(_ command: VirtualRumbleCommand) { commands.append(command) }
+  func count() -> Int { commands.count }
+  func values() -> [VirtualRumbleCommand] { commands }
+}
+
 private final class CompatibilityTransitionProbe: CompatibilityUserSpaceOutputDispatching,
   CompatibilityUserSpaceOutputControllerActivating, @unchecked Sendable
 {
@@ -172,6 +180,28 @@ struct CompatibilityTransitionTests {
     await withCheckedContinuation { continuation in
       server.setCompatibilityIdentity(identity.rawValue) { continuation.resume(returning: $0) }
     }
+  }
+
+  @Test
+  func noncooperativeFeedbackIsQuarantinedBeforeNeutralization() async {
+    let identifier = DeviceIdentifier(vendorID: 1, productID: 2)
+    let stalledWrite = CompatibilityTransitionGate()
+    let probe = CompatibilityFeedbackProbe()
+    let feedbackGate = CompatibilityFeedbackGate { _, command in
+      await probe.append(command)
+      if command.left > 0 { await stalledWrite.wait() }
+    }
+
+    feedbackGate.submit(identifier: identifier, command: VirtualRumbleCommand(left: 1, right: 0))
+    while await probe.count() < 1 { await Task.yield() }
+
+    let started = DispatchTime.now().uptimeNanoseconds
+    #expect(await feedbackGate.quiesceAndNeutralize([identifier], timeout: 20_000_000))
+    let elapsed = DispatchTime.now().uptimeNanoseconds - started
+    #expect(elapsed < 100_000_000)
+    #expect(await probe.values().last == VirtualRumbleCommand(left: 0, right: 0, durationMs: 0))
+
+    await stalledWrite.open()
   }
 
   @Test

@@ -271,7 +271,7 @@ final class SystemExtensionSubmission: NSObject, OSSystemExtensionRequestDelegat
         )
       )
     )
-    finish(.active)
+    finish(mode == .activation ? .active : .inactive)
   }
 
   func request(_ request: OSSystemExtensionRequest, didFailWithError error: Error) {
@@ -339,7 +339,7 @@ final class SystemExtensionSubmission: NSObject, OSSystemExtensionRequestDelegat
   func completeForTesting(_ outcome: SystemExtensionSetupRequestResult) {
     guard completionGate.accept() else { return }
     switch outcome {
-    case .active: setResult(.completed("test"))
+    case .active, .inactive: setResult(.completed("test"))
     case .awaitingApproval: setResult(.requiresApproval)
     case .failed, .cancelled: setResult(.failed("test"))
     case .timedOut: setResult(.timedOut)

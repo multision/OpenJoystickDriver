@@ -14,6 +14,8 @@ enum RemappingProfileLibraryError: Error, Equatable, LocalizedError, Sendable {
   case profileUpdateConflict(UUID)
   case unreadableLibrary
   case unwritableLibrary
+  case profileRecoveryRequired
+  case profileIssueNotFound(UUID)
 
   var errorDescription: String? {
     switch self {
@@ -32,6 +34,8 @@ enum RemappingProfileLibraryError: Error, Equatable, LocalizedError, Sendable {
       "The remapping profile \(id.uuidString) changed since it was read."
     case .unreadableLibrary: "The remapping profile library could not be read."
     case .unwritableLibrary: "The remapping profile library could not be written."
+    case .profileRecoveryRequired: "Damaged profiles must be repaired before changing the library."
+    case .profileIssueNotFound: "The selected damaged profile is no longer current."
     }
   }
 }
@@ -43,6 +47,13 @@ actor RemappingProfileLibrary {
 
   let fileURL: URL
   private var library: RemappingProfileLibraryState?
+  private enum RecoveryIssue {
+    case damagedProfile(index: Int)
+    case unusableLibrary
+  }
+
+  private var profileIssues: [UUID: RecoveryIssue] = [:]
+  private var originalRecoveryData: Data?
 
   init(fileURL: URL = RemappingProfileLibrary.defaultFileURL) { self.fileURL = fileURL }
 
@@ -69,12 +80,68 @@ actor RemappingProfileLibrary {
           profileID: $0.profileID,
           applicationScope: $0.applicationScope
         )
-      }.sorted(by: Self.activeProfileOrder)
+      }.sorted(by: Self.activeProfileOrder),
+      issues: profileIssues.keys.sorted { $0.uuidString < $1.uuidString }.map { issueID in
+        let kind: ApplicationServiceRemappingProfileIssue.Kind =
+          switch profileIssues[issueID] {
+          case .damagedProfile: .damagedProfile
+          case .unusableLibrary, nil: .unusableLibrary
+          }
+        return ApplicationServiceRemappingProfileIssue(
+          id: issueID,
+          kind: kind,
+          message: kind == .damagedProfile
+            ? "This saved profile could not be read and can be removed."
+            : "The saved profile library could not be read and must be reset."
+        )
+      }
     )
   }
 
   func profile(id: UUID) throws -> RemappingProfile? {
-    try loadIfNeeded().profiles.first { $0.id == id }
+    let loaded = try loadIfNeeded()
+    try requireUsableLibrary()
+    return loaded.profiles.first { $0.id == id }
+  }
+
+  @discardableResult
+  func deleteDamagedProfile(issueID: UUID) throws -> RemappingProfileMutationImpact {
+    _ = try loadIfNeeded()
+    guard case .damagedProfile(let index) = profileIssues[issueID], let originalRecoveryData else {
+      throw RemappingProfileLibraryError.profileIssueNotFound(issueID)
+    }
+    try requireCurrentRecoveryData(originalRecoveryData, issueID: issueID)
+    var root = try Self.libraryRoot(from: originalRecoveryData)
+    var profiles = try Self.profileObjects(from: root)
+    guard profiles.indices.contains(index) else {
+      throw RemappingProfileLibraryError.profileIssueNotFound(issueID)
+    }
+    profiles.remove(at: index)
+    root["profiles"] = profiles
+    let recovered = try recoverProfiles(
+      from: try JSONSerialization.data(withJSONObject: root),
+      requireDamagedProfile: false
+    )
+    root["activeProfiles"] = try recovered.activeProfiles.map {
+      try JSONSerialization.jsonObject(with: JSONEncoder().encode($0))
+    }
+    try backUp(originalRecoveryData)
+    try replaceRawLibrary(try JSONSerialization.data(withJSONObject: root), clearRecovery: true)
+    return RemappingProfileMutationImpact(modelsNeedingRefresh: [])
+  }
+
+  @discardableResult
+  func resetDamagedLibrary(issueID: UUID) throws -> RemappingProfileMutationImpact {
+    _ = try loadIfNeeded()
+    guard case .unusableLibrary = profileIssues[issueID], let originalRecoveryData else {
+      throw RemappingProfileLibraryError.profileIssueNotFound(issueID)
+    }
+    try requireCurrentRecoveryData(originalRecoveryData, issueID: issueID)
+    try backUp(originalRecoveryData)
+    try replace(with: RemappingProfileLibraryState())
+    profileIssues = [:]
+    self.originalRecoveryData = nil
+    return RemappingProfileMutationImpact(modelsNeedingRefresh: [])
   }
 
   func checkpoint() throws -> RemappingProfileLibraryCheckpoint {
@@ -139,6 +206,7 @@ actor RemappingProfileLibrary {
   @discardableResult
   func create(_ profile: RemappingProfile) throws -> RemappingProfileMutationImpact {
     var proposed = try loadIfNeeded()
+    try requireRecoveredLibrary()
     guard !proposed.profiles.contains(where: { $0.id == profile.id }) else {
       throw RemappingProfileLibraryError.profileAlreadyExists(profile.id)
     }
@@ -167,6 +235,7 @@ actor RemappingProfileLibrary {
     expectedCurrent: RemappingProfile
   ) throws -> RemappingProfileMutationImpact {
     var proposed = try loadIfNeeded()
+    try requireRecoveredLibrary()
     guard let index = proposed.profiles.firstIndex(where: { $0.id == profile.id }) else {
       throw RemappingProfileLibraryError.profileNotFound(profile.id)
     }
@@ -193,6 +262,7 @@ actor RemappingProfileLibrary {
   @discardableResult
   func importProfile(_ profile: RemappingProfile) throws -> RemappingProfileMutationImpact {
     var proposed = try loadIfNeeded()
+    try requireRecoveredLibrary()
     var modelsNeedingRefresh: Set<RemappingProfileModel> = []
     if let index = proposed.profiles.firstIndex(where: { $0.id == profile.id }) {
       var peers = proposed.profiles
@@ -219,6 +289,7 @@ actor RemappingProfileLibrary {
   @discardableResult
   func delete(id: UUID) throws -> RemappingProfileMutationImpact {
     var proposed = try loadIfNeeded()
+    try requireRecoveredLibrary()
     guard let index = proposed.profiles.firstIndex(where: { $0.id == id }) else {
       throw RemappingProfileLibraryError.profileNotFound(id)
     }
@@ -234,6 +305,7 @@ actor RemappingProfileLibrary {
   @discardableResult
   func activate(profileID: UUID) throws -> RemappingProfileMutationImpact {
     var proposed = try loadIfNeeded()
+    try requireRecoveredLibrary()
     guard let profile = proposed.profiles.first(where: { $0.id == profileID }) else {
       throw RemappingProfileLibraryError.profileNotFound(profileID)
     }
@@ -258,6 +330,7 @@ actor RemappingProfileLibrary {
   @discardableResult
   func deactivate(profileID: UUID) throws -> RemappingProfileMutationImpact {
     var proposed = try loadIfNeeded()
+    try requireRecoveredLibrary()
     guard let existing = proposed.activeProfiles.first(where: { $0.profileID == profileID }) else {
       throw RemappingProfileLibraryError.profileNotFound(profileID)
     }
@@ -269,6 +342,7 @@ actor RemappingProfileLibrary {
   @discardableResult
   func deactivateAll(vendorID: UInt16, productID: UInt16) throws -> RemappingProfileMutationImpact {
     var proposed = try loadIfNeeded()
+    try requireRecoveredLibrary()
     let model = RemappingProfileModel(vendorID: vendorID, productID: productID)
     proposed.activeProfiles.removeAll { $0.model == model }
     try replace(with: proposed)
@@ -285,6 +359,7 @@ actor RemappingProfileLibrary {
     frontmostBundleIdentifier: String?
   ) throws -> RemappingProfile? {
     let loaded = try loadIfNeeded()
+    try requireUsableLibrary()
     let model = RemappingProfileModel(vendorID: vendorID, productID: productID)
     let candidates = loaded.activeProfiles.filter { $0.model == model }
     guard !candidates.isEmpty else { return nil }
@@ -325,19 +400,29 @@ actor RemappingProfileLibrary {
     do { data = try Data(contentsOf: fileURL) } catch {
       throw RemappingProfileLibraryError.unreadableLibrary
     }
-    guard data.count <= Self.maximumEncodedBytes else {
-      throw RemappingProfileLibraryError.librarySizeExceeded(data.count)
-    }
+    guard data.count <= Self.maximumEncodedBytes else { return loadUnusableLibrary(data) }
 
     let decoded: RemappingProfileLibraryState
+    do { decoded = try JSONDecoder().decode(RemappingProfileLibraryState.self, from: data) } catch {
+      do {
+        let recovered = try recoverProfiles(from: data)
+        library = recovered
+        originalRecoveryData = data
+        return recovered
+      } catch { return loadUnusableLibrary(data) }
+    }
     do {
-      decoded = try JSONDecoder().decode(RemappingProfileLibraryState.self, from: data)
-    } catch let error as RemappingValidationError {
-      throw RemappingProfileLibraryError.invalidProfile(error)
-    } catch { throw RemappingProfileLibraryError.corruptLibrary }
-    try validate(decoded)
-    library = decoded
-    return decoded
+      try validate(decoded)
+      library = decoded
+      return decoded
+    } catch {
+      do {
+        let recovered = try recoverProfiles(from: data)
+        library = recovered
+        originalRecoveryData = data
+        return recovered
+      } catch { return loadUnusableLibrary(data) }
+    }
   }
 
   private func replace(with proposed: RemappingProfileLibraryState) throws {
@@ -363,6 +448,122 @@ actor RemappingProfileLibrary {
       try manager.setAttributes([.posixPermissions: 0o600], ofItemAtPath: fileURL.path)
     } catch { throw RemappingProfileLibraryError.unwritableLibrary }
     library = proposed
+    profileIssues = [:]
+    originalRecoveryData = nil
+  }
+
+  private func requireRecoveredLibrary() throws {
+    guard profileIssues.isEmpty else { throw RemappingProfileLibraryError.profileRecoveryRequired }
+  }
+
+  private func requireUsableLibrary() throws {
+    guard
+      !profileIssues.values.contains(where: {
+        if case .unusableLibrary = $0 { return true }
+        return false
+      })
+    else { throw RemappingProfileLibraryError.corruptLibrary }
+  }
+
+  private func recoverProfiles(
+    from data: Data,
+    requireDamagedProfile: Bool = true
+  ) throws -> RemappingProfileLibraryState {
+    let root = try Self.libraryRoot(from: data)
+    let objects = try Self.profileObjects(from: root)
+    var profiles: [RemappingProfile] = []
+    var issues: [UUID: RecoveryIssue] = [:]
+    for (index, object) in objects.enumerated() {
+      do {
+        let profileData = try JSONSerialization.data(withJSONObject: object)
+        let profile = try JSONDecoder().decode(RemappingProfile.self, from: profileData)
+        try validate(profile, in: profiles)
+        profiles.append(profile)
+      } catch { issues[UUID()] = .damagedProfile(index: index) }
+    }
+    if requireDamagedProfile, issues.isEmpty { throw RemappingProfileLibraryError.corruptLibrary }
+    let retainedIDs = Set(profiles.map(\.id))
+    let activeProfiles: [RemappingPersistedActiveProfile] = (root["activeProfiles"] as? [Any] ?? [])
+      .compactMap { object in
+        guard JSONSerialization.isValidJSONObject(object),
+          let data = try? JSONSerialization.data(withJSONObject: object),
+          let active = try? JSONDecoder().decode(RemappingPersistedActiveProfile.self, from: data),
+          retainedIDs.contains(active.profileID)
+        else { return nil }
+        return active
+      }
+    profileIssues = issues
+    return RemappingProfileLibraryState(profiles: profiles, activeProfiles: activeProfiles)
+  }
+
+  private func loadUnusableLibrary(_ data: Data) -> RemappingProfileLibraryState {
+    let empty = RemappingProfileLibraryState()
+    profileIssues = [UUID(): .unusableLibrary]
+    originalRecoveryData = data
+    library = empty
+    return empty
+  }
+
+  private func backUp(_ data: Data) throws {
+    let formatter = DateFormatter()
+    formatter.locale = Locale(identifier: "en_US_POSIX")
+    formatter.dateFormat = "yyyyMMdd-HHmmss"
+    let backup = fileURL.deletingLastPathComponent().appendingPathComponent(
+      fileURL.lastPathComponent + ".backup-" + formatter.string(from: Date()) + "-"
+        + UUID().uuidString
+    )
+    do { try data.write(to: backup, options: .atomic) } catch {
+      throw RemappingProfileLibraryError.unwritableLibrary
+    }
+  }
+
+  private func requireCurrentRecoveryData(_ expected: Data, issueID: UUID) throws {
+    let current: Data
+    do { current = try Data(contentsOf: fileURL) } catch {
+      throw RemappingProfileLibraryError.unreadableLibrary
+    }
+    guard current == expected else {
+      library = nil
+      profileIssues = [:]
+      originalRecoveryData = nil
+      throw RemappingProfileLibraryError.profileIssueNotFound(issueID)
+    }
+  }
+
+  private func replaceRawLibrary(_ data: Data, clearRecovery: Bool) throws {
+    let directory = fileURL.deletingLastPathComponent()
+    do {
+      try FileManager.default.createDirectory(
+        at: directory,
+        withIntermediateDirectories: true,
+        attributes: [.posixPermissions: 0o700]
+      )
+      try FileManager.default.setAttributes(
+        [.posixPermissions: 0o700],
+        ofItemAtPath: directory.path
+      )
+      try data.write(to: fileURL, options: .atomic)
+      try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: fileURL.path)
+    } catch { throw RemappingProfileLibraryError.unwritableLibrary }
+    library = nil
+    if clearRecovery {
+      profileIssues = [:]
+      originalRecoveryData = nil
+    }
+  }
+
+  private static func libraryRoot(from data: Data) throws -> [String: Any] {
+    guard let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+      Set(root.keys).isSubset(of: ["profiles", "activeProfiles"]), root["profiles"] != nil
+    else { throw RemappingProfileLibraryError.corruptLibrary }
+    return root
+  }
+
+  private static func profileObjects(from root: [String: Any]) throws -> [Any] {
+    guard let profiles = root["profiles"] as? [Any] else {
+      throw RemappingProfileLibraryError.corruptLibrary
+    }
+    return profiles
   }
 
   private func validate(_ profile: RemappingProfile, in peers: [RemappingProfile]) throws {

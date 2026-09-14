@@ -89,3 +89,56 @@ public enum CompatibilityIdentity: Codable, CaseIterable, Sendable, Equatable {
 public enum CompatibilityIdentityMutationRejection: String, Equatable, Sendable {
   case unknownIdentity
 }
+
+public enum CompatibilityIdentityTransitionPhase: String, Codable, Equatable, Sendable {
+  case validation
+  case stage
+  case feedbackQuiescence = "feedback-quiescence"
+  case candidateClose = "candidate-close"
+  case activation
+  case rollbackStage = "rollback-stage"
+  case rollbackActivation = "rollback-activation"
+  case zeroDeviceInterval = "zero-device-interval"
+}
+
+public enum CompatibilityIdentityTransitionCause: String, Codable, Equatable, Sendable {
+  case invalidIdentity = "invalid-identity"
+  case timedOut = "timed-out"
+  case unavailable
+  case serverStopped = "server-stopped"
+}
+
+public struct CompatibilityIdentityTransitionFailure: Codable, Equatable, Sendable {
+  public let phase: CompatibilityIdentityTransitionPhase
+  public let cause: CompatibilityIdentityTransitionCause
+
+  public init(
+    phase: CompatibilityIdentityTransitionPhase,
+    cause: CompatibilityIdentityTransitionCause
+  ) {
+    self.phase = phase
+    self.cause = cause
+  }
+}
+
+/// Detailed result for an identity request. `liveIdentity` is the identity actually published.
+public struct CompatibilityIdentityTransitionResult: Codable, Equatable, Sendable {
+  public let requestedIdentity: CompatibilityIdentity?
+  public let liveIdentity: CompatibilityIdentity?
+  public let retainedIdentity: CompatibilityIdentity?
+  public let failure: CompatibilityIdentityTransitionFailure?
+
+  public init(
+    requestedIdentity: CompatibilityIdentity?,
+    liveIdentity: CompatibilityIdentity?,
+    retainedIdentity: CompatibilityIdentity?,
+    failure: CompatibilityIdentityTransitionFailure?
+  ) {
+    self.requestedIdentity = requestedIdentity
+    self.liveIdentity = liveIdentity
+    self.retainedIdentity = retainedIdentity
+    self.failure = failure
+  }
+
+  public var succeeded: Bool { failure == nil && requestedIdentity == liveIdentity }
+}

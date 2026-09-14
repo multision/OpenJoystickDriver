@@ -16,6 +16,8 @@ public enum ApplicationServiceRemappingRPCMethod: String, CaseIterable, Sendable
   case deactivateProfileByID = "deactivateRemappingProfileByID"
   case getPostEventAccess = "getRemappingPostEventAccess"
   case requestPostEventAccess = "requestRemappingPostEventAccess"
+  case deleteDamagedProfile = "deleteDamagedRemappingProfile"
+  case resetProfileLibrary = "resetRemappingProfileLibrary"
 }
 
 /// Bounds decoded remapping arguments below the local transport's framed envelope limit.
@@ -31,6 +33,39 @@ public struct ApplicationServiceRemappingProfileIDArguments: Codable, Sendable {
   public init(profileID: UUID) { self.profileID = profileID }
 
   private enum CodingKeys: String, CodingKey { case profileID }
+}
+
+/// Identifies a damaged persisted profile from one specific library snapshot.
+public struct ApplicationServiceRemappingProfileIssueArguments: Codable, Sendable {
+  public let issueID: UUID
+
+  public init(issueID: UUID) { self.issueID = issueID }
+}
+
+public struct ApplicationServiceRemappingProfileIssue: Codable, Equatable, Sendable, Identifiable {
+  public enum Kind: String, Codable, Sendable {
+    case damagedProfile
+    case unusableLibrary
+  }
+
+  public let id: UUID
+  public let kind: Kind
+  public let message: String
+
+  public init(id: UUID, kind: Kind = .damagedProfile, message: String) {
+    self.id = id
+    self.kind = kind
+    self.message = message
+  }
+
+  private enum CodingKeys: String, CodingKey { case id, kind, message }
+
+  public init(from decoder: any Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    id = try container.decode(UUID.self, forKey: .id)
+    kind = try container.decodeIfPresent(Kind.self, forKey: .kind) ?? .damagedProfile
+    message = try container.decode(String.self, forKey: .message)
+  }
 }
 
 public struct ApplicationServiceRemappingProfileArguments: Codable, Sendable {
@@ -245,6 +280,7 @@ public struct ApplicationServiceRemappingSnapshotPayload: Codable, Equatable, Se
   public let activeProfiles: [ApplicationServiceRemappingActiveProfilePayload]
   public let routes: [ApplicationServiceRemappingRoutePayload]
   public let joyConPairs: [ApplicationServiceJoyConPairPayload]
+  public let profileIssues: [ApplicationServiceRemappingProfileIssue]
   public let postEventAccess: RemappingPostEventAccessState
 
   public init(
@@ -252,12 +288,14 @@ public struct ApplicationServiceRemappingSnapshotPayload: Codable, Equatable, Se
     activeProfiles: [ApplicationServiceRemappingActiveProfilePayload],
     routes: [ApplicationServiceRemappingRoutePayload],
     joyConPairs: [ApplicationServiceJoyConPairPayload] = [],
+    profileIssues: [ApplicationServiceRemappingProfileIssue] = [],
     postEventAccess: RemappingPostEventAccessState
   ) {
     self.profiles = profiles
     self.activeProfiles = activeProfiles
     self.routes = routes
     self.joyConPairs = joyConPairs
+    self.profileIssues = profileIssues
     self.postEventAccess = postEventAccess
   }
 
@@ -266,6 +304,7 @@ public struct ApplicationServiceRemappingSnapshotPayload: Codable, Equatable, Se
     case activeProfiles
     case routes
     case joyConPairs
+    case profileIssues
     case postEventAccess
   }
 
@@ -281,6 +320,11 @@ public struct ApplicationServiceRemappingSnapshotPayload: Codable, Equatable, Se
       try container.decodeIfPresent(
         [ApplicationServiceJoyConPairPayload].self,
         forKey: .joyConPairs
+      ) ?? []
+    profileIssues =
+      try container.decodeIfPresent(
+        [ApplicationServiceRemappingProfileIssue].self,
+        forKey: .profileIssues
       ) ?? []
     postEventAccess = try container.decode(
       RemappingPostEventAccessState.self,
@@ -315,6 +359,7 @@ public struct ApplicationServiceRemappingRPCError: Error, Codable, Equatable, Lo
     case routerShutDown = "router_shut_down"
     case transactionUnreconciled = "transaction_unreconciled"
     case unreadableLibrary = "library_unreadable"
+    case profileRecoveryRequired = "profile_recovery_required"
     case unwritableLibrary = "library_unwritable"
     case unexpected = "unexpected"
   }

@@ -4,10 +4,8 @@ import Testing
 
 struct ControllerExposureDecisionTests {
   @Test
-  func ownedPhysicalInputPublishesGenericByDefault() {
-    for ownership in [
-      ControllerOwnershipObservation.exclusiveHID, .exclusiveRawUSB, .driverKitOwnedUSB,
-    ] {
+  func ownedRawUSBInputPublishesGenericByDefault() {
+    for ownership in [ControllerOwnershipObservation.exclusiveRawUSB, .driverKitOwnedUSB] {
       let decision = ControllerExposureDecision.decide(
         ownership: ownership,
         intent: .automatic(resolvedIdentity: .genericHID)
@@ -20,15 +18,25 @@ struct ControllerExposureDecisionTests {
   }
 
   @Test
-  func nativeHIDRemainsEligibleAndReportsDuplicateRisk() {
+  func automaticNativeHIDUsesPassThroughAndReportsDuplicateRisk() {
     let decision = ControllerExposureDecision.decide(
       ownership: .nativeHIDVisible,
       intent: .automatic(resolvedIdentity: .genericHID)
     )
 
-    #expect(decision.eligibility == .eligible)
-    #expect(decision.effectiveIdentity == .genericHID)
+    #expect(decision.eligibility == .suppressedNativeHIDPassThrough)
+    #expect(decision.effectiveIdentity == nil)
     #expect(decision.duplicateRisk == .nativeHIDVisible)
+  }
+
+  @Test
+  func automaticExclusiveHIDUsesPassThrough() {
+    let decision = ControllerExposureDecision.decide(
+      ownership: .exclusiveHID,
+      intent: .automatic(resolvedIdentity: .genericHID)
+    )
+    #expect(decision.eligibility == .suppressedNativeHIDPassThrough)
+    #expect(decision.effectiveIdentity == nil)
   }
 
   @Test

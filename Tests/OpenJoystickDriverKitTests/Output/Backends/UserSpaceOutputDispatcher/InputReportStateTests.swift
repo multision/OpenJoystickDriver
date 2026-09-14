@@ -2,6 +2,12 @@ import Testing
 
 @testable import OpenJoystickDriverKit
 
+private enum CompatibilitySpecialControl: CaseIterable {
+  case share
+  case touchpad
+  case mute
+}
+
 struct UserSpaceInputReportStateTests {
   @Test
   func currentInputReportTracksChangesForHostGetReportRequests() throws {
@@ -78,5 +84,74 @@ struct UserSpaceInputReportStateTests {
     #expect(view[14] == 0x40)
     #expect(view[16] == 0)
     #expect(state.update { $0 = VirtualGamepadState() } == neutral)
+  }
+
+  @Test
+  func everyCompatibilityFormatPreservesCompoundStateAcrossUpdatesAndRelease() throws {
+    let identities: [CompatibilityIdentity] = [
+      .automatic, .genericHID, .sdl2_3, .appleGameController, .xbox360HID, .dualShock4, .dualSense,
+      .switchPro,
+    ]
+    for identity in identities {
+      let format = try CompatibilityOutputCompositionFactory.make(identity: identity).format
+      let reportState = UserSpaceInputReportState(format: format)
+      let neutral = reportState.currentReport()
+      var expected = compoundState()
+
+      let active = reportState.update { $0 = expected }
+      #expect(active == format.buildInputReport(from: expected), "\(identity)")
+      #expect(active != neutral, "\(identity)")
+
+      expected.rightStickX = 12_345
+      let updated = reportState.update { $0.rightStickX = expected.rightStickX }
+      #expect(updated == format.buildInputReport(from: expected), "\(identity)")
+
+      let released = reportState.update { $0 = VirtualGamepadState() }
+      #expect(released == neutral, "\(identity)")
+    }
+  }
+
+  @Test
+  func compatibilityFormatsExplicitlyClassifySpecialControlSupport() throws {
+    let supported: [CompatibilityIdentity: Set<CompatibilitySpecialControl>] = [
+      .automatic: [.share], .genericHID: [.share], .sdl2_3: [], .appleGameController: [.share],
+      .xbox360HID: [], .dualShock4: [.share, .touchpad], .dualSense: [.share, .touchpad, .mute],
+      .switchPro: [.share],
+    ]
+    #expect(Set(supported.keys) == Set(CompatibilityIdentity.allCases))
+
+    for (identity, supportedControls) in supported {
+      let format = try CompatibilityOutputCompositionFactory.make(identity: identity).format
+      let neutral = format.buildInputReport(from: VirtualGamepadState())
+      for control in CompatibilitySpecialControl.allCases {
+        var state = VirtualGamepadState()
+        switch control {
+        case .share: state.buttons = 1 << GamepadHIDDescriptor.ButtonBit.share.rawValue
+        case .touchpad: state.touchpadPressed = true
+        case .mute: state.mutePressed = true
+        }
+        #expect(
+          (format.buildInputReport(from: state) != neutral) == supportedControls.contains(control),
+          "\(identity) \(control)"
+        )
+      }
+    }
+  }
+
+  private func compoundState() -> VirtualGamepadState {
+    VirtualGamepadState(
+      buttons: UInt32.max,
+      leftStickX: 24_000,
+      leftStickY: -20_000,
+      rightStickX: -16_000,
+      rightStickY: 8_000,
+      leftTrigger: 24_000,
+      rightTrigger: 12_000,
+      leftTriggerPressed: true,
+      rightTriggerPressed: true,
+      touchpadPressed: true,
+      mutePressed: true,
+      hat: .southWest
+    )
   }
 }

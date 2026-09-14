@@ -251,6 +251,47 @@ struct MappingCommandTests {
   }
 
   @Test
+  func newProfilesPassThroughAndEmptyProfilesRequireExplicitCommands() async throws {
+    let creator = MockMappingClient(snapshotValue: snapshot([]))
+    _ = try await MappingInvocation(arguments: [
+      "create", "Default", "--vid", "1", "--pid", "2", "--global",
+    ]).execute(client: creator)
+    #expect(await creator.submittedProfile?.outputPolicy.virtualGamepad == .passthrough)
+
+    let empty = RemappingProfile(
+      name: "Empty",
+      device: RemappingDeviceScope(vendorID: 1118, productID: 654),
+      applicationScope: .global,
+      outputPolicy: RemappingOutputPolicy(virtualGamepad: .mapped),
+      bindings: []
+    )
+    let client = MockMappingClient(snapshotValue: snapshot([empty]))
+    await #expect(throws: MappingCommandError.self) {
+      try await MappingInvocation(arguments: ["enable", empty.id.uuidString]).execute(
+        client: client
+      )
+    }
+    #expect(await client.mutationCount == 0)
+    _ = try await MappingInvocation(arguments: ["enable", empty.id.uuidString, "--allow-empty"])
+      .execute(client: client)
+    #expect(await client.mutationCount == 1)
+
+    _ = try await MappingInvocation(arguments: ["restore-default-input", empty.id.uuidString])
+      .execute(client: client)
+    #expect(await client.submittedProfile?.outputPolicy.virtualGamepad == .passthrough)
+
+    await #expect(throws: MappingCommandError.self) {
+      try await MappingInvocation(arguments: ["clear-inputs", empty.id.uuidString]).execute(
+        client: client
+      )
+    }
+    #expect(await client.mutationCount == 2)
+    _ = try await MappingInvocation(arguments: ["clear-inputs", empty.id.uuidString, "--confirm"])
+      .execute(client: client)
+    #expect(await client.submittedProfile?.suppressesAllControllerInput == true)
+  }
+
+  @Test
   func gyroOptionsCreatePreserveAndRejectInvalidUpdates() async throws {
     let creator = MockMappingClient(snapshotValue: snapshot([]))
     _ = try await MappingInvocation(arguments: [

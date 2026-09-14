@@ -96,6 +96,21 @@ enum InstalledCommandCatalog {
       sideEffect: .transientDeviceMutation
     ),
     command(
+      "controller disconnect [options]",
+      CLILocalized.text(
+        "cli.catalog.controller_disconnect.summary",
+        "Suspend a controller from OpenJoystickDriver"
+      ),
+      group: CLILocalized.text("cli.catalog.group.controllers", "Controllers"),
+      sideEffect: .transientDeviceMutation
+    ),
+    command(
+      "controller resume [options]",
+      CLILocalized.text("cli.catalog.controller_resume.summary", "Resume a suspended controller"),
+      group: CLILocalized.text("cli.catalog.group.controllers", "Controllers"),
+      sideEffect: .transientDeviceMutation
+    ),
+    command(
       "map <command> [options]",
       CLILocalized.text("cli.catalog.map.summary", "Manage controller mapping profiles"),
       group: CLILocalized.text("cli.catalog.group.configuration", "Configuration"),

@@ -163,11 +163,120 @@ struct ProfileLibraryTests {
       let corrupt = Data("not json".utf8)
       try corrupt.write(to: url)
 
-      await #expect(throws: RemappingProfileLibraryError.corruptLibrary) {
+      await #expect(throws: RemappingProfileLibraryError.profileRecoveryRequired) {
         try await library.create(makeProfile(name: "Primary"))
       }
       let preserved = try Data(contentsOf: url)
       #expect(preserved == corrupt)
+    }
+  }
+
+  @Test
+  func validProfilesRemainAvailableWhenAnotherPersistedProfileIsDamaged() async throws {
+    try await withLibrary { library, url in
+      let valid = makeProfile(name: "Valid")
+      let validObject = try #require(
+        JSONSerialization.jsonObject(with: JSONEncoder().encode(valid)) as? [String: Any]
+      )
+      let damaged: [String: Any] = ["name": "Damaged"]
+      let data = try JSONSerialization.data(withJSONObject: [
+        "profiles": [validObject, damaged], "activeProfiles": [],
+      ])
+      try data.write(to: url)
+
+      let snapshot = try await library.snapshot()
+      #expect(snapshot.profiles == [valid])
+      #expect(snapshot.issues.count == 1)
+      #expect(try Data(contentsOf: url) == data)
+
+      try await library.deleteDamagedProfile(issueID: try #require(snapshot.issues.first).id)
+      #expect(try await library.profiles() == [valid])
+      let files = try FileManager.default.contentsOfDirectory(
+        atPath: url.deletingLastPathComponent().path
+      )
+      #expect(files.contains { $0.hasPrefix("profiles.json.backup-") })
+    }
+  }
+
+  @Test
+  func repairingDamageRetainsOnlyActiveReferencesToSalvagedProfiles() async throws {
+    try await withLibrary { library, url in
+      let valid = makeProfile(name: "Valid")
+      let damaged = makeProfile(name: "Damaged")
+      let validObject = try #require(
+        JSONSerialization.jsonObject(with: JSONEncoder().encode(valid)) as? [String: Any]
+      )
+      var damagedObject = try #require(
+        JSONSerialization.jsonObject(with: JSONEncoder().encode(damaged)) as? [String: Any]
+      )
+      damagedObject.removeValue(forKey: "name")
+      let activeObjects = try [valid, damaged].map {
+        try JSONSerialization.jsonObject(
+          with: JSONEncoder().encode(
+            RemappingPersistedActiveProfile(
+              model: RemappingProfileModel($0.device),
+              profileID: $0.id,
+              applicationScope: $0.applicationScope
+            )
+          )
+        )
+      }
+      try JSONSerialization.data(withJSONObject: [
+        "profiles": [validObject, damagedObject], "activeProfiles": activeObjects,
+      ]).write(to: url)
+
+      let damagedIssue = try #require((try await library.snapshot()).issues.first)
+      try await library.deleteDamagedProfile(issueID: damagedIssue.id)
+      let repaired = try await library.snapshot()
+
+      #expect(repaired.profiles == [valid])
+      #expect(repaired.activeProfiles.map(\.profileID) == [valid.id])
+      #expect(repaired.issues.isEmpty)
+    }
+  }
+
+  @Test
+  func damagedProfileIssueIdentifiersAreRejectedAfterRepair() async throws {
+    try await withLibrary { library, url in
+      let data = Data("{\"profiles\":[{}],\"activeProfiles\":[]}".utf8)
+      try data.write(to: url)
+      let issue = try #require((try await library.snapshot()).issues.first)
+      try await library.deleteDamagedProfile(issueID: issue.id)
+      await #expect(throws: RemappingProfileLibraryError.profileIssueNotFound(issue.id)) {
+        try await library.deleteDamagedProfile(issueID: issue.id)
+      }
+    }
+  }
+
+  @Test
+  func recoveryIdentifierIsRejectedWhenTheLibraryChangesOnDisk() async throws {
+    try await withLibrary { library, url in
+      try Data("not json".utf8).write(to: url)
+      let issue = try #require((try await library.snapshot()).issues.first)
+      let replacement = try JSONEncoder().encode(RemappingProfileLibraryState())
+      try replacement.write(to: url, options: .atomic)
+
+      await #expect(throws: RemappingProfileLibraryError.profileIssueNotFound(issue.id)) {
+        try await library.resetDamagedLibrary(issueID: issue.id)
+      }
+      #expect(try Data(contentsOf: url) == replacement)
+    }
+  }
+
+  @Test
+  func malformedLibraryCanBeBackedUpAndReset() async throws {
+    try await withLibrary { library, url in
+      let malformed = Data("not json".utf8)
+      try malformed.write(to: url)
+
+      let issue = try #require((try await library.snapshot()).issues.first)
+      #expect(issue.kind == .unusableLibrary)
+      try await library.resetDamagedLibrary(issueID: issue.id)
+      #expect((try await library.snapshot()).profiles.isEmpty)
+      let files = try FileManager.default.contentsOfDirectory(
+        atPath: url.deletingLastPathComponent().path
+      )
+      #expect(files.contains { $0.hasPrefix("profiles.json.backup-") })
     }
   }
 
@@ -181,11 +290,10 @@ struct ProfileLibraryTests {
       )
       try original.write(to: url)
 
-      await #expect(throws: RemappingProfileLibraryError.corruptLibrary) {
-        _ = try await library.profiles()
-      }
+      let issue = try #require((try await library.snapshot()).issues.first)
+      #expect(issue.kind == .unusableLibrary)
       #expect(try Data(contentsOf: url) == original)
-      await #expect(throws: RemappingProfileLibraryError.corruptLibrary) {
+      await #expect(throws: RemappingProfileLibraryError.profileRecoveryRequired) {
         try await library.create(makeProfile(name: "Primary"))
       }
       #expect(try Data(contentsOf: url) == original)
@@ -206,9 +314,8 @@ struct ProfileLibraryTests {
       let original = try JSONSerialization.data(withJSONObject: legacyObject)
       try original.write(to: url)
 
-      await #expect(throws: RemappingProfileLibraryError.corruptLibrary) {
-        _ = try await library.profiles()
-      }
+      let issue = try #require((try await library.snapshot()).issues.first)
+      #expect(issue.kind == .unusableLibrary)
       #expect(try Data(contentsOf: url) == original)
     }
   }

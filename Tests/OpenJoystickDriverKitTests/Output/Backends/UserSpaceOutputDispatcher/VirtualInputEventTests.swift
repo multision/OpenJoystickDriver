@@ -39,6 +39,7 @@ struct VirtualInputEventTests {
     packet[base + 12] = 1
     packet[base + 18] = 2
     packet[base + 29] = bluetooth ? 0x19 : 0x09
+    if bluetooth { applyDS4BluetoothInputCRC(to: &packet) }
 
     let events = try parser.parse(data: Data(packet))
     var state = VirtualGamepadState()

@@ -22,13 +22,13 @@ extension UserSpaceOutputDispatcher {
 
     func enqueueSetReport(type: HIDReportType, id: HIDReportID?, data: Data) throws {
       let reportID = UInt32(id?.rawValue ?? 0)
-      let task = try handler.setReport(
+      let receipt = try handler.setReport(
         type: Self.reportType(type),
         reportID: reportID,
         bytes: Array(data)
       )
       Task { [handler] in
-        do { try await task.value } catch {
+        do { try await receipt.value() } catch {
           handler.reportAsynchronousFailure(error, reportID: reportID)
         }
       }

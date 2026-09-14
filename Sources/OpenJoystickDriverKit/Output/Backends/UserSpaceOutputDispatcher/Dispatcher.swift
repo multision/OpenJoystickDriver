@@ -175,10 +175,10 @@ public final class UserSpaceOutputDispatcher: CompatibilityUserSpaceOutputDispat
       return (Array(entries.values), changed)
     }
     for entry in suppression.entries {
-      _ = await entry.sender.submit {
+      _ = try? await entry.sender.submit {
         suppression.shouldNeutralize && !entry.inputReportState.isRemapped
           ? [entry.inputReportState.reset()] : []
-      }.result
+      }.value()
     }
   }
   public func setRemappingOutputSuppressed(_ suppressed: Bool) async {
@@ -186,7 +186,7 @@ public final class UserSpaceOutputDispatcher: CompatibilityUserSpaceOutputDispat
       remappingOutputSuppressed = suppressed
       return entries.values.map(\.sender)
     }
-    for sender in senders { _ = await sender.submit { [] }.result }
+    for sender in senders { _ = try? await sender.submit { [] }.value() }
   }
 
   public var lastRumbleStatus: String { registryLock.withLock { _lastRumbleStatus } }
@@ -222,10 +222,11 @@ public final class UserSpaceOutputDispatcher: CompatibilityUserSpaceOutputDispat
   init(
     testBackendFactory:
       @escaping @Sendable (DeviceIdentifier) async throws -> any VirtualDeviceBackend,
+    format: any VirtualGamepadReportFormat = OJDGenericGamepadFormat(),
     onControllerDidStop: (@Sendable (DeviceIdentifier) async -> Void)? = nil
   ) {
     profile = .default
-    format = OJDGenericGamepadFormat()
+    self.format = format
     primaryUsage = Self.defaultPrimaryUsage(for: format)
     emitsXboxGuideReport = false
     productNameOverride = nil
@@ -247,7 +248,8 @@ public final class UserSpaceOutputDispatcher: CompatibilityUserSpaceOutputDispat
       for identifier in identifiers {
         let entry = try await entry(for: identifier)
         guard lifecycle.isOpen else { throw CancellationError() }
-        try await entry.sender.submit { [entry] in [entry.inputReportState.currentReport()] }.value
+        try await entry.sender.submit { [entry] in [entry.inputReportState.currentReport()] }
+          .value()
         startInputReportKeepalive(entry)
       }
       registryLock.withLock { recomputeStatusLocked() }
@@ -262,7 +264,7 @@ public final class UserSpaceOutputDispatcher: CompatibilityUserSpaceOutputDispat
     do {
       let entry = try await entry(for: identifier)
       guard lifecycle.isOpen else { throw CancellationError() }
-      try await entry.sender.submit { [entry] in [entry.inputReportState.currentReport()] }.value
+      try await entry.sender.submit { [entry] in [entry.inputReportState.currentReport()] }.value()
       startInputReportKeepalive(entry)
       registryLock.withLock { recomputeStatusLocked() }
     } catch {
@@ -296,15 +298,35 @@ public final class UserSpaceOutputDispatcher: CompatibilityUserSpaceOutputDispat
   }
 
   internal func startInputReportKeepalive(_ entry: Entry) {
-    entry.startInputReportKeepalive { [weak self, weak entry] in
-      guard let self, let entry else { return false }
-      return self.lifecycle.isOpen
-        && !self.isOutputSuppressed(remapped: entry.inputReportState.isRemapped)
-    }
+    entry.startInputReportKeepalive(
+      isActive: { [weak self, weak entry] in
+        guard let self, let entry else { return false }
+        return self.lifecycle.isOpen
+          && !self.isOutputSuppressed(remapped: entry.inputReportState.isRemapped)
+      },
+      onFailure: { [weak self, weak entry] error in
+        guard let self, let entry else { return }
+        let removed = self.registryLock.withLock { () -> Entry? in
+          guard let identifier = self.entries.first(where: { $0.value === entry })?.key else {
+            return nil
+          }
+          self._status = "error: keepalive failed: \(error)"
+          return self.entries.removeValue(forKey: identifier)
+        }
+        _ = removed?.beginClose()
+      }
+    )
   }
 
   public func dispatch(events: [ControllerEvent], from identifier: DeviceIdentifier) async {
     try? await deliver(events: events, from: identifier, remappedState: nil, motionUpdate: nil)
+  }
+
+  public func dispatchReportingFailure(
+    events: [ControllerEvent],
+    from identifier: DeviceIdentifier
+  ) async throws {
+    try await deliver(events: events, from: identifier, remappedState: nil, motionUpdate: nil)
   }
 
   public func send(_ state: RemappingGamepadState, for identifier: DeviceIdentifier) async throws {
@@ -395,7 +417,7 @@ public final class UserSpaceOutputDispatcher: CompatibilityUserSpaceOutputDispat
           }
         }
         return reports
-      }.value
+      }.value()
       startInputReportKeepalive(activeEntry)
       registryLock.withLock { recomputeStatusLocked() }
     } catch {

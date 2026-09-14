@@ -70,6 +70,8 @@ public struct SupportReport: Codable, Sendable {
     public let preferredBackends: [String]
     public let physicalOutputCapabilities: PhysicalControllerOutputCapabilities
     public let battery: ControllerBatteryTelemetry?
+    public let sessionState: ControllerSessionState
+    public let startupCommandStatus: String?
   }
 
   public struct HIDGamepad: Codable, Sendable {
@@ -171,7 +173,9 @@ public struct SupportReport: Codable, Sendable {
         postHandshakeSettleMs: $0.postHandshakeSettleMs,
         preferredBackends: $0.preferredBackends.sorted(),
         physicalOutputCapabilities: $0.physicalOutputCapabilities,
-        battery: $0.battery
+        battery: $0.battery,
+        sessionState: $0.sessionState,
+        startupCommandStatus: $0.startupCommandStatus
       )
     }.sorted {
       if $0.vendorID != $1.vendorID { return $0.vendorID < $1.vendorID }

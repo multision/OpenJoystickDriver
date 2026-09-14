@@ -22,6 +22,7 @@ final class AutomaticUserSpaceOutputDispatcher: CompatibilityUserSpaceOutputDisp
   private var consumer: CompatibilityConsumerFamily
   private var consumerRevision: UInt64 = 0
   private var diagnosticTargets: [DeviceIdentifier: AutomaticCompatibilityTarget] = [:]
+  private var publicationDiagnostics: [String] = []
   private var observationTask: Task<Void, Never>?
   init(
     deviceManager: DeviceManager,
@@ -108,12 +109,16 @@ final class AutomaticUserSpaceOutputDispatcher: CompatibilityUserSpaceOutputDisp
     stateLock.withLock {
       let targets = Set(diagnosticTargets.values.map(Self.diagnosticTarget)).sorted()
       let suffix = targets.isEmpty ? "" : ", targets: \(targets.joined(separator: "; "))"
-      return "automatic, consumer: \(consumer.rawValue)\(suffix)"
+      let diagnostics =
+        publicationDiagnostics.isEmpty
+        ? "" : ", publication: \(publicationDiagnostics.joined(separator: "; "))"
+      return "automatic, consumer: \(consumer.rawValue)\(suffix)\(diagnostics)"
     }
   }
   var lastRumbleStatus: String { "none" }
   func dispatch(events: [ControllerEvent], from identifier: DeviceIdentifier) async {
     try? await deliver(events: events, state: nil, from: identifier)
+    await synchronizeDiagnostics()
   }
 
   func send(_ state: RemappingGamepadState, for identifier: DeviceIdentifier) async throws {
@@ -124,12 +129,16 @@ final class AutomaticUserSpaceOutputDispatcher: CompatibilityUserSpaceOutputDisp
     }
     guard let lease = await coordinator.leaseForNeutralization(identifier) else { return }
     do {
+      await coordinator.recordPublicationAttempt(for: identifier)
       guard let sink = lease.backend as? any RemappingGamepadSink else {
         throw RemappingEventEngineError.sinkUnavailable
       }
       try await sink.send(state, for: identifier)
+      await coordinator.recordPublicationCompletion(for: identifier)
     } catch {
       await lease.release()
+      await coordinator.recoverPublication(for: identifier, failure: error)
+      await synchronizeDiagnostics()
       throw error
     }
     await lease.release()
@@ -144,12 +153,16 @@ final class AutomaticUserSpaceOutputDispatcher: CompatibilityUserSpaceOutputDisp
     }
     guard let lease = await coordinator.leaseForNeutralization(identifier) else { return }
     do {
+      await coordinator.recordPublicationAttempt(for: identifier)
       guard let sink = lease.backend as? any RemappingGamepadSink else {
         throw RemappingEventEngineError.sinkUnavailable
       }
       try await sink.send(nil, for: identifier)
+      await coordinator.recordPublicationCompletion(for: identifier)
     } catch {
       await lease.release()
+      await coordinator.recoverPublication(for: identifier, failure: error)
+      await synchronizeDiagnostics()
       throw error
     }
     await lease.release()
@@ -178,12 +191,16 @@ final class AutomaticUserSpaceOutputDispatcher: CompatibilityUserSpaceOutputDisp
       )
     else { throw RemappingEventEngineError.sinkUnavailable }
     do {
+      await coordinator.recordPublicationAttempt(for: identifier)
       guard let sink = lease.backend as? any RemappingGamepadSink else {
         throw RemappingEventEngineError.sinkUnavailable
       }
       try await sink.send(motion, for: identifier)
+      await coordinator.recordPublicationCompletion(for: identifier)
     } catch {
       await lease.release()
+      await coordinator.recoverPublication(for: identifier, failure: error)
+      await synchronizeDiagnostics()
       throw error
     }
     await lease.release()
@@ -213,16 +230,20 @@ final class AutomaticUserSpaceOutputDispatcher: CompatibilityUserSpaceOutputDisp
       )
     else { throw RemappingEventEngineError.sinkUnavailable }
     do {
+      await coordinator.recordPublicationAttempt(for: identifier)
       if let state {
         guard let sink = lease.backend as? any RemappingGamepadSink else {
           throw RemappingEventEngineError.sinkUnavailable
         }
         try await sink.send(state, for: identifier)
       } else {
-        await lease.backend.dispatch(events: events, from: identifier)
+        try await lease.backend.dispatchReportingFailure(events: events, from: identifier)
       }
+      await coordinator.recordPublicationCompletion(for: identifier)
     } catch {
       await lease.release()
+      await coordinator.recoverPublication(for: identifier, failure: error)
+      await synchronizeDiagnostics()
       throw error
     }
     await lease.release()
@@ -265,7 +286,11 @@ final class AutomaticUserSpaceOutputDispatcher: CompatibilityUserSpaceOutputDisp
 
   private func synchronizeDiagnostics() async {
     let targets = await coordinator.installedTargets()
-    stateLock.withLock { diagnosticTargets = targets }
+    let publication = await coordinator.publicationDiagnostics()
+    stateLock.withLock {
+      diagnosticTargets = targets
+      publicationDiagnostics = publication
+    }
   }
 
   private static func diagnosticTarget(_ target: AutomaticCompatibilityTarget) -> String {

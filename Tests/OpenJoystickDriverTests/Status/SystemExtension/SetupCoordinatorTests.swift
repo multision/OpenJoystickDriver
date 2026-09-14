@@ -17,6 +17,18 @@ struct SetupCoordinatorTests {
   }
 
   @Test
+  func activeExtensionCanBeExplicitlyUninstalled() async {
+    let client = FakeSetupClient(status: Self.currentActiveStatus, deactivationResult: .inactive)
+    let coordinator = SystemExtensionSetupCoordinator(client: client)
+
+    await coordinator.launch()
+    await coordinator.uninstall()
+
+    #expect(coordinator.state == .needsActivation)
+    #expect(client.deactivationRequestCount == 1)
+  }
+
+  @Test
   func missingRegistrationSubmitsOnceAndWaitsForApproval() async {
     let client = FakeSetupClient(
       status: Self.inactiveStatus,
@@ -231,14 +243,18 @@ private final class FakeSetupClient: @unchecked Sendable, SystemExtensionSetupCl
   let status: ExtensionStatus
   var results: [SystemExtensionSetupRequestResult]
   private(set) var requestCount = 0
+  private(set) var deactivationRequestCount = 0
+  let deactivationResult: SystemExtensionSetupRequestResult
 
   init(
     status: ExtensionStatus,
     result: SystemExtensionSetupRequestResult = .active,
-    results: [SystemExtensionSetupRequestResult]? = nil
+    results: [SystemExtensionSetupRequestResult]? = nil,
+    deactivationResult: SystemExtensionSetupRequestResult = .inactive
   ) {
     self.status = status
     self.results = results ?? [result]
+    self.deactivationResult = deactivationResult
   }
 
   func inspect() -> ExtensionStatus { status }
@@ -247,6 +263,12 @@ private final class FakeSetupClient: @unchecked Sendable, SystemExtensionSetupCl
     await Task.yield()
     requestCount += 1
     return results.isEmpty ? .failed : results.removeFirst()
+  }
+
+  func requestDeactivation() async -> SystemExtensionSetupRequestResult {
+    await Task.yield()
+    deactivationRequestCount += 1
+    return deactivationResult
   }
 }
 

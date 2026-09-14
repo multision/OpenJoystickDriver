@@ -70,6 +70,10 @@ struct DeviceCatalog: Sendable {
       )
   }
 
+  func exactRuntimeProfile(for identifier: DeviceIdentifier) -> DeviceRuntimeProfile? {
+    profiles[key(for: identifier)]
+  }
+
   func supportsRawUSBPipeline(for identifier: DeviceIdentifier) -> Bool {
     rawUSBPipelineIdentifiers.contains(key(for: identifier))
   }

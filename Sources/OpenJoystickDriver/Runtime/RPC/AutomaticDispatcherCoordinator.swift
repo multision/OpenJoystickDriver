@@ -13,7 +13,8 @@ actor AutomaticDispatcherCoordinator {
   struct Request: Sendable {
     let controller: DeviceIdentifier
     let token: UUID
-    let generation: UInt64
+    let sessionGeneration: UInt64
+    let publicationGeneration: UInt64
     let foreground: UInt64
     let consumer: CompatibilityConsumerFamily
     let target: AutomaticCompatibilityTarget
@@ -25,14 +26,30 @@ actor AutomaticDispatcherCoordinator {
   }
 
   struct Entry {
-    var generation: UInt64 = 0
-    var alive = true
+    /// Physical-session state survives temporary publication suppression.
+    var sessionGeneration: UInt64 = 0
+    var physicalSessionActive = true
+    /// Invalidates only virtual publication work for the current physical session.
+    var publicationGeneration: UInt64 = 0
     var target: AutomaticCompatibilityTarget?
+    var context: PublicationContext?
     var installed: AutomaticBackendSlot?
     var installedToken: UUID?
     var retiring: AutomaticBackendSlot?
     var pending: Pending?
     var tasks: [UUID: Pending] = [:]
+    var lastAttemptedSend: UInt64?
+    var lastCompletedSend: UInt64?
+    var lastFailure: String?
+    var recoveryState = "idle"
+    var recoveryToken: UUID?
+  }
+
+  struct PublicationContext: Sendable {
+    let consumer: CompatibilityConsumerFamily
+    let target: AutomaticCompatibilityTarget
+    let isEligible: Eligibility
+    let factory: Factory
   }
 
   private var entries: [DeviceIdentifier: Entry] = [:]
@@ -45,6 +62,11 @@ actor AutomaticDispatcherCoordinator {
   private var remappingSuppressed = false
   private var suppressed = false
   private var suppressionRevision: UInt64 = 0
+  private let recoveryDelayNanoseconds: UInt64
+
+  init(recoveryDelayNanoseconds: UInt64 = 5_000_000_000) {
+    self.recoveryDelayNanoseconds = recoveryDelayNanoseconds
+  }
 
   func activateOne(
     identifier: DeviceIdentifier,
@@ -60,7 +82,11 @@ actor AutomaticDispatcherCoordinator {
         $0.runtimeIdentifier == identifier.runtimeIdentifier
       })
     else { return }
-    if entries[identifier]?.alive == false { entries[identifier]?.alive = true }
+    if entries[identifier]?.physicalSessionActive == false {
+      entries[identifier]?.physicalSessionActive = true
+      entries[identifier]?.sessionGeneration &+= 1
+      entries[identifier]?.publicationGeneration &+= 1
+    }
     let lease = try await acquire(
       identifier,
       consumer: consumer,
@@ -107,7 +133,7 @@ actor AutomaticDispatcherCoordinator {
       return nil
     }
     if let lease = entries[controller]?.installed?.acquire() { return lease }
-    await entries[controller]?.retiring?.retireAndWait()
+    _ = await entries[controller]?.retiring?.retireAndWait()
     return nil
   }
 
@@ -137,12 +163,16 @@ actor AutomaticDispatcherCoordinator {
     guard !closed, consumer == .unknown || consumer == requestedConsumer else { return nil }
     if consumer != requestedConsumer { setConsumer(requestedConsumer) }
     if entries[controller] == nil { entries[controller] = Entry() }
-    guard let initial = entries[controller], initial.alive else { return nil }
-    let generation = initial.generation
+    guard !suppressed, let initial = entries[controller], initial.physicalSessionActive else {
+      return nil
+    }
+    let sessionGeneration = initial.sessionGeneration
+    let publicationGeneration = initial.publicationGeneration
     let currentForeground = foreground
     guard await isEligible(controller, target) else { return nil }
     guard !closed, foreground == currentForeground, let current = entries[controller],
-      current.alive, current.generation == generation
+      current.physicalSessionActive, current.sessionGeneration == sessionGeneration,
+      current.publicationGeneration == publicationGeneration, !suppressed
     else { throw CancellationError() }
     if current.target == target, let lease = current.installed?.acquire() { return lease }
 
@@ -154,7 +184,8 @@ actor AutomaticDispatcherCoordinator {
       let request = Request(
         controller: controller,
         token: UUID(),
-        generation: generation,
+        sessionGeneration: sessionGeneration,
+        publicationGeneration: publicationGeneration,
         foreground: foreground,
         consumer: requestedConsumer,
         target: target
@@ -168,11 +199,17 @@ actor AutomaticDispatcherCoordinator {
           for predecessor in predecessors { _ = await predecessor.result }
           try await install(candidate, request: request, factory: factory)
         } catch {
-          await candidate.retireAndWait()
+          _ = await candidate.retireAndWait()
           throw error
         }
       }
       pending = Pending(request: request, task: task)
+      entries[controller]?.context = PublicationContext(
+        consumer: requestedConsumer,
+        target: target,
+        isEligible: isEligible,
+        factory: factory
+      )
       entries[controller]?.pending = pending
       entries[controller]?.tasks[request.token] = pending
     }
@@ -184,7 +221,8 @@ actor AutomaticDispatcherCoordinator {
     }
     try await pending.task.value
     guard !closed, foreground == currentForeground, let installed = entries[controller],
-      installed.alive, installed.generation == generation, installed.target == target,
+      installed.physicalSessionActive, installed.sessionGeneration == sessionGeneration,
+      installed.publicationGeneration == publicationGeneration, installed.target == target,
       installed.installedToken == pending.request.token
     else { throw CancellationError() }
     return installed.installed?.acquire()
@@ -192,8 +230,10 @@ actor AutomaticDispatcherCoordinator {
 
   private func validate(_ request: Request) throws {
     try Task.checkCancellation()
-    guard !closed, foreground == request.foreground, consumer == request.consumer,
-      let entry = entries[request.controller], entry.alive, entry.generation == request.generation,
+    guard !closed, !suppressed, foreground == request.foreground, consumer == request.consumer,
+      let entry = entries[request.controller], entry.physicalSessionActive,
+      entry.sessionGeneration == request.sessionGeneration,
+      entry.publicationGeneration == request.publicationGeneration,
       entry.pending?.request.token == request.token
     else { throw CancellationError() }
   }
@@ -211,7 +251,10 @@ actor AutomaticDispatcherCoordinator {
     entries[request.controller]?.installedToken = nil
     entries[request.controller]?.target = nil
     if let old {
-      await old.retireAndWait()
+      guard await old.retireAndWait() else {
+        _ = await candidate.retireAndWait()
+        throw CancellationError()
+      }
       try validate(request)
       entries[request.controller]?.retiring = nil
     }
@@ -221,7 +264,7 @@ actor AutomaticDispatcherCoordinator {
       entries[request.controller]?.installedToken = request.token
       entries[request.controller]?.target = request.target
     } catch {
-      await candidate.retireAndWait()
+      _ = await candidate.retireAndWait()
       if let previousTarget {
         await restore(target: previousTarget, request: request, factory: factory)
       }
@@ -258,7 +301,7 @@ actor AutomaticDispatcherCoordinator {
       entries[request.controller]?.installed = rollback
       entries[request.controller]?.installedToken = nil
       entries[request.controller]?.target = target
-    } catch { await rollback.retireAndWait() }
+    } catch { _ = await rollback.retireAndWait() }
   }
 
   private func setConsumer(_ value: CompatibilityConsumerFamily) {
@@ -282,7 +325,7 @@ actor AutomaticDispatcherCoordinator {
     guard !closed, revision > consumerRevision else { return }
     consumerRevision = revision
     setConsumer(value)
-    let controllers = entries.compactMap { $0.value.alive ? $0.key : nil }
+    let controllers = entries.compactMap { $0.value.physicalSessionActive ? $0.key : nil }
     for controller in controllers {
       guard !closed, consumerRevision == revision,
         let description = descriptions.first(where: {
@@ -304,18 +347,82 @@ actor AutomaticDispatcherCoordinator {
 
   func synchronizeSuppression(_ currentValue: @Sendable () -> Bool) async {
     guard !closed else { return }
+    let wasSuppressed = suppressed
     suppressed = currentValue()
     suppressionRevision &+= 1
-    let slots = entries.values.compactMap(\.installed)
-    for slot in slots {
-      guard let lease = slot.acquire() else { continue }
-      repeat {
-        let revision = suppressionRevision
-        await lease.backend.setOutputSuppressed(suppressed)
-        if closed || revision == suppressionRevision { break }
-      } while true
-      await lease.release()
+    if suppressed {
+      let identifiers = Array(entries.keys)
+      var slots: [(DeviceIdentifier, AutomaticBackendSlot)] = []
+      for identifier in identifiers {
+        guard let entry = entries[identifier] else { continue }
+        entries[identifier]?.publicationGeneration &+= 1
+        entries[identifier]?.tasks.values.forEach { $0.task.cancel() }
+        entries[identifier]?.pending = nil
+        guard let installed = entry.installed else { continue }
+        entries[identifier]?.installed = nil
+        entries[identifier]?.installedToken = nil
+        entries[identifier]?.target = nil
+        entries[identifier]?.retiring = installed
+        slots.append((identifier, installed))
+      }
+      await withTaskGroup(of: (DeviceIdentifier, Bool).self) { group in
+        for (identifier, slot) in slots {
+          group.addTask { (identifier, await slot.retireAndWait()) }
+        }
+        for await (identifier, retired) in group {
+          guard let slot = slots.first(where: { $0.0 == identifier })?.1 else { continue }
+          if retired {
+            await retirementFinished(identifier: identifier, slot: slot)
+          } else {
+            Task { [weak self] in
+              await slot.waitForCloseCompletion()
+              await self?.retirementFinished(identifier: identifier, slot: slot)
+            }
+          }
+        }
+      }
+      return
     }
+
+    guard wasSuppressed else { return }
+    let contexts = entries.compactMap {
+      identifier,
+      entry -> (DeviceIdentifier, PublicationContext)? in
+      guard entry.physicalSessionActive, entry.installed == nil, entry.retiring == nil,
+        entry.pending == nil, let context = entry.context
+      else { return nil }
+      return (identifier, context)
+    }
+    for (identifier, context) in contexts {
+      do {
+        let lease = try await acquire(
+          identifier,
+          consumer: context.consumer,
+          target: context.target,
+          isEligible: context.isEligible,
+          factory: context.factory
+        )
+        await lease?.release()
+      } catch { continue }
+    }
+  }
+
+  private func retirementFinished(identifier: DeviceIdentifier, slot: AutomaticBackendSlot) async {
+    guard entries[identifier]?.retiring === slot else { return }
+    entries[identifier]?.retiring = nil
+    guard !closed, !suppressed, let entry = entries[identifier], entry.physicalSessionActive,
+      entry.installed == nil, entry.pending == nil, let context = entry.context
+    else { return }
+    do {
+      let lease = try await acquire(
+        identifier,
+        consumer: context.consumer,
+        target: context.target,
+        isEligible: context.isEligible,
+        factory: context.factory
+      )
+      await lease?.release()
+    } catch { return }
   }
 
   func installedTargets() -> [DeviceIdentifier: AutomaticCompatibilityTarget] {
@@ -323,6 +430,29 @@ actor AutomaticDispatcherCoordinator {
       guard element.value.installed != nil, let target = element.value.target else { return }
       targets[element.key] = target
     }
+  }
+
+  func recordPublicationAttempt(for controller: DeviceIdentifier) {
+    entries[controller]?.lastAttemptedSend = DispatchTime.now().uptimeNanoseconds
+  }
+
+  func recordPublicationCompletion(for controller: DeviceIdentifier) {
+    entries[controller]?.lastCompletedSend = DispatchTime.now().uptimeNanoseconds
+    entries[controller]?.lastFailure = nil
+    entries[controller]?.recoveryState = "idle"
+  }
+
+  func publicationDiagnostics() -> [String] {
+    entries.compactMap { identifier, entry in
+      guard let target = entry.target ?? entry.context?.target else { return nil }
+      let attempted = entry.lastAttemptedSend.map(String.init) ?? "none"
+      let completed = entry.lastCompletedSend.map(String.init) ?? "none"
+      let failure = entry.lastFailure ?? entry.installed?.backend.status ?? "none"
+      return "controller=\(identifier), session=\(entry.sessionGeneration), "
+        + "publication=\(entry.publicationGeneration), target=\(target.identity.rawValue), "
+        + "last-attempted=\(attempted), last-completed=\(completed), "
+        + "failure=\(failure), recovery=\(entry.recoveryState)"
+    }.sorted()
   }
 
   func synchronizeRemappingSuppression(_ currentValue: @Sendable () -> Bool) async {
@@ -343,20 +473,84 @@ actor AutomaticDispatcherCoordinator {
     }
   }
 
+  /// A failed publication is retired before an eligible replacement is considered.
+  /// The physical session remains valid, so a later report can recover without a mode change.
+  func recoverPublication(for controller: DeviceIdentifier, failure: any Error) async {
+    guard !closed, !suppressed, var entry = entries[controller], entry.physicalSessionActive,
+      entry.recoveryState == "idle", entry.context != nil
+    else { return }
+    entry.publicationGeneration &+= 1
+    entry.lastFailure = String(describing: failure)
+    entry.recoveryState = "retiring"
+    let old = entry.installed ?? entry.retiring
+    entry.installed = nil
+    entry.installedToken = nil
+    entry.target = nil
+    entry.retiring = old
+    entry.tasks.values.forEach { $0.task.cancel() }
+    entry.pending = nil
+    entries[controller] = entry
+    guard await old?.retireAndWait() ?? true else {
+      entries[controller]?.recoveryState = "waiting-for-retirement"
+      return
+    }
+    guard entries[controller]?.publicationGeneration == entry.publicationGeneration else { return }
+    entries[controller]?.retiring = nil
+    let token = UUID()
+    entries[controller]?.recoveryToken = token
+    entries[controller]?.recoveryState = "retry-gated"
+    scheduleRecoveryRetry(controller, token: token)
+  }
+
+  private func retryPublication(_ controller: DeviceIdentifier, token: UUID) async {
+    guard !closed, !suppressed, let entry = entries[controller], entry.physicalSessionActive,
+      entry.recoveryToken == token, let context = entry.context
+    else { return }
+    entries[controller]?.recoveryState = "recovering"
+    do {
+      let lease = try await acquire(
+        controller,
+        consumer: context.consumer,
+        target: context.target,
+        isEligible: context.isEligible,
+        factory: context.factory
+      )
+      await lease?.release()
+      entries[controller]?.recoveryState = "idle"
+      entries[controller]?.recoveryToken = nil
+    } catch {
+      entries[controller]?.lastFailure = String(describing: error)
+      entries[controller]?.recoveryState = "retry-gated"
+      scheduleRecoveryRetry(controller, token: token)
+    }
+  }
+
+  private func scheduleRecoveryRetry(_ controller: DeviceIdentifier, token: UUID) {
+    Task { [weak self] in
+      guard let self else { return }
+      try? await Task.sleep(nanoseconds: self.recoveryDelayNanoseconds)
+      await self.retryPublication(controller, token: token)
+    }
+  }
+
   func stop(_ controller: DeviceIdentifier) async {
     var entry = entries[controller] ?? Entry()
-    entry.generation &+= 1
-    entry.alive = false
-    let installed = entry.installed
+    entry.sessionGeneration &+= 1
+    entry.publicationGeneration &+= 1
+    entry.physicalSessionActive = false
+    let installed = entry.installed ?? entry.retiring
     let tasks = entry.tasks.values.map(\.task)
     entry.installed = nil
     entry.target = nil
     entry.pending = nil
+    entry.retiring = installed
     entries[controller] = entry
     tasks.forEach { $0.cancel() }
-    await installed?.retireAndWait()
+    let retired = await installed?.retireAndWait() ?? true
     for task in tasks { _ = await task.result }
-    if entries[controller]?.generation == entry.generation { entries[controller]?.retiring = nil }
+    if retired, entries[controller]?.sessionGeneration == entry.sessionGeneration {
+      entries[controller]?.retiring = nil
+    }
   }
 
   func close() async {
@@ -369,12 +563,13 @@ actor AutomaticDispatcherCoordinator {
     let slots = entries.values.compactMap(\.installed)
     let tasks = entries.values.flatMap { $0.tasks.values.map(\.task) }
     for identifier in entries.keys {
-      entries[identifier]?.alive = false
+      entries[identifier]?.physicalSessionActive = false
+      entries[identifier]?.publicationGeneration &+= 1
       entries[identifier]?.installed = nil
       entries[identifier]?.pending = nil
     }
     tasks.forEach { $0.cancel() }
-    for slot in slots { await slot.retireAndWait() }
+    for slot in slots { _ = await slot.retireAndWait() }
     for task in tasks { _ = await task.result }
     entries.removeAll()
     closeFinished = true

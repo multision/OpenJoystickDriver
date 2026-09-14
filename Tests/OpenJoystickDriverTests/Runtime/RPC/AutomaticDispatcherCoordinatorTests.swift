@@ -133,11 +133,133 @@ struct AutomaticDispatcherCoordinatorTests {
     await coordinator.synchronizeSuppression { true }
     await gate.release()
     let lease = await pending
-    try #require(lease != nil)
-    #expect(backend.suppressOutput)
-    await lease?.release()
+    #expect(lease == nil)
     await coordinator.close()
     #expect(backend.counts().closes == 1)
+  }
+
+  @Test(.timeLimit(.minutes(1)))
+  func suppressionRetiresOnlyPublicationAndRecreatesForTheCurrentSession() async throws {
+    let coordinator = AutomaticDispatcherCoordinator()
+    let first = InstallationBackend(stage: .none, gate: InstallationGate())
+    let second = InstallationBackend(stage: .none, gate: InstallationGate())
+    let builds = AutomaticBuildCounter()
+    let factory: AutomaticDispatcherCoordinator.Factory = { _ in builds.next() == 0 ? first : second
+    }
+
+    let initial = await coordinator.leaseForDispatch(
+      controller: identifier,
+      consumer: .sdlHIDAPI,
+      identity: .genericHID,
+      isEligible: { _, _ in true },
+      factory: factory
+    )
+    try #require(initial != nil)
+    await initial?.release()
+
+    await coordinator.synchronizeSuppression { true }
+    #expect(first.counts().closes == 1)
+    #expect(await coordinator.installedTargets()[identifier] == nil)
+
+    await coordinator.synchronizeSuppression { false }
+    #expect(second.counts().activations == 1)
+    #expect(await coordinator.installedTargets()[identifier] == .genericHID)
+    await coordinator.close()
+    #expect(second.counts().closes == 1)
+  }
+
+  @Test(.timeLimit(.minutes(1)))
+  func suppressionCancelsPendingCreationBeforeItCanInstall() async {
+    let coordinator = AutomaticDispatcherCoordinator()
+    let gate = InstallationGate()
+    let backend = InstallationBackend(stage: .activation, gate: gate)
+    async let pending = coordinator.leaseForDispatch(
+      controller: identifier,
+      consumer: .sdlHIDAPI,
+      identity: .genericHID,
+      isEligible: { _, _ in true },
+      factory: { _ in backend }
+    )
+    await gate.waitForEntry()
+    await coordinator.synchronizeSuppression { true }
+    await gate.waitForCancellation()
+    await gate.release()
+
+    #expect(await pending == nil)
+    #expect(backend.counts().activations == 1)
+    #expect(backend.counts().closes == 1)
+    await coordinator.close()
+  }
+
+  @Test(.timeLimit(.minutes(1)))
+  func recoveryRetriesCreationFailureWithoutChangingMode() async throws {
+    let coordinator = AutomaticDispatcherCoordinator(recoveryDelayNanoseconds: 1)
+    let original = InstallationBackend(stage: .none, gate: InstallationGate())
+    let failed = InstallationBackend(stage: .none, gate: InstallationGate(), failsActivation: true)
+    let recovered = InstallationBackend(stage: .none, gate: InstallationGate())
+    let builds = AutomaticBuildCounter()
+    let factory: AutomaticDispatcherCoordinator.Factory = { _ in
+      switch builds.next() {
+      case 0: original
+      case 1: failed
+      default: recovered
+      }
+    }
+    let lease = await coordinator.leaseForDispatch(
+      controller: identifier,
+      consumer: .sdlHIDAPI,
+      identity: .genericHID,
+      isEligible: { _, _ in true },
+      factory: factory
+    )
+    try #require(lease != nil)
+    await lease?.release()
+    await coordinator.recoverPublication(
+      for: identifier,
+      failure: UserSpaceOutputDispatcher.CreationError.createFailed
+    )
+
+    for _ in 0..<100 where recovered.counts().activations == 0 {
+      try await Task.sleep(nanoseconds: 1_000_000)
+    }
+    #expect(failed.counts() == (1, 1))
+    #expect(recovered.counts().activations == 1)
+    await coordinator.close()
+    #expect(recovered.counts().closes == 1)
+  }
+
+  @Test(.timeLimit(.minutes(1)))
+  func sameIdentifierReconnectCreatesANewPublicationWithoutChangingMode() async throws {
+    let coordinator = AutomaticDispatcherCoordinator()
+    let first = InstallationBackend(stage: .none, gate: InstallationGate())
+    let second = InstallationBackend(stage: .none, gate: InstallationGate())
+    let builds = AutomaticBuildCounter()
+    let factory: AutomaticDispatcherCoordinator.Factory = { _ in builds.next() == 0 ? first : second
+    }
+
+    let initial = await coordinator.leaseForDispatch(
+      controller: identifier,
+      consumer: .sdlHIDAPI,
+      identity: .genericHID,
+      isEligible: { _, _ in true },
+      factory: factory
+    )
+    try #require(initial != nil)
+    await initial?.release()
+    await coordinator.stop(identifier)
+    #expect(first.counts().closes == 1)
+
+    try await coordinator.activateOne(
+      identifier: identifier,
+      descriptions: [description],
+      consumer: .sdlHIDAPI,
+      isEligible: { _, _ in true },
+      identityProvider: { _, _ in .genericHID },
+      factory: factory
+    )
+    #expect(second.counts().activations == 1)
+    await coordinator.close()
+    #expect(second.counts().closes == 1)
   }
 
   @Test(

@@ -34,7 +34,7 @@ final class UserSpaceHostReportHandler: @unchecked Sendable {
     type: VirtualHostReportType,
     reportID: UInt32,
     bytes: [UInt8]
-  ) throws -> Task<Void, Error> {
+  ) throws -> UserSpaceReportSender.SubmissionReceipt {
     try lock.withLock {
       guard isOpen() else { throw VirtualHostReportError.closed }
       let request = try VirtualHostReportRequest(

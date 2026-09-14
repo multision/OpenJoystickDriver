@@ -58,6 +58,23 @@ diagnose [runtime|catalog|report]
 update check ...
 ```
 
+## Workflow Capability Matrix
+
+| Runtime CLI workflow | GUI destination or classification |
+| --- | --- |
+| `status` and `diagnose runtime` | Overview and Developer Tools runtime health |
+| `controller list` | Controllers |
+| `controller state` and `controller watch` | Controllers → Input Test |
+| `controller output` | Controllers → Input Test output controls |
+| `controller packets` | Developer Tools packet capture |
+| `map` profile authoring and activation | Profiles |
+| `permissions` | Overview access cards |
+| `compat show/set/reset` | Controllers → Controller identity |
+| `app logs` and `diagnose report` | Console and Developer Tools report actions |
+| `extension status/enable/disable` | Overview driver setup, repair, and uninstall |
+| `update check` | Settings → Updates |
+| JSON/JSONL output, scripting, soak tests, catalog diagnostics, packaging, catalog generation, and DriverKit generation | Automation-only |
+
 `--timeout <seconds>` applies to bounded application-service calls. Controller
 operations retain opaque `--device` selection and ambiguity rejection.
 Machine-readable output uses `--json` where supported. Stream commands use
@@ -66,3 +83,15 @@ their documented JSONL mode.
 Keep raw packets, runtime soaking, catalog inspection, permission audits, and
 virtual-device self-tests in the CLI: their output is diagnostic, verbose, or
 unsuitable for an always-present consumer interface.
+
+## Controller Sessions and Compatibility
+
+`controller disconnect` suspends a controller from OpenJoystickDriver without terminating its
+physical Bluetooth or USB link. Suspension neutralizes input and physical effects, removes OJD
+virtual output, and keeps the controller visible. `controller resume` repeats required startup
+output and re-enables input; a physical reconnect creates a new active session.
+
+The additive detailed compatibility RPC reports the requested, live, and retained identities plus
+a typed failure phase and cause. The legacy Boolean RPC remains available. Automatic mode passes
+HID controllers through to macOS without publishing an OJD virtual gamepad. Selecting an explicit
+identity intentionally overrides pass-through.

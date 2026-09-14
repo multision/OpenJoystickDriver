@@ -49,6 +49,7 @@ struct RemappingRPCTests {
       offsetDegreesPerSecond: ControllerMotionVector(x: 1, y: 2, z: 3)
     )
     let pairSessionID = UUID()
+    let issueID = UUID()
     let server = LocalServiceRPCServer(
       socketPath: socketPath,
       authentication: { _ in true },
@@ -112,6 +113,13 @@ struct RemappingRPCTests {
             )
             #expect(arguments.profileID == profile.id)
             result = try JSONEncoder().encode(snapshot)
+          case .deleteDamagedProfile, .resetProfileLibrary:
+            let arguments = try JSONDecoder().decode(
+              ApplicationServiceRemappingProfileIssueArguments.self,
+              from: request.arguments
+            )
+            #expect(arguments.issueID == issueID)
+            result = try JSONEncoder().encode(snapshot)
           case .deactivateProfile:
             let arguments = try JSONDecoder().decode(
               ApplicationServiceRemappingModelArguments.self,
@@ -148,6 +156,8 @@ struct RemappingRPCTests {
     #expect(try await client.updateRemappingProfile(profile, expectedCurrent: profile) == snapshot)
     #expect(try await client.importRemappingProfile(profile) == snapshot)
     #expect(try await client.deleteRemappingProfile(id: profile.id) == snapshot)
+    #expect(try await client.deleteDamagedRemappingProfile(issueID: issueID) == snapshot)
+    #expect(try await client.resetRemappingProfileLibrary(issueID: issueID) == snapshot)
     #expect(try await client.activateRemappingProfile(id: profile.id) == snapshot)
     #expect(try await client.deactivateRemappingProfile(vendorID: 1118, productID: 654) == snapshot)
     #expect(try await client.deactivateRemappingProfile(profileID: profile.id) == snapshot)

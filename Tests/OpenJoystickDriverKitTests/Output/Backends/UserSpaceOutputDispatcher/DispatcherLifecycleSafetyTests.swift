@@ -64,7 +64,178 @@ private final class UserSpaceDispatcherTestBackend: UserSpaceOutputDispatcher.Vi
   func publishedReports() -> [[UInt8]] { lock.withLock { reports } }
 }
 
+private struct ContinuitySnapshotReportFormat: VirtualGamepadReportFormat {
+  let descriptor: [UInt8] = []
+  let inputReportPayloadSize = 21
+  let inputReportID: UInt8? = nil
+
+  func buildInputReport(from state: VirtualGamepadState) -> [UInt8] {
+    var report = [
+      UInt8(truncatingIfNeeded: state.buttons), UInt8(truncatingIfNeeded: state.buttons >> 8),
+      UInt8(truncatingIfNeeded: state.buttons >> 16),
+      UInt8(truncatingIfNeeded: state.buttons >> 24),
+    ]
+    for value in [
+      state.leftStickX, state.leftStickY, state.rightStickX, state.rightStickY, state.leftTrigger,
+      state.rightTrigger,
+    ] {
+      report.append(UInt8(truncatingIfNeeded: value))
+      report.append(UInt8(truncatingIfNeeded: value >> 8))
+    }
+    report.append(state.leftTriggerPressed ? 1 : 0)
+    report.append(state.rightTriggerPressed ? 1 : 0)
+    report.append(state.touchpadPressed ? 1 : 0)
+    report.append(state.mutePressed ? 1 : 0)
+    report.append(state.hat.rawValue)
+    return report
+  }
+}
+
+private enum ExpectedButtonOutput {
+  case bit(Int)
+  case leftTrigger
+  case rightTrigger
+  case touchpad
+  case mute
+}
+
 struct UserSpaceOutputDispatcherLifecycleTests {
+  @Test
+  func everyAcceptedButtonPreservesHoldReleaseAndLaterInput() async {
+    let supported: [(Button, ExpectedButtonOutput)] = [
+      (.a, .bit(0)), (.cross, .bit(0)), (.b, .bit(1)), (.circle, .bit(1)), (.x, .bit(2)),
+      (.square, .bit(2)), (.y, .bit(3)), (.triangle, .bit(3)), (.leftBumper, .bit(4)),
+      (.l1, .bit(4)), (.rightBumper, .bit(5)), (.r1, .bit(5)), (.leftStick, .bit(6)),
+      (.rightStick, .bit(7)), (.rightPadClick, .bit(7)), (.start, .bit(8)), (.options, .bit(8)),
+      (.back, .bit(9)), (.guide, .bit(10)), (.ps, .bit(10)), (.dpadUp, .bit(11)),
+      (.dpadDown, .bit(12)), (.dpadLeft, .bit(13)), (.dpadRight, .bit(14)), (.share, .bit(15)),
+      (.l2Digital, .leftTrigger), (.r2Digital, .rightTrigger), (.touchpad, .touchpad),
+      (.mute, .mute),
+    ]
+    let unsupported: [Button] = [
+      .leftGrip, .rightGrip, .leftPadClick, .leftSL, .leftSR, .rightSL, .rightSR, .leftFunction,
+      .rightFunction, .leftPaddle, .rightPaddle,
+    ]
+    #expect(
+      Set((supported.map(\.0) + unsupported).map(\.rawValue))
+        == Set(Button.allCases.map(\.rawValue))
+    )
+
+    for (button, output) in supported {
+      let backend = UserSpaceDispatcherTestBackend()
+      let format = ContinuitySnapshotReportFormat()
+      let dispatcher = UserSpaceOutputDispatcher(
+        testBackendFactory: { _ in backend },
+        format: format
+      )
+      let identifier = DeviceIdentifier(vendorID: 1, productID: 2)
+      var expected = VirtualGamepadState()
+
+      await dispatcher.dispatch(events: [.buttonPressed(button)], from: identifier)
+      set(output, pressed: true, in: &expected)
+      #expect(backend.publishedReports().last == format.buildInputReport(from: expected))
+
+      await dispatcher.dispatch(events: [.leftStickChanged(x: 0.5, y: -0.25)], from: identifier)
+      expected.leftStickX = Int16(0.5 * 32_767)
+      expected.leftStickY = Int16(-0.25 * 32_767)
+      #expect(backend.publishedReports().last == format.buildInputReport(from: expected))
+
+      await dispatcher.dispatch(events: [.buttonReleased(button)], from: identifier)
+      set(output, pressed: false, in: &expected)
+      #expect(backend.publishedReports().last == format.buildInputReport(from: expected))
+
+      await dispatcher.dispatch(events: [.rightTriggerChanged(0.75)], from: identifier)
+      expected.rightTrigger = Int16(0.75 * 32_767)
+      #expect(backend.publishedReports().last == format.buildInputReport(from: expected))
+      await dispatcher.close()
+    }
+
+    let backend = UserSpaceDispatcherTestBackend()
+    let format = ContinuitySnapshotReportFormat()
+    let dispatcher = UserSpaceOutputDispatcher(testBackendFactory: { _ in backend }, format: format)
+    let identifier = DeviceIdentifier(vendorID: 3, productID: 4)
+    let neutral = format.buildInputReport(from: VirtualGamepadState())
+    for button in unsupported {
+      await dispatcher.dispatch(events: [.buttonPressed(button)], from: identifier)
+      #expect(backend.publishedReports().last == neutral, "\(button) must remain unsupported")
+    }
+    await dispatcher.close()
+  }
+
+  @Test
+  func dpadSticksAndTriggersPreserveTransitionsAcrossUnrelatedInput() async {
+    let dpadCases: [(DpadDirection, GamepadHIDDescriptor.Hat)] = [
+      (.north, .north), (.northEast, .northEast), (.east, .east), (.southEast, .southEast),
+      (.south, .south), (.southWest, .southWest), (.west, .west), (.northWest, .northWest),
+    ]
+    for (direction, hat) in dpadCases {
+      var expected = VirtualGamepadState()
+      await verifyContinuity(
+        pressed: .dpadChanged(direction),
+        heldWith: .leftStickChanged(x: 0.5, y: -0.25),
+        released: .dpadChanged(.neutral),
+        later: .rightTriggerChanged(0.75)
+      ) { stage in
+        switch stage {
+        case 0:
+          expected.hat = hat
+          expected.buttons = GamepadHIDDescriptor.dpadButtonBits(for: hat)
+        case 1:
+          expected.leftStickX = Int16(0.5 * 32_767)
+          expected.leftStickY = Int16(-0.25 * 32_767)
+        case 2:
+          expected.hat = .neutral
+          expected.buttons = 0
+        default: expected.rightTrigger = Int16(0.75 * 32_767)
+        }
+        return expected
+      }
+    }
+
+    let analogCases:
+      [(ControllerEvent, ControllerEvent, (inout VirtualGamepadState, Bool) -> Void)] = [
+        (
+          .leftStickChanged(x: 0.75, y: -0.5), .leftStickChanged(x: 0, y: 0),
+          { state, pressed in
+            state.leftStickX = pressed ? Int16(0.75 * 32_767) : 0
+            state.leftStickY = pressed ? Int16(-0.5 * 32_767) : 0
+          }
+        ),
+        (
+          .rightStickChanged(x: -0.5, y: 0.75), .rightStickChanged(x: 0, y: 0),
+          { state, pressed in
+            state.rightStickX = pressed ? Int16(-0.5 * 32_767) : 0
+            state.rightStickY = pressed ? Int16(0.75 * 32_767) : 0
+          }
+        ),
+        (
+          .leftTriggerChanged(0.75), .leftTriggerChanged(0),
+          { state, pressed in state.leftTrigger = pressed ? Int16(0.75 * 32_767) : 0 }
+        ),
+        (
+          .rightTriggerChanged(0.75), .rightTriggerChanged(0),
+          { state, pressed in state.rightTrigger = pressed ? Int16(0.75 * 32_767) : 0 }
+        ),
+      ]
+    for (pressed, released, update) in analogCases {
+      var expected = VirtualGamepadState()
+      await verifyContinuity(
+        pressed: pressed,
+        heldWith: .buttonPressed(.x),
+        released: released,
+        later: .buttonPressed(.a)
+      ) { stage in
+        switch stage {
+        case 0: update(&expected, true)
+        case 1: expected.buttons |= 1 << 2
+        case 2: update(&expected, false)
+        default: expected.buttons |= 1
+        }
+        return expected
+      }
+    }
+  }
+
   @Test
   func compatibilitySuppressionPublishesDeviceWithoutForwardingInput() async {
     let backend = UserSpaceDispatcherTestBackend()
@@ -409,6 +580,42 @@ struct UserSpaceOutputDispatcherLifecycleTests {
 
     #expect(backend.counts().close == 1)
     #expect(callbackCloseCount.current() == 1)
+  }
+
+  private func set(
+    _ output: ExpectedButtonOutput,
+    pressed: Bool,
+    in state: inout VirtualGamepadState
+  ) {
+    switch output {
+    case .bit(let bit):
+      if pressed { state.buttons |= 1 << bit } else { state.buttons &= ~(1 << bit) }
+    case .leftTrigger: state.leftTriggerPressed = pressed
+    case .rightTrigger: state.rightTriggerPressed = pressed
+    case .touchpad: state.touchpadPressed = pressed
+    case .mute: state.mutePressed = pressed
+    }
+  }
+
+  private func verifyContinuity(
+    pressed: ControllerEvent,
+    heldWith: ControllerEvent,
+    released: ControllerEvent,
+    later: ControllerEvent,
+    expectedState: (Int) -> VirtualGamepadState
+  ) async {
+    let backend = UserSpaceDispatcherTestBackend()
+    let format = ContinuitySnapshotReportFormat()
+    let dispatcher = UserSpaceOutputDispatcher(testBackendFactory: { _ in backend }, format: format)
+    let identifier = DeviceIdentifier(vendorID: 1, productID: 2)
+
+    for (stage, event) in [pressed, heldWith, released, later].enumerated() {
+      await dispatcher.dispatch(events: [event], from: identifier)
+      #expect(
+        backend.publishedReports().last == format.buildInputReport(from: expectedState(stage))
+      )
+    }
+    await dispatcher.close()
   }
 }
 

@@ -109,6 +109,41 @@ public enum ApplicationServiceDeviceDiscoverySource: String, Codable, Sendable {
   case unknown
 }
 
+public enum ControllerSessionState: String, Codable, Equatable, Sendable {
+  case active
+  case suspended
+}
+
+public enum ControllerSessionMutationFailure: String, Codable, Equatable, Sendable {
+  case notFound = "not-found"
+  case alreadySuspended = "already-suspended"
+  case alreadyActive = "already-active"
+}
+
+public struct ControllerSuspendResult: Codable, Equatable, Sendable {
+  public let state: ControllerSessionState
+  public let failure: ControllerSessionMutationFailure?
+
+  public init(state: ControllerSessionState, failure: ControllerSessionMutationFailure? = nil) {
+    self.state = state
+    self.failure = failure
+  }
+
+  public var succeeded: Bool { state == .suspended && failure == nil }
+}
+
+public struct ControllerResumeResult: Codable, Equatable, Sendable {
+  public let state: ControllerSessionState
+  public let failure: ControllerSessionMutationFailure?
+
+  public init(state: ControllerSessionState, failure: ControllerSessionMutationFailure? = nil) {
+    self.state = state
+    self.failure = failure
+  }
+
+  public var succeeded: Bool { state == .active && failure == nil }
+}
+
 /// Structured description of a connected controller, used in ``ApplicationServiceStatusPayload``.
 public struct ApplicationServiceDeviceDescription: Codable, Sendable {
   /// Opaque selector for one connected controller during the current runtime session.
@@ -153,6 +188,10 @@ public struct ApplicationServiceDeviceDescription: Codable, Sendable {
   public let physicalInputCapabilities: PhysicalControllerInputCapabilities
   /// Latest battery telemetry reported by the physical controller.
   public let battery: ControllerBatteryTelemetry?
+  /// Whether OpenJoystickDriver currently admits input and publishes output for this session.
+  public let sessionState: ControllerSessionState
+  /// Result of the most recent required protocol startup command sequence.
+  public let startupCommandStatus: String?
 
   private enum CodingKeys: String, CodingKey {
     case name
@@ -176,6 +215,8 @@ public struct ApplicationServiceDeviceDescription: Codable, Sendable {
     case physicalOutputCapabilities
     case physicalInputCapabilities
     case battery
+    case sessionState
+    case startupCommandStatus
   }
 
   /// Creates a new ApplicationServiceDeviceDescription.
@@ -200,6 +241,8 @@ public struct ApplicationServiceDeviceDescription: Codable, Sendable {
     physicalOutputCapabilities: PhysicalControllerOutputCapabilities = .none,
     physicalInputCapabilities: PhysicalControllerInputCapabilities = .none,
     battery: ControllerBatteryTelemetry? = nil,
+    sessionState: ControllerSessionState = .active,
+    startupCommandStatus: String? = nil,
     runtimeIdentifier: String? = nil
   ) {
     self.runtimeIdentifier = runtimeIdentifier ?? String(format: "%04X:%04X:M", vendorID, productID)
@@ -223,6 +266,8 @@ public struct ApplicationServiceDeviceDescription: Codable, Sendable {
     self.physicalOutputCapabilities = physicalOutputCapabilities
     self.physicalInputCapabilities = physicalInputCapabilities
     self.battery = battery
+    self.sessionState = sessionState
+    self.startupCommandStatus = startupCommandStatus
   }
 
   public init(from decoder: Decoder) throws {
@@ -269,6 +314,12 @@ public struct ApplicationServiceDeviceDescription: Codable, Sendable {
         forKey: .physicalInputCapabilities
       ) ?? .none
     self.battery = try container.decodeIfPresent(ControllerBatteryTelemetry.self, forKey: .battery)
+    self.sessionState =
+      try container.decodeIfPresent(ControllerSessionState.self, forKey: .sessionState) ?? .active
+    self.startupCommandStatus = try container.decodeIfPresent(
+      String.self,
+      forKey: .startupCommandStatus
+    )
   }
 }
 

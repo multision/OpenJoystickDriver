@@ -16,7 +16,14 @@ struct CLIGrammarTests {
       "controller watch --device device-1",
       CLIInvocation.controllerInput(["watch", "--device", "device-1"])
     ), ("controller output plan 1 2", CLIInvocation.controllerOutput(["plan", "1", "2"])),
-    ("map list --json", CLIInvocation.mapping(["list", "--json"])),
+    (
+      "controller disconnect --device device-1",
+      CLIInvocation.controllerDisconnect(["--device", "device-1"])
+    ),
+    (
+      "controller resume --device device-1",
+      CLIInvocation.controllerResume(["--device", "device-1"])
+    ), ("map list --json", CLIInvocation.mapping(["list", "--json"])),
     ("app status", CLIInvocation.appStatus([])), ("app ready", CLIInvocation.appReady),
     ("app login enable", CLIInvocation.appLogin(enable: true)),
     ("extension enable", CLIInvocation.extension(.enable)),

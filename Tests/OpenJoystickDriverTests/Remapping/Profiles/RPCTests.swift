@@ -225,12 +225,10 @@ struct RemappingRequestCoordinatorTests {
     let corruptHarness = try await makeHarness()
     defer { corruptHarness.routerHarness.removeFiles() }
     try Data("not json".utf8).write(to: corruptHarness.routerHarness.fileURL)
-    let corrupt = await corruptHarness.coordinator.snapshot()
-    guard case .failure(let corruptError) = corrupt else {
-      Issue.record("Expected corrupt library failure")
-      return
-    }
-    #expect(corruptError.code == .corruptLibrary)
+    let corrupt = try await corruptHarness.coordinator.snapshot().get()
+    #expect(corrupt.profiles.isEmpty)
+    #expect(corrupt.profileIssues.count == 1)
+    #expect(corrupt.profileIssues.first?.kind == .unusableLibrary)
 
     let stoppedHarness = try await makeHarness()
     defer { stoppedHarness.routerHarness.removeFiles() }

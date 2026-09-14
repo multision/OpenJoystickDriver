@@ -25,6 +25,7 @@ public enum VirtualExposureEligibility: Equatable, Sendable {
   case suppressedUpstreamVirtualDevice
   case suppressedOutputDisabled
   case suppressedUnsupportedIdentity
+  case suppressedNativeHIDPassThrough
   case rejectedInvalidIntent
 }
 
@@ -93,6 +94,15 @@ public struct ControllerExposureDecision: Equatable, Sendable {
           ownership: ownership,
           intent: intent,
           eligibility: .rejectedInvalidIntent,
+          effectiveIdentity: nil,
+          duplicateRisk: duplicateRisk
+        )
+      }
+      if ownership == .nativeHIDVisible || ownership == .exclusiveHID {
+        return Self(
+          ownership: ownership,
+          intent: intent,
+          eligibility: .suppressedNativeHIDPassThrough,
           effectiveIdentity: nil,
           duplicateRisk: duplicateRisk
         )
