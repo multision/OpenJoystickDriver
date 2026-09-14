@@ -194,7 +194,7 @@ def dispatch(argv: list[str]) -> int:
             if sub in {"dev", "dext", "release"}:
                 require(f"build {sub}", tail, count=0)
                 exec_target(
-                    "Build/install.sh",
+                    "Build/build.sh",
                     ["build", sub],
                     env={"OJD_ENV": "release"} if sub == "release" else None,
                 )
@@ -206,7 +206,7 @@ def dispatch(argv: list[str]) -> int:
                     die(f"Unknown: build install {config} (expected: dev | release)")
                 require(f"build {sub} {config}", tail, count=0)
                 exec_target(
-                    "Build/build.sh",
+                    "Build/install.sh",
                     [sub, config],
                     env={"OJD_ENV": "release"} if config == "release" else None,
                 )
