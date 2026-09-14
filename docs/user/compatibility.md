@@ -121,6 +121,8 @@ persist the detected engine, VID/PID variant, or other temporary choice.
 ### ✅ Hardware-backed paths
 
 - GameSir G7 SE through GIP, including four-motor output
+- SCUF Envision Pro wired `2E95:434D` report-6 controls recorded in issue 33:
+  sticks, independent triggers, buttons 1–10, and hat
 - Flydigi Vader 5S through GIP; the record sets USB configuration 1 before claim
 - DualShock 4 USB and Bluetooth input, rumble, and RGB lightbar
 - Xbox 360 USB parsing; individual model coverage still varies

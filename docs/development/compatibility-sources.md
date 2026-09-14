@@ -37,6 +37,15 @@ Reinforces the difference between controller state, client routing, and output o
 
 `xpad.c`, `hid-playstation.c`, `hid-sony.c`, `hid-nintendo.c`, and `hid-steam.c` provide protocol and device evidence. Linux recognition does not prove macOS descriptors, endpoints, TCC behavior, or Apple GameController support.
 
+### SCUF Envision Pro
+
+[OpenJoystickDriver issue 33](https://github.com/xsyetopz/OpenJoystickDriver/issues/33)
+contains the wired `2E95:434D` descriptor and IOHID element observations used
+for its report-6 Generic HID layout. That hardware record verifies the mapped
+core inputs. It does not establish buttons 11–19, paddles, rumble, lighting, or
+wireless behavior, so those surfaces remain unclaimed. `2E95:0504` remains on
+its existing GIP route.
+
 ### SDL
 
 SDL mappings and HIDAPI code show how consumer identity affects naming, button order, and rumble. OJD keeps consumer mappings in compatibility profiles and diagnostic tools rather than embedding application quirks in physical parsers.

@@ -58,6 +58,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Wired SCUF Envision Pro `2E95:434D` Generic HID input using report 6, its
+  device-specific stick and trigger axis layout, buttons 1–10, and hat switch.
+  Existing SCUF `2E95:0504` GIP behavior is unchanged.
 - Selectable DualShock 4 (`dualshock4`, `054C:09CC`), DualSense
   (`dualsense`, `054C:0CE6`), and Switch Pro (`switchpro`, `057E:2009`)
   USB HID packers. Automatic routing publishes the matching first-party

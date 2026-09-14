@@ -19,10 +19,13 @@ public final class GenericHIDParser: InputParser, HIDElementValueParser {
   private static let usageBrake: UInt32 = 0xC5
   private static let wr007VendorID: UInt16 = 0x11C1
   private static let wr007ProductID: UInt16 = 0x5600
+  private static let envisionVendorID: UInt16 = 0x2E95
+  private static let envisionProductID: UInt16 = 0x434D
 
   private enum AxisLayout {
     case standard
     case wr007
+    case envision
   }
 
   private let identifier: DeviceIdentifier
@@ -37,9 +40,15 @@ public final class GenericHIDParser: InputParser, HIDElementValueParser {
   /// Creates a new GenericHIDParser for the given device identifier.
   public init(identifier: DeviceIdentifier) {
     self.identifier = identifier
-    axisLayout =
-      identifier.vendorID == Self.wr007VendorID && identifier.productID == Self.wr007ProductID
-      ? .wr007 : .standard
+    if identifier.vendorID == Self.wr007VendorID && identifier.productID == Self.wr007ProductID {
+      axisLayout = .wr007
+    } else if identifier.vendorID == Self.envisionVendorID
+      && identifier.productID == Self.envisionProductID
+    {
+      axisLayout = .envision
+    } else {
+      axisLayout = .standard
+    }
     print("[GenericHIDParser] Unrecognized controller \(identifier), using HID descriptors")
   }
 
@@ -49,7 +58,7 @@ public final class GenericHIDParser: InputParser, HIDElementValueParser {
 
   public func acceptsElement(usagePage: UInt32, usage: UInt32) -> Bool {
     switch usagePage {
-    case Self.buttonUsagePage: button(for: usage) != nil
+    case Self.buttonUsagePage: button(for: usage) != nil && (axisLayout != .envision || usage <= 10)
     case Self.genericDesktopUsagePage:
       [
         Self.usageX, Self.usageY, Self.usageZ, Self.usageRx, Self.usageRy, Self.usageRz,
@@ -64,6 +73,7 @@ public final class GenericHIDParser: InputParser, HIDElementValueParser {
   /// Maps standard HID usages while preserving paired stick coordinates.
   public func parse(elementValue value: HIDElementValue) -> [ControllerEvent] {
     stateLock.withLock {
+      guard axisLayout != .envision || value.reportID == 6 else { return [] }
       switch value.usagePage {
       case Self.buttonUsagePage: return parseButton(value)
       case Self.genericDesktopUsagePage: return parseGenericDesktop(value)
@@ -74,6 +84,7 @@ public final class GenericHIDParser: InputParser, HIDElementValueParser {
   }
 
   private func parseButton(_ value: HIDElementValue) -> [ControllerEvent] {
+    guard axisLayout != .envision || value.usage <= 10 else { return [] }
     guard let button = button(for: value.usage) else { return [] }
     let isPressed = value.integerValue != 0
     let wasPressed = pressedButtons.contains(button)
@@ -87,7 +98,8 @@ public final class GenericHIDParser: InputParser, HIDElementValueParser {
   }
 
   private func parseGenericDesktop(_ value: HIDElementValue) -> [ControllerEvent] {
-    switch value.usage {
+    let usage = axisLayout == .envision ? Self.envisionAxisUsage(value.usage) : value.usage
+    switch usage {
     case Self.usageX:
       leftX = Self.normalizedAxis(value)
       return [.leftStickChanged(x: leftX, y: leftY)]
@@ -114,6 +126,16 @@ public final class GenericHIDParser: InputParser, HIDElementValueParser {
       return [.rightTriggerChanged(Self.normalizedTrigger(value))]
     case Self.usageHatSwitch: return [.dpadChanged(Self.hatDirection(value))]
     default: return []
+    }
+  }
+
+  private static func envisionAxisUsage(_ usage: UInt32) -> UInt32 {
+    switch usage {
+    case usageZ: usageRx
+    case usageRz: usageRy
+    case usageRx: usageZ
+    case usageRy: usageRz
+    default: usage
     }
   }
 

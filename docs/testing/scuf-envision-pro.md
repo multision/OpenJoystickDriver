@@ -1,0 +1,35 @@
+# Test the SCUF Envision Pro
+
+The wired SCUF Envision Pro record is exact HID identity `2E95:434D`. Issue 33
+provides hardware-recorded descriptor and element evidence for report 6. OJD
+maps X/Y to the left stick, Z/Rz to the right stick, Rx/Ry to independent
+triggers, buttons 1–10, and the standard hat. Buttons 11–19 and physical output
+are not claimed. SCUF `2E95:0504` remains an independent GIP identity.
+
+## Validate the record and parser
+
+Run from the repository root:
+
+```bash
+./scripts/ojd diagnose record \
+  Sources/OpenJoystickDriverKit/Resources/Controllers/2e95/2e95-434d.json \
+  --validate-only
+swift test --filter 'SCUFEnvisionParserTests|CoreHIDAccessBackendTests'
+```
+
+The record validation must report `RECORD_VALIDATION result=valid`. The tests
+cover report-ID filtering, both physical HID backend conversions, the exact
+axis layout, button limit, hat diagonals and neutral, and the unaffected
+descriptor-driven fallback for other controllers.
+
+## Verify hardware
+
+Connect the controller by wire and capture its runtime identity. Test on both a
+macOS 15-or-newer CoreHID system and, when available, a macOS 14 legacy IOHID
+system. Confirm that only report 6 changes normalized state. Exercise both
+sticks to every edge, each trigger independently, buttons 1–10, all D-pad
+directions, neutral, disconnect, and reconnect.
+
+Record buttons 11–19 diagnostically without assigning meanings. Do not claim
+paddles, side buttons, rumble, lighting, wireless behavior, or another SCUF
+identity until a separate hardware record establishes that surface.
