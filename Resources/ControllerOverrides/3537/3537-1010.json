@@ -1,11 +1,11 @@
 {
-  "$schema": "https://raw.githubusercontent.com/xsyetopz/OpenJoystickDriver/main/Resources/Schemas/controller-override.schema.json",
-  "operation": "patch",
-  "vendor_id": 13623,
-  "product_id": 4112,
-  "set": {
-    "usb": {
-      "configuration": "set1-before-claim"
-    }
-  }
+	"$schema": "https://raw.githubusercontent.com/xsyetopz/OpenJoystickDriver/main/Resources/Schemas/controller-override.schema.json",
+	"operation": "patch",
+	"vendor_id": 13623,
+	"product_id": 4112,
+	"set": {
+		"usb": {
+			"configuration": "set1-before-claim"
+		}
+	}
 }

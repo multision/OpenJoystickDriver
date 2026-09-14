@@ -37,6 +37,18 @@ Reinforces the difference between controller state, client routing, and output o
 
 `xpad.c`, `hid-playstation.c`, `hid-sony.c`, `hid-nintendo.c`, and `hid-steam.c` provide protocol and device evidence. Linux recognition does not prove macOS descriptors, endpoints, TCC behavior, or Apple GameController support.
 
+### GameSir family
+
+The authored `3537` catalog records use exact identities from Linux
+[`xpad.c`](https://github.com/torvalds/linux/blob/master/drivers/input/joystick/xpad.c)
+and the packet/register research in
+[`gamesir-linux-tools`](https://github.com/broroeror/gamesir-linux-tools/blob/main/RESEARCH.md).
+Those sources establish identities and protocol bytes, not successful OJD use
+on matching hardware. `3537:1004`, `100F`, and `1010` retain their imported
+Linux routes. Shared Microsoft Bluetooth identities `045E:02FD` and
+`045E:02FF` are deliberately not attributed to GameSir without an exact
+hardware capture.
+
 ### SCUF Envision Pro
 
 [OpenJoystickDriver issue 33](https://github.com/xsyetopz/OpenJoystickDriver/issues/33)

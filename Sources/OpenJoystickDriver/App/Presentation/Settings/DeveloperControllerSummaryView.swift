@@ -133,6 +133,8 @@
       case .steamController:
         return OJDLocalized.string("controller.steamController", fallback: "Steam Controller")
       case .flydigi: return OJDLocalized.string("controller.flydigi", fallback: "Flydigi")
+      case .gameSirG7ProUSB: return "GameSir G7 Pro USB"
+      case .gameSirEnhancedHID: return "GameSir enhanced HID"
       case .switchPro:
         return OJDLocalized.string(
           "controller.switchProController",

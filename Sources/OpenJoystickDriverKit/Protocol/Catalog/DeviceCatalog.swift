@@ -211,7 +211,7 @@ struct DeviceCatalog: Sendable {
     return result
   }
 
-  private static let rawUSBParserNames: Set<String> = ["GIP", "XUSB", "XID"]
+  private static let rawUSBParserNames: Set<String> = ["GIP", "XUSB", "XID", "GameSir"]
 
   private struct CatalogError: Error, CustomStringConvertible {
     let description: String

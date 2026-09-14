@@ -53,6 +53,7 @@
 						"SwitchPro",
 						"XboxAdaptiveJoystick",
 						"Flydigi",
+						"GameSir",
 						"GenericHID"
 					]
 				},
@@ -69,6 +70,8 @@
 						"switchPro",
 						"xboxAdaptiveJoystick",
 						"flydigi",
+						"gameSirG7ProUSB",
+						"gameSirEnhancedHID",
 						"genericHID",
 						"unknown"
 					]
@@ -106,6 +109,26 @@
 			"allOf": [
 				{
 					"if": {
+						"properties": {
+							"driver": {
+								"const": "GameSir"
+							}
+						},
+						"required": ["driver"]
+					},
+					"then": {
+						"properties": {
+							"variant": {
+								"enum": ["gameSirG7ProUSB", "gameSirEnhancedHID"]
+							}
+						},
+						"not": {
+							"required": ["quirks"]
+						}
+					}
+				},
+				{
+					"if": {
 						"required": ["driver"],
 						"properties": {
 							"driver": {
@@ -141,7 +164,8 @@
 										"dpadToButtons",
 										"shareOffset",
 										"sticksToNull",
-										"triggersToButtons"
+										"triggersToButtons",
+										"inputOnly"
 									]
 								},
 								"type": "array"

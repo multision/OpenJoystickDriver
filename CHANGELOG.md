@@ -58,6 +58,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Source-backed GameSir G7 Pro, Cyclone 2, and G7 Pro 8K PC input support with
+  exact wired and dongle identities, protocol-specific heartbeats, documented
+  extra controls, telemetry, and model-specific lighting output. G7 Pro
+  `3537:100A` and `3537:1022` remain input-only until physically switched to a
+  configuration-ready mode.
 - Wired SCUF Envision Pro `2E95:434D` Generic HID input using report 6, its
   device-specific stick and trigger axis layout, buttons 1–10, and hat switch.
   Existing SCUF `2E95:0504` GIP behavior is unchanged.

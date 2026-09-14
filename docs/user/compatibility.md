@@ -129,6 +129,13 @@ persist the detected engine, VID/PID variant, or other temporary choice.
 
 ### 🚧 Source-backed paths needing hardware checks
 
+- GameSir G7 Pro USB `3537:1003`, `105D`, `105E`, `109B`, `109C`, and `10BA`
+  with standard XInput gameplay plus the vendor telemetry stream; documented
+  dock brightness becomes available only after the configuration-ready stream
+- GameSir Cyclone 2 enhanced HID `3537:0575`, `100B`, and `1053`, including
+  heartbeat, extras, battery, motion, two-motor rumble, and solid RGB/brightness
+- GameSir G7 Pro 8K PC enhanced HID `3537:10C5`–`10C8`, including heartbeat,
+  extras, battery, motion, two-motor rumble, and home-ring color/brightness
 - DualShock 3 USB and Bluetooth input, operational-mode setup, two motors, and player LEDs
 - DualSense USB and Bluetooth input, compatible rumble, player LEDs, and RGB lightbar
 - Steam Controller wired and wireless input, lifecycle, trackpad haptics, and LED brightness
@@ -137,6 +144,17 @@ persist the detected engine, VID/PID variant, or other temporary choice.
 
 ### ⚠️ Fallback and consumer limits
 
+- GameSir G7 Pro `3537:100A` and `3537:1022` are input-only. OJD does not
+  switch modes or force re-enumeration; hold the controller's physical
+  Menu+Share combination before connecting to expose a configuration-ready
+  identity and its additional features.
+- GameSir's shared Microsoft Bluetooth identities `045E:02FD` and `045E:02FF`
+  remain on Microsoft or Generic HID handling. OJD does not assign them a
+  GameSir model without an exact hardware capture.
+- GameSir `3537:1004` remains the Linux-backed XUSB identity shared with T4
+  Kaleid; the reported White G7 Pro dongle collision is not enough to change
+  that route. Linux-backed `3537:100F` and `3537:1010` also retain their XUSB
+  and GIP paths.
 - Generic HID maps descriptor-defined controls but cannot infer vendor protocols.
 - Raw and vendor-specific USB controllers use direct IOUSBHost when macOS permits app ownership.
   Entitlement-restricted models require OJD's signed USB DriverKit extension.

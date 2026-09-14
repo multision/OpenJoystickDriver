@@ -121,7 +121,7 @@ struct ControllerRecordDocument: Decodable {
     private static let contracts: [String: (variants: Set<String>, quirks: Set<String>)] = [
       "GIP": (
         ["xboxOne", "unknown"],
-        ["dpadToButtons", "triggersToButtons", "sticksToNull", "shareOffset"]
+        ["dpadToButtons", "triggersToButtons", "sticksToNull", "shareOffset", "inputOnly"]
       ),
       "XUSB": (
         ["xbox360", "xbox360Wireless", "unknown"],
@@ -148,7 +148,8 @@ struct ControllerRecordDocument: Decodable {
       ),
       "XboxAdaptiveJoystick": (
         ["xboxAdaptiveJoystick", "unknown"], ["rawUSBPackets", "genericHIDPackets"]
-      ), "Flydigi": (["flydigi"], []), "GenericHID": (["genericHID"], []),
+      ), "Flydigi": (["flydigi"], []), "GameSir": (["gameSirG7ProUSB", "gameSirEnhancedHID"], []),
+      "GenericHID": (["genericHID"], []),
     ]
   }
 

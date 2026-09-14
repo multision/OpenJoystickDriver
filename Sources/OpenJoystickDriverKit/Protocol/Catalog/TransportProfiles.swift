@@ -59,6 +59,8 @@ public enum ControllerProtocolVariant: String, Codable, Hashable, Sendable {
   case switchPro
   case xboxAdaptiveJoystick
   case flydigi
+  case gameSirG7ProUSB
+  case gameSirEnhancedHID
   case genericHID
   case unknown
 }

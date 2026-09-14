@@ -229,9 +229,9 @@ public enum KnownRecordProtocolReconciler {
       case .xbox360, .xbox360Wireless: .xusb
       case .xboxOne, .xboxAdaptiveJoystick: .gip
       case .genericHID, .dualShock3, .dualShock4, .dualSense, .steamController, .switchPro,
-        .flydigi:
+        .flydigi, .gameSirEnhancedHID:
         .genericHID
-      case .unknown: nil
+      case .gameSirG7ProUSB, .unknown: nil
       }
     let match = expected != nil && classification.selected == expected
     return ProtocolReconciliation(

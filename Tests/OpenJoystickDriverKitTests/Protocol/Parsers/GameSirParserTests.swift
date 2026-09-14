@@ -191,3 +191,42 @@ struct GameSirParserTests {
     return Data(report)
   }
 }
+
+struct GameSirCatalogTests {
+  @Test
+  func routesSourceBackedIdentitiesWithoutChangingExistingLinuxPaths() {
+    let registry = ParserRegistry()
+    let g7: [UInt16] = [0x1003, 0x105D, 0x105E, 0x109B, 0x109C, 0x10BA]
+    let enhanced: [UInt16] = [0x0575, 0x100B, 0x1053, 0x10C5, 0x10C6, 0x10C7, 0x10C8]
+    for productID in g7 + enhanced {
+      let identifier = DeviceIdentifier(vendorID: 0x3537, productID: productID)
+      #expect(registry.parserName(for: identifier) == "GameSir")
+      #expect(registry.parser(for: identifier) is GameSirParser)
+    }
+    #expect(
+      registry.parserName(for: DeviceIdentifier(vendorID: 0x3537, productID: 0x1004)) == "XUSB"
+    )
+    #expect(
+      registry.parserName(for: DeviceIdentifier(vendorID: 0x3537, productID: 0x100F)) == "XUSB"
+    )
+    #expect(
+      registry.parserName(for: DeviceIdentifier(vendorID: 0x3537, productID: 0x1010)) == "GIP"
+    )
+    for productID: UInt16 in [0x02FD, 0x02FF] {
+      #expect(
+        registry.parserName(for: DeviceIdentifier(vendorID: 0x045E, productID: productID))
+          != "GameSir"
+      )
+    }
+  }
+
+  @Test
+  func inputOnlyIdentitiesDoNotExposeConfigurationOutputs() {
+    let registry = ParserRegistry()
+    let transition = DeviceIdentifier(vendorID: 0x3537, productID: 0x100A)
+    let native = DeviceIdentifier(vendorID: 0x3537, productID: 0x1022)
+    #expect(registry.parser(for: transition) is GenericHIDParser)
+    #expect((registry.parser(for: native) as? GIPParser)?.physicalRumbleMotors.isEmpty == true)
+    #expect(registry.runtimeProfile(for: native).quirks == ["inputOnly"])
+  }
+}

@@ -47,6 +47,7 @@ public final class GIPParser: InputParser, PhysicalRumbleOutput, USBDeferredOutp
   private let startupPackets: [GIPStartupPacket]
   public let keepAlivePolicy: GIPKeepAlivePolicy
   private let mappingOptions: ControllerMappingOptions
+  private let allowsPhysicalOutput: Bool
 
   private var sequencer = GIPSequencer()
   private let authHandler: GIPAuthHandler
@@ -71,12 +72,14 @@ public final class GIPParser: InputParser, PhysicalRumbleOutput, USBDeferredOutp
     transportProfile: DeviceTransportProfile = .gipDefault,
     startupPackets: [GIPStartupPacket] = GIPStartupPacket.defaultSequence,
     keepAlivePolicy: GIPKeepAlivePolicy = .enabled,
-    mappingOptions: ControllerMappingOptions = []
+    mappingOptions: ControllerMappingOptions = [],
+    allowsPhysicalOutput: Bool = true
   ) {
     self.outEndpoint = transportProfile.outputEndpoint
     self.startupPackets = startupPackets
     self.keepAlivePolicy = keepAlivePolicy
     self.mappingOptions = mappingOptions
+    self.allowsPhysicalOutput = allowsPhysicalOutput
     self.authHandler = GIPAuthHandler()
   }
 
@@ -84,9 +87,7 @@ public final class GIPParser: InputParser, PhysicalRumbleOutput, USBDeferredOutp
 
   /// Sends the GIP init sequence to the controller.
   public func usbStartupOutputPackets() -> [[UInt8]] {
-    startupPackets.map { packet in
-      packet.packet(sequence: sequencer.next(for: packet.command))
-    }
+    startupPackets.map { packet in packet.packet(sequence: sequencer.next(for: packet.command)) }
   }
 
   public var usbStartupOutputIntervalNanoseconds: UInt64 { gipInitDelayNanoseconds }
@@ -243,7 +244,7 @@ public final class GIPParser: InputParser, PhysicalRumbleOutput, USBDeferredOutp
   }
 
   public var physicalRumbleMotors: [PhysicalRumbleMotor] {
-    [.leftMain, .rightMain, .leftTrigger, .rightTrigger]
+    allowsPhysicalOutput ? [.leftMain, .rightMain, .leftTrigger, .rightTrigger] : []
   }
 
   public func sendPhysicalRumble(

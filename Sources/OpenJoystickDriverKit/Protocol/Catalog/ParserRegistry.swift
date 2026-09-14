@@ -36,8 +36,16 @@ public final class ParserRegistry: Sendable {
         transportProfile: transportProfile,
         startupPackets: runtimeProfile.gipStartupPackets,
         keepAlivePolicy: runtimeProfile.gipKeepAlivePolicy,
-        mappingOptions: runtimeProfile.mappingOptions
+        mappingOptions: runtimeProfile.mappingOptions,
+        allowsPhysicalOutput: !runtimeProfile.quirks.contains("inputOnly")
       )
+    case "GameSir":
+      let protocolVariant: GameSirProtocol =
+        runtimeProfile.protocolVariant == .gameSirG7ProUSB ? .g7ProUSB : .enhancedHID
+      let model: GameSirModel =
+        (0x10C5...0x10C8).contains(identifier.productID)
+        ? .g7Pro8K : protocolVariant == .g7ProUSB ? .g7Pro : .cyclone2
+      return GameSirParser(protocol: protocolVariant, model: model)
     case "DS3": return DS3Parser()
     case "DS4": return DS4Parser()
     case "DualSense":
