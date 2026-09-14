@@ -23,9 +23,13 @@
 
             if let errorMessage = preferences.errorMessage {
               HStack(alignment: .top, spacing: 8) {
-                OJDSystemSymbol(name: "exclamationmark.triangle", fallback: "!").foregroundColor(
-                  Color(NSColor.systemOrange)
-                )
+                OJDSystemSymbol(
+                  name: SemanticState.attention.presentation.symbolName,
+                  fallback: OJDLocalized.string(
+                    "common.needsAttention",
+                    fallback: "Needs attention"
+                  )
+                ).foregroundColor(Color(SemanticState.attention.presentation.tone.color))
                 Text(errorMessage).fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: 12)
                 if preferences.notificationAuthorization == .denied {
@@ -140,15 +144,9 @@
             Spacer(minLength: 0)
           }
           Divider()
-          HStack(alignment: .center, spacing: 12) {
+          HStack(alignment: .top, spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
-              Toggle(
-                OJDLocalized.string("settings.notificationSounds", fallback: "Play a sound"),
-                isOn: Binding(
-                  get: { preferences.notificationSounds },
-                  set: { preferences.setNotificationSounds($0) }
-                )
-              ).toggleStyle(.checkbox)
+              Text(OJDLocalized.string("settings.notificationSounds", fallback: "Play a sound"))
               Text(notificationDeliveryStatus).font(.caption).foregroundColor(
                 notificationDeliveryNeedsAttention
                   ? Color(NSColor.systemOrange) : Color(NSColor.secondaryLabelColor)
@@ -163,6 +161,15 @@
               }
             }
             Spacer(minLength: 12)
+            Toggle(
+              OJDLocalized.string("settings.notificationSounds", fallback: "Play a sound"),
+              isOn: Binding(
+                get: { preferences.notificationSounds },
+                set: { preferences.setNotificationSounds($0) }
+              )
+            ).toggleStyle(.switch).labelsHidden().ojdAccessibilityLabel(
+              OJDLocalized.string("settings.notificationSounds", fallback: "Play a sound")
+            )
             Button(
               OJDLocalized.string("settings.testNotification", fallback: "Send Test Notification")
             ) { preferences.sendTestNotification() }
@@ -241,16 +248,30 @@
             }.disabled(preferences.updateState == .checking)
           }
           Divider()
-          Toggle(
-            OJDLocalized.string(
-              "settings.prereleaseUpdates",
-              fallback: "Include prerelease updates"
-            ),
-            isOn: Binding(
-              get: { preferences.includePrereleaseUpdates },
-              set: { preferences.setIncludePrereleaseUpdates($0) }
+          HStack {
+            Text(
+              OJDLocalized.string(
+                "settings.prereleaseUpdates",
+                fallback: "Include prerelease updates"
+              )
             )
-          ).toggleStyle(.checkbox)
+            Spacer(minLength: 12)
+            Toggle(
+              OJDLocalized.string(
+                "settings.prereleaseUpdates",
+                fallback: "Include prerelease updates"
+              ),
+              isOn: Binding(
+                get: { preferences.includePrereleaseUpdates },
+                set: { preferences.setIncludePrereleaseUpdates($0) }
+              )
+            ).toggleStyle(.switch).labelsHidden().ojdAccessibilityLabel(
+              OJDLocalized.string(
+                "settings.prereleaseUpdates",
+                fallback: "Include prerelease updates"
+              )
+            )
+          }
         }.padding(4)
       } label: {
         Text(OJDLocalized.string("settings.updates", fallback: "Updates")).font(.headline)

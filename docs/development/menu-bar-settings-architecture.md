@@ -90,14 +90,13 @@ splitting by individual control or visual role.
 
 Menu items:
 
-- readiness and controller count;
-- active profile or `No active profile`;
-- direct links to Overview, Controllers, Profiles, and Debug;
-- `Request access...` when permissions need attention;
-- Settings and Quit.
+- one readiness, controller-count, and active-profile summary;
+- `Request access...` only when permissions need attention;
+- connected-controller shortcuts;
+- Open Workbench, Settings, Help/About, and Quit.
 
-Do not put packet streams, raw identifiers, catalog audits, support tests, or metrics dashboards in
-the menu. A popover is optional and limited to transient status, capture, or axis-adjustment content.
+Do not put refresh, profile editing, logs, reports, packet streams, raw identifiers, catalog audits,
+support tests, contributor diagnostics, or metrics dashboards in the menu.
 
 ### Settings Window
 

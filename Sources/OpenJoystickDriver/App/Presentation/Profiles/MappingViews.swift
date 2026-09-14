@@ -18,6 +18,10 @@
       get { screen.selectedProfileID }
       nonmutating set { screen.selectedProfileID = newValue }
     }
+    var selectedRecoveryIssueID: UUID? {
+      get { screen.selectedRecoveryIssueID }
+      nonmutating set { screen.selectedRecoveryIssueID = newValue }
+    }
     var isCreatingProfile: Bool {
       get { screen.isCreatingProfile }
       nonmutating set { screen.isCreatingProfile = newValue }
@@ -65,18 +69,21 @@
           ProfileActionErrorBanner(message: profileActionError) { self.profileActionError = nil }
         }
         GeometryReader { proxy in
-          if proxy.size.width < 620 {
+          if WorkspaceListDetailPolicy.layout(for: proxy.size.width) == .stacked {
             VStack(spacing: 0) {
-              profileList.frame(height: min(200, proxy.size.height * 0.34))
+              profileList.frame(
+                height: WorkspaceListDetailPolicy.compactListHeight(
+                  itemCount: profiles.count + (currentSnapshot?.profileIssues.count ?? 0),
+                  availableHeight: proxy.size.height
+                )
+              )
               Divider()
               profileDetail.frame(maxWidth: .infinity, maxHeight: .infinity)
             }
           } else {
             HStack(spacing: 0) {
-              profileList.frame(width: profileListWidth(for: proxy.size.width)).frame(
-                maxHeight: .infinity,
-                alignment: .topLeading
-              )
+              profileList.frame(width: WorkspaceListDetailPolicy.listWidth(for: proxy.size.width))
+                .frame(maxHeight: .infinity, alignment: .topLeading)
               Divider()
               profileDetail.frame(maxWidth: .infinity, maxHeight: .infinity)
             }
@@ -138,9 +145,44 @@
             },
             secondaryButton: .cancel { cancelPendingProfileAction() }
           )
+        case .deleteDamagedProfile(let issueID):
+          Alert(
+            title: Text(
+              OJDLocalized.string("profiles.damagedProfile", fallback: "Damaged profile")
+            ),
+            message: Text(
+              OJDLocalized.string(
+                "profiles.recoveryBackupMessage",
+                fallback: "A backup will be created before damaged data is removed."
+              )
+            ),
+            primaryButton: .destructive(
+              Text(OJDLocalized.string("common.delete", fallback: "Delete"))
+            ) { recoverProfileIssue(issueID, resetLibrary: false) },
+            secondaryButton: .cancel { activeAlert = nil }
+          )
+        case .resetLibrary(let issueID):
+          Alert(
+            title: Text(
+              OJDLocalized.string("profiles.damagedLibrary", fallback: "Profile library")
+            ),
+            message: Text(
+              OJDLocalized.string(
+                "profiles.recoveryBackupMessage",
+                fallback: "A backup will be created before damaged data is removed."
+              )
+            ),
+            primaryButton: .destructive(
+              Text(OJDLocalized.string("profiles.resetLibraryAction", fallback: "Back Up & Reset"))
+            ) { recoverProfileIssue(issueID, resetLibrary: true) },
+            secondaryButton: .cancel { activeAlert = nil }
+          )
         }
       }.onAppear {
-        if case .available(let snapshot) = viewModel.remappingState { lastKnownSnapshot = snapshot }
+        if case .available(let snapshot) = viewModel.remappingState {
+          lastKnownSnapshot = snapshot
+          screen.reconcileSelection(with: snapshot)
+        }
         if observedDiscardGeneration != navigation.discardGeneration {
           profileEditorTransition.setDirty(false)
           observedDiscardGeneration = navigation.discardGeneration
@@ -168,7 +210,7 @@
             preservedEditorProfile = previous
           }
           lastKnownSnapshot = snapshot
-          selectFirstProfileIfNeeded()
+          screen.reconcileSelection(with: snapshot)
         }
       }
     }
@@ -178,10 +220,6 @@
       case .available(let snapshot): return snapshot.profiles
       case .loading, .unavailable, .error: return lastKnownSnapshot?.profiles ?? []
       }
-    }
-
-    func profileListWidth(for availableWidth: CGFloat) -> CGFloat {
-      min(220, max(168, availableWidth * 0.25))
     }
 
     var selectedProfile: RemappingProfile? {
@@ -194,25 +232,25 @@
       return profiles.first
     }
 
+    var selectedRecoveryIssue: ApplicationServiceRemappingProfileIssue? {
+      guard let selectedRecoveryIssueID else { return nil }
+      return currentSnapshot?.profileIssues.first { $0.id == selectedRecoveryIssueID }
+    }
+
     var profileList: some View {
       VStack(alignment: .leading, spacing: 8) {
         HStack {
           Text(OJDLocalized.string("common.profiles", fallback: "Profiles")).font(.headline)
           Spacer()
-          Button(
-            action: { isCreatingProfile = true },
-            label: {
-              OJDSystemSymbol(name: "plus", fallback: "+").ojdAccessibilityLabel(
-                OJDLocalized.string("profiles.new", fallback: "New profile")
-              ).frame(minWidth: 28, minHeight: 28).contentShape(Rectangle())
-            }
-          ).buttonStyle(BorderlessButtonStyle()).disabled(isProfileActionBlocked)
-          Button(action: importProfile) {
-            OJDSystemSymbol(name: "square.and.arrow.down", fallback: "Import")
-              .ojdAccessibilityLabel(
-                OJDLocalized.string("profiles.import", fallback: "Import profile")
-              ).frame(minWidth: 28, minHeight: 28).contentShape(Rectangle())
-          }.buttonStyle(BorderlessButtonStyle()).disabled(isProfileActionBlocked)
+          OJDCompactSymbolButton(
+            symbolName: "plus",
+            label: OJDLocalized.string("profiles.new", fallback: "New profile")
+          ) { isCreatingProfile = true }.disabled(isProfileActionBlocked)
+          OJDCompactSymbolButton(
+            symbolName: "square.and.arrow.down",
+            label: OJDLocalized.string("profiles.import", fallback: "Import profile"),
+            action: importProfile
+          ).disabled(isProfileActionBlocked)
         }.padding(.horizontal, 14).padding(.top, 18)
 
         switch viewModel.remappingState {
@@ -232,58 +270,117 @@
               action: refreshProfiles
             )
           }.padding(.horizontal, 14)
-        case .available: if !profiles.isEmpty { profileListRows }
+        case .available:
+          if !profiles.isEmpty || !(currentSnapshot?.profileIssues.isEmpty ?? true) {
+            profileListRows
+          }
         }
         Spacer(minLength: 0)
       }.background(Color(NSColor.controlBackgroundColor))
     }
 
     var profileListRows: some View {
-      ScrollView {
-        VStack(alignment: .leading, spacing: 3) {
-          ForEach(profiles) { profile in
-            Button(
-              action: { selectProfile(profile.id) },
-              label: {
-                HStack(spacing: 8) {
-                  OJDListGlyphSlot {
-                    OJDSystemSymbol(
-                      name: isActive(profile) ? "checkmark.circle.fill" : "circle",
-                      fallback: isActive(profile) ? "✓" : "○"
-                    ).foregroundColor(Color(NSColor.controlAccentColor))
-                  }
-                  VStack(alignment: .leading, spacing: 2) {
-                    Text(profile.name).lineLimit(1)
-                    Text(assignmentCountLabel(profile.bindings.count)).font(.caption)
-                      .foregroundColor(Color(NSColor.secondaryLabelColor))
-                  }
-                  Spacer(minLength: 0)
-                }.padding(.horizontal, 10).padding(.vertical, 8).contentShape(Rectangle())
-              }
-            ).buttonStyle(ProfileListButtonStyle(selected: selectedProfile?.id == profile.id))
-              .ojdAccessibilityLabel(profile.name).ojdAccessibilitySelection(
-                selectedProfile?.id == profile.id
-              ).ojdAccessibilityValue(profileAccessibilityValue(profile))
+      List(selection: profileListSelection) {
+        ForEach(profiles) { profile in
+          HStack(spacing: 8) {
+            OJDListGlyphSlot {
+              let semanticState: SemanticState = isActive(profile) ? .active : .inactive
+              OJDSystemSymbol(
+                name: semanticState.presentation.symbolName,
+                fallback: isActive(profile)
+                  ? OJDLocalized.string("profiles.active", fallback: "Active")
+                  : OJDLocalized.string("profiles.notActive", fallback: "Not active")
+              ).foregroundColor(Color(semanticState.presentation.tone.color))
+            }
+            VStack(alignment: .leading, spacing: 2) {
+              Text(profile.name).lineLimit(1)
+              Text(assignmentCountLabel(profile.bindings.count)).font(.caption).foregroundColor(
+                Color(NSColor.secondaryLabelColor)
+              )
+            }
+            Spacer(minLength: 0)
+          }.padding(.vertical, 4).tag(ProfileListSelection.profile(profile.id))
+            .ojdAccessibilityLabel(profile.name).ojdAccessibilityValue(
+              profileAccessibilityValue(profile)
+            )
+        }
+        ForEach(currentSnapshot?.profileIssues ?? []) { issue in
+          HStack(spacing: 8) {
+            OJDListGlyphSlot {
+              OJDSystemSymbol(
+                name: issue.kind == .damagedProfile
+                  ? "exclamationmark.triangle.fill" : "xmark.octagon.fill",
+                fallback: OJDLocalized.string("common.needsAttention", fallback: "Needs attention")
+              ).foregroundColor(
+                Color(
+                  (issue.kind == .damagedProfile ? SemanticState.attention : .failure).presentation
+                    .tone.color
+                )
+              )
+            }
+            VStack(alignment: .leading, spacing: 2) {
+              Text(
+                OJDLocalized.string(
+                  issue.kind == .damagedProfile
+                    ? "profiles.damagedProfile" : "profiles.damagedLibrary",
+                  fallback: issue.kind == .damagedProfile ? "Damaged profile" : "Profile library"
+                )
+              ).lineLimit(1)
+              Text(OJDLocalized.string("common.needsAttention", fallback: "Needs attention")).font(
+                .caption
+              ).foregroundColor(Color(NSColor.secondaryLabelColor))
+            }
+            Spacer(minLength: 0)
+          }.padding(.vertical, 4).tag(ProfileListSelection.issue(issue.id)).ojdAccessibilityValue(
+            profileIssueMessage(issue)
+          )
+        }
+      }.listStyle(SidebarListStyle()).disabled(
+        isMutationActive || viewModel.profileRecoveryInFlight
+      )
+    }
+
+    private var profileListSelection: Binding<ProfileListSelection?> {
+      Binding(
+        get: {
+          if let selectedRecoveryIssueID { return .issue(selectedRecoveryIssueID) }
+          return selectedProfileID.map(ProfileListSelection.profile)
+        },
+        set: { selection in
+          switch selection {
+          case .profile(let profileID):
+            selectedRecoveryIssueID = nil
+            selectProfile(profileID)
+          case .issue(let issueID): selectedRecoveryIssueID = issueID
+          case nil: break
           }
-        }.padding(.horizontal, 8).disabled(isProfileActionBlocked)
-      }
+        }
+      )
     }
 
     @ViewBuilder
     var profileDetail: some View {
-      if let selectedProfile {
+      if let selectedRecoveryIssue {
+        profileRecoveryDetail(selectedRecoveryIssue).padding(28)
+      } else if let selectedProfile {
         VStack(alignment: .leading, spacing: 0) {
           refreshStatus
           if selectedProfile.joyConPair != nil { joyConPairControls(selectedProfile) }
           ProfileEditorView(
             profile: selectedProfile,
+            capabilities: ProfileCapabilityResolver.resolve(
+              profile: selectedProfile,
+              connectedDevices: connectedDevices,
+              registry: screen.capabilityRegistry
+            ) ?? .unsupported,
             editor: screen.editor(
               for: selectedProfile,
               discardGeneration: navigation.discardGeneration
             ),
             viewModel: viewModel,
             isActive: isActive(selectedProfile),
-            isEditingBlocked: profileEditorTransition.isEditingBlocked,
+            isEditingBlocked: profileEditorTransition.isEditingBlocked
+              || profileLibraryNeedsRecovery,
             selectedSection: $screen.selectedEditorSection,
             onDelete: { activeAlert = .delete(selectedProfile.id) },
             onExport: { exportProfile($0) },
@@ -319,6 +416,59 @@
         case .available: noProfilesState.padding(28)
         }
       }
+    }
+
+    private func profileRecoveryDetail(
+      _ issue: ApplicationServiceRemappingProfileIssue
+    ) -> some View {
+      VStack(alignment: .leading, spacing: 14) {
+        OJDSystemSymbol(
+          name: issue.kind == .damagedProfile
+            ? "exclamationmark.triangle.fill" : "xmark.octagon.fill",
+          fallback: OJDLocalized.string("common.needsAttention", fallback: "Needs attention")
+        ).font(.largeTitle).foregroundColor(
+          Color(
+            (issue.kind == .damagedProfile ? SemanticState.attention : .failure).presentation.tone
+              .color
+          )
+        ).ojdAccessibilityHidden(true)
+        Text(
+          OJDLocalized.string(
+            issue.kind == .damagedProfile ? "profiles.damagedProfile" : "profiles.damagedLibrary",
+            fallback: issue.kind == .damagedProfile ? "Damaged profile" : "Profile library"
+          )
+        ).font(.title.weight(.semibold))
+        Text(profileIssueMessage(issue)).foregroundColor(Color(NSColor.secondaryLabelColor))
+          .fixedSize(horizontal: false, vertical: true)
+        Button(
+          OJDLocalized.string(
+            issue.kind == .damagedProfile
+              ? "profiles.deleteDamagedButton" : "profiles.resetLibraryButton",
+            fallback: issue.kind == .damagedProfile
+              ? "Delete Damaged Profile..." : "Back Up & Reset Library..."
+          )
+        ) {
+          activeAlert =
+            issue.kind == .damagedProfile
+            ? .deleteDamagedProfile(issue.id) : .resetLibrary(issue.id)
+        }.disabled(viewModel.profileRecoveryInFlight)
+        Spacer()
+      }.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .ojdAccessibilityLabel(
+          OJDLocalized.string(
+            issue.kind == .damagedProfile ? "profiles.damagedProfile" : "profiles.damagedLibrary",
+            fallback: issue.kind == .damagedProfile ? "Damaged profile" : "Profile library"
+          )
+        ).ojdAccessibilityValue(profileIssueMessage(issue))
+    }
+
+    private func profileIssueMessage(_ issue: ApplicationServiceRemappingProfileIssue) -> String {
+      OJDLocalized.string(
+        issue.kind == .damagedProfile ? "profiles.damagedProfileMessage" : "profiles.loadError",
+        fallback: issue.kind == .damagedProfile
+          ? "This saved profile could not be read. Delete it to continue using the valid profiles."
+          : "Profiles could not be loaded."
+      )
     }
 
     @ViewBuilder

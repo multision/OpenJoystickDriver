@@ -16,8 +16,11 @@
   @MainActor
   final class ProfilesViewModel: ObservableObject {
     let documents: ProfileDocumentService
+    let capabilityRegistry = ParserRegistry()
     @Published
     var selectedProfileID: UUID?
+    @Published
+    var selectedRecoveryIssueID: UUID?
     @Published
     var isCreatingProfile = false
     @Published
@@ -58,6 +61,21 @@
     func resetEditor() {
       editorViewModel = nil
       editorViewModelGeneration = nil
+    }
+
+    func reconcileSelection(with snapshot: ApplicationServiceRemappingSnapshotPayload) {
+      if let selectedRecoveryIssueID,
+        !snapshot.profileIssues.contains(where: { $0.id == selectedRecoveryIssueID })
+      {
+        self.selectedRecoveryIssueID = nil
+      }
+      if let selectedProfileID, !snapshot.profiles.contains(where: { $0.id == selectedProfileID }) {
+        self.selectedProfileID = snapshot.profiles.first?.id
+      }
+      if selectedProfileID == nil, selectedRecoveryIssueID == nil {
+        selectedProfileID = snapshot.profiles.first?.id
+        if selectedProfileID == nil { selectedRecoveryIssueID = snapshot.profileIssues.first?.id }
+      }
     }
   }
 

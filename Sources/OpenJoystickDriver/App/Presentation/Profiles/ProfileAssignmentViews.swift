@@ -71,6 +71,7 @@
   struct AssignmentGroupView: View {
     let title: String
     let bindings: [RemappingBinding]
+    let capabilities: ControllerProfileCapabilities
     @Binding
     var draft: RuntimeProfileDraft
     let isEditingDisabled: Bool
@@ -88,6 +89,7 @@
           ForEach(bindings) { binding in
             AssignmentRow(
               binding: binding,
+              capabilities: capabilities,
               draft: $draft,
               isEditingDisabled: isEditingDisabled,
               onRemove: onRemove,
@@ -106,6 +108,7 @@
 
   private struct AssignmentRow: View {
     let binding: RemappingBinding
+    let capabilities: ControllerProfileCapabilities
     @Binding
     var draft: RuntimeProfileDraft
     let isEditingDisabled: Bool
@@ -170,9 +173,10 @@
           .caption
         ).foregroundColor(Color(NSColor.secondaryLabelColor))
         Picker("", selection: sourceBinding) {
-          ForEach(SourceOption.options(including: binding.source), id: \.source) { option in
-            Text(option.title).tag(option.source)
-          }
+          ForEach(
+            SourceOption.options(including: binding.source, capabilities: capabilities),
+            id: \.source
+          ) { option in Text(option.title).tag(option.source).disabled(!option.isSupported) }
         }.labelsHidden().frame(maxWidth: .infinity, alignment: .leading).ojdAccessibilityLabel(
           OJDLocalized.string("capture.controllerControl", fallback: "Controller control")
         ).ojdAccessibilityValue(RuntimePresentation.sourceLabel(binding.source))
@@ -185,15 +189,32 @@
           .foregroundColor(Color(NSColor.secondaryLabelColor))
         Picker("", selection: destinationBinding) {
           ForEach(
-            DestinationOption.options(for: binding.source, including: binding.destination),
+            DestinationOption.options(
+              for: binding.source,
+              including: binding.destination,
+              capabilities: capabilities
+            ),
             id: \.destination
           ) { option in
             KeyboardDestinationLabel(destination: option.destination).tag(option.destination)
+              .disabled(!option.isSupported)
           }
         }.labelsHidden().frame(maxWidth: .infinity, alignment: .leading).ojdAccessibilityLabel(
           OJDLocalized.string("common.destination", fallback: "Destination")
         ).ojdAccessibilityValue(RuntimePresentation.destinationLabel(binding.destination))
-        PhysicalOutputDestinationFields(destination: destinationBinding)
+        PhysicalOutputDestinationFields(destination: destinationBinding).disabled(
+          !ProfileCapabilityPolicy.supports(binding.destination, capabilities: capabilities)
+        )
+        if !ProfileCapabilityPolicy.supports(binding.source, capabilities: capabilities)
+          || !ProfileCapabilityPolicy.supports(binding.destination, capabilities: capabilities)
+        {
+          Text(
+            OJDLocalized.string(
+              "profiles.notSupportedByController",
+              fallback: "Not supported by this controller or protocol."
+            )
+          ).font(.caption).foregroundColor(Color(NSColor.systemOrange))
+        }
       }.frame(maxWidth: .infinity, alignment: .leading)
     }
 

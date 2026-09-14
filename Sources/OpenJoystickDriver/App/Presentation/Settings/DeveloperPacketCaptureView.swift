@@ -27,21 +27,25 @@
               Button(
                 OJDLocalized.string("common.stop", fallback: "Stop"),
                 action: model.stopCapture
-              )
+              ).ojdPrimaryAction()
             } else {
               Button(
                 OJDLocalized.string("developer.startCapture", fallback: "Start Capture"),
                 action: model.startCapture
-              ).disabled(model.selectedDevice == nil)
+              ).ojdPrimaryAction().disabled(model.selectedDevice == nil)
             }
             Button(
               OJDLocalized.string("common.clear", fallback: "Clear"),
               action: model.clearCapture
             ).disabled(model.packets.isEmpty && model.observedExtraInputs.isEmpty)
-            Button(OJDLocalized.string("common.copyAll", fallback: "Copy All"), action: copyAll)
-              .disabled(model.packets.isEmpty)
-            Button(
-              OJDLocalized.string("common.export", fallback: "Export..."),
+            OJDCompactSymbolButton(
+              symbolName: "doc.on.doc",
+              label: OJDLocalized.string("common.copyAll", fallback: "Copy All"),
+              action: copyAll
+            ).disabled(model.packets.isEmpty)
+            OJDCompactSymbolButton(
+              symbolName: "square.and.arrow.up",
+              label: OJDLocalized.string("common.export", fallback: "Export..."),
               action: presentSavePanel
             ).disabled(model.packets.isEmpty)
           }
@@ -102,8 +106,8 @@
           symbol: "tray"
         )
       case .failed(let message):
-        statusLabel(message, symbol: "exclamationmark.triangle").foregroundColor(
-          Color(NSColor.systemRed)
+        statusLabel(message, symbol: SemanticState.failure.presentation.symbolName).foregroundColor(
+          Color(SemanticState.failure.presentation.tone.color)
         )
       }
     }

@@ -7,6 +7,7 @@
   struct CaptureAssignmentSheet: View {
     @ObservedObject
     var viewModel: RuntimeViewModel
+    let capabilities: ControllerProfileCapabilities
     let onAdd: (RemappingSource, RemappingDestination) -> Void
     @Environment(\.presentationMode)
     private var presentationMode
@@ -38,9 +39,8 @@
           OJDLocalized.string("capture.controllerControl", fallback: "Controller control"),
           selection: sourceBinding
         ) {
-          ForEach(SourceOption.options(including: source), id: \.source) { option in
-            Text(option.title).tag(option.source)
-          }
+          ForEach(SourceOption.options(including: source, capabilities: capabilities), id: \.source)
+          { option in Text(option.title).tag(option.source).disabled(!option.isSupported) }
         }
         touchSourceControls
         if !connectedDevices.isEmpty {
@@ -73,8 +73,14 @@
           OJDLocalized.string("common.destination", fallback: "Destination"),
           selection: destinationBinding
         ) {
-          ForEach(DestinationOption.options(for: source, including: destination), id: \.destination)
-          { option in Text(option.title).tag(option.destination) }
+          ForEach(
+            DestinationOption.options(
+              for: source,
+              including: destination,
+              capabilities: capabilities
+            ),
+            id: \.destination
+          ) { option in Text(option.title).tag(option.destination).disabled(!option.isSupported) }
         }.ojdAccessibilityLabel(OJDLocalized.string("common.destination", fallback: "Destination"))
           .ojdAccessibilityValue(destinationAccessibilityValue)
         if case .keyboard = destination {
@@ -203,6 +209,9 @@
     }
 
     private var canAddAssignment: Bool {
+      guard ProfileCapabilityPolicy.supports(source, capabilities: capabilities),
+        ProfileCapabilityPolicy.supports(destination, capabilities: capabilities)
+      else { return false }
       if case .keyboard = destination { return !keyboardDestinationCleared }
       return true
     }
@@ -230,7 +239,11 @@
         get: { source },
         set: { newSource in
           source = newSource
-          let options = DestinationOption.options(for: newSource, including: destination)
+          let options = DestinationOption.options(
+            for: newSource,
+            including: destination,
+            capabilities: capabilities
+          )
           if !options.contains(where: { $0.destination == destination }),
             let replacement = options.first
           {
@@ -302,8 +315,13 @@
     }
 
     private func applyDetectedSource(_ detected: RemappingSource) {
+      guard ProfileCapabilityPolicy.supports(detected, capabilities: capabilities) else { return }
       source = detected
-      let options = DestinationOption.options(for: detected, including: destination)
+      let options = DestinationOption.options(
+        for: detected,
+        including: destination,
+        capabilities: capabilities
+      )
       if !options.contains(where: { $0.destination == destination }),
         let replacement = options.first
       {

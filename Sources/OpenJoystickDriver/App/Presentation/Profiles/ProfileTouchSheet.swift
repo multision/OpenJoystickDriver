@@ -4,6 +4,7 @@
 
   struct ProfileTouchSheet: View {
     let onSave: ([RemappingTouchMapping]) throws -> Void
+    let capabilities: ControllerProfileCapabilities
     @Environment(\.presentationMode)
     private var presentationMode
     @State
@@ -19,12 +20,18 @@
 
     init(
       mappings: [RemappingTouchMapping],
+      capabilities: ControllerProfileCapabilities,
       onSave: @escaping ([RemappingTouchMapping]) throws -> Void
     ) {
       self.onSave = onSave
+      self.capabilities = capabilities
       _primary = State(initialValue: Self.draft(.primary, mappings: mappings))
       _left = State(initialValue: Self.draft(.left, mappings: mappings))
       _right = State(initialValue: Self.draft(.right, mappings: mappings))
+      let available = RemappingTouchSurface.allCases.first {
+        ProfileCapabilityPolicy.supports(.touchContact($0), capabilities: capabilities)
+      }
+      _selected = State(initialValue: mappings.first?.surface ?? available ?? .primary)
     }
 
     var body: some View {
@@ -38,13 +45,13 @@
         ) {
           Text(OJDLocalized.string("mapping.touchSurfacePrimary", fallback: "Primary surface")).tag(
             RemappingTouchSurface.primary
-          )
+          ).disabled(!canSelect(.primary))
           Text(OJDLocalized.string("mapping.touchSurfaceLeft", fallback: "Left surface")).tag(
             RemappingTouchSurface.left
-          )
+          ).disabled(!canSelect(.left))
           Text(OJDLocalized.string("mapping.touchSurfaceRight", fallback: "Right surface")).tag(
             RemappingTouchSurface.right
-          )
+          ).disabled(!canSelect(.right))
         }.pickerStyle(SegmentedPickerStyle())
         ScrollView { ProfileTouchFields(draft: selectedDraft).padding(.trailing, 8) }
         if let errorMessage { Text(errorMessage).foregroundColor(.red) }
@@ -59,7 +66,14 @@
           }
           Button(OJDLocalized.string("common.save", fallback: "Save")) { save() }
         }
-      }.padding(28).frame(width: 500, height: 500)
+      }.padding(28).frame(
+        width: 500,
+        height: ProfilePresentationPolicy.optionalEditorHeight(
+          enabled: selectedDraft.wrappedValue.enabled,
+          compact: 260,
+          expanded: 500
+        )
+      )
     }
 
     private var selectedDraft: Binding<ProfileTouchDraft> {
@@ -68,6 +82,11 @@
       case .left: $left
       case .right: $right
       }
+    }
+
+    private func canSelect(_ surface: RemappingTouchSurface) -> Bool {
+      ProfileCapabilityPolicy.supports(.touchContact(surface), capabilities: capabilities)
+        || [primary, left, right].contains { $0.surface == surface && $0.enabled }
     }
 
     private func resetSelected() {

@@ -6,14 +6,16 @@
   import SwiftUI
 
   enum SettingsWindowSizingPolicy {
-    static let defaultContentSize = NSSize(width: 960, height: 640)
-    static let minimumContentSize = NSSize(width: 720, height: 480)
+    static let defaultContentSize = NSSize(width: 1_040, height: 700)
+    static let minimumContentSize = NSSize(width: 800, height: 560)
 
     static func fittingContentSize(_ current: NSSize) -> NSSize {
-      NSSize(
-        width: max(current.width, minimumContentSize.width),
-        height: max(current.height, minimumContentSize.height)
-      )
+      WindowFramePolicy.fittingSize(current, minimumSize: minimumContentSize)
+    }
+
+    @MainActor
+    static func minimumFrameSize(for window: NSWindow) -> NSSize {
+      window.frameRect(forContentRect: NSRect(origin: .zero, size: minimumContentSize)).size
     }
   }
 
@@ -33,14 +35,18 @@
     private let developerTools: DeveloperToolsViewModel
     private let controllers: ControllersViewModel
     private let profiles: ProfilesViewModel
+    private let visibilityChanged: @MainActor (Bool) -> Void
     private var developerToolsObservation: AnyCancellable?
+    private var isEnforcingMinimumSize = false
 
     init(
       viewModel: RuntimeViewModel,
       restartApplication: @escaping @MainActor () -> Void,
       openInputTest: @escaping @MainActor (ApplicationServiceDeviceDescription) -> Void,
+      visibilityChanged: @escaping @MainActor (Bool) -> Void = { _ in },
       persistence: any SettingsPanePersistence = UserDefaultsSettingsPanePersistence()
     ) {
+      self.visibilityChanged = visibilityChanged
       notificationPermission = NotificationPermissionModel()
       preferences = SettingsPreferencesModel()
       navigation = SettingsNavigationModel(
@@ -70,21 +76,14 @@
         backing: .buffered,
         defer: false
       )
-      window.contentMinSize = SettingsWindowSizingPolicy.minimumContentSize
       window.hidesOnDeactivate = false
-      let autosaveName = "SettingsWindowGeometry"
-      let restoredFrame = window.setFrameUsingName(autosaveName)
-      window.setFrameAutosaveName(autosaveName)
       window.title = OJDLocalized.string("app.name", fallback: "OpenJoystickDriver")
       window.isReleasedWhenClosed = false
       window.contentView = host
-      let restoredContentSize = window.contentView?.bounds.size ?? .zero
-      window.setContentSize(SettingsWindowSizingPolicy.fittingContentSize(restoredContentSize))
-      if !restoredFrame { window.center() }
-      WindowFramePolicy.clamp(window)
       super.init(window: window)
       window.delegate = self
       configureToolbar(for: window)
+      installSizingPolicy(on: window)
       developerToolsObservation = preferences.$developerToolsEnabled.dropFirst().sink {
         [weak self] enabled in
         guard let self else { return }
@@ -98,7 +97,13 @@
     func show(pane: SettingsPane?) {
       if let pane { navigation.requestPane(pane) }
       window?.toolbar?.isVisible = true
-      if let window { WindowFramePolicy.clamp(window) }
+      if let window {
+        let minimumFrameSize = SettingsWindowSizingPolicy.minimumFrameSize(for: window)
+        window.contentMinSize = SettingsWindowSizingPolicy.minimumContentSize
+        window.minSize = minimumFrameSize
+        WindowFramePolicy.clamp(window, minimumSize: minimumFrameSize)
+      }
+      visibilityChanged(true)
       window?.makeKeyAndOrderFront(nil)
       NSApplication.shared.activate(ignoringOtherApps: true)
     }
@@ -106,7 +111,45 @@
     func windowShouldClose(_ sender: NSWindow) -> Bool {
       // Hiding, rather than releasing, preserves the selected pane and the user's window geometry.
       sender.orderOut(nil)
+      visibilityChanged(false)
       return false
+    }
+
+    func windowWillResize(_ sender: NSWindow, toFrameSize frameSize: NSSize) -> NSSize {
+      WindowFramePolicy.fittingSize(
+        frameSize,
+        minimumSize: SettingsWindowSizingPolicy.minimumFrameSize(for: sender)
+      )
+    }
+
+    func windowDidResize(_ notification: Notification) {
+      guard !isEnforcingMinimumSize, let window = notification.object as? NSWindow else { return }
+      let minimumFrameSize = SettingsWindowSizingPolicy.minimumFrameSize(for: window)
+      let fittedFrame = WindowFramePolicy.fittingFrame(window.frame, minimumSize: minimumFrameSize)
+      guard fittedFrame.size != window.frame.size else { return }
+      isEnforcingMinimumSize = true
+      window.setFrame(fittedFrame, display: true)
+      isEnforcingMinimumSize = false
+    }
+
+    func windowDidChangeScreen(_ notification: Notification) {
+      guard let window else { return }
+      WindowFramePolicy.clamp(
+        window,
+        minimumSize: SettingsWindowSizingPolicy.minimumFrameSize(for: window)
+      )
+    }
+
+    private func installSizingPolicy(on window: NSWindow) {
+      window.contentMinSize = SettingsWindowSizingPolicy.minimumContentSize
+      window.minSize = SettingsWindowSizingPolicy.minimumFrameSize(for: window)
+      window.setContentSize(SettingsWindowSizingPolicy.defaultContentSize)
+
+      let autosaveName = "SettingsWindowGeometry"
+      let restoredFrame = window.setFrameUsingName(autosaveName)
+      window.setFrameAutosaveName(autosaveName)
+      if !restoredFrame { window.center() }
+      WindowFramePolicy.clamp(window, minimumSize: window.minSize)
     }
 
     private func configureToolbar(for window: NSWindow) {

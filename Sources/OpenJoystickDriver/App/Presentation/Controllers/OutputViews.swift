@@ -13,6 +13,8 @@
     // authoritative runtime value, never an identity whose update failed.
     @State
     private var retryIdentity: CompatibilityIdentity?
+    @State
+    private var identityChoicesHeight: CGFloat = 28
 
     private let outputIdentities: [CompatibilityIdentity] = [
       .automatic, .genericHID, .xbox360HID, .sdl2_3, .appleGameController, .dualShock4, .dualSense,
@@ -42,9 +44,10 @@
         )
         if let outputError {
           HStack(alignment: .top, spacing: 8) {
-            OJDSystemSymbol(name: "exclamationmark.triangle", fallback: "!").foregroundColor(
-              Color(NSColor.systemRed)
-            )
+            OJDSystemSymbol(
+              name: SemanticState.failure.presentation.symbolName,
+              fallback: OJDLocalized.string("common.needsAttention", fallback: "Needs attention")
+            ).foregroundColor(Color(SemanticState.failure.presentation.tone.color))
             VStack(alignment: .leading, spacing: 4) {
               Text(OJDLocalized.string("common.needsAttention", fallback: "Needs attention")).font(
                 .subheadline.weight(.semibold)
@@ -119,25 +122,29 @@
     @ViewBuilder
     private var identityChoices: some View {
       GeometryReader { proxy in
-        let spacing: CGFloat = 18
-        let columnWidth = max(0, (proxy.size.width - spacing * 2) / 3)
+        let columnCount = ControllerDetailLayoutPolicy.identityColumnCount(for: proxy.size.width)
+        let rowCount = (outputIdentities.count + columnCount - 1) / columnCount
         VStack(alignment: .leading, spacing: 8) {
-          ForEach(0..<3, id: \.self) { row in
-            HStack(alignment: .top, spacing: spacing) {
-              ForEach(0..<3, id: \.self) { column in
-                let index = row * 3 + column
-                Group {
-                  if index < outputIdentities.count {
-                    identityChoice(outputIdentities[index])
-                  } else {
-                    Color.clear.frame(minHeight: 28)
-                  }
-                }.frame(width: columnWidth, alignment: .leading)
+          ForEach(0..<rowCount, id: \.self) { row in
+            HStack(alignment: .top, spacing: 18) {
+              let firstIndex = row * columnCount
+              let endIndex = min(firstIndex + columnCount, outputIdentities.count)
+              ForEach(firstIndex..<endIndex, id: \.self) { index in
+                identityChoice(outputIdentities[index]).frame(
+                  maxWidth: .infinity,
+                  alignment: .leading
+                )
               }
             }
           }
-        }.frame(maxWidth: .infinity, alignment: .leading)
-      }.frame(height: 96)
+        }.background(
+          GeometryReader { content in
+            Color.clear.preference(key: IdentityChoicesHeightKey.self, value: content.size.height)
+          }
+        )
+      }.frame(height: identityChoicesHeight).onPreferenceChange(IdentityChoicesHeightKey.self) {
+        identityChoicesHeight = max(28, $0)
+      }
     }
 
     private func identityChoice(_ identity: CompatibilityIdentity) -> some View {
@@ -183,6 +190,14 @@
       } else {
         Task { @MainActor in await viewModel.loadCompatibilityIdentity() }
       }
+    }
+  }
+
+  private struct IdentityChoicesHeightKey: PreferenceKey {
+    static let defaultValue: CGFloat = 28
+
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+      value = max(value, nextValue())
     }
   }
 

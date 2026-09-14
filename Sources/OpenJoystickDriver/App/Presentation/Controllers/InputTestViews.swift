@@ -49,7 +49,9 @@
 
     private var controllerHeader: some View {
       HStack(spacing: 10) {
-        Circle().fill(statusColor).frame(width: 8, height: 8)
+        OJDSystemSymbol(name: statusSemanticState.presentation.symbolName, fallback: statusLabel)
+          .foregroundColor(Color(statusSemanticState.presentation.tone.color))
+          .ojdAccessibilityHidden(true)
         Text(statusLabel).font(.subheadline.weight(.semibold))
         if let device = model.device {
           Text(
@@ -325,11 +327,11 @@
       case .running(let current) where current == operation: OJDLoadingIndicator()
       case .succeeded(let current) where current == operation:
         Text(OJDLocalized.string("common.done", fallback: "Done")).foregroundColor(
-          Color(NSColor.systemGreen)
+          Color(SemanticState.healthy.presentation.tone.color)
         )
       case .failed(let current) where current == operation:
         Text(OJDLocalized.string("common.failed", fallback: "Failed")).foregroundColor(
-          Color(NSColor.systemRed)
+          Color(SemanticState.failure.presentation.tone.color)
         )
       default: EmptyView()
       }
@@ -388,12 +390,15 @@
       }
     }
 
-    private var statusColor: Color {
+    private var statusSemanticState: SemanticState {
       switch model.sessionState {
-      case .live: return Color(NSColor.systemGreen)
-      case .starting, .stale: return Color(NSColor.systemOrange)
-      case .idle: return Color(NSColor.secondaryLabelColor)
-      case .disconnected, .permissionRequired, .unavailable, .error: return Color(NSColor.systemRed)
+      case .live: return .active
+      case .starting: return .loading
+      case .stale, .permissionRequired: return .attention
+      case .idle: return .inactive
+      case .disconnected: return .disconnected
+      case .unavailable: return .unknown
+      case .error: return .failure
       }
     }
 

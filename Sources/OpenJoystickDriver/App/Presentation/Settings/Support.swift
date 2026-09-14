@@ -344,9 +344,10 @@
     var body: some View {
       GroupBox {
         HStack(alignment: .top, spacing: 10) {
-          OJDSystemSymbol(name: "exclamationmark.triangle", fallback: "!").foregroundColor(
-            Color(NSColor.systemRed)
-          )
+          OJDSystemSymbol(
+            name: SemanticState.failure.presentation.symbolName,
+            fallback: OJDLocalized.string("common.needsAttention", fallback: "Needs attention")
+          ).foregroundColor(Color(SemanticState.failure.presentation.tone.color))
           VStack(alignment: .leading, spacing: 6) {
             Text(title).font(.headline)
             Text(message).foregroundColor(Color(NSColor.secondaryLabelColor)).fixedSize(

@@ -121,9 +121,16 @@
               Text(selection.title).tag(selection)
             }
           }.pickerStyle(.segmented).frame(width: 220)
-          Button(OJDLocalized.string("common.refresh", fallback: "Refresh")) { model.refresh() }
-          Button(OJDLocalized.string("console.copyAll", fallback: "Copy All")) { model.copyAll() }
-            .disabled(model.displayedLines.isEmpty)
+          OJDCompactSymbolButton(
+            symbolName: "arrow.clockwise",
+            label: OJDLocalized.string("common.refresh", fallback: "Refresh"),
+            action: model.refresh
+          )
+          OJDCompactSymbolButton(
+            symbolName: "doc.on.doc",
+            label: OJDLocalized.string("console.copyAll", fallback: "Copy All"),
+            action: model.copyAll
+          ).disabled(model.displayedLines.isEmpty)
         }
 
         if let errorMessage = model.errorMessage {

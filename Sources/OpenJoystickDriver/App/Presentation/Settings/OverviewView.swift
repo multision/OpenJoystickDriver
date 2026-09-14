@@ -308,7 +308,7 @@
       GroupBox {
         VStack(alignment: .leading, spacing: 10) {
           HStack(alignment: .firstTextBaseline) {
-            StatusBadge(status: statusTitle, symbol: statusSymbol)
+            StatusBadge(status: statusTitle, semanticState: statusSemanticState)
             Spacer()
             Button(OJDLocalized.string("common.refresh", fallback: "Refresh")) {
               Task { @MainActor in await viewModel.refresh() }
@@ -333,12 +333,11 @@
       }
     }
 
-    private var statusSymbol: String {
+    private var statusSemanticState: SemanticState {
       switch viewModel.statusState {
-      case .available(let status):
-        return status.readiness == .ready ? "checkmark.circle" : "exclamationmark.circle"
-      case .loading: return "clock"
-      case .unavailable, .error: return "exclamationmark.triangle"
+      case .available(let status): return status.readiness == .ready ? .healthy : .attention
+      case .loading: return .loading
+      case .unavailable, .error: return .failure
       }
     }
 
@@ -357,34 +356,20 @@
 
   private struct OverviewAccessStatus {
     let value: String
-    let tone: OverviewAccessTone
+    let tone: SemanticTone
     let isActionable: Bool
-  }
-
-  private enum OverviewAccessTone {
-    case positive
-    case caution
-    case neutral
-
-    var color: Color {
-      switch self {
-      case .positive: return Color(NSColor.systemGreen)
-      case .caution: return Color(NSColor.systemOrange)
-      case .neutral: return Color(NSColor.secondaryLabelColor)
-      }
-    }
   }
 
   private struct AccessRequirementCard: View {
     let title: String
     let value: String
     let symbol: String
-    let tone: OverviewAccessTone
+    let tone: SemanticTone
     let action: (() -> Void)?
 
     var body: some View {
       VStack(alignment: .leading, spacing: 6) {
-        OJDSystemSymbol(name: symbol, fallback: title).foregroundColor(tone.color).frame(
+        OJDSystemSymbol(name: symbol, fallback: title).foregroundColor(Color(tone.color)).frame(
           width: 20,
           height: 20
         ).ojdAccessibilityHidden(true)
@@ -406,16 +391,16 @@
 
   struct StatusBadge: View {
     let status: String
-    let symbol: String
+    let semanticState: SemanticState
 
     var body: some View {
       HStack(spacing: 7) {
         OJDSystemSymbol(
-          name: symbol,
+          name: semanticState.presentation.symbolName,
           fallback: OJDLocalized.string("common.status", fallback: "Status")
         ).ojdAccessibilityHidden(true)
         Text(status).font(.headline.weight(.semibold))
-      }.foregroundColor(Color(NSColor.labelColor)).ojdAccessibilityLabel(
+      }.foregroundColor(Color(semanticState.presentation.tone.color)).ojdAccessibilityLabel(
         OJDLocalized.string("common.status", fallback: "Status")
       ).ojdAccessibilityValue(status)
     }

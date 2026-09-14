@@ -26,7 +26,7 @@
 
     var body: some View {
       GeometryReader { proxy in
-        if proxy.size.width < 620 {
+        if WorkspaceListDetailPolicy.layout(for: proxy.size.width) == .stacked {
           VStack(spacing: 0) {
             controllerList.frame(height: min(200, proxy.size.height * 0.34))
             Divider()
@@ -34,10 +34,8 @@
           }
         } else {
           HStack(spacing: 0) {
-            controllerList.frame(width: controllerListWidth(for: proxy.size.width)).frame(
-              maxHeight: .infinity,
-              alignment: .topLeading
-            )
+            controllerList.frame(width: WorkspaceListDetailPolicy.listWidth(for: proxy.size.width))
+              .frame(maxHeight: .infinity, alignment: .topLeading)
             Divider()
             controllerDetail.frame(maxWidth: .infinity, maxHeight: .infinity)
           }
@@ -53,10 +51,6 @@
 
     private var selectedDevice: ApplicationServiceDeviceDescription? { screen.selectedDevice }
 
-    private func controllerListWidth(for availableWidth: CGFloat) -> CGFloat {
-      min(220, max(168, availableWidth * 0.25))
-    }
-
     private func reportedValue(_ value: String) -> String {
       let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
       return trimmed.isEmpty
@@ -68,13 +62,13 @@
         HStack {
           Text(OJDLocalized.string("common.controllers", fallback: "Controllers")).font(.headline)
           Spacer()
-          Button(action: refresh) {
-            OJDSystemSymbol(
-              name: "arrow.clockwise",
-              fallback: OJDLocalized.string("common.refresh", fallback: "Refresh")
-            )
-          }.buttonStyle(.plain).ojdAccessibilityLabel(
-            OJDLocalized.string("controllers.refreshAccessibility", fallback: "Refresh controllers")
+          OJDCompactSymbolButton(
+            symbolName: "arrow.clockwise",
+            label: OJDLocalized.string(
+              "controllers.refreshAccessibility",
+              fallback: "Refresh controllers"
+            ),
+            action: refresh
           ).disabled(isRefreshing)
         }.padding(.horizontal, 14).padding(.top, 18)
 
@@ -111,45 +105,45 @@
     }
 
     private var controllerListRows: some View {
-      ScrollView {
-        VStack(alignment: .leading, spacing: 3) {
-          ForEach(devices, id: \.runtimeIdentifier) { device in
-            let published = PublishedVirtualIdentity.profile(
-              for: device,
-              requested: viewModel.requestedCompatibilityIdentity
-            )
-            Button(
-              action: { screen.select(device) },
-              label: {
-                HStack(spacing: 8) {
-                  OJDListGlyphSlot {
-                    OJDSystemSymbol(
-                      name: published.presentation.controllerSymbolName,
-                      fallback: "◉",
-                      fallbackSymbolName: published.presentation.controllerSymbolFallback
-                    ).foregroundColor(published.presentation.glyphFamily.controllerSymbolColor)
-                  }
-                  VStack(alignment: .leading, spacing: 2) {
-                    Text(device.name).lineLimit(1)
-                    Text(published.publishedUSBIdentityLabel).font(.caption).foregroundColor(
-                      Color(NSColor.secondaryLabelColor)
-                    ).lineLimit(1)
-                  }
-                  Spacer(minLength: 0)
-                }.padding(.horizontal, 10).padding(.vertical, 8).contentShape(Rectangle())
-              }
-            ).buttonStyle(
-              ProfileListButtonStyle(
-                selected: selectedDevice?.runtimeIdentifier == device.runtimeIdentifier
-              )
-            ).ojdAccessibilityLabel(device.name).ojdAccessibilityValue(
+      List(selection: selectedDeviceIdentifier) {
+        ForEach(devices, id: \.runtimeIdentifier) { device in
+          let published = PublishedVirtualIdentity.profile(
+            for: device,
+            requested: viewModel.requestedCompatibilityIdentity
+          )
+          HStack(spacing: 8) {
+            OJDListGlyphSlot {
+              OJDSystemSymbol(
+                name: published.presentation.controllerSymbolName,
+                fallback: OJDLocalized.string("common.controller", fallback: "Controller"),
+                fallbackSymbolName: published.presentation.controllerSymbolFallback
+              ).foregroundColor(published.presentation.glyphFamily.controllerSymbolColor)
+            }
+            VStack(alignment: .leading, spacing: 2) {
+              Text(device.name).lineLimit(1)
+              Text(published.publishedUSBIdentityLabel).font(.caption).foregroundColor(
+                Color(NSColor.secondaryLabelColor)
+              ).lineLimit(1)
+            }
+            Spacer(minLength: 0)
+          }.padding(.vertical, 4).tag(device.runtimeIdentifier).ojdAccessibilityLabel(device.name)
+            .ojdAccessibilityValue(
               "\(published.publishedUSBIdentityLabel). \(device.protocolVariant.displayLabel)"
-            ).ojdAccessibilitySelection(
-              selectedDevice?.runtimeIdentifier == device.runtimeIdentifier
             )
-          }
-        }.padding(.horizontal, 8)
-      }
+        }
+      }.listStyle(SidebarListStyle())
+    }
+
+    private var selectedDeviceIdentifier: Binding<String?> {
+      Binding(
+        get: { selectedDevice?.runtimeIdentifier },
+        set: { identifier in
+          guard let identifier,
+            let device = devices.first(where: { $0.runtimeIdentifier == identifier })
+          else { return }
+          screen.select(device)
+        }
+      )
     }
 
     @ViewBuilder

@@ -77,7 +77,7 @@
           HStack {
             Text(title).font(.headline)
             Spacer()
-            Button(addTitle, action: add)
+            OJDCompactSymbolButton(symbolName: "plus", label: addTitle, action: add)
           }
           if isEmpty {
             Text(emptyMessage).foregroundColor(Color(NSColor.secondaryLabelColor))
@@ -91,6 +91,7 @@
 
   struct ProfileLayersSection: View {
     let profile: RemappingProfile
+    let capabilities: ControllerProfileCapabilities
     let openSheet: (ProfileEditorSheet) -> Void
     let removeLayer: (UUID) -> Void
     let removeBinding: (UUID, UUID) -> Void
@@ -100,9 +101,10 @@
         HStack {
           Text(OJDLocalized.string("profiles.layers", fallback: "Layers")).font(.headline)
           Spacer()
-          Button(OJDLocalized.string("profiles.addLayer", fallback: "Add layer")) {
-            openSheet(.layer)
-          }
+          OJDCompactSymbolButton(
+            symbolName: "plus",
+            label: OJDLocalized.string("profiles.addLayer", fallback: "Add layer")
+          ) { openSheet(.layer) }
         }
         if profile.layers.isEmpty {
           Text(OJDLocalized.string("profiles.noLayers", fallback: "No layers configured."))
@@ -124,12 +126,16 @@
               )
             }
             Spacer()
-            Button(OJDLocalized.string("common.addAssignment", fallback: "Add assignment")) {
-              openSheet(.layerBinding(layer))
-            }
-            Button(OJDLocalized.string("profiles.motion.title", fallback: "Motion tuning")) {
-              openSheet(.layerMotion(layer))
-            }
+            OJDCompactSymbolButton(
+              symbolName: "plus",
+              label: OJDLocalized.string("common.addAssignment", fallback: "Add assignment")
+            ) { openSheet(.layerBinding(layer)) }
+            OJDCompactSymbolButton(
+              symbolName: "pencil",
+              label: OJDLocalized.string("profiles.motion.title", fallback: "Motion tuning")
+            ) { openSheet(.layerMotion(layer)) }.disabled(
+              !capabilities.physicalInput.rawMotion && layer.motionTuning == nil
+            )
             removeButton { removeLayer(layer.id) }
           }
           ForEach(layer.bindings) { binding in
@@ -164,6 +170,7 @@
 
   struct ProfileControllerSection: View {
     let profile: RemappingProfile
+    let capabilities: ControllerProfileCapabilities
     let openSheet: (ProfileEditorSheet) -> Void
     let updateOutputPolicy: (RemappingOutputPolicy) -> Void
     let updatePhysicalColor: (RemappingPhysicalColor?) -> Void
@@ -176,36 +183,42 @@
         configurationGroup(
           title: OJDLocalized.string("profiles.motion.title", fallback: "Motion tuning"),
           summary: OJDLocalized.string("profiles.motion.space", fallback: "Coordinate space")
-            + " · " + OJDLocalized.string("profiles.gyro.output", fallback: "Gyro output")
+            + " · " + OJDLocalized.string("profiles.gyro.output", fallback: "Gyro output"),
+          supported: capabilities.physicalInput.rawMotion
         ) { openSheet(.motion) }
         configurationGroup(
           title: OJDLocalized.string("profiles.stick.title", fallback: "Stick modes"),
-          summary: assignmentCountLabel(profile.stickMappings.count)
+          summary: assignmentCountLabel(profile.stickMappings.count),
+          supported: capabilities.supportsStickAxes,
+          enabled: capabilities.supportsStickAxes || !profile.stickMappings.isEmpty
         ) { openSheet(.sticks) }
         configurationGroup(
           title: OJDLocalized.string("profiles.trigger.title", fallback: "Trigger stages"),
-          summary: assignmentCountLabel(profile.triggerMappings.count)
+          summary: assignmentCountLabel(profile.triggerMappings.count),
+          supported: capabilities.supportsAnalogTriggers,
+          enabled: capabilities.supportsAnalogTriggers || !profile.triggerMappings.isEmpty
         ) { openSheet(.triggers) }
         configurationGroup(
           title: OJDLocalized.string("profiles.touch.title", fallback: "Touch mappings"),
-          summary: assignmentCountLabel(profile.touchMappings.count)
+          summary: assignmentCountLabel(profile.touchMappings.count),
+          supported: capabilities.physicalInput.touchContactsPerFrame > 0
+            && !capabilities.physicalInput.touchSurfaces.isEmpty,
+          enabled: capabilities.physicalInput.touchContactsPerFrame > 0
+            || !profile.touchMappings.isEmpty
         ) { openSheet(.touch) }
-        ProfileLightingEditor(color: profile.physicalColor, onChange: updatePhysicalColor)
+        ProfileLightingEditor(color: profile.physicalColor, onChange: updatePhysicalColor).disabled(
+          !capabilities.physicalOutput.lightingFeatures.contains(.programmableColor)
+            && profile.physicalColor == nil
+        )
       }
     }
 
     private var detailsGroup: some View {
       GroupBox {
         VStack(alignment: .leading, spacing: 8) {
-          HStack {
-            Text(OJDLocalized.string("profiles.details", fallback: "Profile details")).font(
-              .subheadline.weight(.semibold)
-            )
-            Spacer()
-            Button(OJDLocalized.string("profiles.details", fallback: "Details")) {
-              openSheet(.metadata)
-            }
-          }
+          Text(OJDLocalized.string("profiles.details", fallback: "Profile details")).font(
+            .subheadline.weight(.semibold)
+          )
           KeyValueRow(
             label: OJDLocalized.string("common.controller", fallback: "Controller"),
             value: String(format: "%04X:%04X", profile.device.vendorID, profile.device.productID)
@@ -232,17 +245,30 @@
     private func configurationGroup(
       title: String,
       summary: String,
+      supported: Bool,
+      enabled: Bool? = nil,
       action: @escaping () -> Void
     ) -> some View {
       GroupBox {
         HStack(alignment: .firstTextBaseline, spacing: 12) {
           VStack(alignment: .leading, spacing: 3) {
             Text(title).font(.subheadline.weight(.semibold))
-            Text(summary).font(.caption).foregroundColor(Color(NSColor.secondaryLabelColor))
-              .fixedSize(horizontal: false, vertical: true)
+            Text(
+              supported
+                ? summary
+                : OJDLocalized.string(
+                  "profiles.notSupportedByController",
+                  fallback: "Not supported by this controller or protocol."
+                )
+            ).font(.caption).foregroundColor(
+              supported ? Color(NSColor.secondaryLabelColor) : Color(NSColor.systemOrange)
+            ).fixedSize(horizontal: false, vertical: true)
           }
           Spacer(minLength: 8)
-          Button(OJDLocalized.string("common.adjust", fallback: "Adjust..."), action: action)
+          OJDCompactSymbolButton(
+            symbolName: "pencil",
+            label: OJDLocalized.string("common.adjust", fallback: "Adjust")
+          ) { action() }.disabled(!(enabled ?? supported))
         }.padding(4)
       }
     }

@@ -9,6 +9,7 @@
 
   struct ProfileEditorView: View {
     let profile: RemappingProfile
+    let capabilities: ControllerProfileCapabilities
     @ObservedObject
     var editor: ProfileEditorViewModel
     @ObservedObject
@@ -22,6 +23,8 @@
     let onEditingStateChanged: (Bool) -> Void
     let onMutationStarted: (RuntimeMutationRequest) -> Bool
     let onMutationResult: (RuntimeMutationResult) -> Void
+    @State
+    var confirmation: ProfileEditorConfirmation?
 
     var draft: RuntimeProfileDraft {
       get { editor.draft }
@@ -54,6 +57,7 @@
 
     init(
       profile: RemappingProfile,
+      capabilities: ControllerProfileCapabilities,
       editor: ProfileEditorViewModel,
       viewModel: RuntimeViewModel,
       isActive: Bool,
@@ -66,6 +70,7 @@
       onMutationResult: @escaping (RuntimeMutationResult) -> Void
     ) {
       self.profile = profile
+      self.capabilities = capabilities
       self.editor = editor
       self.viewModel = viewModel
       self.isActive = isActive
@@ -108,8 +113,8 @@
               reportEditingState()
             }
           case .touch:
-            ProfileTouchSheet(mappings: draft.profile.touchMappings) { mappings in
-              applyDraftChange { try draft.settingTouchMappings(mappings) }
+            ProfileTouchSheet(mappings: draft.profile.touchMappings, capabilities: capabilities) {
+              mappings in applyDraftChange { try draft.settingTouchMappings(mappings) }
             }
           case .motion:
             ProfileMotionSheet(tuning: draft.profile.motionTuning, output: draft.profile.gyroOutput)
@@ -129,15 +134,16 @@
               }
             )
           case .capture:
-            CaptureAssignmentSheet(viewModel: viewModel) { source, destination in
-              addBinding(source: source, destination: destination)
+            CaptureAssignmentSheet(viewModel: viewModel, capabilities: capabilities) {
+              source,
+              destination in addBinding(source: source, destination: destination)
             }
           case .adjustment(let binding):
             AxisAdjustmentSheet(binding: binding) { tuning in
               updateAxisTuning(tuning, for: binding.id)
             }
           case .behavior(let binding):
-            BindingBehaviorSheet(binding: binding) {
+            BindingBehaviorSheet(binding: binding, capabilities: capabilities) {
               behavior,
               pulseDurationMs,
               turbo,
@@ -156,19 +162,29 @@
               }
             }
           case .chord:
-            ProfileCombinationSheet(kind: .chord) { sources, mode, windowMs, destination in
+            ProfileCombinationSheet(kind: .chord, capabilities: capabilities) {
+              sources,
+              mode,
+              windowMs,
+              destination in
               addChord(sources: sources, mode: mode, windowMs: windowMs, destination: destination)
             }
           case .sequence:
-            ProfileCombinationSheet(kind: .sequence) { sources, _, windowMs, destination in
+            ProfileCombinationSheet(kind: .sequence, capabilities: capabilities) {
+              sources,
+              _,
+              windowMs,
+              destination in
               addSequence(sources: sources, windowMs: windowMs, destination: destination)
             }
           case .layer:
-            ProfileLayerSheet { name, activator, mode in
+            ProfileLayerSheet(capabilities: capabilities) { name, activator, mode in
               addLayer(name: name, activator: activator, mode: mode)
             }
           case .layerBinding(let layer):
-            ProfileLayerBindingSheet(layer: layer) { source, destination in
+            ProfileLayerBindingSheet(layer: layer, capabilities: capabilities) {
+              source,
+              destination in
               setLayerBinding(layerID: layer.id, source: source, destination: destination)
             }
           case .layerAdjustment(let layerID, let binding):
@@ -176,7 +192,7 @@
               updateLayerAxisTuning(tuning, layerID: layerID, bindingID: binding.id)
             }
           case .layerBehavior(let layerID, let binding):
-            BindingBehaviorSheet(binding: binding) {
+            BindingBehaviorSheet(binding: binding, capabilities: capabilities) {
               behavior,
               pulseDurationMs,
               turbo,
@@ -197,6 +213,44 @@
             }
           }
         }.disabled(isEditingDisabled)
+      }.alert(item: $confirmation) { confirmation in
+        switch confirmation {
+        case .activateEmpty:
+          Alert(
+            title: Text(
+              OJDLocalized.string(
+                "profiles.emptyActivationTitle",
+                fallback: "Activate profile with no controller input?"
+              )
+            ),
+            message: Text(
+              OJDLocalized.string(
+                "profiles.emptyActivationMessage",
+                fallback: "This profile suppresses all controller input."
+              )
+            ),
+            primaryButton: .destructive(
+              Text(OJDLocalized.string("common.setActive", fallback: "Set active"))
+            ) { activateProfile() },
+            secondaryButton: .cancel { self.confirmation = nil }
+          )
+        case .clearInputs:
+          Alert(
+            title: Text(
+              OJDLocalized.string("profiles.clearInputsTitle", fallback: "Clear all inputs?")
+            ),
+            message: Text(
+              OJDLocalized.string(
+                "profiles.clearInputsMessage",
+                fallback: "This removes all assignments and input processing from this profile."
+              )
+            ),
+            primaryButton: .destructive(
+              Text(OJDLocalized.string("profiles.clearInputs", fallback: "Clear all inputs"))
+            ) { clearInputs() },
+            secondaryButton: .cancel { self.confirmation = nil }
+          )
+        }
       }.onReceive(viewModel.$mutationState) { mutation in handleMutation(mutation) }.onAppear {
         reportEditingState()
       }
@@ -205,15 +259,16 @@
     func editorHeader(width: CGFloat) -> some View {
       VStack(alignment: .leading, spacing: 10) {
         HStack(alignment: .center, spacing: 10) {
-          TextField(
-            OJDLocalized.string("common.profileName", fallback: "Profile name"),
-            text: nameBinding
-          ).font(.headline.weight(.semibold)).textFieldStyle(PlainTextFieldStyle()).frame(
+          Text(draft.profile.name).font(.headline.weight(.semibold)).frame(
             maxWidth: .infinity,
             alignment: .leading
           ).ojdAccessibilityLabel(
             OJDLocalized.string("common.profileName", fallback: "Profile name")
           )
+          OJDCompactSymbolButton(
+            symbolName: "pencil",
+            label: OJDLocalized.string("profiles.details", fallback: "Profile details")
+          ) { activeSheet = .metadata }
           primaryActivationAction
           profileActionMenu
         }
@@ -241,6 +296,19 @@
             keepEditing: { showingConflict = false }
           )
         }
+        if draft.profile.suppressesAllControllerInput {
+          HStack(spacing: 8) {
+            Text(
+              OJDLocalized.string(
+                "profiles.emptyInputWarning",
+                fallback: "This profile suppresses all controller input."
+              )
+            ).foregroundColor(Color(NSColor.systemOrange))
+            Button(
+              OJDLocalized.string("profiles.restoreDefaultInput", fallback: "Restore default input")
+            ) { restoreDefaultInput() }
+          }.font(.caption)
+        }
       }.padding(.horizontal, 28).padding(.vertical, 18)
     }
 
@@ -253,7 +321,6 @@
         Color(NSColor.secondaryLabelColor)
       )
       Text(activationLabel).foregroundColor(Color(NSColor.secondaryLabelColor))
-      saveStatusView
     }
 
     @ViewBuilder
@@ -264,7 +331,7 @@
             isActive ? "common.deactivate" : "common.setActive",
             fallback: isActive ? "Deactivate" : "Set active"
           )
-        ) { isActive ? deactivateProfile() : activateProfile() }.disabled(isMutationActive)
+        ) { isActive ? deactivateProfile() : requestActivation() }.disabled(isMutationActive)
       }
     }
 
@@ -316,7 +383,7 @@
       ScrollView {
         sectionContent(assignmentLayout: ProfilePresentationPolicy.assignmentRowLayout(for: width))
           .padding(28).frame(maxWidth: .infinity, alignment: .leading)
-      }
+      }.id(selectedSection)
     }
 
     @ViewBuilder
@@ -333,6 +400,7 @@
       case .layers:
         ProfileLayersSection(
           profile: draft.profile,
+          capabilities: capabilities,
           openSheet: { activeSheet = $0 },
           removeLayer: removeLayer,
           removeBinding: removeLayerBinding
@@ -340,6 +408,7 @@
       case .controller:
         ProfileControllerSection(
           profile: draft.profile,
+          capabilities: capabilities,
           openSheet: { activeSheet = $0 },
           updateOutputPolicy: { policy in applyDraftChange { try draft.settingOutputPolicy(policy) }
           },
@@ -354,9 +423,13 @@
         HStack(alignment: .firstTextBaseline) {
           Text(OJDLocalized.string("common.assignments", fallback: "Assignments")).font(.headline)
           Spacer()
-          Button(OJDLocalized.string("common.addAssignment", fallback: "Add assignment")) {
-            activeSheet = .capture
-          }
+          OJDCompactSymbolButton(
+            symbolName: "plus",
+            label: OJDLocalized.string("common.addAssignment", fallback: "Add assignment")
+          ) { activeSheet = .capture }
+          Button(OJDLocalized.string("profiles.clearInputs", fallback: "Clear all inputs")) {
+            confirmation = .clearInputs
+          }.disabled(isEditingDisabled)
         }
         if draft.profile.bindings.isEmpty {
           EmptyStateView(
@@ -372,6 +445,7 @@
             AssignmentGroupView(
               title: group.title,
               bindings: group.bindings,
+              capabilities: capabilities,
               draft: $editor.draft,
               isEditingDisabled: isEditingDisabled,
               onRemove: removeBinding,
@@ -457,6 +531,18 @@
       }
     }
 
+  }
+
+  enum ProfileEditorConfirmation: Identifiable {
+    case activateEmpty
+    case clearInputs
+
+    var id: String {
+      switch self {
+      case .activateEmpty: "activate-empty"
+      case .clearInputs: "clear-inputs"
+      }
+    }
   }
 
 #endif

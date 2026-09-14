@@ -28,11 +28,23 @@ enum ProfileScopeKind: String, CaseIterable, Identifiable {
 struct SourceOption: Hashable {
   let source: RemappingSource
   let title: String
+  let isSupported: Bool
 
-  static func options(including current: RemappingSource? = nil) -> [Self] {
-    var options = all
+  static func options(
+    including current: RemappingSource? = nil,
+    capabilities: ControllerProfileCapabilities? = nil
+  ) -> [Self] {
+    var options = all.filter {
+      ProfileCapabilityPolicy.supports($0.source, capabilities: capabilities)
+    }
     if let current, !options.contains(where: { $0.source == current }) {
-      options.append(Self(source: current, title: RuntimePresentation.sourceLabel(current)))
+      options.append(
+        Self(
+          source: current,
+          title: RuntimePresentation.sourceLabel(current),
+          isSupported: ProfileCapabilityPolicy.supports(current, capabilities: capabilities)
+        )
+      )
     }
     return options
   }
@@ -71,7 +83,7 @@ struct SourceOption: Hashable {
       return contact + swipes + grid
     }
     return (buttons + dpad + axes + triggerStages + motionLean + touches).map {
-      .init(source: $0, title: RuntimePresentation.sourceLabel($0))
+      .init(source: $0, title: RuntimePresentation.sourceLabel($0), isSupported: true)
     }
   }()
 }

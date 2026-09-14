@@ -49,6 +49,7 @@
     private let notificationMonitor = RuntimeNotificationMonitor()
     private let notificationPresenter = RuntimeNotificationCenterDelegate()
     private let termination = MenuBarTermination()
+    private let primaryWindowVisibility = PrimaryWindowVisibilityController()
     private static weak var activeCoordinator: MenuBarCoordinator?
 
     init(
@@ -136,9 +137,6 @@
     }
 
     @objc
-    func refreshFromStatus(_ sender: Any?) { refreshLiveStatus() }
-
-    @objc
     func quit(_ sender: Any?) { NSApplication.shared.terminate(sender) }
 
     private func restartApplication() {
@@ -162,7 +160,14 @@
         settingsWindowController = SettingsWindowController(
           viewModel: viewModel,
           restartApplication: { [weak self] in self?.restartApplication() },
-          openInputTest: { [weak self] device in self?.openInputTest(for: device) }
+          openInputTest: { [weak self] device in self?.openInputTest(for: device) },
+          visibilityChanged: { [weak self] isOpen in
+            if isOpen {
+              self?.primaryWindowVisibility.opened(.workbench)
+            } else {
+              self?.primaryWindowVisibility.closed(.workbench)
+            }
+          }
         )
       }
       settingsWindowController?.show(pane: pane)
@@ -173,7 +178,13 @@
         inputTestWindowController = InputTestWindowController(
           gateway: gateway,
           runtimeViewModel: viewModel
-        )
+        ) { [weak self] isOpen in
+          if isOpen {
+            self?.primaryWindowVisibility.opened(.inputTest)
+          } else {
+            self?.primaryWindowVisibility.closed(.inputTest)
+          }
+        }
       }
       inputTestWindowController?.show(device: device)
     }
@@ -242,13 +253,12 @@
       guard let menu = statusMenu else { return }
       menu.removeAllItems()
 
-      let show = NSMenuItem(
-        title: OJDLocalized.string("menu.show", fallback: "Show OpenJoystickDriver"),
-        action: #selector(showApplication(_:)),
-        keyEquivalent: ""
+      let summary = NSMenuItem(title: menuBarViewModel.summaryTitle, action: nil, keyEquivalent: "")
+      summary.isEnabled = false
+      summary.image = menuImage(
+        symbol: menuBarViewModel.summarySemanticState.presentation.symbolName
       )
-      show.target = self
-      menu.addItem(show)
+      menu.addItem(summary)
       menu.addItem(.separator())
 
       if menuBarViewModel.needsPermissionAttention {
@@ -262,15 +272,21 @@
         menu.addItem(request)
       }
 
-      let refresh = NSMenuItem(
-        title: OJDLocalized.string("common.refresh", fallback: "Refresh"),
-        action: #selector(refreshFromStatus(_:)),
-        keyEquivalent: "r"
+      let controllers = NSMenuItem(
+        title: OJDLocalized.string("common.controllers", fallback: "Controllers"),
+        action: nil,
+        keyEquivalent: ""
       )
-      refresh.target = self
-      refresh.keyEquivalentModifierMask = [.command]
-      refresh.image = menuImage(symbol: "arrow.clockwise")
-      menu.addItem(refresh)
+      controllers.submenu = makeControllersMenu()
+      menu.addItem(controllers)
+
+      let show = NSMenuItem(
+        title: OJDLocalized.string("menu.show", fallback: "Show OpenJoystickDriver"),
+        action: #selector(showApplication(_:)),
+        keyEquivalent: ""
+      )
+      show.target = self
+      menu.addItem(show)
 
       let settings = NSMenuItem(
         title: OJDLocalized.string("menu.settings", fallback: "Settings..."),
@@ -283,14 +299,6 @@
       settings.image = menuImage(symbol: "gearshape")
       menu.addItem(settings)
       menu.addItem(.separator())
-
-      let controllers = NSMenuItem(
-        title: OJDLocalized.string("common.controllers", fallback: "Controllers"),
-        action: nil,
-        keyEquivalent: ""
-      )
-      controllers.submenu = makeControllersMenu()
-      menu.addItem(controllers)
 
       let help = NSMenuItem(
         title: OJDLocalized.string("menu.help", fallback: "Help"),
@@ -367,21 +375,6 @@
         symbol: "terminal",
         to: menu
       )
-      let report = NSMenuItem(
-        title: OJDLocalized.string("debug.saveReport", fallback: "Save Debug Report..."),
-        action: #selector(saveSupportReport(_:)),
-        keyEquivalent: ""
-      )
-      report.target = self
-      menu.addItem(report)
-      let logs = NSMenuItem(
-        title: OJDLocalized.string("debug.saveLogs", fallback: "Save Logs..."),
-        action: #selector(saveSupportLogs(_:)),
-        keyEquivalent: ""
-      )
-      logs.target = self
-      menu.addItem(logs)
-      menu.addItem(.separator())
       let project = NSMenuItem(
         title: OJDLocalized.string("menu.projectPage", fallback: "GitHub"),
         action: #selector(openProjectPage(_:)),

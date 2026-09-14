@@ -93,11 +93,14 @@
 
     var accessibilityValue: String { label }
 
-    var color: Color {
+    var color: Color { Color(semanticState.presentation.tone.color) }
+
+    var semanticState: SemanticState {
       switch self {
-      case .unsaved, .saving: return Color(NSColor.secondaryLabelColor)
-      case .saved: return Color(NSColor.systemGreen)
-      case .error: return Color(NSColor.systemRed)
+      case .unsaved: return .dirty
+      case .saving: return .loading
+      case .saved: return .saved
+      case .error: return .failure
       }
     }
   }

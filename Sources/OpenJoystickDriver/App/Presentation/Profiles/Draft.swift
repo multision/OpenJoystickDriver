@@ -4,17 +4,26 @@ import OpenJoystickDriverKit
 struct DestinationOption: Hashable {
   let destination: RemappingDestination
   let title: String
+  let isSupported: Bool
 
   static func options(
     for source: RemappingSource,
-    including current: RemappingDestination? = nil
+    including current: RemappingDestination? = nil,
+    capabilities: ControllerProfileCapabilities? = nil
   ) -> [Self] {
-    var options = all.filter { isCompatible($0.destination, with: source) }
+    var options = all.filter {
+      isCompatible($0.destination, with: source)
+        && ProfileCapabilityPolicy.supports($0.destination, capabilities: capabilities)
+    }
     if let current, isCompatible(current, with: source),
       !options.contains(where: { $0.destination == current })
     {
       options.append(
-        Self(destination: current, title: RuntimePresentation.destinationLabel(current))
+        Self(
+          destination: current,
+          title: RuntimePresentation.destinationLabel(current),
+          isSupported: ProfileCapabilityPolicy.supports(current, capabilities: capabilities)
+        )
       )
     }
     return options
@@ -43,20 +52,29 @@ struct DestinationOption: Hashable {
       }
     }
     let keyboard = (plainKeyboard + modifiedKeyboard).map { destination in
-      Self(destination: destination, title: RuntimePresentation.destinationLabel(destination))
+      Self(
+        destination: destination,
+        title: RuntimePresentation.destinationLabel(destination),
+        isSupported: true
+      )
     }
     let mouse = RemappingMouseButton.allCases.map { button in
       let destination = RemappingDestination.mouseButton(button)
       return Self(
         destination: destination,
-        title: RuntimePresentation.destinationLabel(destination)
+        title: RuntimePresentation.destinationLabel(destination),
+        isSupported: true
       )
     }
     let pointerAxes: [RemappingPointerAxis] = [.x, .y]
     let pointer = pointerAxes.flatMap { axis in
       [RemappingDestination.mouseMovement(axis), RemappingDestination.scroll(axis)]
     }.map { destination in
-      Self(destination: destination, title: RuntimePresentation.destinationLabel(destination))
+      Self(
+        destination: destination,
+        title: RuntimePresentation.destinationLabel(destination),
+        isSupported: true
+      )
     }
     let gamepadDestinations =
       RemappingButton.allCases.filter(\.supportsVirtualOutput).map(
@@ -64,7 +82,11 @@ struct DestinationOption: Hashable {
       ) + RemappingDpadDirection.allCases.map(RemappingDestination.gamepadDpad)
       + RemappingAxis.allCases.map(RemappingDestination.gamepadAxis)
     let gamepad = gamepadDestinations.map { destination in
-      Self(destination: destination, title: RuntimePresentation.destinationLabel(destination))
+      Self(
+        destination: destination,
+        title: RuntimePresentation.destinationLabel(destination),
+        isSupported: true
+      )
     }
     return keyboard + mouse + pointer + gamepad + physical
   }()

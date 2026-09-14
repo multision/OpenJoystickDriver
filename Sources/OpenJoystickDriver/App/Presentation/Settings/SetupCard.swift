@@ -8,12 +8,14 @@
     var viewModel: RuntimeViewModel
     @ObservedObject
     var navigation: SettingsNavigationModel
+    @State
+    private var confirmsUninstall = false
 
     var body: some View {
       GroupBox {
         VStack(alignment: .leading, spacing: 10) {
           HStack {
-            StatusBadge(status: statusLabel, symbol: symbol)
+            StatusBadge(status: statusLabel, semanticState: semanticState)
             Spacer()
             Button(OJDLocalized.string("common.refresh", fallback: "Refresh")) {
               Task { @MainActor in await viewModel.refreshSystemExtensionSetup() }
@@ -42,13 +44,36 @@
             }
             Button(OJDLocalized.string("setup.copySupportReport", fallback: "Copy Support Report"))
             { Task { @MainActor in _ = await viewModel.copySupportReport() } }
+            if viewModel.systemExtensionSetupState == .active {
+              OJDDestructiveButton(
+                action: { confirmsUninstall = true },
+                label: {
+                  Text(OJDLocalized.string("cli.login.uninstall_action", fallback: "Uninstall"))
+                }
+              )
+            }
           }
         }.padding(4)
       } label: {
         Text(OJDLocalized.string("setup.driverTitle", fallback: "Xbox USB Driver")).font(.headline)
       }.ojdAccessibilityLabel(
         OJDLocalized.string("setup.driverAccessibility", fallback: "Xbox USB Driver setup")
-      ).ojdAccessibilityValue(detail)
+      ).ojdAccessibilityValue(detail).alert(isPresented: $confirmsUninstall) {
+        Alert(
+          title: Text(OJDLocalized.string("cli.login.uninstall_action", fallback: "Uninstall")),
+          message: Text(
+            OJDLocalized.string(
+              "setup.repairDetail",
+              fallback:
+                "OpenJoystickDriver will repair the Xbox USB driver without developer tools."
+            )
+          ),
+          primaryButton: .destructive(
+            Text(OJDLocalized.string("cli.login.uninstall_action", fallback: "Uninstall"))
+          ) { Task { @MainActor in await viewModel.uninstallSystemExtension() } },
+          secondaryButton: .cancel()
+        )
+      }
     }
 
     private var statusLabel: String {
@@ -64,8 +89,13 @@
       }
     }
 
-    private var symbol: String {
-      viewModel.systemExtensionSetupState == .active ? "checkmark.circle" : "exclamationmark.circle"
+    private var semanticState: SemanticState {
+      switch viewModel.systemExtensionSetupState {
+      case .active: return .healthy
+      case .checking, .needsActivation, .replacementNeeded: return .loading
+      case .awaitingApproval: return .attention
+      case .missingEmbedded, .invalid, .failed: return .failure
+      }
     }
 
     private var detail: String {

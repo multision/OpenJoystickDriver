@@ -21,7 +21,7 @@ extension DestinationOption {
         )
       }
     return destinations.map {
-      Self(destination: $0, title: RuntimePresentation.destinationLabel($0))
+      Self(destination: $0, title: RuntimePresentation.destinationLabel($0), isSupported: true)
     }
   }()
 }

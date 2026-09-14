@@ -7,9 +7,41 @@ import Testing
 @Suite
 struct SettingsNavigationTests {
   @Test
+  @MainActor
+  func dockVisibilityTracksPrimaryWindowsAndRetriesFailedPolicyChanges() {
+    var requestedPolicies: [NSApplication.ActivationPolicy] = []
+    var shouldSucceed = true
+    let visibility = PrimaryWindowVisibilityController { policy in
+      requestedPolicies.append(policy)
+      return shouldSucceed
+    }
+
+    #expect(visibility.appliedPolicy == .accessory)
+    visibility.opened(.workbench)
+    #expect(requestedPolicies == [.regular])
+    #expect(visibility.appliedPolicy == .regular)
+
+    visibility.opened(.inputTest)
+    visibility.closed(.workbench)
+    #expect(requestedPolicies == [.regular])
+    #expect(visibility.isOpen(.inputTest))
+
+    shouldSucceed = false
+    visibility.closed(.inputTest)
+    #expect(requestedPolicies == [.regular, .accessory])
+    #expect(visibility.appliedPolicy == .regular)
+
+    shouldSucceed = true
+    visibility.opened(.inputTest)
+    visibility.closed(.inputTest)
+    #expect(requestedPolicies == [.regular, .accessory, .accessory])
+    #expect(visibility.appliedPolicy == .accessory)
+  }
+
+  @Test
   func settingsWindowUsesStableContentSizingAcrossPanes() {
-    #expect(SettingsWindowSizingPolicy.defaultContentSize == NSSize(width: 960, height: 640))
-    #expect(SettingsWindowSizingPolicy.minimumContentSize == NSSize(width: 720, height: 480))
+    #expect(SettingsWindowSizingPolicy.defaultContentSize == NSSize(width: 1_040, height: 700))
+    #expect(SettingsWindowSizingPolicy.minimumContentSize == NSSize(width: 800, height: 560))
     #expect(
       SettingsWindowSizingPolicy.fittingContentSize(NSSize(width: 1_100, height: 700))
         == NSSize(width: 1_100, height: 700)
@@ -21,11 +53,54 @@ struct SettingsNavigationTests {
   }
 
   @Test
+  func restoredAndLiveResizeFramesCannotCrossTheContentMinimum() {
+    let minimum = NSSize(width: 816, height: 604)
+    let restored = WindowFramePolicy.fittingFrame(
+      NSRect(x: 200, y: 300, width: 640, height: 420),
+      minimumSize: minimum
+    )
+    #expect(restored == NSRect(x: 200, y: 116, width: 816, height: 604))
+    #expect(
+      WindowFramePolicy.fittingSize(NSSize(width: 700, height: 500), minimumSize: minimum)
+        == minimum
+    )
+    #expect(
+      WindowFramePolicy.fittingSize(NSSize(width: 1_100, height: 760), minimumSize: minimum)
+        == NSSize(width: 1_100, height: 760)
+    )
+  }
+
+  @Test
+  @MainActor
+  func frameMinimumConvertsBackToTheRequiredContentMinimum() {
+    let window = NSWindow(
+      contentRect: NSRect(origin: .zero, size: SettingsWindowSizingPolicy.defaultContentSize),
+      styleMask: [.titled, .closable, .resizable],
+      backing: .buffered,
+      defer: false
+    )
+    window.toolbar = NSToolbar(identifier: "SizingPolicyTest")
+    let minimumFrameSize = SettingsWindowSizingPolicy.minimumFrameSize(for: window)
+    let convertedContentSize = window.contentRect(
+      forFrameRect: NSRect(origin: .zero, size: minimumFrameSize)
+    ).size
+
+    #expect(convertedContentSize == SettingsWindowSizingPolicy.minimumContentSize)
+  }
+
+  @Test
   func restoredWindowFramesAreClampedToTheUsableScreen() {
     let screen = NSRect(x: 0, y: 0, width: 1_440, height: 900)
     #expect(
       WindowFramePolicy.clampedFrame(NSRect(x: 1_300, y: -100, width: 900, height: 620), to: screen)
         == NSRect(x: 540, y: 0, width: 900, height: 620)
+    )
+    #expect(
+      WindowFramePolicy.clampedFrame(
+        NSRect(x: 1_300, y: 700, width: 500, height: 300),
+        to: screen,
+        minimumSize: NSSize(width: 816, height: 604)
+      ) == NSRect(x: 624, y: 296, width: 816, height: 604)
     )
   }
 

@@ -78,7 +78,14 @@
             } catch { errorMessage = RuntimePresentation.userFacingError(error) }
           }
         }
-      }.padding(28).frame(width: 500, height: 560)
+      }.padding(28).frame(
+        width: 500,
+        height: ProfilePresentationPolicy.optionalEditorHeight(
+          enabled: selected == .left ? left.enabled : right.enabled,
+          compact: 260,
+          expanded: 560
+        )
+      )
     }
   }
 #endif

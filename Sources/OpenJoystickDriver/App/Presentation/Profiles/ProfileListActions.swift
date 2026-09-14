@@ -18,6 +18,20 @@
       requestProfileAction(.select(profileID))
     }
 
+    func recoverProfileIssue(_ issueID: UUID, resetLibrary: Bool) {
+      activeAlert = nil
+      Task { @MainActor in
+        profileActionError =
+          resetLibrary
+          ? await viewModel.resetRemappingProfileLibrary(issueID: issueID)
+          : await viewModel.deleteDamagedRemappingProfile(issueID: issueID)
+        if profileActionError == nil {
+          selectedRecoveryIssueID = nil
+          selectFirstProfileIfNeeded()
+        }
+      }
+    }
+
     func setEditorDirty(_ dirty: Bool) {
       profileEditorTransition.setDirty(dirty)
       if !dirty { preservedEditorProfile = nil }
@@ -82,6 +96,7 @@
         name: name,
         device: device,
         applicationScope: scope,
+        outputPolicy: RemappingOutputPolicy(virtualGamepad: .passthrough),
         bindings: []
       )
       let request = RuntimeMutationRequest(operation: .create(profileID: profile.id))
@@ -272,7 +287,10 @@
 
     var isProfileActionBlocked: Bool {
       isMutationActive || profileEditorTransition.isEditingBlocked
+        || viewModel.profileRecoveryInFlight || profileLibraryNeedsRecovery
     }
+
+    var profileLibraryNeedsRecovery: Bool { !(currentSnapshot?.profileIssues.isEmpty ?? true) }
 
     var connectedDevices: [ApplicationServiceDeviceDescription] {
       guard case .available(let status) = viewModel.statusState else { return [] }
@@ -283,13 +301,22 @@
   enum ProfilesAlert: Identifiable {
     case delete(UUID)
     case discard(UUID)
+    case deleteDamagedProfile(UUID)
+    case resetLibrary(UUID)
 
     var id: String {
       switch self {
       case .delete(let profileID): return "delete-\(profileID.uuidString)"
       case .discard(let profileID): return "discard-\(profileID.uuidString)"
+      case .deleteDamagedProfile(let issueID): return "delete-damaged-\(issueID.uuidString)"
+      case .resetLibrary(let issueID): return "reset-library-\(issueID.uuidString)"
       }
     }
+  }
+
+  enum ProfileListSelection: Hashable {
+    case profile(UUID)
+    case issue(UUID)
   }
 
 #endif

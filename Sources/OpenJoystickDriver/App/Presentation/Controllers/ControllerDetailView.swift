@@ -13,17 +13,22 @@
     let openInputTest: @MainActor (ApplicationServiceDeviceDescription) -> Void
 
     var body: some View {
-      ScrollView {
-        VStack(alignment: .leading, spacing: 18) {
-          controllerHeader
-          activeProfileRow
-          Divider()
-          controllerDetails
-          Divider()
-          inputTestAction
-          Divider()
-          ControllerIdentityView(viewModel: viewModel)
-        }.padding(28).frame(maxWidth: .infinity, alignment: .leading)
+      GeometryReader { proxy in
+        ScrollView {
+          VStack(alignment: .leading, spacing: 18) {
+            controllerHeader
+            controllerSessionAction
+            activeProfileRow
+            Divider()
+            controllerDetails(
+              compact: ControllerDetailLayoutPolicy.factColumnCount(for: proxy.size.width) == 1
+            )
+            Divider()
+            inputTestAction
+            Divider()
+            ControllerIdentityView(viewModel: viewModel)
+          }.padding(28).frame(maxWidth: .infinity, alignment: .leading)
+        }
       }.ojdAccessibilityLabel(device.name).ojdAccessibilityValue(accessibilityValue)
     }
 
@@ -44,6 +49,45 @@
         Spacer(minLength: 12)
         Button(OJDLocalized.string("inputTest.open", fallback: "Open Input Test...")) {
           openInputTest(device)
+        }.disabled(device.sessionState == .suspended)
+      }
+    }
+
+    private var controllerSessionAction: some View {
+      HStack(alignment: .center, spacing: 12) {
+        VStack(alignment: .leading, spacing: 3) {
+          Text(
+            device.sessionState == .suspended
+              ? OJDLocalized.string("controllers.suspended", fallback: "Suspended")
+              : OJDLocalized.string(
+                "controllers.sessionActive",
+                fallback: "Managed by OpenJoystickDriver"
+              )
+          ).font(.headline)
+          Text(
+            device.sessionState == .suspended
+              ? OJDLocalized.string(
+                "controllers.suspendedSummary",
+                fallback: "Input and OpenJoystickDriver output are paused until you resume."
+              )
+              : OJDLocalized.string(
+                "controllers.disconnectSummary",
+                fallback: "Pause input, physical effects, and OpenJoystickDriver virtual output."
+              )
+          ).font(.caption).foregroundColor(Color(NSColor.secondaryLabelColor))
+        }
+        Spacer(minLength: 12)
+        if device.sessionState == .suspended {
+          Button(OJDLocalized.string("controllers.resume", fallback: "Resume")) {
+            Task { @MainActor in await viewModel.resumeController(device) }
+          }
+        } else {
+          Button(
+            OJDLocalized.string(
+              "controllers.disconnectFromOJD",
+              fallback: "Disconnect from OpenJoystickDriver"
+            )
+          ) { Task { @MainActor in await viewModel.suspendController(device) } }
         }
       }
     }
@@ -132,49 +176,61 @@
       )
     }
 
-    private var controllerDetails: some View {
-      VStack(alignment: .leading, spacing: 6) {
-        KeyValueRow(
-          label: OJDLocalized.string("controllers.publishedAs", fallback: "Published as"),
-          value: publishedProfile.publishedUSBIdentityLabel
-        )
-        KeyValueRow(
-          label: OJDLocalized.string("common.protocol", fallback: "Protocol"),
-          value: device.protocolVariant.displayLabel
-        )
-        KeyValueRow(
-          label: OJDLocalized.string("common.parser", fallback: "Parser"),
-          value: reportedValue(device.parser)
-        )
-        KeyValueRow(
-          label: OJDLocalized.string("common.serialNumber", fallback: "Serial number"),
-          value: serialNumberLabel
-        )
-        KeyValueRow(
-          label: OJDLocalized.string("controllers.battery", fallback: "Battery"),
-          value: batteryPercentageLabel
-        )
-        KeyValueRow(
-          label: OJDLocalized.string("controllers.chargingState", fallback: "Charging state"),
-          value: chargingStateLabel
-        )
-        KeyValueRow(
-          label: OJDLocalized.string("controllers.cableState", fallback: "Cable state"),
-          value: cableStateLabel
-        )
-        KeyValueRow(
-          label: OJDLocalized.string("controllers.usbIdentifier", fallback: "USB VID/PID"),
-          value: usbIdentifier
-        )
-        KeyValueRow(
-          label: OJDLocalized.string("common.inputEndpoint", fallback: "Input endpoint"),
-          value: endpointLabel(device.inputEndpoint)
-        )
-        KeyValueRow(
-          label: OJDLocalized.string("common.outputEndpoint", fallback: "Output endpoint"),
-          value: endpointLabel(device.outputEndpoint)
-        )
-      }.frame(maxWidth: .infinity, alignment: .leading)
+    @ViewBuilder
+    private func controllerDetails(compact: Bool) -> some View {
+      if compact {
+        VStack(alignment: .leading, spacing: 12) {
+          ForEach(Array(controllerFacts.enumerated()), id: \.offset) { _, fact in
+            ControllerFactView(label: fact.label, value: fact.value)
+          }
+        }.frame(maxWidth: .infinity, alignment: .leading)
+      } else {
+        VStack(alignment: .leading, spacing: 8) {
+          ForEach(0..<5, id: \.self) { row in
+            HStack(alignment: .top, spacing: 24) {
+              let first = controllerFacts[row * 2]
+              let second = controllerFacts[row * 2 + 1]
+              ControllerFactView(label: first.label, value: first.value).frame(
+                maxWidth: .infinity,
+                alignment: .leading
+              )
+              ControllerFactView(label: second.label, value: second.value).frame(
+                maxWidth: .infinity,
+                alignment: .leading
+              )
+            }
+          }
+        }
+      }
+    }
+
+    private var controllerFacts: [(label: String, value: String)] {
+      [
+        (
+          OJDLocalized.string("controllers.publishedAs", fallback: "Published as"),
+          publishedProfile.publishedUSBIdentityLabel
+        ),
+        (
+          OJDLocalized.string("common.protocol", fallback: "Protocol"),
+          device.protocolVariant.displayLabel
+        ), (OJDLocalized.string("common.parser", fallback: "Parser"), reportedValue(device.parser)),
+        (OJDLocalized.string("common.serialNumber", fallback: "Serial number"), serialNumberLabel),
+        (OJDLocalized.string("controllers.battery", fallback: "Battery"), batteryPercentageLabel),
+        (
+          OJDLocalized.string("controllers.chargingState", fallback: "Charging state"),
+          chargingStateLabel
+        ),
+        (OJDLocalized.string("controllers.cableState", fallback: "Cable state"), cableStateLabel),
+        (OJDLocalized.string("controllers.usbIdentifier", fallback: "USB VID/PID"), usbIdentifier),
+        (
+          OJDLocalized.string("common.inputEndpoint", fallback: "Input endpoint"),
+          endpointLabel(device.inputEndpoint)
+        ),
+        (
+          OJDLocalized.string("common.outputEndpoint", fallback: "Output endpoint"),
+          endpointLabel(device.outputEndpoint)
+        ),
+      ]
     }
 
     private var serialNumberLabel: String {
@@ -285,6 +341,18 @@
           message
         )
       }
+    }
+  }
+
+  private struct ControllerFactView: View {
+    let label: String
+    let value: String
+
+    var body: some View {
+      VStack(alignment: .leading, spacing: 3) {
+        Text(label).font(.caption).foregroundColor(Color(NSColor.secondaryLabelColor))
+        Text(value).fixedSize(horizontal: false, vertical: true)
+      }.frame(maxWidth: .infinity, alignment: .leading)
     }
   }
 

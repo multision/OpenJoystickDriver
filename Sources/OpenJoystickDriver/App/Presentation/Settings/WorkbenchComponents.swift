@@ -18,14 +18,23 @@
 
     var body: some View {
       if #available(macOS 11.0, *) {
-        if let image = NSImage(systemSymbolName: name, accessibilityDescription: nil) {
-          Image(nsImage: image)
-        } else if let fallbackSymbolName,
-          let image = NSImage(systemSymbolName: fallbackSymbolName, accessibilityDescription: nil)
-        {
-          Image(nsImage: image)
-        } else {
-          Text(fallback).font(.caption)
+        let preferredImage = NSImage(systemSymbolName: name, accessibilityDescription: nil)
+        let fallbackImage = fallbackSymbolName.flatMap {
+          NSImage(systemSymbolName: $0, accessibilityDescription: nil)
+        }
+        switch SystemSymbolPolicy.resolution(
+          preferred: name,
+          fallback: fallbackSymbolName,
+          preferredIsAvailable: preferredImage != nil,
+          fallbackIsAvailable: fallbackImage != nil
+        ) {
+        case .symbol(let resolvedName):
+          if resolvedName == name, let preferredImage {
+            Image(nsImage: preferredImage)
+          } else if let fallbackImage {
+            Image(nsImage: fallbackImage)
+          }
+        case .text: Text(fallback).font(.caption)
         }
       } else {
         Text(fallback).font(.caption)
@@ -47,7 +56,38 @@
     }
   }
 
+  struct OJDCompactSymbolButton: View {
+    let symbolName: String
+    let fallbackSymbolName: String?
+    let label: String
+    let action: () -> Void
+
+    init(
+      symbolName: String,
+      fallbackSymbolName: String? = nil,
+      label: String,
+      action: @escaping () -> Void
+    ) {
+      self.symbolName = symbolName
+      self.fallbackSymbolName = fallbackSymbolName
+      self.label = label
+      self.action = action
+    }
+
+    var body: some View {
+      Button(action: action) {
+        OJDSystemSymbol(name: symbolName, fallback: label, fallbackSymbolName: fallbackSymbolName)
+          .frame(minWidth: 28, minHeight: 28).contentShape(Rectangle())
+      }.buttonStyle(BorderlessButtonStyle()).ojdAccessibilityLabel(label).ojdHelp(label)
+    }
+  }
+
   extension View {
+    @ViewBuilder
+    func ojdPrimaryAction() -> some View {
+      if #available(macOS 11.0, *) { keyboardShortcut(.defaultAction) } else { self }
+    }
+
     @ViewBuilder
     func ojdAccessibilityLabel(_ label: String) -> some View {
       if #available(macOS 11.0, *) {

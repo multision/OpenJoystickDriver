@@ -27,10 +27,16 @@
 
     let model: InputTestViewModel
     private let runtimeViewModel: RuntimeViewModel
+    private let visibilityChanged: @MainActor (Bool) -> Void
 
-    init(gateway: any InputTestDeviceGateway, runtimeViewModel: RuntimeViewModel) {
+    init(
+      gateway: any InputTestDeviceGateway,
+      runtimeViewModel: RuntimeViewModel,
+      visibilityChanged: @escaping @MainActor (Bool) -> Void = { _ in }
+    ) {
       model = InputTestViewModel(gateway: gateway)
       self.runtimeViewModel = runtimeViewModel
+      self.visibilityChanged = visibilityChanged
       let rootView = InputTestView(model: model, runtimeViewModel: runtimeViewModel)
       let host = NSHostingView(rootView: rootView)
       let window = NSWindow(
@@ -69,6 +75,7 @@
         ).productName
       )
       model.open()
+      visibilityChanged(true)
       if let window { WindowFramePolicy.clamp(window) }
       window?.makeKeyAndOrderFront(nil)
       NSApplication.shared.activate(ignoringOtherApps: true)
@@ -79,6 +86,7 @@
     func windowShouldClose(_ sender: NSWindow) -> Bool {
       model.close()
       sender.orderOut(nil)
+      visibilityChanged(false)
       return false
     }
 

@@ -165,6 +165,7 @@
     ) -> Void
     let onSave: SaveAction
     let showsAdditionalActions: Bool
+    let capabilities: ControllerProfileCapabilities?
     @Environment(\.presentationMode)
     private var presentationMode
     @State
@@ -195,11 +196,13 @@
     init(
       binding: RemappingBinding,
       showsAdditionalActions: Bool = true,
+      capabilities: ControllerProfileCapabilities? = nil,
       onSave: @escaping SaveAction
     ) {
       self.binding = binding
       self.onSave = onSave
       self.showsAdditionalActions = showsAdditionalActions
+      self.capabilities = capabilities
       _additionalActions = State(initialValue: binding.additionalActions)
       _behavior = State(initialValue: binding.behavior)
       _pulseDurationMs = State(initialValue: binding.pulseDurationMs)
@@ -260,7 +263,11 @@
           )
         }
         if showsAdditionalActions {
-          ProfileAdditionalActionsView(source: binding.source, actions: $additionalActions)
+          ProfileAdditionalActionsView(
+            source: binding.source,
+            capabilities: capabilities,
+            actions: $additionalActions
+          )
         }
         Toggle(OJDLocalized.string("profiles.turbo", fallback: "Turbo"), isOn: $turboEnabled)
           .disabled(

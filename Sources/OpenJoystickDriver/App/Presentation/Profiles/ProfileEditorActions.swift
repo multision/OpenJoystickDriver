@@ -57,7 +57,9 @@
     }
 
     var menuActions: [ProfileEditorMenuAction] {
-      var actions: [ProfileEditorMenuAction] = [.duplicate, .export, .details]
+      var actions: [ProfileEditorMenuAction] = [.duplicate, .export]
+      if draft.profile.suppressesAllControllerInput { actions.append(.restoreDefaultInput) }
+      actions.append(.clearInputs)
       if isActive, profile.joyConPair == nil { actions.append(.deactivateAll) }
       return actions
     }
@@ -70,7 +72,25 @@
           localError = RuntimePresentation.userFacingError(error)
         }
       case .details: activeSheet = .metadata
+      case .restoreDefaultInput: restoreDefaultInput()
+      case .clearInputs: confirmation = .clearInputs
       case .deactivateAll: deactivateAllProfiles()
+      }
+    }
+
+    func restoreDefaultInput() {
+      applyDraftChange { RuntimeProfileDraft(profile: draft.profile.restoringDefaultInput()) }
+    }
+
+    func clearInputs() {
+      applyDraftChange { RuntimeProfileDraft(profile: draft.profile.clearingAllInput()) }
+    }
+
+    func requestActivation() {
+      if profile.suppressesAllControllerInput {
+        confirmation = .activateEmpty
+      } else {
+        activateProfile()
       }
     }
 
@@ -292,6 +312,8 @@
     case duplicate
     case export
     case details
+    case restoreDefaultInput
+    case clearInputs
     case deactivateAll
 
     var title: String {
@@ -299,6 +321,13 @@
       case .duplicate: return OJDLocalized.string("common.duplicate", fallback: "Duplicate")
       case .export: return OJDLocalized.string("profiles.export", fallback: "Export")
       case .details: return OJDLocalized.string("profiles.details", fallback: "Details")
+      case .restoreDefaultInput:
+        return OJDLocalized.string(
+          "profiles.restoreDefaultInput",
+          fallback: "Restore default input"
+        )
+      case .clearInputs:
+        return OJDLocalized.string("profiles.clearInputs", fallback: "Clear all inputs")
       case .deactivateAll:
         return OJDLocalized.string("profiles.deactivateController", fallback: "Deactivate all")
       }

@@ -4,6 +4,7 @@
 
   struct ProfileAdditionalActionsView: View {
     let source: RemappingSource
+    let capabilities: ControllerProfileCapabilities?
     @Binding
     var actions: [RemappingAction]
     @State
@@ -22,9 +23,13 @@
                   selection: destinationBinding(action)
                 ) {
                   ForEach(
-                    DestinationOption.options(for: source, including: action.destination),
+                    DestinationOption.options(
+                      for: source,
+                      including: action.destination,
+                      capabilities: capabilities
+                    ),
                     id: \.destination
-                  ) { Text($0.title).tag($0.destination) }
+                  ) { Text($0.title).tag($0.destination).disabled(!$0.isSupported) }
                 }
                 PhysicalOutputDestinationFields(destination: destinationBinding(action))
                 HStack {
@@ -46,9 +51,10 @@
           }
         }.frame(height: actions.isEmpty ? 0 : 170)
         Button(OJDLocalized.string("profiles.addAction", fallback: "Add action")) {
-          guard let destination = DestinationOption.options(for: source).first?.destination else {
-            return
-          }
+          guard
+            let destination = DestinationOption.options(for: source, capabilities: capabilities)
+              .first?.destination
+          else { return }
           actions.append(RemappingAction(destination: destination))
         }.disabled(actions.count >= RemappingProfile.maximumBindingCount - 1)
       }.sheet(item: $editing) { action in
@@ -63,7 +69,8 @@
             longHold: action.longHold,
             doubleTap: action.doubleTap
           ),
-          showsAdditionalActions: false
+          showsAdditionalActions: false,
+          capabilities: capabilities
         ) { behavior, duration, turbo, hold, tap, _ in
           replace(
             RemappingAction(

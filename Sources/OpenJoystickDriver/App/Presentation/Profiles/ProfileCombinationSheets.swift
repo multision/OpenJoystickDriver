@@ -10,6 +10,7 @@
 
   struct ProfileCombinationSheet: View {
     let kind: ProfileCombinationKind
+    let capabilities: ControllerProfileCapabilities
     typealias SaveAction = ([RemappingSource], RemappingChordMode, Double, RemappingDestination) ->
       Void
     let onSave: SaveAction
@@ -24,8 +25,13 @@
     @State
     private var destination: RemappingDestination
 
-    init(kind: ProfileCombinationKind, onSave: @escaping SaveAction) {
+    init(
+      kind: ProfileCombinationKind,
+      capabilities: ControllerProfileCapabilities,
+      onSave: @escaping SaveAction
+    ) {
       self.kind = kind
+      self.capabilities = capabilities
       self.onSave = onSave
       _sources = State(initialValue: [.button(.south), .button(.east)])
       _chordMode = State(initialValue: .modifier)
@@ -56,8 +62,8 @@
               OJDLocalized.formatted("profiles.controlNumber", fallback: "Control %d", index + 1),
               selection: sourceBinding(at: index)
             ) {
-              ForEach(discreteSources, id: \.source) { option in
-                Text(option.title).tag(option.source)
+              ForEach(discreteSources(capabilities: capabilities), id: \.source) { option in
+                Text(option.title).tag(option.source).disabled(!option.isSupported)
               }
             }
             if sources.count > 2 {
@@ -72,7 +78,7 @@
         }
         Button(OJDLocalized.string("profiles.addControl", fallback: "Add control")) {
           sources.append(nextSource)
-        }.disabled(sources.count >= discreteSources.count)
+        }.disabled(sources.count >= discreteSources(capabilities: capabilities).count)
         if kind == .chord {
           Picker(
             OJDLocalized.string("profiles.chordMode", fallback: "Chord mode"),
@@ -102,9 +108,10 @@
           OJDLocalized.string("common.destination", fallback: "Destination"),
           selection: $destination
         ) {
-          ForEach(discreteDestinations(including: destination), id: \.destination) { option in
-            Text(option.title).tag(option.destination)
-          }
+          ForEach(
+            discreteDestinations(including: destination, capabilities: capabilities),
+            id: \.destination
+          ) { option in Text(option.title).tag(option.destination).disabled(!option.isSupported) }
         }
         PhysicalOutputDestinationFields(destination: $destination)
         HStack {
@@ -114,7 +121,10 @@
             let window = kind == .chord && chordMode == .modifier ? 50 : windowMs
             onSave(sources, chordMode, window, destination)
             dismiss()
-          }.disabled(Set(sources).count != sources.count)
+          }.disabled(
+            Set(sources).count != sources.count
+              || !ProfileCapabilityPolicy.supports(destination, capabilities: capabilities)
+          )
         }
       }.padding(28).frame(width: 480)
     }
@@ -127,7 +137,8 @@
     }
 
     private var nextSource: RemappingSource {
-      discreteSources.first { !sources.contains($0.source) }?.source ?? .button(.south)
+      discreteSources(capabilities: capabilities).first { !sources.contains($0.source) }?.source
+        ?? .button(.south)
     }
 
     private func sourceBinding(at index: Int) -> Binding<RemappingSource> {
@@ -155,6 +166,7 @@
   }
 
   struct ProfileLayerSheet: View {
+    let capabilities: ControllerProfileCapabilities
     let onSave: (String, RemappingSource, RemappingLayerActivation) -> Void
     @Environment(\.presentationMode)
     private var presentationMode
@@ -166,16 +178,15 @@
     private var activationMode = RemappingLayerActivation.hold
 
     var body: some View {
-      VStack(alignment: .leading, spacing: 15) {
-        Text(OJDLocalized.string("profiles.addLayer", fallback: "Add layer")).font(
-          .headline.weight(.semibold)
-        )
+      ProfileSheetScaffold(title: OJDLocalized.string("profiles.addLayer", fallback: "Add layer")) {
         TextField(OJDLocalized.string("profiles.layerName", fallback: "Layer name"), text: $name)
         Picker(
           OJDLocalized.string("profiles.activator", fallback: "Activator"),
           selection: $activator
         ) {
-          ForEach(discreteSources, id: \.source) { option in Text(option.title).tag(option.source) }
+          ForEach(discreteSources(capabilities: capabilities), id: \.source) { option in
+            Text(option.title).tag(option.source).disabled(!option.isSupported)
+          }
         }
         Picker(
           OJDLocalized.string("profiles.activationMode", fallback: "Activation"),
@@ -188,15 +199,14 @@
             RemappingLayerActivation.toggle
           )
         }
-        HStack {
-          Spacer()
-          Button(OJDLocalized.string("common.cancel", fallback: "Cancel")) { dismiss() }
-          Button(OJDLocalized.string("common.add", fallback: "Add")) {
-            onSave(name.trimmingCharacters(in: .whitespacesAndNewlines), activator, activationMode)
-            dismiss()
-          }.disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-        }
-      }.padding(28).frame(width: 430)
+      } footer: {
+        Spacer()
+        Button(OJDLocalized.string("common.cancel", fallback: "Cancel")) { dismiss() }
+        Button(OJDLocalized.string("common.add", fallback: "Add")) {
+          onSave(name.trimmingCharacters(in: .whitespacesAndNewlines), activator, activationMode)
+          dismiss()
+        }.disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+      }
     }
 
     private func dismiss() { presentationMode.wrappedValue.dismiss() }
@@ -204,6 +214,7 @@
 
   struct ProfileLayerBindingSheet: View {
     let layer: RemappingLayer
+    let capabilities: ControllerProfileCapabilities
     let onSave: (RemappingSource, RemappingDestination) -> Void
     @Environment(\.presentationMode)
     private var presentationMode
@@ -213,39 +224,45 @@
     private var destination: RemappingDestination = .keyboard(key: .space, modifiers: [])
 
     var body: some View {
-      VStack(alignment: .leading, spacing: 15) {
-        Text(
-          OJDLocalized.formatted(
-            "profiles.addLayerAssignment",
-            fallback: "Add assignment to %@",
-            layer.name
-          )
-        ).font(.headline.weight(.semibold))
+      ProfileSheetScaffold(
+        title: OJDLocalized.formatted(
+          "profiles.addLayerAssignment",
+          fallback: "Add assignment to %@",
+          layer.name
+        )
+      ) {
         Picker(
           OJDLocalized.string("capture.controllerControl", fallback: "Controller control"),
           selection: sourceBinding
         ) {
-          ForEach(SourceOption.options(including: source), id: \.source) { option in
-            Text(option.title).tag(option.source)
-          }
+          ForEach(SourceOption.options(including: source, capabilities: capabilities), id: \.source)
+          { option in Text(option.title).tag(option.source).disabled(!option.isSupported) }
         }
         Picker(
           OJDLocalized.string("common.destination", fallback: "Destination"),
           selection: $destination
         ) {
-          ForEach(DestinationOption.options(for: source, including: destination), id: \.destination)
-          { option in Text(option.title).tag(option.destination) }
+          ForEach(
+            DestinationOption.options(
+              for: source,
+              including: destination,
+              capabilities: capabilities
+            ),
+            id: \.destination
+          ) { option in Text(option.title).tag(option.destination).disabled(!option.isSupported) }
         }
         PhysicalOutputDestinationFields(destination: $destination)
-        HStack {
-          Spacer()
-          Button(OJDLocalized.string("common.cancel", fallback: "Cancel")) { dismiss() }
-          Button(OJDLocalized.string("common.add", fallback: "Add")) {
-            onSave(source, destination)
-            dismiss()
-          }
-        }
-      }.padding(28).frame(width: 470)
+      } footer: {
+        Spacer()
+        Button(OJDLocalized.string("common.cancel", fallback: "Cancel")) { dismiss() }
+        Button(OJDLocalized.string("common.add", fallback: "Add")) {
+          onSave(source, destination)
+          dismiss()
+        }.disabled(
+          !ProfileCapabilityPolicy.supports(source, capabilities: capabilities)
+            || !ProfileCapabilityPolicy.supports(destination, capabilities: capabilities)
+        )
+      }
     }
 
     private var sourceBinding: Binding<RemappingSource> {
@@ -253,7 +270,11 @@
         get: { source },
         set: { newSource in
           source = newSource
-          let options = DestinationOption.options(for: newSource, including: destination)
+          let options = DestinationOption.options(
+            for: newSource,
+            including: destination,
+            capabilities: capabilities
+          )
           if !options.contains(where: { $0.destination == destination }), let first = options.first
           {
             destination = first.destination
@@ -265,8 +286,8 @@
     private func dismiss() { presentationMode.wrappedValue.dismiss() }
   }
 
-  private var discreteSources: [SourceOption] {
-    SourceOption.options().filter { option in
+  private func discreteSources(capabilities: ControllerProfileCapabilities) -> [SourceOption] {
+    SourceOption.options(capabilities: capabilities).filter { option in
       switch option.source {
       case .axis: false
       case .axisDirection, .triggerStage, .motionLean, .button, .dpad, .touchContact, .touchGrid,
@@ -278,6 +299,13 @@
 
   func discreteDestinations(including current: RemappingDestination) -> [DestinationOption] {
     DestinationOption.options(for: .button(.south), including: current)
+  }
+
+  func discreteDestinations(
+    including current: RemappingDestination,
+    capabilities: ControllerProfileCapabilities
+  ) -> [DestinationOption] {
+    DestinationOption.options(for: .button(.south), including: current, capabilities: capabilities)
   }
 
 #endif
