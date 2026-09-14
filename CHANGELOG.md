@@ -18,6 +18,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   GamePad-1 until reboot; OJD does not create that shim (gamecontrollerd does
   when GameController binds an Xbox identity) and cannot drain stuck user
   clients.
+- Development rebuilds keep Input Monitoring: the host is signed with a stable
+  team and bundle-id designated requirement instead of a unique-certificate pin.
+- After a TCC permission Quit & Reopen, a detached waiter waits until this
+  process is gone, boots out leftover Launch Services jobs whose pid is
+  dead, then opens the `.app` bundle via Launch Services. Menu Quit and
+  SIGTERM still exit without relaunch; they only retire a stale job so
+  Spotlight can open again. Do not spawn during terminate. Do not exec the
+  Mach-O.
 
 ### Changed
 
@@ -65,17 +73,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   by matching CoreHID snapshots to IOHID devices.
 - Report when CoreHID virtual HID creation fails because the Apple Development
   provisioning profile does not include this Mac.
-
-### Fixed
-
-- Development rebuilds keep Input Monitoring: the host is signed with a stable
-  team and bundle-id designated requirement instead of a unique-certificate pin.
-- After a TCC permission Quit & Reopen, a detached waiter waits until this
-  process is gone, boots out leftover Launch Services jobs whose pid is
-  dead, then opens the `.app` bundle via Launch Services. Menu Quit and
-  SIGTERM still exit without relaunch; they only retire a stale job so
-  Spotlight can open again. Do not spawn during terminate. Do not exec the
-  Mach-O.
 
 ## [0.5.0-beta.4] - 2026-09-05
 
