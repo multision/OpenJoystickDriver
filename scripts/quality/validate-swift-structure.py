@@ -4,13 +4,13 @@
 from __future__ import annotations
 
 import argparse
-from collections import defaultdict
-from pathlib import Path
 import re
 import sys
+from collections import defaultdict
+from pathlib import Path
 
-MAX_LINES = 800
-PREFERRED_LINES = 500
+SOURCE_MAX_LINES = 500
+TEST_MAX_LINES = 1000
 SWIFTLINT_DIRECTIVE = re.compile(r"swiftlint\s*:(?:disable|enable)")
 
 
@@ -32,13 +32,16 @@ def validate(root: Path) -> tuple[list[str], list[str]]:
         relative = path.relative_to(root)
         text = path.read_text(encoding="utf-8")
         line_count = len(text.splitlines())
-        if line_count > MAX_LINES:
-            errors.append(f"{relative}: {line_count} lines exceeds {MAX_LINES}")
-        elif line_count > PREFERRED_LINES:
-            notes.append(f"{relative}: {line_count} lines; consider a cohesive split")
+        maximum_lines = (
+            TEST_MAX_LINES if relative.parts[0] == "Tests" else SOURCE_MAX_LINES
+        )
+        if line_count > maximum_lines:
+            errors.append(f"{relative}: {line_count} lines exceeds {maximum_lines}")
 
         if "+" in path.name:
-            errors.append(f"{relative}: use an ownership directory instead of a '+' filename")
+            errors.append(
+                f"{relative}: use an ownership directory instead of a '+' filename"
+            )
 
         for line_number, line in enumerate(text.splitlines(), start=1):
             if SWIFTLINT_DIRECTIVE.search(line):
@@ -48,7 +51,9 @@ def validate(root: Path) -> tuple[list[str], list[str]]:
 
     test_root = root / "Tests" / "OpenJoystickDriverKitTests"
     for path in sorted(test_root.glob("*.swift")):
-        errors.append(f"{path.relative_to(root)}: tests must be placed by source ownership")
+        errors.append(
+            f"{path.relative_to(root)}: tests must be placed by source ownership"
+        )
 
     target_roots = []
     for tree in ("Sources", "Tests"):
@@ -86,7 +91,10 @@ def main() -> int:
         print(f"error: {error}", file=sys.stderr)
 
     if errors:
-        print(f"Swift structure validation failed with {len(errors)} error(s).", file=sys.stderr)
+        print(
+            f"Swift structure validation failed with {len(errors)} error(s).",
+            file=sys.stderr,
+        )
         return 1
 
     print("Swift structure validation passed.")

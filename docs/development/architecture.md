@@ -20,6 +20,37 @@ flowchart LR
   I --> J[Consumer applications]
 ```
 
+## Controller ownership and concurrency
+
+`DeviceManager` is the inventory actor and the only owner of physical discovery and exact-device
+selection. Each connected device has one `DevicePipeline` actor, created, replaced, and stopped by
+the manager. The pipeline exclusively owns its mutable parser, normalized input/output state,
+transport coordination, and retained run and idle tasks.
+
+```mermaid
+flowchart LR
+  A[IOKit or CoreHID callback] --> B[HID transport adapter]
+  C[IOUSBHost or USBDriverKit transfer] --> D[USB transport actor]
+  B --> E[DevicePipeline actor]
+  D --> E
+  E --> F[Session-owned parser]
+  F --> G[Normalized Sendable snapshot]
+  G --> H[DeviceManager actor]
+  H --> I[Application service and typed RPC]
+  I --> J[MainActor feature ViewModel]
+  J --> K[SwiftUI or AppKit presentation]
+```
+
+- HID and USB adapters own platform handles and translate callbacks or transfers into copied data.
+- Decoding and controller state mutation execute only on the pipeline actor, never on `@MainActor`.
+- Parser protocols are intentionally not `Sendable`; a parser is transferred once into its session.
+- USB startup, keep-alive, and physical output are parser-produced value plans executed by the
+  pipeline's transport session, keeping device I/O out of decoding objects.
+- Replacement and shutdown cancel and await established session tasks before the old pipeline is
+  discarded. A non-cooperative platform open that has not produced a session cannot block shutdown;
+  its late result observes the inactive generation and is closed without publishing state.
+- `@MainActor` owns application, window, menu, panel, and observable presentation state only.
+
 ## Platform split
 
 The package deployment floor remains macOS 10.15. Availability selection happens once inside each

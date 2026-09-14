@@ -22,8 +22,10 @@ Keep the UI in the existing `OpenJoystickDriver` executable.
 
 ## Runtime boundary
 
-`ApplicationServiceRuntime` remains the only owner of physical discovery, remapping, virtual output,
-permission polling, foreground routing, local RPC, shutdown, and process lifetime.
+`ApplicationServiceRuntime` is the `@MainActor` composition and process-lifecycle owner. It starts and
+stops the service actors but does not perform controller I/O or serve as a presentation gateway.
+`DeviceManager` owns physical discovery and sessions; the remapping router, permission manager, and
+application server retain their existing isolated responsibilities.
 
 `HeadlessApplicationHost` is the composition root. A no-argument launch starts the runtime and the
 AppKit presentation shell. Argument-bearing launches keep the existing CLI path.
@@ -44,7 +46,15 @@ The gateway is the only presentation-to-service seam. Views and view models do n
 `DeviceManager`, `RemappingProfileLibrary`, socket frames, or CLI parsers. `OpenJoystickDriverKit`
 remains independent of SwifterKit.
 
+Input Test uses this same seam for live input, rumble, player indicators, brightness, motion
+calibration, and tokenized temporary color previews. It does not bypass RPC through the in-process
+runtime. Releasing a preview token restores the next authoritative physical-color owner.
+
 ## Presentation ownership
+
+Feature and screen ViewModels are `@MainActor` and own asynchronous workflow state. Service payloads
+are stored once and presentation values are derived from them. Views own only transient visual state;
+coordinators own AppKit lifecycle and panels.
 
 | Area | Owner | Boundary |
 | --- | --- | --- |
@@ -114,6 +124,9 @@ virtualDeviceDiagnostics()
 requestPermissions()
 requestPermission(requirement)
 deviceInputState(selector)
+packetLog(selector)
+sendRumble/setPlayerIndicator/previewColor/releaseColorPreview/setBrightness
+motionCalibration(selector, command)
 remappingSnapshot()
 remappingProfile(id)
 create/update(expectedCurrent)/import/delete profile
