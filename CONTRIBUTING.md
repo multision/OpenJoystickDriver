@@ -25,6 +25,8 @@ Signing, DriverKit, and packaging: `Scripts/README.md`. Dev install:
 SwifterKit comes from `Package.resolved`. `OJD_USE_LOCAL_SWIFTERKIT=1` is
 local-only.
 
+Create a private, notarized DMG with the [local tester-build guide](docs/development/tester-builds.md).
+
 ```bash
 ./Scripts/ojd diagnose record /tmp/controller-candidate.json --validate-only
 ./Scripts/ojd diagnose backends --seconds 5

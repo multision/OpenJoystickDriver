@@ -47,6 +47,7 @@ Choose the shortest path for your task.
 - [Responsiveness](development/application-responsiveness.md)
 - [Environment files](development/environment.md)
 - [Signing](development/signing.md)
+- [Local tester builds](development/tester-builds.md)
 - [Implementation status](development/implementation-status.md)
 - [Issue audit](development/issue-audit.md)
 - [Experimental controllers](development/experimental-controllers.md)

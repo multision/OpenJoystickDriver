@@ -243,6 +243,15 @@ launch-sdl-gamecontroller *args:
 # Release
 # =========================================================================
 
+# Check release environment and signing assets for a tester build
+package-tester-check:
+    OJD_ENV=release ./Scripts/ojd env audit
+    OJD_ENV=release ./Scripts/ojd signing doctor
+
+# Build a private notarized Developer ID tester DMG without installing or publishing it
+package-tester:
+    ./Scripts/ojd package tester
+
 # Update release version references (changelog heading must exist)
 release-bump-version version:
     ./Scripts/ojd release bump-version {{ version }}
