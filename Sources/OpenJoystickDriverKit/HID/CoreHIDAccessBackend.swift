@@ -51,6 +51,11 @@ enum CoreHIDInputReport {
 }
 
 @available(macOS 15, *)
+enum CoreHIDElementReportID {
+  static func value(_ reportID: HIDReportID?) -> UInt32? { reportID.map { UInt32($0.rawValue) } }
+}
+
+@available(macOS 15, *)
 enum CoreHIDPhysicalReportRequest {
   static let timeout: Duration = .seconds(2)
 
@@ -364,7 +369,8 @@ actor CoreHIDAccessBackend: HIDAccessBackend {
                   usage: UInt32(element.usage.usage ?? 0),
                   logicalMinimum: Int(element.logicalMinimum ?? 0),
                   logicalMaximum: Int(element.logicalMaximum ?? 0),
-                  integerValue: value.integerValue(asTypeTruncatingIfNeeded: Int.self)
+                  integerValue: value.integerValue(asTypeTruncatingIfNeeded: Int.self),
+                  reportID: CoreHIDElementReportID.value(element.reportID)
                 )
               )
             )

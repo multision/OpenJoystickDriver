@@ -29,6 +29,7 @@ public enum HIDInputOwnership: String, Codable, Equatable, Sendable {
 
 /// A semantic value decoded by the active app HID backend from one input element.
 public struct HIDElementValue: Sendable, Equatable {
+  public let reportID: UInt32?
   public let usagePage: UInt32
   public let usage: UInt32
   public let logicalMinimum: Int
@@ -40,8 +41,10 @@ public struct HIDElementValue: Sendable, Equatable {
     usage: UInt32,
     logicalMinimum: Int,
     logicalMaximum: Int,
-    integerValue: Int
+    integerValue: Int,
+    reportID: UInt32? = nil
   ) {
+    self.reportID = reportID
     self.usagePage = usagePage
     self.usage = usage
     self.logicalMinimum = logicalMinimum

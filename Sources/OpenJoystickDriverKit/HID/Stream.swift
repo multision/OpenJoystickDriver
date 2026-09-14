@@ -2,6 +2,8 @@ import Foundation
 import IOKit
 import IOKit.hid
 
+enum IOHIDElementReportID { static func value(_ reportID: UInt32) -> UInt32 { reportID } }
+
 /// Watches for HID-class game controllers using Apple's IOKit HID framework.
 ///
 /// Creates an `AsyncStream` of device connect, disconnect, and input report
@@ -304,7 +306,8 @@ public final class HIDDeviceStream: @unchecked Sendable {
       usage: IOHIDElementGetUsage(element),
       logicalMinimum: IOHIDElementGetLogicalMin(element),
       logicalMaximum: IOHIDElementGetLogicalMax(element),
-      integerValue: IOHIDValueGetIntegerValue(value)
+      integerValue: IOHIDValueGetIntegerValue(value),
+      reportID: IOHIDElementReportID.value(IOHIDElementGetReportID(element))
     )
     continuation?.yield(
       .inputValue(locationID: UInt32(truncatingIfNeeded: loc), value: semanticValue)

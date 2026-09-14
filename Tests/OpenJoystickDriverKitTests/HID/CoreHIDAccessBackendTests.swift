@@ -54,6 +54,19 @@ struct CoreHIDAccessBackendTests {
 
   @available(macOS 15, *)
   @Test
+  func coreHIDElementReportIdentifiersArePreserved() {
+    #expect(CoreHIDElementReportID.value(HIDReportID(rawValue: 6)) == 6)
+    #expect(CoreHIDElementReportID.value(nil) == nil)
+  }
+
+  @Test
+  func legacyHIDElementReportIdentifiersArePreservedWithoutNarrowing() {
+    #expect(IOHIDElementReportID.value(6) == 6)
+    #expect(IOHIDElementReportID.value(UInt32.max) == UInt32.max)
+  }
+
+  @available(macOS 15, *)
+  @Test
   func physicalSetReportUsesFiniteTimeoutAndCompletesFailures() async throws {
     struct ExpectedFailure: Error {}
     var receivedTimeout: Duration?
