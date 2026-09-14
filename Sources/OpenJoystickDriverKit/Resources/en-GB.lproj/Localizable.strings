@@ -296,6 +296,7 @@
 "profiles.creationValidation" = "Review the profile name, controller identifiers, and application target.";
 "profiles.deactivateController" = "Deactivate all";
 "profiles.details" = "Profile details";
+"profiles.notSupportedByController" = "Not supported by this controller or protocol.";
 "profiles.doubleTap" = "Double tap";
 "profiles.export" = "Export profile";
 "profiles.hold" = "Hold";
@@ -1221,3 +1222,34 @@
 "profiles.physical.strength" = "Resistance strength";
 
 "cli.mapping.physical_output_help" = "Physical controller targets:\n  physical:rumble:<motor>:<0...1>\n  physical:player:<0...4>\n  physical:color:<red>:<green>:<blue>\n  physical:brightness:<0...1>\n  physical:adaptive:<left|right>:off\n  physical:adaptive:<left|right>:resistance:<start-position>:<strength>";
+"cli.mapping.clear_inputs_requires_confirmation" = "Pass --confirm to clear all profile input configuration.";
+"cli.mapping.empty_profile_requires_confirmation" = "This profile suppresses all controller input. Pass --allow-empty to activate it.";
+"cli.mapping.usage.restore_default_input" = "map restore-default-input <uuid-or-name>";
+"profiles.clearInputs" = "Clear all inputs";
+"profiles.clearInputsMessage" = "This removes all assignments and input processing from this profile.";
+"profiles.clearInputsTitle" = "Clear all inputs?";
+"profiles.emptyActivationMessage" = "This profile suppresses all controller input.";
+"profiles.emptyActivationTitle" = "Activate profile with no controller input?";
+"profiles.emptyInputWarning" = "This profile suppresses all controller input.";
+"profiles.restoreDefaultInput" = "Restore default input";
+"profiles.damagedProfile" = "Damaged profile";
+"profiles.damagedLibrary" = "Profile library";
+"profiles.deleteDamagedButton" = "Delete Damaged Profile...";
+"profiles.resetLibraryButton" = "Back Up & Reset Library...";
+"profiles.recoveryBackupMessage" = "A backup will be created before damaged data is removed.";
+"profiles.damagedProfileMessage" = "This saved profile could not be read. Delete it to continue using the valid profiles.";
+"profiles.resetLibraryAction" = "Back Up & Reset";
+
+/* Controller session lifecycle */
+"controllers.suspended" = "Suspended";
+"controllers.sessionActive" = "Managed by OpenJoystickDriver";
+"controllers.suspendedSummary" = "Input and OpenJoystickDriver output are paused until you resume.";
+"controllers.disconnectSummary" = "Pause input, physical effects, and OpenJoystickDriver virtual output.";
+"controllers.resume" = "Resume";
+"controllers.disconnectFromOJD" = "Disconnect from OpenJoystickDriver";
+"error.compatibilityTransitionDetailed" = "Could not switch controller output (%@, %@). The previous output remains active.";
+"error.controllerSessionChangeRejected" = "The controller session could not be changed.";
+"cli.catalog.controller_disconnect.summary" = "Suspend a controller from OpenJoystickDriver";
+"cli.catalog.controller_resume.summary" = "Resume a suspended controller";
+"cli.controller.disconnected" = "Controller suspended from OpenJoystickDriver.";
+"cli.controller.resumed" = "Controller resumed in OpenJoystickDriver.";

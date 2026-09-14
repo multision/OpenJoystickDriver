@@ -13,17 +13,17 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>d</string>
 			<key>one</key>
-			<string>%d controller connected</string>
+			<string>%d stivrejeaddji lea čadnojuvvon</string>
 			<key>zero</key>
-			<string>%d controllers connected</string>
+			<string>%d stivrejeaddjit leat čadnojuvvon</string>
 			<key>two</key>
-			<string>%d controllers connected</string>
+			<string>%d stivrejeaddjit leat čadnojuvvon</string>
 			<key>few</key>
-			<string>%d controllers connected</string>
+			<string>%d stivrejeaddjit leat čadnojuvvon</string>
 			<key>many</key>
-			<string>%d controllers connected</string>
+			<string>%d stivrejeaddjit leat čadnojuvvon</string>
 			<key>other</key>
-			<string>%d controllers connected</string>
+			<string>%d stivrejeaddjit leat čadnojuvvon</string>
 		</dict>
 	</dict>
 	<key>status.activeProfilesCount</key>
@@ -37,17 +37,17 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>d</string>
 			<key>one</key>
-			<string>%d active profile</string>
+			<string>%d aktiiva profiila</string>
 			<key>zero</key>
-			<string>%d active profiles</string>
+			<string>%d aktiiva profiillat</string>
 			<key>two</key>
-			<string>%d active profiles</string>
+			<string>%d aktiiva profiillat</string>
 			<key>few</key>
-			<string>%d active profiles</string>
+			<string>%d aktiiva profiillat</string>
 			<key>many</key>
-			<string>%d active profiles</string>
+			<string>%d aktiiva profiillat</string>
 			<key>other</key>
-			<string>%d active profiles</string>
+			<string>%d aktiiva profiillat</string>
 		</dict>
 	</dict>
 	<key>profiles.assignments</key>
@@ -61,17 +61,17 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>d</string>
 			<key>one</key>
-			<string>%d assignment</string>
+			<string>%d bargu</string>
 			<key>zero</key>
-			<string>%d assignments</string>
+			<string>%d barggut</string>
 			<key>two</key>
-			<string>%d assignments</string>
+			<string>%d barggut</string>
 			<key>few</key>
-			<string>%d assignments</string>
+			<string>%d barggut</string>
 			<key>many</key>
-			<string>%d assignments</string>
+			<string>%d barggut</string>
 			<key>other</key>
-			<string>%d assignments</string>
+			<string>%d barggut</string>
 		</dict>
 	</dict>
 	<key>debug.devices</key>
@@ -85,17 +85,17 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>d</string>
 			<key>zero</key>
-			<string>None detected</string>
+			<string>Ii oktage gávdnon</string>
 			<key>one</key>
-			<string>%d detected</string>
+			<string>%d gávnnahuvvon</string>
 			<key>two</key>
-			<string>%d detected</string>
+			<string>%d gávnnahuvvon</string>
 			<key>few</key>
-			<string>%d detected</string>
+			<string>%d gávnnahuvvon</string>
 			<key>many</key>
-			<string>%d detected</string>
+			<string>%d gávnnahuvvon</string>
 			<key>other</key>
-			<string>%d detected</string>
+			<string>%d gávnnahuvvon</string>
 		</dict>
 	</dict>
 	<key>debug.outputDevices</key>
@@ -109,17 +109,17 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>d</string>
 			<key>zero</key>
-			<string>No controller output devices detected</string>
+			<string>Ii gávdnon stivrejeaddji olggosbuktinrusttet</string>
 			<key>one</key>
-			<string>%d controller output device detected</string>
+			<string>%d stivrejeaddji olggosbuktinrusttet lea gávdnon</string>
 			<key>two</key>
-			<string>%d controller output devices detected</string>
+			<string>%d stivrejeaddji olggosbuktinrusttegat leat gávdnon</string>
 			<key>few</key>
-			<string>%d controller output devices detected</string>
+			<string>%d stivrejeaddji olggosbuktinrusttegat leat gávdnon</string>
 			<key>many</key>
-			<string>%d controller output devices detected</string>
+			<string>%d stivrejeaddji olggosbuktinrusttegat leat gávdnon</string>
 			<key>other</key>
-			<string>%d controller output devices detected</string>
+			<string>%d stivrejeaddji olggosbuktinrusttegat leat gávdnon</string>
 		</dict>
 	</dict>
 </dict>

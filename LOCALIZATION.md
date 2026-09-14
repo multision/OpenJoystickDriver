@@ -15,9 +15,10 @@ order picks the locale. No in-app switcher.
 locales into the app. Kit `Localization` falls back to `en-US`. App:
 `OJDLocalized`. CLI: `CLILocalized`.
 
-83 `.lproj` bundles. Five plurals. First-pass translations except English
-source (`en-US`, `C`, `en-*`) and Northern Sámi (`se-FI`, `se-NO`). `et-EE` is
-the reviewed start. Do not restore retired catalogs.
+83 `.lproj` bundles. Five plurals. Every non-English locale, including
+Northern Sámi (`se-FI`, `se-NO`), has a fluent first-pass translation. English
+source catalogs are `en-US`, `C`, and `en-*`. `et-EE` is the reviewed start. Do
+not restore retired catalogs.
 
 ## Punctuation
 
@@ -34,6 +35,10 @@ the reviewed start. Do not restore retired catalogs.
 3. One key per label. Sentence case. Native ellipsis when the action opens
    another surface.
 4. RTL: check mixed-direction names and paths.
+
+Capability messages describe the controller or active protocol, not a permanent profile error.
+Compact symbol actions still require localized text because that text is used for older-system
+fallbacks, tooltips, and accessibility labels.
 
 Put the language first in macOS to try it.
 

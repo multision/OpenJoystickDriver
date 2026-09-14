@@ -32,6 +32,39 @@ struct LocalizationTests {
   }
 
   @Test
+  func everyNonEnglishLocaleTranslatesSourceEnglishProse() {
+    let sourceKeys = LocalizationCatalogAudit.keys(for: Localization.sourceLocalization)
+    #expect(LocalizationCatalogAudit.nonLinguisticSourceIdenticalKeys.isSubset(of: sourceKeys))
+    var usedNonLinguisticExceptions = Set<String>()
+
+    for locale in Localization.availableLocalizations()
+    where locale.caseInsensitiveCompare("C") != .orderedSame
+      && !locale.lowercased().hasPrefix("en-")
+    {
+      let untranslated = LocalizationCatalogAudit.sourceIdenticalEnglishProseKeys(for: locale)
+      let allowed = LocalizationCatalogAudit.allowedSourceIdenticalEnglishProseKeys(for: locale)
+      #expect(
+        untranslated.isSubset(of: allowed),
+        "\(locale) leaves source English in \(untranslated.subtracting(allowed).sorted())"
+      )
+      #expect(
+        allowed.subtracting(LocalizationCatalogAudit.nonLinguisticSourceIdenticalKeys).isSubset(
+          of: untranslated
+        ),
+        "\(locale) has obsolete locale-specific exceptions"
+      )
+      usedNonLinguisticExceptions.formUnion(
+        untranslated.intersection(LocalizationCatalogAudit.nonLinguisticSourceIdenticalKeys)
+      )
+    }
+
+    #expect(
+      usedNonLinguisticExceptions == LocalizationCatalogAudit.nonLinguisticSourceIdenticalKeys,
+      "Non-linguistic exceptions must reference source-identical catalog entries"
+    )
+  }
+
+  @Test
   func packagedCatalogIncludesCLIAndInputTestProductKeys() {
     let keys = LocalizationCatalogAudit.keys(for: Localization.sourceLocalization)
     for required in [

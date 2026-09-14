@@ -3,6 +3,173 @@ import Foundation
 @testable import OpenJoystickDriverKit
 
 enum LocalizationCatalogAudit {
+  static let nonLinguisticSourceIdenticalKeys: Set<String> = [
+    "app.name", "cli.diagnose.interface_line", "cli.diagnose.macos_version",
+    "cli.diagnose.usb_device_line", "cli.error.codesign_diagnostic",
+    "cli.mapping.usage.restore_default_input", "compatibility.appleGameController",
+    "compatibility.genericHID", "compatibility.sdl2_3", "compatibility.xbox360HID",
+    "controller.dualSense", "controller.dualShock3", "controller.dualShock4", "controller.flydigi",
+    "controller.genericHID", "controller.originalXbox", "controller.standardHID",
+    "controller.steamController", "controller.switchPro", "controller.switchProController",
+    "controller.xbox360", "controller.xbox360Wireless", "controller.xbox360WirelessDeveloper",
+    "controller.xboxAdaptiveJoystick", "controller.xboxOne", "controller.xboxOriginal",
+    "controllers.usbIdentifier", "developer.hid", "developer.usbID", "inputTest.aCross",
+    "inputTest.yTriangle", "mapping.buttonNorth", "mapping.buttonSouth", "mapping.dpadDirection",
+    "mapping.paddle1", "mapping.paddle2", "mapping.paddle3", "mapping.paddle4",
+    "mapping.rightJoyConSL", "menu.projectPage", "profiles.sectionDpad",
+    "setup.driverAccessibility", "setup.driverTitle",
+  ]
+
+  private static let sourceIdenticalTermsByLocale: [String: Set<String>] = [
+    "af-ZA": [
+      "settings.status", "controllers.battery", "profiles.turbo", "common.status", "common.stop",
+      "inputTest.minus", "inputTest.plus", "keyboard.tab", "profiles.physical.motor",
+    ],
+    "ca-AD": [
+      "menu.zoom", "settings.general", "controllers.protocol", "profiles.controlNumber",
+      "profiles.turbo", "mapping.mode", "common.protocol", "cli.output.error_prefix",
+      "inputTest.color", "inputTest.rumble", "inputTest.triangle", "keyboard.control",
+      "console.errors", "profiles.motion.local", "profiles.physical.motor",
+    ],
+    "ca-ES": [
+      "menu.zoom", "settings.general", "controllers.protocol", "profiles.controlNumber",
+      "profiles.turbo", "mapping.mode", "common.protocol", "cli.output.error_prefix",
+      "inputTest.color", "inputTest.rumble", "inputTest.triangle", "keyboard.control",
+      "console.errors", "profiles.motion.local", "profiles.physical.motor",
+    ],
+    "ca-FR": [
+      "menu.zoom", "settings.general", "controllers.protocol", "profiles.controlNumber",
+      "profiles.turbo", "mapping.mode", "common.protocol", "cli.output.error_prefix",
+      "inputTest.color", "inputTest.rumble", "inputTest.triangle", "keyboard.control",
+      "console.errors", "profiles.motion.local", "profiles.physical.motor",
+    ],
+    "ca-IT": [
+      "menu.zoom", "settings.general", "controllers.protocol", "profiles.controlNumber",
+      "profiles.turbo", "mapping.mode", "common.protocol", "cli.output.error_prefix",
+      "inputTest.color", "inputTest.rumble", "inputTest.triangle", "keyboard.control",
+      "console.errors", "profiles.motion.local", "profiles.physical.motor",
+    ], "cs-CZ": ["profiles.turbo", "profiles.trackball.enabled", "profiles.physical.motor"],
+    "da-DK": [
+      "menu.zoom", "settings.status", "controllers.parser", "capture.destination", "profiles.turbo",
+      "mapping.start", "profiles.touch.pointer", "common.status", "common.parser",
+      "common.destination", "cli.catalog.group.system", "cli.controller.transport",
+      "inputTest.minus", "inputTest.rumble", "inputTest.testRumble", "motion.calibration.pause",
+      "profiles.stick.pointerRing", "profiles.physical.motor",
+    ],
+    "de-AT": [
+      "settings.status", "controllers.parser", "capture.linear", "profiles.turbo", "common.status",
+      "common.parser", "cli.catalog.group.system", "cli.controller.transport", "developer.route",
+      "inputTest.minus", "profiles.trackball.enabled", "profiles.physical.motor",
+    ],
+    "de-CH": [
+      "settings.status", "controllers.parser", "capture.linear", "profiles.turbo", "common.status",
+      "common.parser", "cli.catalog.group.system", "cli.controller.transport", "developer.route",
+      "inputTest.minus", "profiles.trackball.enabled", "profiles.physical.motor",
+    ],
+    "de-DE": [
+      "settings.status", "controllers.parser", "capture.linear", "profiles.turbo", "common.status",
+      "common.parser", "cli.catalog.group.system", "cli.controller.transport", "developer.route",
+      "inputTest.minus", "profiles.trackball.enabled", "profiles.physical.motor",
+    ], "es-AR": ["profiles.turbo"], "es-CR": ["profiles.turbo"], "es-ES": ["profiles.turbo"],
+    "es-MX": ["profiles.turbo"],
+    "et-EE": ["controllers.parser", "profiles.turbo", "common.parser"], "fi-FI": ["profiles.turbo"],
+    "fr-BE": [
+      "settings.service", "capture.destination", "profiles.activationMode",
+      "profiles.touch.surface", "common.service", "common.destination",
+      "cli.catalog.group.configuration", "inputTest.triangle", "console.title",
+      "motion.calibration.pause",
+    ],
+    "fr-CA": [
+      "settings.service", "capture.destination", "profiles.activationMode",
+      "profiles.touch.surface", "common.service", "common.destination",
+      "cli.catalog.group.configuration", "inputTest.triangle", "console.title",
+      "motion.calibration.pause",
+    ],
+    "fr-CH": [
+      "settings.service", "capture.destination", "profiles.activationMode",
+      "profiles.touch.surface", "common.service", "common.destination",
+      "cli.catalog.group.configuration", "inputTest.triangle", "console.title",
+      "motion.calibration.pause",
+    ],
+    "fr-FR": [
+      "settings.service", "capture.destination", "profiles.activationMode",
+      "profiles.touch.surface", "common.service", "common.destination",
+      "cli.catalog.group.configuration", "inputTest.triangle", "console.title",
+      "motion.calibration.pause",
+    ], "ga-IE": ["profiles.turbo", "common.stop", "profiles.trackball.yaw"],
+    "hr-HR": [
+      "controllers.parser", "profiles.turbo", "common.parser", "inputTest.minus",
+      "inputTest.testRumble", "profiles.physical.motor",
+    ], "hu-HU": ["profiles.trackball.yaw", "profiles.physical.motor"],
+    "it-CH": ["menu.zoom", "settings.debug", "profiles.turbo", "debug.title"],
+    "it-IT": ["menu.zoom", "settings.debug", "profiles.turbo", "debug.title"],
+    "lt-LT": ["profiles.turbo"], "lv-LV": ["profiles.turbo"],
+    "nb-NO": [
+      "menu.zoom", "settings.status", "controllers.parser", "profiles.turbo", "mapping.start",
+      "common.status", "common.parser", "cli.catalog.group.system", "cli.controller.transport",
+      "inputTest.minus", "inputTest.rumble", "inputTest.testRumble", "motion.calibration.pause",
+      "profiles.physical.motor",
+    ],
+    "nl-BE": [
+      "settings.status", "settings.updates", "controllers.protocol", "controllers.parser",
+      "profiles.activator", "profiles.sectionTriggers", "common.status", "common.protocol",
+      "common.parser", "cli.mapping.routes", "keyboard.tab", "console.title",
+      "motion.calibration.offset", "profiles.trackball.enabled", "profiles.trigger.source",
+    ],
+    "nl-NL": [
+      "settings.status", "settings.updates", "controllers.protocol", "controllers.parser",
+      "profiles.activator", "profiles.sectionTriggers", "common.status", "common.protocol",
+      "common.parser", "cli.mapping.routes", "keyboard.tab", "console.title",
+      "motion.calibration.offset", "profiles.trackball.enabled", "profiles.trigger.source",
+    ],
+    "nn-NO": [
+      "menu.zoom", "profiles.turbo", "cli.controller.transport", "inputTest.minus",
+      "inputTest.rumble", "inputTest.testRumble", "motion.calibration.offset",
+      "motion.calibration.pause", "profiles.physical.motor",
+    ],
+    "no-NO": [
+      "menu.zoom", "settings.status", "controllers.parser", "profiles.turbo", "mapping.start",
+      "common.status", "common.parser", "cli.catalog.group.system", "cli.controller.transport",
+      "inputTest.minus", "inputTest.rumble", "inputTest.testRumble", "motion.calibration.pause",
+      "profiles.physical.motor",
+    ],
+    "pl-PL": [
+      "controllers.parser", "profiles.turbo", "common.parser", "cli.controller.transport",
+      "inputTest.menu", "inputTest.minus",
+    ], "pt-BR": ["menu.zoom", "profiles.turbo", "keyboard.capsLock", "profiles.physical.motor"],
+    "pt-PT": ["menu.zoom", "profiles.turbo", "keyboard.capsLock", "profiles.physical.motor"],
+    "ro-RO": [
+      "menu.zoom", "profiles.activator", "profiles.turbo", "inputTest.minus",
+      "inputTest.testRumble", "profiles.motion.local", "profiles.trigger.source",
+      "profiles.physical.motor",
+    ],
+    "se-FI": [
+      "menu.zoom", "profiles.turbo", "inputTest.minus", "inputTest.rumble", "keyboard.capsLock",
+      "keyboard.tab", "motion.calibration.offset",
+    ],
+    "se-NO": [
+      "menu.zoom", "profiles.turbo", "inputTest.minus", "inputTest.rumble", "keyboard.capsLock",
+      "keyboard.tab", "motion.calibration.offset",
+    ], "sk-SK": ["profiles.turbo", "profiles.trackball.enabled", "profiles.physical.motor"],
+    "sl-SI": ["profiles.turbo", "inputTest.testRumble", "profiles.physical.motor"],
+    "sv-FI": [
+      "settings.status", "profiles.turbo", "common.status", "cli.controller.transport",
+      "inputTest.minus", "inputTest.rumble", "profiles.physical.motor",
+    ],
+    "sv-SE": [
+      "settings.status", "profiles.turbo", "common.status", "cli.controller.transport",
+      "inputTest.minus", "inputTest.rumble", "profiles.physical.motor",
+    ],
+  ]
+
+  static func allowedSourceIdenticalEnglishProseKeys(for localization: String) -> Set<String> {
+    let localizedTerms =
+      sourceIdenticalTermsByLocale.first {
+        $0.key.caseInsensitiveCompare(localization) == .orderedSame
+      }?.value ?? []
+    return nonLinguisticSourceIdenticalKeys.union(localizedTerms)
+  }
+
   static func keys(for localization: String) -> Set<String> {
     var result = stringsData(for: localization).map { Set(parseStrings($0).keys) } ?? []
     result.formUnion(stringsDictionary(for: localization).keys)
@@ -24,6 +191,33 @@ enum LocalizationCatalogAudit {
 
   static func pluralCategories(for localization: String) -> [String: Set<String>] {
     stringsDictionary(for: localization).mapValues(collectPluralCategories)
+  }
+
+  static func sourceIdenticalEnglishProseKeys(for localization: String) -> Set<String> {
+    let sourceStrings = stringsData(for: Localization.sourceLocalization).map(parseStrings) ?? [:]
+    let localizedStrings = stringsData(for: localization).map(parseStrings) ?? [:]
+    var result: Set<String> = Set(
+      localizedStrings.compactMap { key, value in
+        guard sourceStrings[key] == value, isEnglishProse(value) else { return nil }
+        return key
+      }
+    )
+
+    let sourcePlurals = stringsDictionary(for: Localization.sourceLocalization)
+    let localizedPlurals = stringsDictionary(for: localization)
+    for (key, localizedValue) in localizedPlurals {
+      guard let sourceValue = sourcePlurals[key] else { continue }
+      var sourceValues: [String] = []
+      var localizedValues: [String] = []
+      collectPluralStrings(sourceValue, into: &sourceValues)
+      collectPluralStrings(localizedValue, into: &localizedValues)
+      if zip(sourceValues, localizedValues).contains(where: { source, localized in
+        source == localized && isEnglishProse(source)
+      }) {
+        result.insert(key)
+      }
+    }
+    return result
   }
 
   private static func resourceData(for localization: String, extension: String) -> Data? {
@@ -92,5 +286,14 @@ enum LocalizationCatalogAudit {
     return expression.matches(in: value, range: range).compactMap { match in
       Range(match.range, in: value).map { String(value[$0]) }
     }
+  }
+
+  private static func isEnglishProse(_ value: String) -> Bool {
+    let withoutPlaceholders = value.replacingOccurrences(
+      of: #"%(?:#@\w+@|(?:[0-9]+\$)?[-+0-9.#]*[@a-zA-Z])"#,
+      with: "",
+      options: .regularExpression
+    )
+    return withoutPlaceholders.range(of: #"[A-Za-z]{3,}"#, options: .regularExpression) != nil
   }
 }
