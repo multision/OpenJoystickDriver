@@ -144,6 +144,26 @@ public struct ControllerResumeResult: Codable, Equatable, Sendable {
   public var succeeded: Bool { state == .active && failure == nil }
 }
 
+public enum WirelessControllerDisconnectFailure: String, Codable, Equatable, Sendable {
+  case notFound = "not-found"
+  case notBluetooth = "not-bluetooth"
+  case missingAddress = "missing-address"
+  case disconnectFailed = "disconnect-failed"
+  case timedOut = "timed-out"
+}
+
+public struct WirelessControllerDisconnectResult: Codable, Equatable, Sendable {
+  public let state: ControllerSessionState
+  public let failure: WirelessControllerDisconnectFailure?
+
+  public init(state: ControllerSessionState, failure: WirelessControllerDisconnectFailure? = nil) {
+    self.state = state
+    self.failure = failure
+  }
+
+  public var succeeded: Bool { failure == nil }
+}
+
 /// Structured description of a connected controller, used in ``ApplicationServiceStatusPayload``.
 public struct ApplicationServiceDeviceDescription: Codable, Sendable {
   /// Opaque selector for one connected controller during the current runtime session.
@@ -192,6 +212,8 @@ public struct ApplicationServiceDeviceDescription: Codable, Sendable {
   public let sessionState: ControllerSessionState
   /// Result of the most recent required protocol startup command sequence.
   public let startupCommandStatus: String?
+  /// Live report freshness and recovery state for this controller input pipeline.
+  public let inputHealth: ControllerInputHealth
 
   private enum CodingKeys: String, CodingKey {
     case name
@@ -217,6 +239,7 @@ public struct ApplicationServiceDeviceDescription: Codable, Sendable {
     case battery
     case sessionState
     case startupCommandStatus
+    case inputHealth
   }
 
   /// Creates a new ApplicationServiceDeviceDescription.
@@ -243,6 +266,7 @@ public struct ApplicationServiceDeviceDescription: Codable, Sendable {
     battery: ControllerBatteryTelemetry? = nil,
     sessionState: ControllerSessionState = .active,
     startupCommandStatus: String? = nil,
+    inputHealth: ControllerInputHealth = ControllerInputHealth(state: .healthy),
     runtimeIdentifier: String? = nil
   ) {
     self.runtimeIdentifier = runtimeIdentifier ?? String(format: "%04X:%04X:M", vendorID, productID)
@@ -268,6 +292,7 @@ public struct ApplicationServiceDeviceDescription: Codable, Sendable {
     self.battery = battery
     self.sessionState = sessionState
     self.startupCommandStatus = startupCommandStatus
+    self.inputHealth = inputHealth
   }
 
   public init(from decoder: Decoder) throws {
@@ -320,6 +345,9 @@ public struct ApplicationServiceDeviceDescription: Codable, Sendable {
       String.self,
       forKey: .startupCommandStatus
     )
+    self.inputHealth =
+      try container.decodeIfPresent(ControllerInputHealth.self, forKey: .inputHealth)
+      ?? ControllerInputHealth(state: .healthy)
   }
 }
 

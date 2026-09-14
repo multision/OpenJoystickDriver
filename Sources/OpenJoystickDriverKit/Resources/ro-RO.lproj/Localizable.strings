@@ -1253,3 +1253,15 @@
 "cli.catalog.controller_resume.summary" = "Încearcă din nou — Controlor deconectat";
 "cli.controller.disconnected" = "Controlor deconectat";
 "cli.controller.resumed" = "Input activ";
+
+"controllers.disconnectWireless" = "Controlor deconectat…";
+"controllers.disconnectWirelessButton" = "Controlor deconectat…";
+"controllers.disconnectWirelessSummary" = "Controlor deconectat";
+"controllers.disconnectWirelessConfirmTitle" = "Controlor deconectat";
+"controllers.disconnectWirelessConfirmMessage" = "%@ nu mai este conectat.";
+"controllers.disconnectWirelessConfirm" = "Controlor deconectat";
+"cli.catalog.controller_disconnect_wireless.summary" = "Controlor deconectat";
+"cli.controller.wirelessDisconnected" = "Controlor deconectat";
+
+"notifications.controllerNeedsAttention" = "Controlor deconectat";
+"notifications.controllerNeedsAttentionBody" = "%@ nu mai este conectat.";

@@ -15,8 +15,11 @@ is shipped, so there is no consumer-free daemon-era resource to remove.
 
 Controller sessions distinguish physical connection from reversible OJD suspension. Compatibility
 transitions use bounded shutdown and retain the actual live identity after a failed replacement.
-Complete DualShock 4 Bluetooth reports require a valid CRC; stale non-neutral output is retired
-after one second and recovers at a fresh neutral report. GameSir G7 SE startup keeps the mandatory
+Complete DualShock 4 Bluetooth reports require a valid CRC. Absolute report observations reconcile
+missed deltas, stale report progress retires non-neutral OJD output after one second, and recovery
+requires a fresh neutral report. Idle input is never consumed as a wake event. Explicit wireless
+disconnect neutralizes and suspends one selected session before a bounded Bluetooth close, without
+reconnecting or affecting other controllers. GameSir G7 SE startup keeps the mandatory
 GIP LED-on command on every USB open and resume, with the latest startup result in diagnostics.
 
 Quit requests share one asynchronous teardown and leave the app stopped. TCC

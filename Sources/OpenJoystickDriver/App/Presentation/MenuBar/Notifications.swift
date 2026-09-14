@@ -2,6 +2,7 @@
 
   import AppKit
   import Foundation
+  import OpenJoystickDriverKit
   import UserNotifications
 
   enum RuntimeNotificationAuthorizationState: Equatable, Sendable {
@@ -150,9 +151,15 @@
     }
   }
 
+  struct RuntimeControllerHealthSnapshot: Equatable {
+    let name: String
+    let state: ControllerInputHealthState
+  }
+
   struct RuntimeNotificationSnapshot: Equatable {
     let controllers: [String: String]?
     let activeProfiles: [String: String]?
+    let controllerHealth: [String: RuntimeControllerHealthSnapshot]?
 
     @MainActor
     init(viewModel: RuntimeViewModel) {
@@ -161,7 +168,17 @@
         controllers = Dictionary(
           uniqueKeysWithValues: status.devices.map { ($0.runtimeIdentifier, $0.name) }
         )
-      case .loading, .unavailable, .error: controllers = nil
+        controllerHealth = Dictionary(
+          uniqueKeysWithValues: status.devices.map {
+            (
+              $0.runtimeIdentifier,
+              RuntimeControllerHealthSnapshot(name: $0.name, state: $0.inputHealth.state)
+            )
+          }
+        )
+      case .loading, .unavailable, .error:
+        controllers = nil
+        controllerHealth = nil
       }
 
       switch viewModel.remappingState {
@@ -175,9 +192,14 @@
       }
     }
 
-    init(controllers: [String: String]?, activeProfiles: [String: String]?) {
+    init(
+      controllers: [String: String]?,
+      activeProfiles: [String: String]?,
+      controllerHealth: [String: RuntimeControllerHealthSnapshot]? = nil
+    ) {
       self.controllers = controllers
       self.activeProfiles = activeProfiles
+      self.controllerHealth = controllerHealth
     }
   }
 
@@ -185,6 +207,7 @@
     case controllerConnected(String)
     case controllerDisconnected(String)
     case activeProfileChanged(from: String?, to: String?)
+    case controllerNeedsAttention(String)
   }
 
   enum RuntimeNotificationDiff {
@@ -215,6 +238,16 @@
           events.append(
             .activeProfileChanged(from: previousProfiles[device], to: currentProfiles[device])
           )
+        }
+      }
+      if let previousHealth = previous.controllerHealth,
+        let currentHealth = current.controllerHealth
+      {
+        for identifier in currentHealth.keys.sorted() {
+          guard let currentController = currentHealth[identifier],
+            currentController.state != .healthy, previousHealth[identifier]?.state == .healthy
+          else { continue }
+          events.append(.controllerNeedsAttention(currentController.name))
         }
       }
       return events
@@ -327,6 +360,20 @@
             fallback: "Active profile changed"
           ),
           body: profileChangeBody(from: previousName, to: currentName),
+          sound: notificationSoundIsEnabled
+        )
+      case .controllerNeedsAttention(let name):
+        guard preferenceIsEnabled(ApplicationPreferenceKeys.controllerNotifications) else { return }
+        delivery.deliver(
+          title: OJDLocalized.string(
+            "notifications.controllerNeedsAttention",
+            fallback: "Controller needs attention"
+          ),
+          body: OJDLocalized.formatted(
+            "notifications.controllerNeedsAttentionBody",
+            fallback: "%@ input stopped updating. Release its controls or disconnect it.",
+            name
+          ),
           sound: notificationSoundIsEnabled
         )
       }

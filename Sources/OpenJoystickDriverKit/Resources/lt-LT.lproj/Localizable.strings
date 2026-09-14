@@ -1253,3 +1253,15 @@
 "cli.catalog.controller_resume.summary" = "Bandyti dar kartą — Valdiklis išjungtas";
 "cli.controller.disconnected" = "Valdiklis išjungtas";
 "cli.controller.resumed" = "Įvesti aktyvus";
+
+"controllers.disconnectWireless" = "Valdiklis išjungtas…";
+"controllers.disconnectWirelessButton" = "Valdiklis išjungtas…";
+"controllers.disconnectWirelessSummary" = "Valdiklis išjungtas";
+"controllers.disconnectWirelessConfirmTitle" = "Valdiklis išjungtas";
+"controllers.disconnectWirelessConfirmMessage" = "%@ - Neįjungtas.";
+"controllers.disconnectWirelessConfirm" = "Valdiklis išjungtas";
+"cli.catalog.controller_disconnect_wireless.summary" = "Valdiklis išjungtas";
+"cli.controller.wirelessDisconnected" = "Valdiklis išjungtas";
+
+"notifications.controllerNeedsAttention" = "Valdiklis išjungtas";
+"notifications.controllerNeedsAttentionBody" = "%@ - Neįjungtas.";

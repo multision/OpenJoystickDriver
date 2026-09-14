@@ -1253,3 +1253,15 @@
 "cli.catalog.controller_resume.summary" = "Proovi uuesti — Kontrolleri ühendus katkes";
 "cli.controller.disconnected" = "Kontrolleri ühendus katkes";
 "cli.controller.resumed" = "Sisend aktiivne";
+
+"controllers.disconnectWireless" = "Kontrolleri ühendus katkes…";
+"controllers.disconnectWirelessButton" = "Kontrolleri ühendus katkes…";
+"controllers.disconnectWirelessSummary" = "Kontrolleri ühendus katkes";
+"controllers.disconnectWirelessConfirmTitle" = "Kontrolleri ühendus katkes";
+"controllers.disconnectWirelessConfirmMessage" = "%@ pole enam ühendatud.";
+"controllers.disconnectWirelessConfirm" = "Kontrolleri ühendus katkes";
+"cli.catalog.controller_disconnect_wireless.summary" = "Kontrolleri ühendus katkes";
+"cli.controller.wirelessDisconnected" = "Kontrolleri ühendus katkes";
+
+"notifications.controllerNeedsAttention" = "Kontrolleri ühendus katkes";
+"notifications.controllerNeedsAttentionBody" = "%@ pole enam ühendatud.";

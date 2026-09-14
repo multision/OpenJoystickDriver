@@ -1253,3 +1253,15 @@
 "cli.catalog.controller_resume.summary" = "حاول مرة أخرى — المراقب منفصل";
 "cli.controller.disconnected" = "المراقب منفصل";
 "cli.controller.resumed" = "إدخال نشط";
+
+"controllers.disconnectWireless" = "المراقب منفصل…";
+"controllers.disconnectWirelessButton" = "المراقب منفصل…";
+"controllers.disconnectWirelessSummary" = "المراقب منفصل";
+"controllers.disconnectWirelessConfirmTitle" = "المراقب منفصل";
+"controllers.disconnectWirelessConfirmMessage" = "لم يعد %@ متصلًا.";
+"controllers.disconnectWirelessConfirm" = "المراقب منفصل";
+"cli.catalog.controller_disconnect_wireless.summary" = "المراقب منفصل";
+"cli.controller.wirelessDisconnected" = "المراقب منفصل";
+
+"notifications.controllerNeedsAttention" = "تم فصل وحدة التحكم";
+"notifications.controllerNeedsAttentionBody" = "لم يعد %@ متصلًا.";

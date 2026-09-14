@@ -102,6 +102,7 @@ public actor DeviceManager {
   let permissionManager: PermissionManager
   let hidManager: HIDManager
   let usbTransportProvider: (any USBTransportProvider)?
+  let wirelessControllerDisconnector: (any WirelessControllerDisconnecting)?
   var pipelines: [DeviceIdentifier: DevicePipeline] = [:]
   var deviceInfos: [DeviceIdentifier: DeviceInfo] = [:]
   var detectionTasks: [Task<Void, Never>] = []
@@ -125,10 +126,12 @@ public actor DeviceManager {
   public init(
     dispatcher: any OutputDispatcher,
     virtualProfile: VirtualDeviceProfile = .default,
-    usbTransportProvider: (any USBTransportProvider)? = nil
+    usbTransportProvider: (any USBTransportProvider)? = nil,
+    wirelessControllerDisconnector: (any WirelessControllerDisconnecting)? = nil
   ) {
     self.dispatcher = dispatcher
     self.usbTransportProvider = usbTransportProvider
+    self.wirelessControllerDisconnector = wirelessControllerDisconnector
     let registry = ParserRegistry()
     self.parserRegistry = registry
     self.permissionManager = PermissionManager()
@@ -246,6 +249,7 @@ public actor DeviceManager {
           battery: await pipeline?.batteryTelemetry(),
           sessionState: await pipeline?.controllerSessionState() ?? .active,
           startupCommandStatus: await pipeline?.startupCommandStatus(),
+          inputHealth: await pipeline?.inputHealth() ?? ControllerInputHealth(state: .healthy),
           runtimeIdentifier: id.runtimeIdentifier
         )
       )
@@ -309,6 +313,67 @@ public actor DeviceManager {
       return ControllerResumeResult(state: .suspended, failure: .notFound)
     }
     return ControllerResumeResult(state: .active)
+  }
+
+  public func disconnectWirelessController(
+    vendorID: UInt16,
+    productID: UInt16,
+    runtimeIdentifier: String?,
+    timeoutNanoseconds: UInt64 = 3_000_000_000
+  ) async -> WirelessControllerDisconnectResult {
+    let model = DeviceIdentifier(vendorID: vendorID, productID: productID)
+    guard
+      let identifier = connectedIdentifier(matching: model, runtimeIdentifier: runtimeIdentifier),
+      let pipeline = pipelines[identifier], let info = deviceInfos[identifier]
+    else { return WirelessControllerDisconnectResult(state: .active, failure: .notFound) }
+    guard info.connection.caseInsensitiveCompare("Bluetooth") == .orderedSame else {
+      return WirelessControllerDisconnectResult(
+        state: await pipeline.controllerSessionState(),
+        failure: .notBluetooth
+      )
+    }
+    guard let address = Self.bluetoothAddress(from: info.serialNumber) else {
+      return WirelessControllerDisconnectResult(
+        state: await pipeline.controllerSessionState(),
+        failure: .missingAddress
+      )
+    }
+    guard let wirelessControllerDisconnector else {
+      return WirelessControllerDisconnectResult(
+        state: await pipeline.controllerSessionState(),
+        failure: .disconnectFailed
+      )
+    }
+
+    await neutralizePhysicalOutputs(for: identifier, pipeline: pipeline)
+    if await pipeline.controllerSessionState() == .active {
+      guard await pipeline.suspendControllerSession() else {
+        return WirelessControllerDisconnectResult(state: .active, failure: .notFound)
+      }
+    }
+
+    switch await wirelessControllerDisconnector.disconnect(
+      address: address,
+      timeoutNanoseconds: timeoutNanoseconds
+    ) {
+    case .disconnected: return WirelessControllerDisconnectResult(state: .suspended)
+    case .failed:
+      return WirelessControllerDisconnectResult(state: .suspended, failure: .disconnectFailed)
+    case .timedOut: return WirelessControllerDisconnectResult(state: .suspended, failure: .timedOut)
+    }
+  }
+
+  static func bluetoothAddress(from serialNumber: String?) -> String? {
+    guard let serialNumber else { return nil }
+    let hexadecimal = serialNumber.filter(\.isHexDigit)
+    guard hexadecimal.count == 12,
+      serialNumber.allSatisfy({ $0.isHexDigit || $0 == ":" || $0 == "-" })
+    else { return nil }
+    return stride(from: 0, to: hexadecimal.count, by: 2).map { offset in
+      let start = hexadecimal.index(hexadecimal.startIndex, offsetBy: offset)
+      let end = hexadecimal.index(start, offsetBy: 2)
+      return hexadecimal[start..<end].uppercased()
+    }.joined(separator: ":")
   }
 
   /// Stop all detection and pipelines.

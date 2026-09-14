@@ -1253,3 +1253,15 @@
 "cli.catalog.controller_resume.summary" = "Паўтарыць спробу — Кантролер адключаны";
 "cli.controller.disconnected" = "Кантролер адключаны";
 "cli.controller.resumed" = "Увода актыўны";
+
+"controllers.disconnectWireless" = "Кантролер адключаны…";
+"controllers.disconnectWirelessButton" = "Кантролер адключаны…";
+"controllers.disconnectWirelessSummary" = "Кантролер адключаны";
+"controllers.disconnectWirelessConfirmTitle" = "Кантролер адключаны";
+"controllers.disconnectWirelessConfirmMessage" = "%@ не звязана больш.";
+"controllers.disconnectWirelessConfirm" = "Кантролер адключаны";
+"cli.catalog.controller_disconnect_wireless.summary" = "Кантролер адключаны";
+"cli.controller.wirelessDisconnected" = "Кантролер адключаны";
+
+"notifications.controllerNeedsAttention" = "Кантролер адключаны";
+"notifications.controllerNeedsAttentionBody" = "%@ не звязана больш.";

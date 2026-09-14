@@ -1253,3 +1253,15 @@
 "cli.catalog.controller_resume.summary" = "फिर कोशिश करें — नियंत्रक से कनेक्ट नहीं";
 "cli.controller.disconnected" = "नियंत्रक से कनेक्ट नहीं";
 "cli.controller.resumed" = "इनपुट सक्रिय";
+
+"controllers.disconnectWireless" = "नियंत्रक से कनेक्ट नहीं…";
+"controllers.disconnectWirelessButton" = "नियंत्रक से कनेक्ट नहीं…";
+"controllers.disconnectWirelessSummary" = "नियंत्रक से कनेक्ट नहीं";
+"controllers.disconnectWirelessConfirmTitle" = "नियंत्रक से कनेक्ट नहीं";
+"controllers.disconnectWirelessConfirmMessage" = "%@ अब जुड़ा नहीं है।";
+"controllers.disconnectWirelessConfirm" = "नियंत्रक से कनेक्ट नहीं";
+"cli.catalog.controller_disconnect_wireless.summary" = "नियंत्रक से कनेक्ट नहीं";
+"cli.controller.wirelessDisconnected" = "नियंत्रक से कनेक्ट नहीं";
+
+"notifications.controllerNeedsAttention" = "नियंत्रक से कनेक्ट नहीं";
+"notifications.controllerNeedsAttentionBody" = "%@ अब जुड़ा नहीं है।";

@@ -47,7 +47,7 @@ CLI command families:
 
 ```text
 status [--json]
-controller list|state|packets|watch|output ...
+controller list|state|packets|watch|output|disconnect|disconnect-wireless|resume ...
 map ...
 app status|login enable|disable|logs ...
 extension status|enable|disable
@@ -90,6 +90,20 @@ unsuitable for an always-present consumer interface.
 physical Bluetooth or USB link. Suspension neutralizes input and physical effects, removes OJD
 virtual output, and keeps the controller visible. `controller resume` repeats required startup
 output and re-enables input; a physical reconnect creates a new active session.
+
+`controller disconnect-wireless` is Bluetooth-only. It neutralizes and suspends the selected OJD
+session before making a bounded request to macOS to close that physical connection. A failed or
+timed-out close leaves the session suspended so stale input cannot be republished; use
+`controller resume` only when you intentionally want OJD to accept it again. OJD never reconnects
+the controller automatically, and the command does not stop other controller sessions.
+
+Parsers that expose complete report observations also expose typed input health in status and
+support reports. DualShock 4 health uses the advancing device sensor timestamp rather than host
+packet arrival alone. Missing or non-advancing complete reports become stale after one second,
+neutralize OJD-published output, and wait for a fresh neutral report before recovery. A fresh held
+control is not guessed to be accidental. Native HID pass-through may still be visible directly to
+another app, so stale health remains a Needs attention condition even after OJD retires its own
+publication.
 
 The additive detailed compatibility RPC reports the requested, live, and retained identities plus
 a typed failure phase and cause. The legacy Boolean RPC remains available. Automatic mode passes

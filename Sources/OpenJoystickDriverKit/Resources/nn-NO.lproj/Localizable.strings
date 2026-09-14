@@ -1253,3 +1253,15 @@
 "cli.catalog.controller_resume.summary" = "Prøv på nytt — Kontrollerar avkoppla";
 "cli.controller.disconnected" = "Kontrollerar avkoppla";
 "cli.controller.resumed" = "Input aktiv";
+
+"controllers.disconnectWireless" = "Kontrollerar avkoppla…";
+"controllers.disconnectWirelessButton" = "Kontrollerar avkoppla…";
+"controllers.disconnectWirelessSummary" = "Kontrollerar avkoppla";
+"controllers.disconnectWirelessConfirmTitle" = "Kontrollerar avkoppla";
+"controllers.disconnectWirelessConfirmMessage" = "%@ är inte längre ansluten.";
+"controllers.disconnectWirelessConfirm" = "Kontrollerar avkoppla";
+"cli.catalog.controller_disconnect_wireless.summary" = "Kontrollerar avkoppla";
+"cli.controller.wirelessDisconnected" = "Kontrollerar avkoppla";
+
+"notifications.controllerNeedsAttention" = "Kontroller frånkopplad";
+"notifications.controllerNeedsAttentionBody" = "%@ är inte längre ansluten.";

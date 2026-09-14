@@ -4,7 +4,7 @@ import Testing
 @testable import OpenJoystickDriverKit
 
 private func makeDS4Report(
-  includesReportID: Bool = false,
+  includesReportID: Bool = true,
   leftStickX: UInt8 = 128,
   leftStickY: UInt8 = 128,
   rightStickX: UInt8 = 128,
@@ -14,6 +14,7 @@ private func makeDS4Report(
   buttons2: UInt8 = 0,
   leftTrigger: UInt8 = 0,
   rightTrigger: UInt8 = 0,
+  sensorTimestamp: UInt16 = 0,
   status: UInt8 = 0
 ) -> Data {
   var report = [UInt8](repeating: 0, count: includesReportID ? 64 : 63)
@@ -28,6 +29,8 @@ private func makeDS4Report(
   report[base + 6] = buttons2
   report[base + 7] = leftTrigger
   report[base + 8] = rightTrigger
+  report[base + 9] = UInt8(truncatingIfNeeded: sensorTimestamp)
+  report[base + 10] = UInt8(truncatingIfNeeded: sensorTimestamp >> 8)
   report[base + 29] = status
   return Data(report)
 }
@@ -44,6 +47,7 @@ private func makeDS4BluetoothReport(
   buttons2: UInt8 = 0,
   leftTrigger: UInt8 = 0,
   rightTrigger: UInt8 = 0,
+  sensorTimestamp: UInt16 = 0,
   status: UInt8 = 0
 ) -> Data {
   var report: [UInt8] = []
@@ -52,9 +56,10 @@ private func makeDS4BluetoothReport(
   report.append(contentsOf: [0xC0, 0x00])
   report.append(contentsOf: [
     leftStickX, leftStickY, rightStickX, rightStickY, buttons0, buttons1, buttons2, leftTrigger,
-    rightTrigger,
+    rightTrigger, UInt8(truncatingIfNeeded: sensorTimestamp),
+    UInt8(truncatingIfNeeded: sensorTimestamp >> 8),
   ])
-  report.append(contentsOf: [UInt8](repeating: 0, count: 62))
+  report.append(contentsOf: [UInt8](repeating: 0, count: 60))
   let commonOffset = (includesHIDTransaction ? 1 : 0) + (includesReportID ? 1 : 0) + 2
   report[commonOffset + 29] = status
   report.append(contentsOf: [0, 0, 0, 0])
@@ -76,6 +81,43 @@ private func containsEvent(_ events: [ControllerEvent], _ expected: ControllerEv
 }
 
 struct DS4ParserTests {
+  @Test
+  func testValidatedReportsExposeAbsoluteControlsAndAdvancingTimestamp() throws {
+    let parser = DS4Parser()
+
+    _ = try parser.parse(
+      data: makeDS4Report(rightStickX: 255, buttons0: 0x28, sensorTimestamp: 0xFFFF)
+    )
+    #expect(parser.latestInputReportObservation?.isFresh == true)
+    #expect(
+      parser.latestInputReportObservation?.controls.contains(
+        .rightStickChanged(x: 127.0 / 128.0, y: 0)
+      ) == true
+    )
+    #expect(parser.latestInputReportObservation?.controls.contains(.buttonPressed(.cross)) == true)
+
+    _ = try parser.parse(data: makeDS4Report(sensorTimestamp: 0xFFFF))
+    #expect(parser.latestInputReportObservation?.isFresh == false)
+    _ = try parser.parse(data: makeDS4Report(sensorTimestamp: 0))
+    #expect(parser.latestInputReportObservation?.isFresh == true)
+    _ = try parser.parse(data: makeDS4Report(sensorTimestamp: 0xFFFF))
+    #expect(parser.latestInputReportObservation?.isFresh == false)
+  }
+
+  @Test
+  func testInvalidBluetoothReportDoesNotReplaceTheLastObservation() throws {
+    let parser = DS4Parser(prefersBluetooth: true)
+    _ = try parser.parse(data: makeDS4BluetoothReport(sensorTimestamp: 1))
+    let observation = parser.latestInputReportObservation
+    var invalidReport = Array(makeDS4BluetoothReport(sensorTimestamp: 2))
+    invalidReport[20] ^= 1
+
+    #expect(throws: DS4ParserError.invalidBluetoothCRC) {
+      try parser.parse(data: Data(invalidReport))
+    }
+    #expect(parser.latestInputReportObservation?.isFresh == observation?.isFresh)
+  }
+
   @Test
   func testUSBReportsBatteryBucketsAndCableStates() throws {
     let parser = DS4Parser()
@@ -191,13 +233,13 @@ struct DS4ParserTests {
   }
 
   @Test
-  func testWiredIOHIDReportWithoutReportIDParsesFaceButtons() throws {
+  func testWiredReportWithoutReportIDIsRejected() throws {
     let parser = DS4Parser()
     _ = try parser.parse(data: makeDS4Report())
 
-    let events = try parser.parse(data: makeDS4Report(buttons0: 0x28))
-
-    #expect(containsEvent(events, .buttonPressed(.cross)))
+    #expect(throws: DS4ParserError.invalidReportFraming) {
+      try parser.parse(data: makeDS4Report(includesReportID: false, buttons0: 0x28))
+    }
   }
   @Test
   func testUSBFaceButtonTransitionsRemainOrderedAcrossUnrelatedInput() throws {
@@ -245,24 +287,21 @@ struct DS4ParserTests {
     #expect(containsEvent(events, .buttonPressed(.touchpad)))
   }
   @Test
-  func testBluetoothPayloadWithoutReportIDParsesDpad() throws {
+  func testBluetoothPayloadWithoutReportIDIsRejected() throws {
     let parser = DS4Parser()
-    _ = try parser.parse(data: makeDS4BluetoothReport(includesReportID: false))
-
-    let events = try parser.parse(
-      data: makeDS4BluetoothReport(includesReportID: false, buttons0: 0x02)
-    )
-
-    #expect(containsEvent(events, .dpadChanged(.east)))
+    #expect(throws: DS4ParserError.invalidReportFraming) {
+      try parser.parse(data: makeDS4BluetoothReport(includesReportID: false))
+    }
   }
   @Test
   func testBluetoothShortReportWithHIDTransactionParsesFaceButtons() throws {
     let parser = DS4Parser(prefersBluetooth: true)
-    _ = try parser.parse(data: Data([0xA1] + Array(makeDS4Report(includesReportID: true))))
+    let neutral: [UInt8] = [0xA1, 0x01, 128, 128, 128, 128, 0x08, 0, 0, 0, 0]
+    _ = try parser.parse(data: Data(neutral))
 
-    let events = try parser.parse(
-      data: Data([0xA1] + Array(makeDS4Report(includesReportID: true, buttons0: 0x28)))
-    )
+    var pressed = neutral
+    pressed[6] = 0x28
+    let events = try parser.parse(data: Data(pressed))
 
     #expect(containsEvent(events, .buttonPressed(.cross)))
   }

@@ -122,7 +122,7 @@ struct RuntimeStatusPresentation: Sendable, Equatable {
       outputState: outputState,
       postEventAccess: postEventAccess,
       requiresPostEventAccess: requiresPostEventAccess,
-      deviceCount: payload.connectedDevices.count
+      devices: payload.connectedDevices
     )
   }
 
@@ -141,7 +141,7 @@ struct RuntimeStatusPresentation: Sendable, Equatable {
         outputState: outputState,
         postEventAccess: state,
         requiresPostEventAccess: requiresPostEventAccess,
-        deviceCount: devices.count
+        devices: devices
       )
     )
   }
@@ -161,7 +161,7 @@ struct RuntimeStatusPresentation: Sendable, Equatable {
         outputState: outputState,
         postEventAccess: postEventAccess,
         requiresPostEventAccess: requiresPostEventAccess,
-        deviceCount: devices.count
+        devices: devices
       )
     )
   }
@@ -182,7 +182,7 @@ struct RuntimeStatusPresentation: Sendable, Equatable {
         outputState: outputState,
         postEventAccess: postEventAccess,
         requiresPostEventAccess: requiresPostEventAccess,
-        deviceCount: devices.count
+        devices: devices
       )
     )
   }
@@ -206,7 +206,7 @@ struct RuntimeStatusPresentation: Sendable, Equatable {
         outputState: outputState,
         postEventAccess: postEventAccess,
         requiresPostEventAccess: requiresPostEventAccess,
-        deviceCount: devices.count
+        devices: devices
       )
     )
   }
@@ -243,6 +243,11 @@ struct RuntimeStatusPresentation: Sendable, Equatable {
       && lhs.postHandshakeSettleMs == rhs.postHandshakeSettleMs
       && lhs.preferredBackends == rhs.preferredBackends
       && lhs.physicalOutputCapabilities == rhs.physicalOutputCapabilities
+      && lhs.inputHealth.state == rhs.inputHealth.state
+      && lhs.inputHealth.reportFormat == rhs.inputHealth.reportFormat
+      && lhs.inputHealth.lastReportAgeNanoseconds == rhs.inputHealth.lastReportAgeNanoseconds
+      && lhs.inputHealth.failureReason == rhs.inputHealth.failureReason
+      && lhs.inputHealth.recoveryCount == rhs.inputHealth.recoveryCount
   }
 
   private init(
@@ -272,12 +277,13 @@ struct RuntimeStatusPresentation: Sendable, Equatable {
     outputState: RuntimeOutputState,
     postEventAccess: RemappingPostEventAccessState?,
     requiresPostEventAccess: Bool?,
-    deviceCount: Int
+    devices: [ApplicationServiceDeviceDescription]
   ) -> RuntimeReadiness {
     guard permissions.isReady, outputState == .ready else { return .needsAttention }
     guard let requiresPostEventAccess else { return .needsAttention }
     guard !requiresPostEventAccess || postEventAccess == .granted else { return .needsAttention }
-    return deviceCount == 0 ? .noController : .ready
+    guard devices.allSatisfy({ $0.inputHealth.state == .healthy }) else { return .needsAttention }
+    return devices.isEmpty ? .noController : .ready
   }
 
   private static func requiresPostEventAccess(

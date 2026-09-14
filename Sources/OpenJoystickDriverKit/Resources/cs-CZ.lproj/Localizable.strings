@@ -1253,3 +1253,15 @@
 "cli.catalog.controller_resume.summary" = "Zkusit znovu — Kontrolor odpojený";
 "cli.controller.disconnected" = "Kontrolor odpojený";
 "cli.controller.resumed" = "Vstup aktivní";
+
+"controllers.disconnectWireless" = "Kontrolor odpojený…";
+"controllers.disconnectWirelessButton" = "Kontrolor odpojený…";
+"controllers.disconnectWirelessSummary" = "Kontrolor odpojený";
+"controllers.disconnectWirelessConfirmTitle" = "Kontrolor odpojený";
+"controllers.disconnectWirelessConfirmMessage" = "%@ už není připojen.";
+"controllers.disconnectWirelessConfirm" = "Kontrolor odpojený";
+"cli.catalog.controller_disconnect_wireless.summary" = "Kontrolor odpojený";
+"cli.controller.wirelessDisconnected" = "Kontrolor odpojený";
+
+"notifications.controllerNeedsAttention" = "Ovladač odpojen";
+"notifications.controllerNeedsAttentionBody" = "%@ už není připojen.";

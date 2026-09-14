@@ -33,6 +33,7 @@ enum CLIInvocation: Equatable {
   case controllerInput([String])
   case controllerOutput([String])
   case controllerDisconnect([String])
+  case controllerDisconnectWireless([String])
   case controllerResume([String])
   case mapping([String])
   case appStatus([String])
@@ -102,6 +103,8 @@ struct CLIGrammar {
     case .controllerOutput(let arguments): PhysicalOutputCommand().run(arguments: arguments)
     case .controllerDisconnect(let arguments):
       ControllerSessionCommand(action: .suspend).run(arguments: arguments)
+    case .controllerDisconnectWireless(let arguments):
+      ControllerSessionCommand(action: .disconnectWireless).run(arguments: arguments)
     case .controllerResume(let arguments):
       ControllerSessionCommand(action: .resume).run(arguments: arguments)
     case .mapping(let arguments): MappingCommand().run(arguments: arguments)
@@ -183,6 +186,7 @@ struct CLIGrammar {
     case "packets", "trace", "watch": return .controllerInput([command] + trailing)
     case "output": return .controllerOutput(trailing)
     case "disconnect": return .controllerDisconnect(trailing)
+    case "disconnect-wireless": return .controllerDisconnectWireless(trailing)
     case "resume": return .controllerResume(trailing)
     default: throw CLIParseError.unknownCommand("controller \(command)")
     }

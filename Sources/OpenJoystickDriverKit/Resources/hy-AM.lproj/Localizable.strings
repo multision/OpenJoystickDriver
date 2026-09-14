@@ -1253,3 +1253,15 @@
 "cli.catalog.controller_resume.summary" = "Փորձել նորից — Կառավարիչը անջատված է";
 "cli.controller.disconnected" = "Կառավարիչը անջատված է";
 "cli.controller.resumed" = "Ներմուծման ակտիվ";
+
+"controllers.disconnectWireless" = "Կառավարիչը անջատված է…";
+"controllers.disconnectWirelessButton" = "Կառավարիչը անջատված է…";
+"controllers.disconnectWirelessSummary" = "Կառավարիչը անջատված է";
+"controllers.disconnectWirelessConfirmTitle" = "Կառավարիչը անջատված է";
+"controllers.disconnectWirelessConfirmMessage" = "%@ այլեւս կապ չունի:";
+"controllers.disconnectWirelessConfirm" = "Կառավարիչը անջատված է";
+"cli.catalog.controller_disconnect_wireless.summary" = "Կառավարիչը անջատված է";
+"cli.controller.wirelessDisconnected" = "Կառավարիչը անջատված է";
+
+"notifications.controllerNeedsAttention" = "Կառավարիչը անջատված է";
+"notifications.controllerNeedsAttentionBody" = "%@ այլեւս կապ չունի:";

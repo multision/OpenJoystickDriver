@@ -1253,3 +1253,15 @@
 "cli.catalog.controller_resume.summary" = "Volver a intentarlo — Control desconectado";
 "cli.controller.disconnected" = "Control desconectado";
 "cli.controller.resumed" = "Entrada activa";
+
+"controllers.disconnectWireless" = "Control desconectado…";
+"controllers.disconnectWirelessButton" = "Control desconectado…";
+"controllers.disconnectWirelessSummary" = "Control desconectado";
+"controllers.disconnectWirelessConfirmTitle" = "Control desconectado";
+"controllers.disconnectWirelessConfirmMessage" = "%@ ya no está conectado.";
+"controllers.disconnectWirelessConfirm" = "Control desconectado";
+"cli.catalog.controller_disconnect_wireless.summary" = "Control desconectado";
+"cli.controller.wirelessDisconnected" = "Control desconectado";
+
+"notifications.controllerNeedsAttention" = "Control desconectado";
+"notifications.controllerNeedsAttentionBody" = "%@ ya no está conectado.";

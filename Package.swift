@@ -57,7 +57,10 @@ let package = Package(
       path: "Sources/OpenJoystickDriver",
       exclude: ["App/Host.entitlements", "App/Info.plist"],
       resources: [.copy("Resources")],
-      linkerSettings: [.linkedFramework("GameController"), .linkedFramework("SystemExtensions")]
+      linkerSettings: [
+        .linkedFramework("GameController"), .linkedFramework("IOBluetooth"),
+        .linkedFramework("SystemExtensions"),
+      ]
     ),
 
     .executableTarget(

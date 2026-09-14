@@ -1253,3 +1253,15 @@
 "cli.catalog.controller_resume.summary" = "Mēģināt vēlreiz — Kontroleris ir atlēks";
 "cli.controller.disconnected" = "Kontroleris ir atlēks";
 "cli.controller.resumed" = "Input aktivizēts";
+
+"controllers.disconnectWireless" = "Kontroleris ir atlēks…";
+"controllers.disconnectWirelessButton" = "Kontroleris ir atlēks…";
+"controllers.disconnectWirelessSummary" = "Kontroleris ir atlēks";
+"controllers.disconnectWirelessConfirmTitle" = "Kontroleris ir atlēks";
+"controllers.disconnectWirelessConfirmMessage" = "%@ nav vairs savienota.";
+"controllers.disconnectWirelessConfirm" = "Kontroleris ir atlēks";
+"cli.catalog.controller_disconnect_wireless.summary" = "Kontroleris ir atlēks";
+"cli.controller.wirelessDisconnected" = "Kontroleris ir atlēks";
+
+"notifications.controllerNeedsAttention" = "Kontroleris ir atlēks";
+"notifications.controllerNeedsAttentionBody" = "%@ nav vairs savienota.";

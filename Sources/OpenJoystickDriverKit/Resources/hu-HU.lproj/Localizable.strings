@@ -1253,3 +1253,15 @@
 "cli.catalog.controller_resume.summary" = "Újra — A vezérlő le van kapcsolva";
 "cli.controller.disconnected" = "A vezérlő le van kapcsolva";
 "cli.controller.resumed" = "Beadási aktiv";
+
+"controllers.disconnectWireless" = "A vezérlő le van kapcsolva…";
+"controllers.disconnectWirelessButton" = "A vezérlő le van kapcsolva…";
+"controllers.disconnectWirelessSummary" = "A vezérlő le van kapcsolva";
+"controllers.disconnectWirelessConfirmTitle" = "A vezérlő le van kapcsolva";
+"controllers.disconnectWirelessConfirmMessage" = "A(z) %@ már nincs csatlakoztatva.";
+"controllers.disconnectWirelessConfirm" = "A vezérlő le van kapcsolva";
+"cli.catalog.controller_disconnect_wireless.summary" = "A vezérlő le van kapcsolva";
+"cli.controller.wirelessDisconnected" = "A vezérlő le van kapcsolva";
+
+"notifications.controllerNeedsAttention" = "Vezérlő leválasztva";
+"notifications.controllerNeedsAttentionBody" = "A(z) %@ már nincs csatlakoztatva.";

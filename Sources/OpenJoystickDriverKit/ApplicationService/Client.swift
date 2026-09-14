@@ -299,6 +299,26 @@ public final class ApplicationServiceClient: @unchecked Sendable {
     return result
   }
 
+  public func disconnectWirelessController(
+    vendorID: UInt16,
+    productID: UInt16,
+    runtimeIdentifier: String?
+  ) async throws -> WirelessControllerDisconnectResult {
+    let data: Data = try await call(
+      "disconnectWirelessController",
+      LocalServiceRPCDeviceArguments(
+        vendorID: Int(vendorID),
+        productID: Int(productID),
+        runtimeIdentifier: runtimeIdentifier
+      ),
+      timeoutSeconds: 5
+    )
+    guard
+      let result = try? JSONDecoder().decode(WirelessControllerDisconnectResult.self, from: data)
+    else { throw ApplicationServiceClientError.invalidResponse }
+    return result
+  }
+
   public func getCompatibilityIdentity() async throws -> String {
     try await call("getCompatibilityIdentity", LocalServiceRPCEmptyArguments())
   }

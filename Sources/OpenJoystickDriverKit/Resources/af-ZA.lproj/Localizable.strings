@@ -1253,3 +1253,15 @@
 "cli.catalog.controller_resume.summary" = "Probeer weer — Beheerder ontkoppel";
 "cli.controller.disconnected" = "Beheerder ontkoppel";
 "cli.controller.resumed" = "Invoer aktief";
+
+"controllers.disconnectWireless" = "Beheerder ontkoppel…";
+"controllers.disconnectWirelessButton" = "Beheerder ontkoppel…";
+"controllers.disconnectWirelessSummary" = "Beheerder ontkoppel";
+"controllers.disconnectWirelessConfirmTitle" = "Beheerder ontkoppel";
+"controllers.disconnectWirelessConfirmMessage" = "%@ is nie meer verbind nie.";
+"controllers.disconnectWirelessConfirm" = "Beheerder ontkoppel";
+"cli.catalog.controller_disconnect_wireless.summary" = "Beheerder ontkoppel";
+"cli.controller.wirelessDisconnected" = "Beheerder ontkoppel";
+
+"notifications.controllerNeedsAttention" = "Beheerder ontkoppel";
+"notifications.controllerNeedsAttentionBody" = "%@ is nie meer verbind nie.";

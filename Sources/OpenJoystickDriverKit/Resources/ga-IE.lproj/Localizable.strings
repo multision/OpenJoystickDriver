@@ -1253,3 +1253,15 @@
 "cli.catalog.controller_resume.summary" = "Bain triail eile as — Cluiche a chur ar fáil";
 "cli.controller.disconnected" = "Cluiche a chur ar fáil";
 "cli.controller.resumed" = "Input Active";
+
+"controllers.disconnectWireless" = "Cluiche a chur ar fáil…";
+"controllers.disconnectWirelessButton" = "Cluiche a chur ar fáil…";
+"controllers.disconnectWirelessSummary" = "Cluiche a chur ar fáil";
+"controllers.disconnectWirelessConfirmTitle" = "Cluiche a chur ar fáil";
+"controllers.disconnectWirelessConfirmMessage" = "%@ Ní bhaineann sé le chéile.";
+"controllers.disconnectWirelessConfirm" = "Cluiche a chur ar fáil";
+"cli.catalog.controller_disconnect_wireless.summary" = "Cluiche a chur ar fáil";
+"cli.controller.wirelessDisconnected" = "Cluiche a chur ar fáil";
+
+"notifications.controllerNeedsAttention" = "Cluiche a chur ar fáil";
+"notifications.controllerNeedsAttentionBody" = "%@ Ní bhaineann sé le chéile.";

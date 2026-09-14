@@ -57,12 +57,15 @@ remove it from Input Monitoring and Accessibility.
 | Runtime disconnected | Launch the app, then `--headless status` |
 | SDL sees 0 controllers | Grant Input Monitoring and Accessibility, restart, retry |
 | XboxUSBDevice install fails | Rebuild the signed app; `--headless extension enable` |
+| Input stays held or status says Needs attention | Release the controls and check controller input health with `--headless status --json` |
+| Bluetooth controller will not recover | Use Controller Details → Disconnect Wireless Controller, reconnect it manually, then verify neutral startup |
 
 ```bash
 /Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless diagnose report
 ```
 
-Identical models: `controller output list`, then `--device <id>`.
+Identical models: `controller output list`, then `--device <id>`. To close only the selected
+Bluetooth link, use `controller disconnect-wireless --device <id>`; this never reconnects it.
 
 ## Development
 

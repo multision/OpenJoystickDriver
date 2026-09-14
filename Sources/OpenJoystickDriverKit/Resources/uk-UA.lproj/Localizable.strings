@@ -1253,3 +1253,15 @@
 "cli.catalog.controller_resume.summary" = "Повторити спробу — Контролер роз'єднаний";
 "cli.controller.disconnected" = "Контролер роз'єднаний";
 "cli.controller.resumed" = "Вхід активний";
+
+"controllers.disconnectWireless" = "Контролер роз'єднаний…";
+"controllers.disconnectWirelessButton" = "Контролер роз'єднаний…";
+"controllers.disconnectWirelessSummary" = "Контролер роз'єднаний";
+"controllers.disconnectWirelessConfirmTitle" = "Контролер роз'єднаний";
+"controllers.disconnectWirelessConfirmMessage" = "%@ більше не підключений.";
+"controllers.disconnectWirelessConfirm" = "Контролер роз'єднаний";
+"cli.catalog.controller_disconnect_wireless.summary" = "Контролер роз'єднаний";
+"cli.controller.wirelessDisconnected" = "Контролер роз'єднаний";
+
+"notifications.controllerNeedsAttention" = "Контролер відключено";
+"notifications.controllerNeedsAttentionBody" = "%@ більше не підключений.";

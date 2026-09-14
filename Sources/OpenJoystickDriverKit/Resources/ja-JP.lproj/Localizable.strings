@@ -1253,3 +1253,15 @@
 "cli.catalog.controller_resume.summary" = "再試行 — コントローラが切断されました";
 "cli.controller.disconnected" = "コントローラが切断されました";
 "cli.controller.resumed" = "入力中";
+
+"controllers.disconnectWireless" = "コントローラが切断されました…";
+"controllers.disconnectWirelessButton" = "コントローラが切断されました…";
+"controllers.disconnectWirelessSummary" = "コントローラが切断されました";
+"controllers.disconnectWirelessConfirmTitle" = "コントローラが切断されました";
+"controllers.disconnectWirelessConfirmMessage" = "%@は接続されていません。";
+"controllers.disconnectWirelessConfirm" = "コントローラが切断されました";
+"cli.catalog.controller_disconnect_wireless.summary" = "コントローラが切断されました";
+"cli.controller.wirelessDisconnected" = "コントローラが切断されました";
+
+"notifications.controllerNeedsAttention" = "コントローラ切断";
+"notifications.controllerNeedsAttentionBody" = "%@は接続されていません。";

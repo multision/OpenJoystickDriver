@@ -2,7 +2,7 @@ import Foundation
 import OpenJoystickDriverKit
 
 struct ControllerSessionCommand {
-  enum Action { case suspend, resume }
+  enum Action { case suspend, resume, disconnectWireless }
 
   let action: Action
 
@@ -39,19 +39,38 @@ struct ControllerSessionCommand {
               runtimeIdentifier: device.runtimeIdentifier
             )
             return .success(result.succeeded || result.failure == .alreadyActive)
+          case .disconnectWireless:
+            let result = try await client.disconnectWirelessController(
+              vendorID: device.vendorID,
+              productID: device.productID,
+              runtimeIdentifier: device.runtimeIdentifier
+            )
+            return .success(result.succeeded)
           }
         } catch { return .failure(error) }
       }
       let succeeded = try mutation.get()
       guard succeeded else { throw Failure.sessionChangeRejected }
-      print(
-        action == .suspend
-          ? CLILocalized.text(
+      switch action {
+      case .suspend:
+        print(
+          CLILocalized.text(
             "cli.controller.disconnected",
             "Controller suspended from OpenJoystickDriver."
           )
-          : CLILocalized.text("cli.controller.resumed", "Controller resumed in OpenJoystickDriver.")
-      )
+        )
+      case .resume:
+        print(
+          CLILocalized.text("cli.controller.resumed", "Controller resumed in OpenJoystickDriver.")
+        )
+      case .disconnectWireless:
+        print(
+          CLILocalized.text(
+            "cli.controller.wirelessDisconnected",
+            "Wireless controller disconnected."
+          )
+        )
+      }
     } catch {
       CLIOutput.error(error.localizedDescription)
       exit(1)

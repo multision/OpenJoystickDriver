@@ -1253,3 +1253,15 @@
 "cli.catalog.controller_resume.summary" = "Yritä uudelleen — Valvonta-asemien purkaminen";
 "cli.controller.disconnected" = "Valvonta-asemien purkaminen";
 "cli.controller.resumed" = "Tuloaktiivinen";
+
+"controllers.disconnectWireless" = "Valvonta-asemien purkaminen…";
+"controllers.disconnectWirelessButton" = "Valvonta-asemien purkaminen…";
+"controllers.disconnectWirelessSummary" = "Valvonta-asemien purkaminen";
+"controllers.disconnectWirelessConfirmTitle" = "Valvonta-asemien purkaminen";
+"controllers.disconnectWirelessConfirmMessage" = "%@ ei ole enää yhdistettynä.";
+"controllers.disconnectWirelessConfirm" = "Valvonta-asemien purkaminen";
+"cli.catalog.controller_disconnect_wireless.summary" = "Valvonta-asemien purkaminen";
+"cli.controller.wirelessDisconnected" = "Valvonta-asemien purkaminen";
+
+"notifications.controllerNeedsAttention" = "Ohjain irrotettu";
+"notifications.controllerNeedsAttentionBody" = "%@ ei ole enää yhdistettynä.";

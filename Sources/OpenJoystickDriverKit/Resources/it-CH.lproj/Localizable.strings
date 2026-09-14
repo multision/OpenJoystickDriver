@@ -1253,3 +1253,15 @@
 "cli.catalog.controller_resume.summary" = "Riprova — Controller disconnesso";
 "cli.controller.disconnected" = "Controller disconnesso";
 "cli.controller.resumed" = "Input attivo";
+
+"controllers.disconnectWireless" = "Controller disconnesso…";
+"controllers.disconnectWirelessButton" = "Controller disconnesso…";
+"controllers.disconnectWirelessSummary" = "Controller disconnesso";
+"controllers.disconnectWirelessConfirmTitle" = "Controller disconnesso";
+"controllers.disconnectWirelessConfirmMessage" = "%@ non è più collegato.";
+"controllers.disconnectWirelessConfirm" = "Controller disconnesso";
+"cli.catalog.controller_disconnect_wireless.summary" = "Controller disconnesso";
+"cli.controller.wirelessDisconnected" = "Controller disconnesso";
+
+"notifications.controllerNeedsAttention" = "Controller scollegato";
+"notifications.controllerNeedsAttentionBody" = "%@ non è più collegato.";

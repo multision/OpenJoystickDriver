@@ -1253,3 +1253,15 @@
 "cli.catalog.controller_resume.summary" = "Spróbuj ponownie — Kontrolator odłączony";
 "cli.controller.disconnected" = "Kontrolator odłączony";
 "cli.controller.resumed" = "Aktywny wprowadzanie";
+
+"controllers.disconnectWireless" = "Kontrolator odłączony…";
+"controllers.disconnectWirelessButton" = "Kontrolator odłączony…";
+"controllers.disconnectWirelessSummary" = "Kontrolator odłączony";
+"controllers.disconnectWirelessConfirmTitle" = "Kontrolator odłączony";
+"controllers.disconnectWirelessConfirmMessage" = "%@ nie jest już połączony.";
+"controllers.disconnectWirelessConfirm" = "Kontrolator odłączony";
+"cli.catalog.controller_disconnect_wireless.summary" = "Kontrolator odłączony";
+"cli.controller.wirelessDisconnected" = "Kontrolator odłączony";
+
+"notifications.controllerNeedsAttention" = "Kontroler rozłączony";
+"notifications.controllerNeedsAttentionBody" = "%@ nie jest już połączony.";

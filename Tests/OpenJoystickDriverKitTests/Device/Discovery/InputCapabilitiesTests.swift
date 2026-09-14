@@ -52,12 +52,14 @@ struct InputCapabilitiesTests {
     let data = try JSONEncoder().encode(description)
     var object = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
     object.removeValue(forKey: "physicalInputCapabilities")
+    object.removeValue(forKey: "inputHealth")
     let decoded = try JSONDecoder().decode(
       ApplicationServiceDeviceDescription.self,
       from: JSONSerialization.data(withJSONObject: object)
     )
     #expect(decoded.physicalInputCapabilities == .none)
     #expect(decoded.battery == nil)
+    #expect(decoded.inputHealth.state == .healthy)
   }
 
   @Test

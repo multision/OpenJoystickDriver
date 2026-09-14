@@ -34,7 +34,8 @@ final class ApplicationServiceRuntime {
     )
     let manager = DeviceManager(
       dispatcher: remappingRouter,
-      usbTransportProvider: OpenJoystickDriverUSBTransportProvider()
+      usbTransportProvider: OpenJoystickDriverUSBTransportProvider(),
+      wirelessControllerDisconnector: BluetoothControllerDisconnector()
     )
     physicalOutputBridge.attach(manager)
     let applicationServiceServer = ApplicationServiceServer(

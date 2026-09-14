@@ -332,19 +332,14 @@
       let menu = NSMenu(title: OJDLocalized.string("common.controllers", fallback: "Controllers"))
       if !menuBarViewModel.devices.isEmpty {
         for device in menuBarViewModel.devices {
-          let item = NSMenuItem(
-            title: device.name,
-            action: #selector(openSettingsFromStatus(_:)),
-            keyEquivalent: ""
-          )
-          item.target = self
-          item.representedObject = SettingsPane.controllers.rawValue
+          let item = NSMenuItem(title: device.name, action: nil, keyEquivalent: "")
           item.image = controllerMenuImage(
             for: PublishedVirtualIdentity.presentation(
               for: device,
               requested: viewModel.requestedCompatibilityIdentity
             )
           )
+          item.submenu = makeControllerMenu(for: device)
           menu.addItem(item)
         }
         menu.addItem(.separator())
@@ -365,6 +360,58 @@
         to: menu
       )
       return menu
+    }
+
+    private func makeControllerMenu(for device: ApplicationServiceDeviceDescription) -> NSMenu {
+      let menu = NSMenu(title: device.name)
+      addNavigationItem(
+        title: OJDLocalized.string("menu.controllers", fallback: "Open Controllers..."),
+        pane: .controllers,
+        symbol: "info.circle",
+        to: menu
+      )
+      if device.connection.caseInsensitiveCompare("Bluetooth") == .orderedSame {
+        let disconnect = NSMenuItem(
+          title: OJDLocalized.string(
+            "controllers.disconnectWireless",
+            fallback: "Disconnect Wireless Controller..."
+          ),
+          action: #selector(disconnectWirelessControllerFromStatus(_:)),
+          keyEquivalent: ""
+        )
+        disconnect.target = self
+        disconnect.representedObject = device.runtimeIdentifier
+        disconnect.image = menuImage(symbol: "antenna.radiowaves.left.and.right.slash")
+        menu.addItem(disconnect)
+      }
+      return menu
+    }
+
+    @objc
+    private func disconnectWirelessControllerFromStatus(_ sender: Any?) {
+      guard let identifier = (sender as? NSMenuItem)?.representedObject as? String,
+        let device = menuBarViewModel.devices.first(where: { $0.runtimeIdentifier == identifier })
+      else { return }
+      let alert = NSAlert()
+      alert.alertStyle = .warning
+      alert.messageText = OJDLocalized.string(
+        "controllers.disconnectWirelessConfirmTitle",
+        fallback: "Disconnect Wireless Controller?"
+      )
+      alert.informativeText = OJDLocalized.formatted(
+        "controllers.disconnectWirelessConfirmMessage",
+        fallback: "%@ will stay disconnected until you connect it again manually.",
+        device.name
+      )
+      alert.addButton(
+        withTitle: OJDLocalized.string(
+          "controllers.disconnectWirelessConfirm",
+          fallback: "Disconnect"
+        )
+      )
+      alert.addButton(withTitle: OJDLocalized.string("common.cancel", fallback: "Cancel"))
+      guard alert.runModal() == .alertFirstButtonReturn else { return }
+      Task { @MainActor in await viewModel.disconnectWirelessController(device) }
     }
 
     private func makeHelpMenu() -> NSMenu {

@@ -11,6 +11,8 @@
     @ObservedObject
     var viewModel: RuntimeViewModel
     let openInputTest: @MainActor (ApplicationServiceDeviceDescription) -> Void
+    @State
+    private var confirmsWirelessDisconnect = false
 
     var body: some View {
       GeometryReader { proxy in
@@ -18,6 +20,7 @@
           VStack(alignment: .leading, spacing: 18) {
             controllerHeader
             controllerSessionAction
+            if isBluetooth { wirelessDisconnectAction }
             activeProfileRow
             Divider()
             controllerDetails(
@@ -29,7 +32,58 @@
             ControllerIdentityView(viewModel: viewModel)
           }.padding(28).frame(maxWidth: .infinity, alignment: .leading)
         }
-      }.ojdAccessibilityLabel(device.name).ojdAccessibilityValue(accessibilityValue)
+      }.ojdAccessibilityLabel(device.name).ojdAccessibilityValue(accessibilityValue).alert(
+        isPresented: $confirmsWirelessDisconnect
+      ) {
+        Alert(
+          title: Text(
+            OJDLocalized.string(
+              "controllers.disconnectWirelessConfirmTitle",
+              fallback: "Disconnect Wireless Controller?"
+            )
+          ),
+          message: Text(
+            OJDLocalized.formatted(
+              "controllers.disconnectWirelessConfirmMessage",
+              fallback: "%@ will stay disconnected until you connect it again manually.",
+              device.name
+            )
+          ),
+          primaryButton: .destructive(
+            Text(
+              OJDLocalized.string("controllers.disconnectWirelessConfirm", fallback: "Disconnect")
+            )
+          ) { Task { @MainActor in await viewModel.disconnectWirelessController(device) } },
+          secondaryButton: .cancel()
+        )
+      }
+    }
+
+    private var isBluetooth: Bool {
+      device.connection.caseInsensitiveCompare("Bluetooth") == .orderedSame
+    }
+
+    private var wirelessDisconnectAction: some View {
+      HStack(alignment: .center, spacing: 12) {
+        VStack(alignment: .leading, spacing: 3) {
+          Text(
+            OJDLocalized.string(
+              "controllers.disconnectWireless",
+              fallback: "Disconnect Wireless Controller..."
+            )
+          ).font(.headline)
+          Text(
+            OJDLocalized.string(
+              "controllers.disconnectWirelessSummary",
+              fallback: "Stop this Bluetooth connection without affecting other controllers."
+            )
+          ).font(.caption).foregroundColor(Color(NSColor.secondaryLabelColor))
+        }
+        Spacer(minLength: 12)
+        Button(
+          OJDLocalized.string("controllers.disconnectWirelessButton", fallback: "Disconnect...")
+        ) { confirmsWirelessDisconnect = true }
+      }
     }
 
     private var inputTestAction: some View {

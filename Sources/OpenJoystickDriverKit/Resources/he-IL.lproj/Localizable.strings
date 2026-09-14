@@ -1253,3 +1253,15 @@
 "cli.catalog.controller_resume.summary" = "ניסיון חוזר — המפקד מנותק";
 "cli.controller.disconnected" = "המפקד מנותק";
 "cli.controller.resumed" = "הכניס פעיל";
+
+"controllers.disconnectWireless" = "המפקד מנותק…";
+"controllers.disconnectWirelessButton" = "המפקד מנותק…";
+"controllers.disconnectWirelessSummary" = "המפקד מנותק";
+"controllers.disconnectWirelessConfirmTitle" = "המפקד מנותק";
+"controllers.disconnectWirelessConfirmMessage" = "%@ כבר אינו מחובר.";
+"controllers.disconnectWirelessConfirm" = "המפקד מנותק";
+"cli.catalog.controller_disconnect_wireless.summary" = "המפקד מנותק";
+"cli.controller.wirelessDisconnected" = "המפקד מנותק";
+
+"notifications.controllerNeedsAttention" = "בקר נותק";
+"notifications.controllerNeedsAttentionBody" = "%@ כבר אינו מחובר.";

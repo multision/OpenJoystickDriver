@@ -1256,3 +1256,15 @@
 "cli.catalog.controller_resume.summary" = "Resume a suspended controller";
 "cli.controller.disconnected" = "Controller suspended from OpenJoystickDriver.";
 "cli.controller.resumed" = "Controller resumed in OpenJoystickDriver.";
+
+"controllers.disconnectWireless" = "Disconnect Wireless Controller...";
+"controllers.disconnectWirelessButton" = "Disconnect...";
+"controllers.disconnectWirelessSummary" = "Stop this Bluetooth connection without affecting other controllers.";
+"controllers.disconnectWirelessConfirmTitle" = "Disconnect Wireless Controller?";
+"controllers.disconnectWirelessConfirmMessage" = "%@ will stay disconnected until you connect it again manually.";
+"controllers.disconnectWirelessConfirm" = "Disconnect";
+"cli.catalog.controller_disconnect_wireless.summary" = "Disconnect a Bluetooth controller";
+"cli.controller.wirelessDisconnected" = "Wireless controller disconnected.";
+
+"notifications.controllerNeedsAttention" = "Controller needs attention";
+"notifications.controllerNeedsAttentionBody" = "%@ input stopped updating. Release its controls or disconnect it.";

@@ -1253,3 +1253,15 @@
 "cli.catalog.controller_resume.summary" = "Prøv igen — Kontroller afbrudt";
 "cli.controller.disconnected" = "Kontroller afbrudt";
 "cli.controller.resumed" = "Indgang aktiv";
+
+"controllers.disconnectWireless" = "Kontroller afbrudt…";
+"controllers.disconnectWirelessButton" = "Kontroller afbrudt…";
+"controllers.disconnectWirelessSummary" = "Kontroller afbrudt";
+"controllers.disconnectWirelessConfirmTitle" = "Kontroller afbrudt";
+"controllers.disconnectWirelessConfirmMessage" = "%@ er ikke længere tilsluttet.";
+"controllers.disconnectWirelessConfirm" = "Kontroller afbrudt";
+"cli.catalog.controller_disconnect_wireless.summary" = "Kontroller afbrudt";
+"cli.controller.wirelessDisconnected" = "Kontroller afbrudt";
+
+"notifications.controllerNeedsAttention" = "Controller afbrudt";
+"notifications.controllerNeedsAttentionBody" = "%@ er ikke længere tilsluttet.";

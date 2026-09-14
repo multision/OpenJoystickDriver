@@ -1253,3 +1253,15 @@
 "cli.catalog.controller_resume.summary" = "Опитай отново — Контролър отключен";
 "cli.controller.disconnected" = "Контролър отключен";
 "cli.controller.resumed" = "Вход активен";
+
+"controllers.disconnectWireless" = "Контролър отключен…";
+"controllers.disconnectWirelessButton" = "Контролър отключен…";
+"controllers.disconnectWirelessSummary" = "Контролър отключен";
+"controllers.disconnectWirelessConfirmTitle" = "Контролър отключен";
+"controllers.disconnectWirelessConfirmMessage" = "%@ вече не е свързана.";
+"controllers.disconnectWirelessConfirm" = "Контролър отключен";
+"cli.catalog.controller_disconnect_wireless.summary" = "Контролър отключен";
+"cli.controller.wirelessDisconnected" = "Контролър отключен";
+
+"notifications.controllerNeedsAttention" = "Контролър отключен";
+"notifications.controllerNeedsAttentionBody" = "%@ вече не е свързана.";

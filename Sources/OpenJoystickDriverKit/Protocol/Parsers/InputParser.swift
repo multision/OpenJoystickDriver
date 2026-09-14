@@ -59,7 +59,62 @@ extension HIDStartupOutputReportProvider {
 /// Parser-owned report liveness used when stale state can leave virtual controls held.
 public protocol ControllerInputReportLivenessProvider: AnyObject {
   var inputReportLivenessTimeoutNanoseconds: UInt64 { get }
-  var latestInputReportIsNeutral: Bool { get }
+}
+
+/// Complete controller controls decoded from one validated input report.
+///
+/// `controls` is an absolute snapshot: omitted buttons and axes are neutral.
+/// A stale observation must not refresh the pipeline liveness deadline.
+public struct ControllerInputReportObservation: Sendable {
+  public let controls: [ControllerEvent]
+  public let isFresh: Bool
+
+  public init(controls: [ControllerEvent], isFresh: Bool) {
+    self.controls = controls
+    self.isFresh = isFresh
+  }
+}
+
+/// Optional parser report observation used to reconcile state after lost deltas.
+public protocol ControllerInputReportObserver: AnyObject {
+  var latestInputReportObservation: ControllerInputReportObservation? { get }
+}
+
+public protocol ControllerInputReportFormatProvider: AnyObject {
+  var latestInputReportFormat: String? { get }
+}
+
+public enum ControllerInputHealthState: String, Codable, Sendable {
+  case healthy
+  case stale
+  case waitingForNeutral
+}
+
+public enum ControllerInputHealthFailureReason: String, Codable, Sendable {
+  case missingReports
+  case freshnessNotAdvancing
+}
+
+public struct ControllerInputHealth: Codable, Sendable {
+  public let state: ControllerInputHealthState
+  public let reportFormat: String?
+  public let lastReportAgeNanoseconds: UInt64?
+  public let failureReason: ControllerInputHealthFailureReason?
+  public let recoveryCount: Int
+
+  public init(
+    state: ControllerInputHealthState,
+    reportFormat: String? = nil,
+    lastReportAgeNanoseconds: UInt64? = nil,
+    failureReason: ControllerInputHealthFailureReason? = nil,
+    recoveryCount: Int = 0
+  ) {
+    self.state = state
+    self.reportFormat = reportFormat
+    self.lastReportAgeNanoseconds = lastReportAgeNanoseconds
+    self.failureReason = failureReason
+    self.recoveryCount = recoveryCount
+  }
 }
 
 /// Bounded follow-up reads for startup protocols whose replies arrive through the input stream.

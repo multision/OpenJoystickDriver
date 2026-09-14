@@ -1253,3 +1253,15 @@
 "cli.catalog.controller_resume.summary" = "다시 시도 — 제어기 연결이 끊어졌다";
 "cli.controller.disconnected" = "제어기 연결이 끊어졌다";
 "cli.controller.resumed" = "입력 활동";
+
+"controllers.disconnectWireless" = "제어기 연결이 끊어졌다…";
+"controllers.disconnectWirelessButton" = "제어기 연결이 끊어졌다…";
+"controllers.disconnectWirelessSummary" = "제어기 연결이 끊어졌다";
+"controllers.disconnectWirelessConfirmTitle" = "제어기 연결이 끊어졌다";
+"controllers.disconnectWirelessConfirmMessage" = "%@이(가) 더 이상 연결되지 않았습니다.";
+"controllers.disconnectWirelessConfirm" = "제어기 연결이 끊어졌다";
+"cli.catalog.controller_disconnect_wireless.summary" = "제어기 연결이 끊어졌다";
+"cli.controller.wirelessDisconnected" = "제어기 연결이 끊어졌다";
+
+"notifications.controllerNeedsAttention" = "컨트롤러 연결 해제됨";
+"notifications.controllerNeedsAttentionBody" = "%@이(가) 더 이상 연결되지 않았습니다.";

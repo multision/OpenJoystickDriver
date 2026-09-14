@@ -1253,3 +1253,15 @@
 "cli.catalog.controller_resume.summary" = "Geahččal fas — Stivrenrusttet lea heaittihuvvon";
 "cli.controller.disconnected" = "Stivrenrusttet lea heaittihuvvon";
 "cli.controller.resumed" = "Sisdoallu lea aktiiva";
+
+"controllers.disconnectWireless" = "Stivrenrusttet lea heaittihuvvon…";
+"controllers.disconnectWirelessButton" = "Stivrenrusttet lea heaittihuvvon…";
+"controllers.disconnectWirelessSummary" = "Stivrenrusttet lea heaittihuvvon";
+"controllers.disconnectWirelessConfirmTitle" = "Stivrenrusttet lea heaittihuvvon";
+"controllers.disconnectWirelessConfirmMessage" = "%@ ii leat šat čadnojuvvon.";
+"controllers.disconnectWirelessConfirm" = "Stivrenrusttet lea heaittihuvvon";
+"cli.catalog.controller_disconnect_wireless.summary" = "Stivrenrusttet lea heaittihuvvon";
+"cli.controller.wirelessDisconnected" = "Stivrenrusttet lea heaittihuvvon";
+
+"notifications.controllerNeedsAttention" = "Stivrenrusttet lea heaittihuvvon";
+"notifications.controllerNeedsAttentionBody" = "%@ ii leat šat čadnojuvvon.";

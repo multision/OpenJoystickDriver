@@ -1253,3 +1253,15 @@
 "cli.catalog.controller_resume.summary" = "Қайта көру — Бақылаушы қосылымы бұғатталған";
 "cli.controller.disconnected" = "Бақылаушы қосылымы бұғатталған";
 "cli.controller.resumed" = "Кіріс белсенді";
+
+"controllers.disconnectWireless" = "Бақылаушы қосылымы бұғатталған…";
+"controllers.disconnectWirelessButton" = "Бақылаушы қосылымы бұғатталған…";
+"controllers.disconnectWirelessSummary" = "Бақылаушы қосылымы бұғатталған";
+"controllers.disconnectWirelessConfirmTitle" = "Бақылаушы қосылымы бұғатталған";
+"controllers.disconnectWirelessConfirmMessage" = "%@ қосылмаған.";
+"controllers.disconnectWirelessConfirm" = "Бақылаушы қосылымы бұғатталған";
+"cli.catalog.controller_disconnect_wireless.summary" = "Бақылаушы қосылымы бұғатталған";
+"cli.controller.wirelessDisconnected" = "Бақылаушы қосылымы бұғатталған";
+
+"notifications.controllerNeedsAttention" = "Бақылаушы қосылымы бұғатталған";
+"notifications.controllerNeedsAttentionBody" = "%@ қосылмаған.";

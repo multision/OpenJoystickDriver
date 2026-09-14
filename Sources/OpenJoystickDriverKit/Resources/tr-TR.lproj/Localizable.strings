@@ -1253,3 +1253,15 @@
 "cli.catalog.controller_resume.summary" = "Yeniden dene — Kontrolör koparıldı";
 "cli.controller.disconnected" = "Kontrolör koparıldı";
 "cli.controller.resumed" = "Giriş aktif";
+
+"controllers.disconnectWireless" = "Kontrolör koparıldı…";
+"controllers.disconnectWirelessButton" = "Kontrolör koparıldı…";
+"controllers.disconnectWirelessSummary" = "Kontrolör koparıldı";
+"controllers.disconnectWirelessConfirmTitle" = "Kontrolör koparıldı";
+"controllers.disconnectWirelessConfirmMessage" = "%@ artık bağlı değil.";
+"controllers.disconnectWirelessConfirm" = "Kontrolör koparıldı";
+"cli.catalog.controller_disconnect_wireless.summary" = "Kontrolör koparıldı";
+"cli.controller.wirelessDisconnected" = "Kontrolör koparıldı";
+
+"notifications.controllerNeedsAttention" = "Kumanda bağlantısı kesildi";
+"notifications.controllerNeedsAttentionBody" = "%@ artık bağlı değil.";

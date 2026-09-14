@@ -1253,3 +1253,15 @@
 "cli.catalog.controller_resume.summary" = "Дахин оролдох — Хяналтын систем нь буулжээ";
 "cli.controller.disconnected" = "Хяналтын систем нь буулжээ";
 "cli.controller.resumed" = "Дахин орж ирэх";
+
+"controllers.disconnectWireless" = "Хяналтын систем нь буулжээ…";
+"controllers.disconnectWirelessButton" = "Хяналтын систем нь буулжээ…";
+"controllers.disconnectWirelessSummary" = "Хяналтын систем нь буулжээ";
+"controllers.disconnectWirelessConfirmTitle" = "Хяналтын систем нь буулжээ";
+"controllers.disconnectWirelessConfirmMessage" = "%@ Одоо холбоогүй.";
+"controllers.disconnectWirelessConfirm" = "Хяналтын систем нь буулжээ";
+"cli.catalog.controller_disconnect_wireless.summary" = "Хяналтын систем нь буулжээ";
+"cli.controller.wirelessDisconnected" = "Хяналтын систем нь буулжээ";
+
+"notifications.controllerNeedsAttention" = "Хяналтын систем нь буулжээ";
+"notifications.controllerNeedsAttentionBody" = "%@ Одоо холбоогүй.";

@@ -203,9 +203,7 @@ extension DevicePipeline {
 
     while isActive {
       let loopStartNs = DispatchTime.now().uptimeNanoseconds
-      if !sleepGate.isSleeping,
-        shouldSendKeepAlive(lastKeepAliveNs: lastKeepAliveNs, now: loopStartNs)
-      {
+      if shouldSendKeepAlive(lastKeepAliveNs: lastKeepAliveNs, now: loopStartNs) {
         lastKeepAliveNs = loopStartNs
         await runKeepAlive(handle: handle)
       }
@@ -338,79 +336,82 @@ extension DevicePipeline {
   func evaluateIdleSleep() async {
     guard isActive else { return }
     if let liveness = parser as? any ControllerInputReportLivenessProvider,
-      let last = lastLiveInputReportNanoseconds,
-      DispatchTime.now().uptimeNanoseconds - last >= liveness.inputReportLivenessTimeoutNanoseconds,
-      !outputState.isEffectivelyNeutral
+      let last = lastLiveInputReportNanoseconds ?? inputHealthMonitoringStartedNanoseconds,
+      DispatchTime.now().uptimeNanoseconds - last >= liveness.inputReportLivenessTimeoutNanoseconds
     {
       await retireOutputAfterLivenessLoss()
-    }
-    guard
-      sleepGate.idleTransition(
-        currentState: currentInputState,
-        now: DispatchTime.now().uptimeNanoseconds
-      ) != nil
-    else { return }
-
-    let neutralizingEvents = outputState.neutralizingEvents()
-    print("[DevicePipeline] Controller sleeping after idle: \(identifier)")
-    if !neutralizingEvents.isEmpty {
-      await dispatcher.dispatch(events: neutralizingEvents, from: identifier)
-      updateOutputState(from: neutralizingEvents)
     }
   }
 
   func handleParsedEvents(_ events: [ControllerEvent], now: UInt64) async {
     guard sessionState == .active else { return }
+    let observation = (parser as? any ControllerInputReportObserver)?.latestInputReportObservation
+    if observation != nil { lastObservedInputReportNanoseconds = now }
     if let liveness = parser as? any ControllerInputReportLivenessProvider {
-      if let last = lastLiveInputReportNanoseconds,
+      if let last = lastLiveInputReportNanoseconds ?? inputHealthMonitoringStartedNanoseconds,
         now - last >= liveness.inputReportLivenessTimeoutNanoseconds
       {
-        if !outputState.isEffectivelyNeutral { await retireOutputAfterLivenessLoss() }
+        await retireOutputAfterLivenessLoss()
       }
-      lastLiveInputReportNanoseconds = now
+      if observation?.isFresh == true { lastLiveInputReportNanoseconds = now }
       if awaitingNeutralAfterLivenessLoss {
-        guard liveness.latestInputReportIsNeutral else { return }
+        guard let observation, observation.isFresh else { return }
+        var observedState = DeviceInputState(
+          vendorID: identifier.vendorID,
+          productID: identifier.productID
+        )
+        observedState.apply(events: observation.controls)
+        guard observedState.isEffectivelyNeutral else { return }
         resetObservedInputState()
         outputState = currentInputState
         awaitingNeutralAfterLivenessLoss = false
+        inputHealthRecoveryCount += 1
         await dispatcher.dispatch(events: [], from: identifier)
         return
       }
     }
     let previousState = currentInputState
-    let normalizedEvents = ControllerEventNormalizer.normalize(events, from: previousState).events
+    let sourceEvents: [ControllerEvent]
+    if let observation {
+      var observedState = DeviceInputState(
+        vendorID: identifier.vendorID,
+        productID: identifier.productID
+      )
+      observedState.apply(events: observation.controls)
+      let samples = events.filter { event in
+        switch event {
+        case .motionSample, .touchSample: return true
+        default: return false
+        }
+      }
+      sourceEvents = previousState.transitionEvents(to: observedState) + samples
+      currentInputState = observedState
+    } else {
+      sourceEvents = events
+    }
+    let normalizedEvents = ControllerEventNormalizer.normalize(sourceEvents, from: previousState)
+      .events
     let nextState = previousState.applying(events: normalizedEvents)
-    updateObservedInputState(from: normalizedEvents)
+    if observation == nil { updateObservedInputState(from: normalizedEvents) }
 
-    switch sleepGate.handleInput(
-      events: normalizedEvents,
-      previousState: previousState,
-      nextState: nextState,
-      now: now
-    ) {
-    case .forward:
-      if !externalOutputAllowed { return }
-      if waitingForExternalNeutral {
-        if nextState.isEffectivelyNeutral {
-          waitingForExternalNeutral = false
-          print("[DevicePipeline] Foreground gate re-armed after neutral: \(identifier)")
-          return
-        }
-        if !normalizedEvents.isEmpty {
-          waitingForExternalNeutral = false
-          print(
-            "[DevicePipeline] Foreground gate re-armed after first post-focus change: \(identifier)"
-          )
-          return
-        }
+    if !externalOutputAllowed { return }
+    if waitingForExternalNeutral {
+      if nextState.isEffectivelyNeutral {
+        waitingForExternalNeutral = false
+        print("[DevicePipeline] Foreground gate re-armed after neutral: \(identifier)")
         return
       }
       if !normalizedEvents.isEmpty {
-        await dispatcher.dispatch(events: normalizedEvents, from: identifier)
+        waitingForExternalNeutral = false
+        print(
+          "[DevicePipeline] Foreground gate re-armed after first post-focus change: \(identifier)"
+        )
       }
-      updateOutputState(from: normalizedEvents)
-    case .consumeWhileSleeping: break
-    case .consumeWake: print("[DevicePipeline] Controller woke from sleep: \(identifier)")
+      return
     }
+    if !normalizedEvents.isEmpty {
+      await dispatcher.dispatch(events: normalizedEvents, from: identifier)
+    }
+    updateOutputState(from: normalizedEvents)
   }
 }

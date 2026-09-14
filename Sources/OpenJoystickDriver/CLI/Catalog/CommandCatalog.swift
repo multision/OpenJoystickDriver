@@ -111,6 +111,15 @@ enum InstalledCommandCatalog {
       sideEffect: .transientDeviceMutation
     ),
     command(
+      "controller disconnect-wireless [options]",
+      CLILocalized.text(
+        "cli.catalog.controller_disconnect_wireless.summary",
+        "Disconnect a Bluetooth controller"
+      ),
+      group: CLILocalized.text("cli.catalog.group.controllers", "Controllers"),
+      sideEffect: .transientDeviceMutation
+    ),
+    command(
       "map <command> [options]",
       CLILocalized.text("cli.catalog.map.summary", "Manage controller mapping profiles"),
       group: CLILocalized.text("cli.catalog.group.configuration", "Configuration"),

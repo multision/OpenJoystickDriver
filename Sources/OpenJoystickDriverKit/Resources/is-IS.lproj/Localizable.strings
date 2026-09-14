@@ -1253,3 +1253,15 @@
 "cli.catalog.controller_resume.summary" = "Reyna aftur — Stjórnanda aftengdur";
 "cli.controller.disconnected" = "Stjórnanda aftengdur";
 "cli.controller.resumed" = "Innleiðslustarf";
+
+"controllers.disconnectWireless" = "Stjórnanda aftengdur…";
+"controllers.disconnectWirelessButton" = "Stjórnanda aftengdur…";
+"controllers.disconnectWirelessSummary" = "Stjórnanda aftengdur";
+"controllers.disconnectWirelessConfirmTitle" = "Stjórnanda aftengdur";
+"controllers.disconnectWirelessConfirmMessage" = "%@ er ekki lengur tengd.";
+"controllers.disconnectWirelessConfirm" = "Stjórnanda aftengdur";
+"cli.catalog.controller_disconnect_wireless.summary" = "Stjórnanda aftengdur";
+"cli.controller.wirelessDisconnected" = "Stjórnanda aftengdur";
+
+"notifications.controllerNeedsAttention" = "Stjórnanda aftengdur";
+"notifications.controllerNeedsAttentionBody" = "%@ er ekki lengur tengd.";

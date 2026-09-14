@@ -36,7 +36,8 @@ public enum DS4ParserError: Error, Equatable, Sendable {
 /// transport/control prefix.
 public final class DS4Parser: InputParser, PhysicalHIDRumbleOutput, PhysicalHIDColorOutput,
   HIDStartupOutputReportProvider, HIDStartupFeatureReadRequestProvider, HIDFeatureReportConsumer,
-  ControllerBatteryTelemetryProvider, ControllerInputReportLivenessProvider
+  ControllerBatteryTelemetryProvider, ControllerInputReportLivenessProvider,
+  ControllerInputReportObserver, ControllerInputReportFormatProvider
 {
   public var physicalDefaultColor: (red: UInt8, green: UInt8, blue: UInt8) { (0, 0, 64) }
 
@@ -73,10 +74,12 @@ public final class DS4Parser: InputParser, PhysicalHIDRumbleOutput, PhysicalHIDC
   private var prevLSY = UInt8(ds4AxisCenter)
   private var prevRSX = UInt8(ds4AxisCenter)
   private var prevRSY = UInt8(ds4AxisCenter)
+  private var previousSensorTimestamp: UInt16?
   public private(set) var transport: DS4Transport = .usb
   public private(set) var batteryTelemetry: ControllerBatteryTelemetry?
   public let inputReportLivenessTimeoutNanoseconds: UInt64 = 1_000_000_000
-  public private(set) var latestInputReportIsNeutral = true
+  public private(set) var latestInputReportObservation: ControllerInputReportObservation?
+  public private(set) var latestInputReportFormat: String?
 
   /// Creates a new DS4Parser.
   public init(prefersBluetooth: Bool = false) { transport = prefersBluetooth ? .bluetooth : .usb }
@@ -135,7 +138,18 @@ public final class DS4Parser: InputParser, PhysicalHIDRumbleOutput, PhysicalHIDC
   public func parse(data: Data) throws -> [ControllerEvent] {
     let bytes = try reportPayload(from: data)
     guard bytes.count >= 9 else { return [] }
-    latestInputReportIsNeutral = Self.isNeutralInput(bytes)
+    let timestamp = bytes.count >= 11 ? UInt16(bytes[9]) | (UInt16(bytes[10]) << 8) : nil
+    let isFresh =
+      timestamp.map { current in
+        guard let previousSensorTimestamp else { return true }
+        let advance = current &- previousSensorTimestamp
+        return advance > 0 && advance < 0x8000
+      } ?? false
+    previousSensorTimestamp = timestamp
+    latestInputReportObservation = ControllerInputReportObservation(
+      controls: Self.absoluteControlEvents(bytes),
+      isFresh: isFresh
+    )
     updateBatteryTelemetry(from: bytes)
     var events: [ControllerEvent] = []
 
@@ -185,12 +199,56 @@ public final class DS4Parser: InputParser, PhysicalHIDRumbleOutput, PhysicalHIDC
     return events
   }
 
-  private static func isNeutralInput(_ bytes: [UInt8]) -> Bool {
-    guard bytes.count >= 9 else { return true }
-    let sticks = bytes[0...3].allSatisfy { abs(Int($0) - Int(ds4AxisCenter)) <= 4 }
-    let hatNeutral = bytes[4] & 0x0F == 0x08
-    let buttonsNeutral = bytes[4] & 0xF0 == 0 && bytes[5] == 0 && bytes[6] == 0
-    return sticks && hatNeutral && buttonsNeutral && bytes[7] == 0 && bytes[8] == 0
+  private static func absoluteControlEvents(_ bytes: [UInt8]) -> [ControllerEvent] {
+    var events: [ControllerEvent] = [
+      .leftStickChanged(x: normalize(bytes[0]), y: normalize(bytes[1])),
+      .rightStickChanged(x: normalize(bytes[2]), y: normalize(bytes[3])),
+      .leftTriggerChanged(Float(bytes[7]) / ds4TriggerMax),
+      .rightTriggerChanged(Float(bytes[8]) / ds4TriggerMax),
+      .dpadChanged(direction(for: bytes[4] & 0x0F)),
+    ]
+    appendPressedButtons(
+      bytes[4],
+      mapping: [(0x10, .square), (0x20, .cross), (0x40, .circle), (0x80, .triangle)],
+      to: &events
+    )
+    appendPressedButtons(
+      bytes[5],
+      mapping: [
+        (0x01, .l1), (0x02, .r1), (0x10, .share), (0x20, .options), (0x40, .leftStick),
+        (0x80, .rightStick),
+      ],
+      to: &events
+    )
+    appendPressedButtons(bytes[6], mapping: [(0x01, .ps), (0x02, .touchpad)], to: &events)
+    return events
+  }
+
+  private static func appendPressedButtons(
+    _ value: UInt8,
+    mapping: [(UInt8, Button)],
+    to events: inout [ControllerEvent]
+  ) {
+    for (mask, button) in mapping where value & mask != 0 { events.append(.buttonPressed(button)) }
+  }
+
+  private static func normalize(_ raw: UInt8) -> Float {
+    let value = (Float(raw) - ds4AxisCenter) / ds4AxisCenter
+    return abs(value) < ds4AxisDeadzone ? 0 : value
+  }
+
+  private static func direction(for hat: UInt8) -> DpadDirection {
+    switch hat {
+    case 0: .north
+    case 1: .northEast
+    case 2: .east
+    case 3: .southEast
+    case 4: .south
+    case 5: .southWest
+    case 6: .west
+    case 7: .northWest
+    default: .neutral
+    }
   }
 
   public func physicalRumbleReport(
@@ -245,14 +303,21 @@ public final class DS4Parser: InputParser, PhysicalHIDRumbleOutput, PhysicalHIDC
 
   private func reportPayload(from data: Data) throws -> [UInt8] {
     let bytes = Array(data)
-    if bytes.first == ds4USBInputReportID, (10...64).contains(bytes.count) {
-      if transport != .bluetooth { transport = .usb }
+    if bytes.first == ds4USBInputReportID, bytes.count == 64 {
+      transport = .usb
+      latestInputReportFormat = "ds4-usb-0x01"
+      return Array(bytes.dropFirst())
+    }
+    if bytes.first == ds4USBInputReportID, bytes.count == 10 {
+      transport = .bluetooth
+      latestInputReportFormat = "ds4-bluetooth-minimal-0x01"
       return Array(bytes.dropFirst())
     }
     if bytes.first == ds4BluetoothHIDInputTransaction,
-      bytes.dropFirst().first == ds4USBInputReportID, (11...65).contains(bytes.count)
+      bytes.dropFirst().first == ds4USBInputReportID, bytes.count == 11
     {
       transport = .bluetooth
+      latestInputReportFormat = "ds4-bluetooth-minimal-0x01"
       return Array(bytes.dropFirst(2))
     }
     if bytes.first == ds4BluetoothHIDInputTransaction,
@@ -260,21 +325,14 @@ public final class DS4Parser: InputParser, PhysicalHIDRumbleOutput, PhysicalHIDC
     {
       try validateBluetoothInputCRC(Array(bytes.dropFirst()))
       transport = .bluetooth
+      latestInputReportFormat = "ds4-bluetooth-complete-0x11"
       return Array(bytes.dropFirst(4).dropLast(4))
     }
     if bytes.first == ds4BluetoothInputReportID, bytes.count == 78 {
       try validateBluetoothInputCRC(bytes)
       transport = .bluetooth
+      latestInputReportFormat = "ds4-bluetooth-complete-0x11"
       return Array(bytes.dropFirst(3).dropLast(4))
-    }
-    if bytes.first == ds4BluetoothOutputHIDAndCRCFlag, bytes.count == 77 {
-      try validateBluetoothInputCRC([ds4BluetoothInputReportID] + bytes)
-      transport = .bluetooth
-      return Array(bytes.dropFirst(2).dropLast(4))
-    }
-    if bytes.count == 63 {
-      if transport != .bluetooth { transport = .usb }
-      return bytes
     }
     throw DS4ParserError.invalidReportFraming
   }

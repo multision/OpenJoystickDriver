@@ -1253,3 +1253,15 @@
 "cli.catalog.controller_resume.summary" = "重试 — 控制器已断开";
 "cli.controller.disconnected" = "控制器已断开";
 "cli.controller.resumed" = "正在输入";
+
+"controllers.disconnectWireless" = "控制器已断开…";
+"controllers.disconnectWirelessButton" = "控制器已断开…";
+"controllers.disconnectWirelessSummary" = "控制器已断开";
+"controllers.disconnectWirelessConfirmTitle" = "控制器已断开";
+"controllers.disconnectWirelessConfirmMessage" = "%@ 已不再连接。";
+"controllers.disconnectWirelessConfirm" = "控制器已断开";
+"cli.catalog.controller_disconnect_wireless.summary" = "控制器已断开";
+"cli.controller.wirelessDisconnected" = "控制器已断开";
+
+"notifications.controllerNeedsAttention" = "控制器已断开";
+"notifications.controllerNeedsAttentionBody" = "%@ 已不再连接。";

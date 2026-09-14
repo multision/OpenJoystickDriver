@@ -1253,3 +1253,15 @@
 "cli.catalog.controller_resume.summary" = "Erneut versuchen — Controller getrennt";
 "cli.controller.disconnected" = "Controller getrennt";
 "cli.controller.resumed" = "Eingabe aktiv";
+
+"controllers.disconnectWireless" = "Controller getrennt…";
+"controllers.disconnectWirelessButton" = "Controller getrennt…";
+"controllers.disconnectWirelessSummary" = "Controller getrennt";
+"controllers.disconnectWirelessConfirmTitle" = "Controller getrennt";
+"controllers.disconnectWirelessConfirmMessage" = "%@ ist nicht mehr verbunden.";
+"controllers.disconnectWirelessConfirm" = "Controller getrennt";
+"cli.catalog.controller_disconnect_wireless.summary" = "Controller getrennt";
+"cli.controller.wirelessDisconnected" = "Controller getrennt";
+
+"notifications.controllerNeedsAttention" = "Controller getrennt";
+"notifications.controllerNeedsAttentionBody" = "%@ ist nicht mehr verbunden.";

@@ -1253,3 +1253,15 @@
 "cli.catalog.controller_resume.summary" = "دوباره تلاش کنید — کنترل کننده قطع شده";
 "cli.controller.disconnected" = "کنترل کننده قطع شده";
 "cli.controller.resumed" = "فعال ورودی";
+
+"controllers.disconnectWireless" = "کنترل کننده قطع شده…";
+"controllers.disconnectWirelessButton" = "کنترل کننده قطع شده…";
+"controllers.disconnectWirelessSummary" = "کنترل کننده قطع شده";
+"controllers.disconnectWirelessConfirmTitle" = "کنترل کننده قطع شده";
+"controllers.disconnectWirelessConfirmMessage" = "%@ دیگه ارتباط نداره";
+"controllers.disconnectWirelessConfirm" = "کنترل کننده قطع شده";
+"cli.catalog.controller_disconnect_wireless.summary" = "کنترل کننده قطع شده";
+"cli.controller.wirelessDisconnected" = "کنترل کننده قطع شده";
+
+"notifications.controllerNeedsAttention" = "کنترل کننده قطع شده";
+"notifications.controllerNeedsAttentionBody" = "%@ دیگه ارتباط نداره";

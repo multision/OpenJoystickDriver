@@ -23,6 +23,10 @@ struct CLIGrammarTests {
     (
       "controller resume --device device-1",
       CLIInvocation.controllerResume(["--device", "device-1"])
+    ),
+    (
+      "controller disconnect-wireless --device device-1",
+      CLIInvocation.controllerDisconnectWireless(["--device", "device-1"])
     ), ("map list --json", CLIInvocation.mapping(["list", "--json"])),
     ("app status", CLIInvocation.appStatus([])), ("app ready", CLIInvocation.appReady),
     ("app login enable", CLIInvocation.appLogin(enable: true)),

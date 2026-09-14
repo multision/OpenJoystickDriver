@@ -218,7 +218,9 @@
 				"needsSetConfiguration",
 				"postHandshakeSettleMs",
 				"preferredBackends",
-				"physicalOutputCapabilities"
+				"physicalOutputCapabilities",
+				"sessionState",
+				"inputHealth"
 			],
 			"additionalProperties": false,
 			"properties": {
@@ -279,8 +281,41 @@
 				"physicalOutputCapabilities": {
 					"$ref": "#/$defs/physicalOutputCapabilities"
 				},
+				"sessionState": {
+					"enum": ["active", "suspended"]
+				},
+				"startupCommandStatus": {
+					"type": "string"
+				},
+				"inputHealth": {
+					"$ref": "#/$defs/controllerInputHealth"
+				},
 				"battery": {
 					"$ref": "#/$defs/controllerBattery"
+				}
+			}
+		},
+		"controllerInputHealth": {
+			"type": "object",
+			"required": ["state", "recoveryCount"],
+			"additionalProperties": false,
+			"properties": {
+				"state": {
+					"enum": ["healthy", "stale", "waitingForNeutral"]
+				},
+				"failureReason": {
+					"enum": ["missingReports", "freshnessNotAdvancing"]
+				},
+				"reportFormat": {
+					"type": "string"
+				},
+				"lastReportAgeNanoseconds": {
+					"type": "integer",
+					"minimum": 0
+				},
+				"recoveryCount": {
+					"type": "integer",
+					"minimum": 0
 				}
 			}
 		},

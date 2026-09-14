@@ -1253,3 +1253,15 @@
 "cli.catalog.controller_resume.summary" = "Δοκιμάστε ξανά — Διακόπωση του ελεγκτή";
 "cli.controller.disconnected" = "Διακόπωση του ελεγκτή";
 "cli.controller.resumed" = "Ενεργή εισόδου";
+
+"controllers.disconnectWireless" = "Διακόπωση του ελεγκτή…";
+"controllers.disconnectWirelessButton" = "Διακόπωση του ελεγκτή…";
+"controllers.disconnectWirelessSummary" = "Διακόπωση του ελεγκτή";
+"controllers.disconnectWirelessConfirmTitle" = "Διακόπωση του ελεγκτή";
+"controllers.disconnectWirelessConfirmMessage" = "%@ Δεν συνδέεται πλέον.";
+"controllers.disconnectWirelessConfirm" = "Διακόπωση του ελεγκτή";
+"cli.catalog.controller_disconnect_wireless.summary" = "Διακόπωση του ελεγκτή";
+"cli.controller.wirelessDisconnected" = "Διακόπωση του ελεγκτή";
+
+"notifications.controllerNeedsAttention" = "Διακόπωση του ελεγκτή";
+"notifications.controllerNeedsAttentionBody" = "%@ Δεν συνδέεται πλέον.";

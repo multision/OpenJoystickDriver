@@ -29,7 +29,6 @@ let usbIOErrorReconnectThreshold = 10
 let usbIOErrorBackoffBaseNs: UInt64 = 250_000_000  // 250ms
 let usbIOErrorBackoffMaxNs: UInt64 = 2_000_000_000  // 2s
 let usbIOErrorLogIntervalNs: UInt64 = 5_000_000_000  // 5s
-private let defaultControllerIdleTimeoutNanoseconds: UInt64 = 30_000_000_000
 private let defaultIdleMonitorIntervalNanoseconds: UInt64 = 1_000_000_000
 
 /// Manages full lifecycle of single connected controller.
@@ -58,7 +57,6 @@ actor DevicePipeline {
   let maxPacketLogEntries = 200
   private var currentBatteryTelemetry: ControllerBatteryTelemetry?
   private let packetLog: PacketLogBuffer
-  var sleepGate = ControllerSleepGate()
   var idleMonitorTask: Task<Void, Never>?
   private var runTask: Task<Void, Never>?
   var externalOutputAllowed: Bool
@@ -68,7 +66,10 @@ actor DevicePipeline {
   var inputConnectionActive: Bool
   var sessionState: ControllerSessionState = .active
   var lastLiveInputReportNanoseconds: UInt64?
+  var inputHealthMonitoringStartedNanoseconds: UInt64?
+  var lastObservedInputReportNanoseconds: UInt64?
   var awaitingNeutralAfterLivenessLoss = false
+  var inputHealthRecoveryCount = 0
   var startupOutputStatus: String?
 
   init(
@@ -80,7 +81,7 @@ actor DevicePipeline {
     transportProfile: DeviceTransportProfile = .gipDefault,
     usbRecoveryPolicy: USBPipelineRecoveryPolicy = .standard,
     externalOutputAllowed: Bool = true,
-    idleTimeoutNanoseconds: UInt64 = defaultControllerIdleTimeoutNanoseconds,
+    idleTimeoutNanoseconds _: UInt64 = 30_000_000_000,
     idleMonitorIntervalNanoseconds: UInt64 = defaultIdleMonitorIntervalNanoseconds
   ) {
     self.identifier = identifier
@@ -101,13 +102,15 @@ actor DevicePipeline {
     self.currentInputState = initialState
     self.outputState = initialState
     self.packetLog = PacketLogBuffer(maxEntries: maxPacketLogEntries)
-    self.sleepGate = ControllerSleepGate(idleTimeoutNanoseconds: idleTimeoutNanoseconds)
   }
 
   /// Start pipeline: open device, handshake, begin input loop.
   func start() {
     guard !isActive else { return }
     isActive = true
+    if parser is any ControllerInputReportLivenessProvider {
+      inputHealthMonitoringStartedNanoseconds = DispatchTime.now().uptimeNanoseconds
+    }
     startIdleMonitor()
 
     switch transport {
@@ -263,6 +266,41 @@ actor DevicePipeline {
   func startupCommandStatus() -> String? { startupOutputStatus }
   func getPacketLog() -> [PacketLogEntry] { packetLog.entries() }
 
+  func inputHealth() -> ControllerInputHealth {
+    let now = DispatchTime.now().uptimeNanoseconds
+    let reference = lastLiveInputReportNanoseconds ?? inputHealthMonitoringStartedNanoseconds
+    let age = reference.map { now &- $0 }
+    let observationAge = lastObservedInputReportNanoseconds.map { now &- $0 }
+    let state: ControllerInputHealthState
+    if awaitingNeutralAfterLivenessLoss {
+      state = .waitingForNeutral
+    } else if let liveness = parser as? any ControllerInputReportLivenessProvider, let age,
+      age >= liveness.inputReportLivenessTimeoutNanoseconds
+    {
+      state = .stale
+    } else {
+      state = .healthy
+    }
+    let failureReason: ControllerInputHealthFailureReason?
+    if state == .healthy {
+      failureReason = nil
+    } else if let liveness = parser as? any ControllerInputReportLivenessProvider,
+      let observationAge, observationAge < liveness.inputReportLivenessTimeoutNanoseconds
+    {
+      failureReason = .freshnessNotAdvancing
+    } else {
+      failureReason = .missingReports
+    }
+    let reportFormat = (parser as? any ControllerInputReportFormatProvider)?.latestInputReportFormat
+    return ControllerInputHealth(
+      state: state,
+      reportFormat: reportFormat,
+      lastReportAgeNanoseconds: age,
+      failureReason: failureReason,
+      recoveryCount: inputHealthRecoveryCount
+    )
+  }
+
   func setExternalOutputAllowed(_ allowed: Bool) async {
     let changed = externalOutputAllowed != allowed
     guard changed else { return }
@@ -296,6 +334,7 @@ actor DevicePipeline {
     guard isActive, sessionState == .active else { return false }
     sessionState = .suspended
     lastLiveInputReportNanoseconds = nil
+    inputHealthMonitoringStartedNanoseconds = nil
     awaitingNeutralAfterLivenessLoss = false
     waitingForExternalNeutral = false
     await neutralizeOutput()
@@ -311,6 +350,7 @@ actor DevicePipeline {
     resetObservedInputState()
     outputState = currentInputState
     lastLiveInputReportNanoseconds = nil
+    inputHealthMonitoringStartedNanoseconds = DispatchTime.now().uptimeNanoseconds
     awaitingNeutralAfterLivenessLoss = false
     sessionState = .active
     await dispatcher.dispatch(events: [], from: identifier)

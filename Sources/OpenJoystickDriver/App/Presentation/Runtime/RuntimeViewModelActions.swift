@@ -288,6 +288,21 @@ extension RuntimeViewModel {
     } catch { lastError = RuntimePresentation.userFacingError(error) }
   }
 
+  func disconnectWirelessController(_ device: ApplicationServiceDeviceDescription) async {
+    do {
+      let result = try await gateway.disconnectWirelessController(
+        RuntimeDeviceSelector(device: device)
+      )
+      guard result.succeeded else {
+        throw ApplicationServiceGatewayError.controllerSessionChangeRejected
+      }
+      await refreshControllerInventory()
+    } catch {
+      lastError = RuntimePresentation.userFacingError(error)
+      await refreshControllerInventory()
+    }
+  }
+
   private func locallyValid(
     _ profile: RemappingProfile,
     request: RuntimeMutationRequest

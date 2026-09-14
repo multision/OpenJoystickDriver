@@ -100,6 +100,29 @@ struct NotificationTests {
   }
 
   @Test
+  func reportsControllerHealthLossOnce() {
+    let healthy = RuntimeControllerHealthSnapshot(name: "DualShock 4", state: .healthy)
+    let stale = RuntimeControllerHealthSnapshot(name: "DualShock 4", state: .stale)
+    let before = RuntimeNotificationSnapshot(
+      controllers: ["ds4": "DualShock 4"],
+      activeProfiles: [:],
+      controllerHealth: ["ds4": healthy]
+    )
+    let after = RuntimeNotificationSnapshot(
+      controllers: ["ds4": "DualShock 4"],
+      activeProfiles: [:],
+      controllerHealth: ["ds4": stale]
+    )
+
+    #expect(
+      RuntimeNotificationDiff.events(from: before, to: after) == [
+        .controllerNeedsAttention("DualShock 4")
+      ]
+    )
+    #expect(RuntimeNotificationDiff.events(from: after, to: after).isEmpty)
+  }
+
+  @Test
   func unavailableSourceDoesNotBlockOrInventEventsForTheOtherSource() {
     let before = RuntimeNotificationSnapshot(
       controllers: ["old": "Old Controller"],

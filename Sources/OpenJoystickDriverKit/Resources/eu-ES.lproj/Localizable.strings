@@ -1253,3 +1253,15 @@
 "cli.catalog.controller_resume.summary" = "Saiatu berriro — Kontrolgailua deskonektatuta";
 "cli.controller.disconnected" = "Kontrolgailua deskonektatuta";
 "cli.controller.resumed" = "Sarrera aktiboa";
+
+"controllers.disconnectWireless" = "Kontrolgailua deskonektatuta…";
+"controllers.disconnectWirelessButton" = "Kontrolgailua deskonektatuta…";
+"controllers.disconnectWirelessSummary" = "Kontrolgailua deskonektatuta";
+"controllers.disconnectWirelessConfirmTitle" = "Kontrolgailua deskonektatuta";
+"controllers.disconnectWirelessConfirmMessage" = "%@ Ez dago loturarik.";
+"controllers.disconnectWirelessConfirm" = "Kontrolgailua deskonektatuta";
+"cli.catalog.controller_disconnect_wireless.summary" = "Kontrolgailua deskonektatuta";
+"cli.controller.wirelessDisconnected" = "Kontrolgailua deskonektatuta";
+
+"notifications.controllerNeedsAttention" = "Kontrolgailua deskonektatuta";
+"notifications.controllerNeedsAttentionBody" = "%@ Ez dago loturarik.";

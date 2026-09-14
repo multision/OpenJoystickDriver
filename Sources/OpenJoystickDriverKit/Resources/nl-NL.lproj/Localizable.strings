@@ -1253,3 +1253,15 @@
 "cli.catalog.controller_resume.summary" = "Probeer opnieuw — De controller is afgesloten";
 "cli.controller.disconnected" = "De controller is afgesloten";
 "cli.controller.resumed" = "Invoer actief";
+
+"controllers.disconnectWireless" = "De controller is afgesloten…";
+"controllers.disconnectWirelessButton" = "De controller is afgesloten…";
+"controllers.disconnectWirelessSummary" = "De controller is afgesloten";
+"controllers.disconnectWirelessConfirmTitle" = "De controller is afgesloten";
+"controllers.disconnectWirelessConfirmMessage" = "%@ is niet meer verbonden.";
+"controllers.disconnectWirelessConfirm" = "De controller is afgesloten";
+"cli.catalog.controller_disconnect_wireless.summary" = "De controller is afgesloten";
+"cli.controller.wirelessDisconnected" = "De controller is afgesloten";
+
+"notifications.controllerNeedsAttention" = "Controller verbroken";
+"notifications.controllerNeedsAttentionBody" = "%@ is niet meer verbonden.";

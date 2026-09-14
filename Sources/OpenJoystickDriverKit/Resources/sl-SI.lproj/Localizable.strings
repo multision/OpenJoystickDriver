@@ -1253,3 +1253,15 @@
 "cli.catalog.controller_resume.summary" = "Poskusi znova — Kontroler je izključen";
 "cli.controller.disconnected" = "Kontroler je izključen";
 "cli.controller.resumed" = "Aktivno vnos";
+
+"controllers.disconnectWireless" = "Kontroler je izključen…";
+"controllers.disconnectWirelessButton" = "Kontroler je izključen…";
+"controllers.disconnectWirelessSummary" = "Kontroler je izključen";
+"controllers.disconnectWirelessConfirmTitle" = "Kontroler je izključen";
+"controllers.disconnectWirelessConfirmMessage" = "%@ Ni več povezan.";
+"controllers.disconnectWirelessConfirm" = "Kontroler je izključen";
+"cli.catalog.controller_disconnect_wireless.summary" = "Kontroler je izključen";
+"cli.controller.wirelessDisconnected" = "Kontroler je izključen";
+
+"notifications.controllerNeedsAttention" = "Kontroler je izključen";
+"notifications.controllerNeedsAttentionBody" = "%@ Ni več povezan.";

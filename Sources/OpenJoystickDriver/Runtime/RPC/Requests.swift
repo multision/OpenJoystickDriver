@@ -331,6 +331,23 @@ extension ApplicationServiceServer {
     }
   }
 
+  public func disconnectWirelessController(
+    vendorID: Int,
+    productID: Int,
+    runtimeIdentifier: String?,
+    reply: @escaping (Data) -> Void
+  ) {
+    let callback = SendableReply(call: reply)
+    Task {
+      let result = await deviceManager.disconnectWirelessController(
+        vendorID: UInt16(clamping: vendorID),
+        productID: UInt16(clamping: productID),
+        runtimeIdentifier: runtimeIdentifier
+      )
+      callback.call((try? JSONEncoder().encode(result)) ?? Data())
+    }
+  }
+
   private func compatibilityTransitionFailure(
     from snapshot: UserSpaceStatusSnapshot
   ) -> CompatibilityIdentityTransitionFailure {

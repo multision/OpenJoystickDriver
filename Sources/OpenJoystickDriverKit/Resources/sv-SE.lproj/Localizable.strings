@@ -1253,3 +1253,15 @@
 "cli.catalog.controller_resume.summary" = "Försök igen — Kontrollen avstängd";
 "cli.controller.disconnected" = "Kontrollen avstängd";
 "cli.controller.resumed" = "Inmatningsaktivt";
+
+"controllers.disconnectWireless" = "Kontrollen avstängd…";
+"controllers.disconnectWirelessButton" = "Kontrollen avstängd…";
+"controllers.disconnectWirelessSummary" = "Kontrollen avstängd";
+"controllers.disconnectWirelessConfirmTitle" = "Kontrollen avstängd";
+"controllers.disconnectWirelessConfirmMessage" = "%@ är inte längre ansluten.";
+"controllers.disconnectWirelessConfirm" = "Kontrollen avstängd";
+"cli.catalog.controller_disconnect_wireless.summary" = "Kontrollen avstängd";
+"cli.controller.wirelessDisconnected" = "Kontrollen avstängd";
+
+"notifications.controllerNeedsAttention" = "Kontroller frånkopplad";
+"notifications.controllerNeedsAttentionBody" = "%@ är inte längre ansluten.";

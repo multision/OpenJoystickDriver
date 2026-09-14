@@ -4,8 +4,12 @@ import Testing
 @testable import OpenJoystickDriverKit
 
 struct DevicePipelineSleepTests {
-  @Test
-  func testSleepingPipelineKeepsPhysicalInputStateButStopsVirtualDispatch() async {
+  @Test(arguments: [
+    (UInt8(3), ControllerEvent.leftStickChanged(x: 0.8, y: 0)),
+    (UInt8(4), ControllerEvent.buttonPressed(.b)), (UInt8(6), ControllerEvent.dpadChanged(.north)),
+    (UInt8(7), ControllerEvent.leftTriggerChanged(0.75)),
+  ])
+  func testIdlePipelineForwardsTheFirstWakeInput(code: UInt8, expected: ControllerEvent) async {
     let dispatcher = RecordingOutputDispatcher()
     let pipeline = DevicePipeline(
       identifier: DeviceIdentifier(vendorID: 100, productID: 200),
@@ -22,11 +26,9 @@ struct DevicePipelineSleepTests {
 
     try? await Task.sleep(nanoseconds: 80_000_000)
 
-    let dispatchCountBeforeSleepInput = dispatcher.dispatchCount
-    await pipeline.feedHIDData(Data([3]))
+    await pipeline.feedHIDData(Data([code]))
 
-    #expect(dispatcher.dispatchCount == dispatchCountBeforeSleepInput)
-    #expect(abs(await pipeline.inputState().leftStickX - 0.8) < 0.001)
+    #expect(dispatcher.flattenedEvents == [.buttonPressed(.a), .buttonReleased(.a), expected])
   }
 
   @Test
@@ -229,6 +231,7 @@ private final class ScriptedInputParser: InputParser {
     case 4: return [.buttonPressed(.b)]
     case 5: return [.leftStickChanged(x: 0.6, y: 0)]
     case 6: return [.dpadChanged(.north)]
+    case 7: return [.leftTriggerChanged(0.75)]
     case 9: return [.buttonPressed(.a), .buttonReleased(.a)]
     case 10: return [.buttonPressed(.a), .buttonPressed(.a)]
     case 11: return [.leftStickChanged(x: .nan, y: .infinity)]

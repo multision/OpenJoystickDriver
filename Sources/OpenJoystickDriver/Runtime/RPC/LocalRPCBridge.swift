@@ -248,6 +248,14 @@ extension ApplicationServiceServer {
           runtimeIdentifier: value.runtimeIdentifier,
           reply: send
         )
+      case "disconnectWirelessController":
+        let value = try decode(LocalServiceRPCDeviceArguments.self)
+        disconnectWirelessController(
+          vendorID: value.vendorID,
+          productID: value.productID,
+          runtimeIdentifier: value.runtimeIdentifier,
+          reply: send
+        )
       case "runVirtualDeviceSelfTest":
         runVirtualDeviceSelfTest(
           seconds: try decode(LocalServiceRPCIntArguments.self).value,

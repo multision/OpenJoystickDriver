@@ -65,6 +65,9 @@ protocol CompatibilityGateway: Sendable {
   ) async throws -> CompatibilityIdentityTransitionResult
   func suspendController(_ selector: RuntimeDeviceSelector) async throws -> ControllerSuspendResult
   func resumeController(_ selector: RuntimeDeviceSelector) async throws -> ControllerResumeResult
+  func disconnectWirelessController(
+    _ selector: RuntimeDeviceSelector
+  ) async throws -> WirelessControllerDisconnectResult
 }
 
 extension CompatibilityGateway {
@@ -91,6 +94,13 @@ extension CompatibilityGateway {
   func resumeController(_ selector: RuntimeDeviceSelector) async throws -> ControllerResumeResult {
     _ = try? await compatibilityIdentity()
     return ControllerResumeResult(state: .suspended, failure: .notFound)
+  }
+
+  func disconnectWirelessController(
+    _ selector: RuntimeDeviceSelector
+  ) async throws -> WirelessControllerDisconnectResult {
+    _ = try? await compatibilityIdentity()
+    return WirelessControllerDisconnectResult(state: .active, failure: .notFound)
   }
 }
 
@@ -310,6 +320,17 @@ actor ApplicationServiceClientGateway: ApplicationServiceGateway {
   func resumeController(_ selector: RuntimeDeviceSelector) async throws -> ControllerResumeResult {
     await ensureConnection()
     return try await client.resumeController(
+      vendorID: selector.vendorID,
+      productID: selector.productID,
+      runtimeIdentifier: selector.runtimeIdentifier
+    )
+  }
+
+  func disconnectWirelessController(
+    _ selector: RuntimeDeviceSelector
+  ) async throws -> WirelessControllerDisconnectResult {
+    await ensureConnection()
+    return try await client.disconnectWirelessController(
       vendorID: selector.vendorID,
       productID: selector.productID,
       runtimeIdentifier: selector.runtimeIdentifier
