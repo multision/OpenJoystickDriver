@@ -42,7 +42,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          for dependency in pkg-config pyright ruff sdl3 shellcheck swiftlint xmake; do
+          for dependency in pkg-config pyright ruff sdl3 shellcheck swift-format swiftlint xmake; do
             brew list --versions "$dependency" >/dev/null 2>&1 || brew install "$dependency"
           done
           python3 -m venv .build/schema-validator
