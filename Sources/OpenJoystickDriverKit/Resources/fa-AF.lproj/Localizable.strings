@@ -601,8 +601,8 @@
 "cli.diagnose.expected_id_present" = "  نتیجه: PASS (شناسهٔ مورد انتظار موجود است: %@)";
 "cli.diagnose.extension_heading" = "افزونهٔ سیستم DriverKit (در /Applications):";
 "cli.diagnose.extensions_folder_missing" = "  نتیجه: FAIL (پوشهٔ SystemExtensions موجود نیست)";
-"cli.diagnose.fix_build_dext" = "  اصلاح: اجرا کنید: ./scripts/ojd build dext";
-"cli.diagnose.fix_rebuild_dev" = "  اصلاح: اجرا کنید: ./scripts/ojd build install dev";
+"cli.diagnose.fix_build_dext" = "  اصلاح: اجرا کنید: ./Scripts/ojd build dext";
+"cli.diagnose.fix_rebuild_dev" = "  اصلاح: اجرا کنید: ./Scripts/ojd build install dev";
 "cli.diagnose.heading" = "تشخیص OpenJoystickDriver";
 "cli.diagnose.interface_line" = "    رابط %d/%d: %02X/%@/%@";
 "cli.diagnose.macos_version" = "macOS: %d.%d.%d";
@@ -618,7 +618,7 @@
 "cli.diagnose.troubleshoot_driverkit" = "  افزونهٔ DriverKit موجود نیست/خراب است؟";
 "cli.diagnose.troubleshoot_input_monitoring" = "    -> نظارت بر ورودی را بدهید: تنظیمات سیستم -> حریم خصوصی و امنیت -> نظارت بر ورودی";
 "cli.diagnose.troubleshoot_no_input" = "  ورودی از کنترلر نیست؟";
-"cli.diagnose.troubleshoot_rebuild" = "    -> اجرا کنید: ./scripts/ojd build install dev";
+"cli.diagnose.troubleshoot_rebuild" = "    -> اجرا کنید: ./Scripts/ojd build install dev";
 "cli.diagnose.troubleshoot_report_command" = "    -> اجرا کنید: --headless diagnose report";
 "cli.diagnose.troubleshoot_reporting" = "  گزارش مشکل کنترلر؟";
 "cli.diagnose.troubleshoot_virtual_device" = "  دستگاه مجازی فضای کاربر در دسترس نیست؟";
@@ -640,14 +640,14 @@
 "cli.error.missing_command" = "فرمان لازم است.";
 "cli.error.missing_subcommand" = "«%@» به فرمان فرعی نیاز دارد.";
 "cli.error.no_output" = "  (خروجی نیست)";
-"cli.error.rebuild_fast_step" = "  1) اجرا کنید: ./scripts/ojd build install-fast dev";
+"cli.error.rebuild_fast_step" = "  1) اجرا کنید: ./Scripts/ojd build install-fast dev";
 "cli.error.rerun_step" = "  2) سپس دوباره اجرا کنید: /Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless %@";
 "cli.error.signature_verification_failed" = "%@ ناموفق: تأیید امضای برنامه ناموفق بود:";
 "cli.error.unexpected_arguments" = "«%@» آرگومان اضافی نمی‌پذیرد.";
 "cli.error.unknown_command" = "فرمان ناشناخته «%@».";
 "cli.extension.approval_required" = "درخواست افزونهٔ سیستم ارسال شد و در تنظیمات سیستم نیاز به تأیید دارد.";
 "cli.extension.bundle_missing" = "بستهٔ برنامه شامل %@.dext نیست";
-"cli.extension.bundle_missing_fix" = "اصلاح: ./scripts/ojd build install dev را اجرا کنید، سپس از /Applications دوباره تلاش کنید.";
+"cli.extension.bundle_missing_fix" = "اصلاح: ./Scripts/ojd build install dev را اجرا کنید، سپس از /Applications دوباره تلاش کنید.";
 "cli.extension.cancelled" = "درخواست افزونهٔ سیستم لغو شد.";
 "cli.extension.completed" = "درخواست افزونهٔ سیستم با نتیجهٔ %@ تمام شد.";
 "cli.extension.failed" = "درخواست افزونهٔ سیستم ناموفق بود: %@ code=%d %@";

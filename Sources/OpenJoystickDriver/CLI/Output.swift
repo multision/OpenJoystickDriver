@@ -224,7 +224,7 @@ func requireValidBundleSignatureOrExit(action: String) {
       CLIOutput.diagnostic(
         CLILocalized.text(
           "cli.error.rebuild_fast_step",
-          "  1) Run: ./scripts/ojd build install-fast dev"
+          "  1) Run: ./Scripts/ojd build install-fast dev"
         )
       )
       CLIOutput.diagnostic(

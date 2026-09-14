@@ -153,16 +153,18 @@ extension DeviceManager {
     guard deviceInfos[identifier] != nil, pipelines[identifier] == nil else { return }
     print("[DeviceManager] HID device connected:" + " \(name) (\(identifier))")
     let parser: any InputParser
-    if parserRegistry.parserName(for: identifier) == "DS4", connection == "Bluetooth" {
+    if parserRegistry.parserName(for: identifier, transport: .hid) == "DS4",
+      connection == "Bluetooth"
+    {
       parser = DS4Parser(prefersBluetooth: true)
-    } else if parserRegistry.parserName(for: identifier) == "DualSense" {
+    } else if parserRegistry.parserName(for: identifier, transport: .hid) == "DualSense" {
       let profile = parserRegistry.runtimeProfile(for: identifier)
       parser = DualSenseParser(
         prefersBluetooth: connection == "Bluetooth",
         hasEdgeButtons: profile.quirks.contains("edgeButtons")
       )
     } else {
-      parser = parserRegistry.parser(for: identifier)
+      parser = parserRegistry.parser(for: identifier, transport: .hid)
     }
     let pipeline = DevicePipeline(
       identifier: identifier,

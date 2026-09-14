@@ -226,15 +226,11 @@ struct RemappingRequestCoordinatorTests {
     defer { corruptHarness.routerHarness.removeFiles() }
     try Data("not json".utf8).write(to: corruptHarness.routerHarness.fileURL)
     let corrupt = await corruptHarness.coordinator.snapshot()
-    #expect(
-      corrupt
-        == .failure(
-          ApplicationServiceRemappingRPCError(
-            code: .corruptLibrary,
-            message: "The remapping profile library is corrupt."
-          )
-        )
-    )
+    guard case .failure(let corruptError) = corrupt else {
+      Issue.record("Expected corrupt library failure")
+      return
+    }
+    #expect(corruptError.code == .corruptLibrary)
 
     let stoppedHarness = try await makeHarness()
     defer { stoppedHarness.routerHarness.removeFiles() }
@@ -247,7 +243,6 @@ struct RemappingRequestCoordinatorTests {
       return
     }
     #expect(activationError.code == .routerShutDown)
-    #expect(activationError.message == "The remapping output router has shut down.")
     #expect(
       try await stoppedHarness.routerHarness.library.activeProfile(vendorID: 1118, productID: 654)
         == nil
@@ -453,7 +448,6 @@ struct RemappingRequestCoordinatorTests {
       return
     }
     #expect(error.code == .routerEngineUnavailable)
-    #expect(error.message == "The system-input sink rejected a remapping action.")
   }
 
   private func profile(

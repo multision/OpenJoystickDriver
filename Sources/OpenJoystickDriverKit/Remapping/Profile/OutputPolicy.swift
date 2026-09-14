@@ -40,8 +40,8 @@ public struct RemappingOutputPolicy: Codable, Equatable, Hashable, Sendable {
   }
 
   private enum CodingKeys: String, CodingKey {
-    case virtualGamepad = "virtual_gamepad"
-    case physicalInput = "physical_input"
+    case virtualGamepad
+    case physicalInput
   }
 }
 

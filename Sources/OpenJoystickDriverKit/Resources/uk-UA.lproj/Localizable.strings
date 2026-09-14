@@ -601,8 +601,8 @@
 "cli.diagnose.expected_id_present" = "  Результат: PASS (очікуваний id наявний: %@)";
 "cli.diagnose.extension_heading" = "Системне розширення DriverKit (у /Applications):";
 "cli.diagnose.extensions_folder_missing" = "  Результат: FAIL (бракує папки SystemExtensions)";
-"cli.diagnose.fix_build_dext" = "  Виправлення: запустіть: ./scripts/ojd build dext";
-"cli.diagnose.fix_rebuild_dev" = "  Виправлення: запустіть: ./scripts/ojd build install dev";
+"cli.diagnose.fix_build_dext" = "  Виправлення: запустіть: ./Scripts/ojd build dext";
+"cli.diagnose.fix_rebuild_dev" = "  Виправлення: запустіть: ./Scripts/ojd build install dev";
 "cli.diagnose.heading" = "Діагностика OpenJoystickDriver";
 "cli.diagnose.interface_line" = "    Інтерфейс %d/%d: %02X/%@/%@";
 "cli.diagnose.macos_version" = "macOS: %d.%d.%d";
@@ -618,7 +618,7 @@
 "cli.diagnose.troubleshoot_driverkit" = "  Розширення DriverKit відсутнє або пошкоджене?";
 "cli.diagnose.troubleshoot_input_monitoring" = "    -> Надайте Моніторинг введення: Системні параметри -> Приватність і безпека -> Моніторинг введення";
 "cli.diagnose.troubleshoot_no_input" = "  Немає входу з контролера?";
-"cli.diagnose.troubleshoot_rebuild" = "    -> Запустіть: ./scripts/ojd build install dev";
+"cli.diagnose.troubleshoot_rebuild" = "    -> Запустіть: ./Scripts/ojd build install dev";
 "cli.diagnose.troubleshoot_report_command" = "    -> Запустіть: --headless diagnose report";
 "cli.diagnose.troubleshoot_reporting" = "  Повідомляєте про проблему з контролером?";
 "cli.diagnose.troubleshoot_virtual_device" = "  Віртуальний пристрій простору користувача недоступний?";
@@ -640,14 +640,14 @@
 "cli.error.missing_command" = "Потрібна команда.";
 "cli.error.missing_subcommand" = "«%@» потребує підкоманди.";
 "cli.error.no_output" = "  (немає виходу)";
-"cli.error.rebuild_fast_step" = "  1) Запустіть: ./scripts/ojd build install-fast dev";
+"cli.error.rebuild_fast_step" = "  1) Запустіть: ./Scripts/ojd build install-fast dev";
 "cli.error.rerun_step" = "  2) Потім запустіть знову: /Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless %@";
 "cli.error.signature_verification_failed" = "%@ не вдалося: перевірка підпису застосунку не вдалася:";
 "cli.error.unexpected_arguments" = "«%@» не приймає додаткових аргументів.";
 "cli.error.unknown_command" = "Невідома команда «%@».";
 "cli.extension.approval_required" = "Запит системного розширення надіслано й потребує схвалення в Системних параметрах.";
 "cli.extension.bundle_missing" = "Пакет застосунку не містить %@.dext";
-"cli.extension.bundle_missing_fix" = "Виправлення: запустіть ./scripts/ojd build install dev, потім повторіть із /Applications.";
+"cli.extension.bundle_missing_fix" = "Виправлення: запустіть ./Scripts/ojd build install dev, потім повторіть із /Applications.";
 "cli.extension.cancelled" = "Запит системного розширення скасовано.";
 "cli.extension.completed" = "Запит системного розширення завершено з результатом %@.";
 "cli.extension.failed" = "Запит системного розширення не вдався: %@ code=%d %@";

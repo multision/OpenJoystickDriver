@@ -56,7 +56,6 @@ struct ProfileStickDraftTests {
     )
     let mapping = RemappingStickMapping(source: .left)
     let edited = try RuntimeProfileDraft(profile: profile).settingStickMappings([mapping])
-    #expect(edited.profile.schemaVersion == RemappingProfile.currentSchemaVersion)
     #expect(edited.profile.id == profile.id)
     #expect(edited.profile.bindings == profile.bindings)
     #expect(edited.profile.stickMappings == [mapping])

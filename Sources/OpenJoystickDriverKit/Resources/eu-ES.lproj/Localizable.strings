@@ -601,8 +601,8 @@
 "cli.diagnose.expected_id_present" = "  Emaitza: PASS (esperotako id presente: %@)";
 "cli.diagnose.extension_heading" = "DriverKit sistema-luzapena (/Applications-en):";
 "cli.diagnose.extensions_folder_missing" = "  Emaitza: FAIL (SystemExtensions karpeta falta da)";
-"cli.diagnose.fix_build_dext" = "  Konponketa: exekutatu: ./scripts/ojd build dext";
-"cli.diagnose.fix_rebuild_dev" = "  Konponketa: exekutatu: ./scripts/ojd build install dev";
+"cli.diagnose.fix_build_dext" = "  Konponketa: exekutatu: ./Scripts/ojd build dext";
+"cli.diagnose.fix_rebuild_dev" = "  Konponketa: exekutatu: ./Scripts/ojd build install dev";
 "cli.diagnose.heading" = "OpenJoystickDriver diagnostikoa";
 "cli.diagnose.interface_line" = "    Interfazea %d/%d: %02X/%@/%@";
 "cli.diagnose.macos_version" = "macOS: %d.%d.%d";
@@ -618,7 +618,7 @@
 "cli.diagnose.troubleshoot_driverkit" = "  DriverKit luzapena falta/hautsita?";
 "cli.diagnose.troubleshoot_input_monitoring" = "    -> Eman Sarreraren jarraipena: Sistemaren ezarpenak -> Pribatutasuna eta segurtasuna -> Sarreraren jarraipena";
 "cli.diagnose.troubleshoot_no_input" = "  Agintearen sarrerarik ez?";
-"cli.diagnose.troubleshoot_rebuild" = "    -> Exekutatu: ./scripts/ojd build install dev";
+"cli.diagnose.troubleshoot_rebuild" = "    -> Exekutatu: ./Scripts/ojd build install dev";
 "cli.diagnose.troubleshoot_report_command" = "    -> Exekutatu: --headless diagnose report";
 "cli.diagnose.troubleshoot_reporting" = "  Aginte-arazo bat jakinarazten?";
 "cli.diagnose.troubleshoot_virtual_device" = "  Erabiltzaile-espazioko gailu birtuala ez dago erabilgarri?";
@@ -640,14 +640,14 @@
 "cli.error.missing_command" = "Komando bat behar da.";
 "cli.error.missing_subcommand" = "«%@»-k azpikomando bat behar du.";
 "cli.error.no_output" = "  (irteerarik ez)";
-"cli.error.rebuild_fast_step" = "  1) Exekutatu: ./scripts/ojd build install-fast dev";
+"cli.error.rebuild_fast_step" = "  1) Exekutatu: ./Scripts/ojd build install-fast dev";
 "cli.error.rerun_step" = "  2) Gero berriro exekutatu: /Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless %@";
 "cli.error.signature_verification_failed" = "%@ huts egin du: aplikazio-sinaduraren egiaztapenak huts egin du:";
 "cli.error.unexpected_arguments" = "«%@»-k ez ditu argumentu gehigarriak onartzen.";
 "cli.error.unknown_command" = "Komando ezezaguna «%@».";
 "cli.extension.approval_required" = "Sistema-luzapenaren eskaera bidali da eta Sistemaren ezarpenetan onespena behar du.";
 "cli.extension.bundle_missing" = "Aplikazio-paketeak ez du %@.dext";
-"cli.extension.bundle_missing_fix" = "Konponketa: exekutatu ./scripts/ojd build install dev, gero saiatu berriro /Applications-etik.";
+"cli.extension.bundle_missing_fix" = "Konponketa: exekutatu ./Scripts/ojd build install dev, gero saiatu berriro /Applications-etik.";
 "cli.extension.cancelled" = "Sistema-luzapenaren eskaera bertan behera utzi da.";
 "cli.extension.completed" = "Sistema-luzapenaren eskaera %@ emaitzarekin amaitu da.";
 "cli.extension.failed" = "Sistema-luzapenaren eskaerak huts egin du: %@ code=%d %@";

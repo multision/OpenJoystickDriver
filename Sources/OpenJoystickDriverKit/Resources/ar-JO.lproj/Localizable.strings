@@ -601,8 +601,8 @@
 "cli.diagnose.expected_id_present" = "  النتيجة: PASS (المعرّف المتوقع موجود: %@)";
 "cli.diagnose.extension_heading" = "ملحق نظام DriverKit (في /Applications):";
 "cli.diagnose.extensions_folder_missing" = "  النتيجة: FAIL (مجلد SystemExtensions مفقود)";
-"cli.diagnose.fix_build_dext" = "  الإصلاح: نفّذ: ./scripts/ojd build dext";
-"cli.diagnose.fix_rebuild_dev" = "  الإصلاح: نفّذ: ./scripts/ojd build install dev";
+"cli.diagnose.fix_build_dext" = "  الإصلاح: نفّذ: ./Scripts/ojd build dext";
+"cli.diagnose.fix_rebuild_dev" = "  الإصلاح: نفّذ: ./Scripts/ojd build install dev";
 "cli.diagnose.heading" = "تشخيص OpenJoystickDriver";
 "cli.diagnose.interface_line" = "    الواجهة %d/%d: %02X/%@/%@";
 "cli.diagnose.macos_version" = "macOS: %d.%d.%d";
@@ -618,7 +618,7 @@
 "cli.diagnose.troubleshoot_driverkit" = "  ملحق DriverKit مفقود/معطوب؟";
 "cli.diagnose.troubleshoot_input_monitoring" = "    -> امنح مراقبة الإدخال: إعدادات النظام -> الخصوصية والأمن -> مراقبة الإدخال";
 "cli.diagnose.troubleshoot_no_input" = "  لا إدخال من وحدة التحكم؟";
-"cli.diagnose.troubleshoot_rebuild" = "    -> نفّذ: ./scripts/ojd build install dev";
+"cli.diagnose.troubleshoot_rebuild" = "    -> نفّذ: ./Scripts/ojd build install dev";
 "cli.diagnose.troubleshoot_report_command" = "    -> نفّذ: --headless diagnose report";
 "cli.diagnose.troubleshoot_reporting" = "  الإبلاغ عن مشكلة في وحدة التحكم؟";
 "cli.diagnose.troubleshoot_virtual_device" = "  الجهاز الافتراضي في مساحة المستخدم غير متوفر؟";
@@ -640,14 +640,14 @@
 "cli.error.missing_command" = "الأمر مطلوب.";
 "cli.error.missing_subcommand" = "«%@» يتطلب أمراً فرعياً.";
 "cli.error.no_output" = "  (لا مخرجات)";
-"cli.error.rebuild_fast_step" = "  1) نفّذ: ./scripts/ojd build install-fast dev";
+"cli.error.rebuild_fast_step" = "  1) نفّذ: ./Scripts/ojd build install-fast dev";
 "cli.error.rerun_step" = "  2) ثم أعد التشغيل: /Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless %@";
 "cli.error.signature_verification_failed" = "فشل %@: فشل التحقق من توقيع التطبيق:";
 "cli.error.unexpected_arguments" = "«%@» لا يقبل وسائط إضافية.";
 "cli.error.unknown_command" = "أمر غير معروف «%@».";
 "cli.extension.approval_required" = "قُدّم طلب ملحق النظام ويتطلب الموافقة في إعدادات النظام.";
 "cli.extension.bundle_missing" = "حزمة التطبيق لا تحتوي على %@.dext";
-"cli.extension.bundle_missing_fix" = "الإصلاح: نفّذ ./scripts/ojd build install dev، ثم أعد المحاولة من /Applications.";
+"cli.extension.bundle_missing_fix" = "الإصلاح: نفّذ ./Scripts/ojd build install dev، ثم أعد المحاولة من /Applications.";
 "cli.extension.cancelled" = "أُلغي طلب ملحق النظام.";
 "cli.extension.completed" = "انتهى طلب ملحق النظام بالنتيجة %@.";
 "cli.extension.failed" = "فشل طلب ملحق النظام: %@ code=%d %@";

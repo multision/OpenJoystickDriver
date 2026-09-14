@@ -76,7 +76,7 @@ struct UpdatesCommand {
           info.htmlURL.absoluteString
         )
       )
-    case .failed(let message):
+    case .failed(let failure):
       print(
         CLILocalized.format(
           "cli.updates.status_failed",
@@ -84,7 +84,7 @@ struct UpdatesCommand {
           CLILocalized.text("cli.updates.failed", "failed")
         )
       )
-      print(CLILocalized.format("cli.updates.error_label", "  Error       : %@", message))
+      print(CLILocalized.format("cli.updates.error_label", "  Error       : %@", failure.message))
     case .idle, .checking:
       print(
         CLILocalized.format(
@@ -117,14 +117,14 @@ struct UpdatesCommand {
         includePrereleases: options.includePrereleases,
         message: nil
       )
-    case .failed(let message):
+    case .failed(let failure):
       output = JSONOutput(
         status: "failed",
         currentVersion: currentVersion,
         latestTag: nil,
         releaseURL: nil,
         includePrereleases: options.includePrereleases,
-        message: message
+        message: failure.message
       )
     case .idle, .checking:
       output = JSONOutput(

@@ -18,7 +18,7 @@ struct ControllerRecordDocument: Decodable {
   init(from decoder: any Decoder) throws {
     let container = try decoder.container(keyedBy: DocumentKey.self)
     try container.rejectUnknown(allowed: [
-      "$schema", "vendor_id", "product_id", "transport", "protocol", "usb",
+      "$schema", "vendorID", "productID", "transport", "protocol", "usb",
     ])
     let schema = try container.decode(String.self, for: "$schema")
     guard schema == Self.schemaID else {
@@ -28,8 +28,8 @@ struct ControllerRecordDocument: Decodable {
         debugDescription: "$schema must identify the current controller contract"
       )
     }
-    vendorID = try container.decode(Int.self, for: "vendor_id")
-    productID = try container.decode(Int.self, for: "product_id")
+    vendorID = try container.decode(Int.self, for: "vendorID")
+    productID = try container.decode(Int.self, for: "productID")
     transport = try container.decode(String.self, for: "transport")
     protocolInfo = try container.decode(ProtocolInfo.self, for: "protocol")
     usb = try container.decodeOptional(USBOverride.self, for: "usb")
@@ -61,17 +61,17 @@ struct ControllerRecordDocument: Decodable {
     init(from decoder: any Decoder) throws {
       let container = try decoder.container(keyedBy: DocumentKey.self)
       try container.rejectUnknown(allowed: [
-        "driver", "variant", "quirks", "startup_packets", "keep_alive",
+        "driver", "variant", "quirks", "startupPackets", "keepAlive",
       ])
       driver = try container.decode(String.self, for: "driver")
       variant = try container.decode(String.self, for: "variant")
       quirks = try container.decodeOptional([String].self, for: "quirks")
-      startupPackets = try container.decodeOptional([String].self, for: "startup_packets")
-      keepAliveEnabled = try container.decodeOptional(Bool.self, for: "keep_alive")
+      startupPackets = try container.decodeOptional([String].self, for: "startupPackets")
+      keepAliveEnabled = try container.decodeOptional(Bool.self, for: "keepAlive")
       try Self.validateUniqueNonempty(quirks, field: "quirks", codingPath: decoder.codingPath)
       try Self.validateUniqueNonempty(
         startupPackets,
-        field: "startup_packets",
+        field: "startupPackets",
         codingPath: decoder.codingPath
       )
       guard let contract = Self.contracts[driver], contract.variants.contains(variant) else {
@@ -162,7 +162,7 @@ struct ControllerRecordDocument: Decodable {
     init(from decoder: any Decoder) throws {
       let container = try decoder.container(keyedBy: DocumentKey.self)
       try container.rejectUnknown(allowed: [
-        "interface", "configuration", "post_handshake_settle_ms", "endpoints",
+        "interface", "configuration", "postHandshakeSettleMs", "endpoints",
       ])
       guard !container.allKeys.isEmpty else {
         throw DecodingError.dataCorrupted(
@@ -173,7 +173,7 @@ struct ControllerRecordDocument: Decodable {
       configuration = try container.decodeOptional(String.self, for: "configuration")
       postHandshakeSettleMilliseconds = try container.decodeOptional(
         Int.self,
-        for: "post_handshake_settle_ms"
+        for: "postHandshakeSettleMs"
       )
       endpoints = try container.decodeOptional(Endpoints.self, for: "endpoints")
       guard interface.map({ (1...255).contains($0) }) ?? true else {
@@ -187,8 +187,8 @@ struct ControllerRecordDocument: Decodable {
       guard postHandshakeSettleMilliseconds.map({ (1...60_000).contains($0) }) ?? true else {
         throw DecodingError.dataCorrupted(
           .init(
-            codingPath: decoder.codingPath + [DocumentKey("post_handshake_settle_ms")],
-            debugDescription: "post_handshake_settle_ms must be in 1...60000"
+            codingPath: decoder.codingPath + [DocumentKey("postHandshakeSettleMs")],
+            debugDescription: "postHandshakeSettleMs must be in 1...60000"
           )
         )
       }

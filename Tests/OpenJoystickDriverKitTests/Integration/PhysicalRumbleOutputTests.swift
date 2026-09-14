@@ -9,6 +9,7 @@ struct PhysicalRumbleOutputTests {
   func testSourceBackedParsersExposeExactOutputCapabilities() {
     let gip = GIPParser()
     let xbox360 = Xbox360Parser()
+    let xid = XIDParser()
     let ds4 = DS4Parser()
     let dualSense = DualSenseParser()
     let ds3 = DS3Parser()
@@ -19,6 +20,7 @@ struct PhysicalRumbleOutputTests {
       Set(gip.physicalRumbleMotors) == Set([.leftMain, .rightMain, .leftTrigger, .rightTrigger])
     )
     #expect(Set(xbox360.physicalRumbleMotors) == Set([.leftMain, .rightMain]))
+    #expect(Set(xid.physicalRumbleMotors) == Set([.leftMain, .rightMain]))
     #expect(xbox360.physicalLightingFeatures == [.playerIndicator])
     #expect(Set(ds4.physicalRumbleMotors) == Set([.leftMain, .rightMain]))
     #expect(Set(dualSense.physicalRumbleMotors) == Set([.leftMain, .rightMain]))
@@ -33,6 +35,7 @@ struct PhysicalRumbleOutputTests {
     #expect(steamController.physicalLightingFeatures == [.programmableBrightness])
     #expect(hasPhysicalRumble(gip))
     #expect(hasPhysicalRumble(xbox360))
+    #expect(hasPhysicalRumble(xid))
     #expect(hasPhysicalRumble(ds4))
     #expect(hasPhysicalRumble(dualSense))
     #expect(hasPhysicalRumble(ds3))

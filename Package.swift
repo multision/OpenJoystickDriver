@@ -73,6 +73,13 @@ let package = Package(
       linkerSettings: [.linkedFramework("CoreHaptics"), .linkedFramework("GameController")]
     ),
 
+    .executableTarget(
+      name: "ParserCompatibilityHarness",
+      dependencies: ["OpenJoystickDriverKit"],
+      path: "Tests/ParserCompatibilityHarness",
+      swiftSettings: [.unsafeFlags(["-target", testTargetTriple])],
+      linkerSettings: [.unsafeFlags(["-target", testTargetTriple])]
+    ),
     .testTarget(
       name: "OpenJoystickDriverKitTests",
       dependencies: ["OpenJoystickDriverKit", "OpenJoystickDriverUSB"],

@@ -601,8 +601,8 @@
 "cli.diagnose.expected_id_present" = "  Resultado: OK (id esperado presente: %@)";
 "cli.diagnose.extension_heading" = "Extensão de sistema DriverKit (em /Applications):";
 "cli.diagnose.extensions_folder_missing" = "  Resultado: FALHA (pasta SystemExtensions ausente)";
-"cli.diagnose.fix_build_dext" = "  Correção: execute: ./scripts/ojd build dext";
-"cli.diagnose.fix_rebuild_dev" = "  Correção: execute: ./scripts/ojd build install dev";
+"cli.diagnose.fix_build_dext" = "  Correção: execute: ./Scripts/ojd build dext";
+"cli.diagnose.fix_rebuild_dev" = "  Correção: execute: ./Scripts/ojd build install dev";
 "cli.diagnose.heading" = "Diagnóstico do OpenJoystickDriver";
 "cli.diagnose.interface_line" = "    Interface %d/%d: %02X/%@/%@";
 "cli.diagnose.macos_version" = "macOS: %d.%d.%d";
@@ -618,7 +618,7 @@
 "cli.diagnose.troubleshoot_driverkit" = "  Extensão DriverKit ausente ou danificada?";
 "cli.diagnose.troubleshoot_input_monitoring" = "    -> Conceda Monitorização de Entrada: Definições do Sistema -> Privacidade e segurança -> Monitorização de Entrada";
 "cli.diagnose.troubleshoot_no_input" = "  Sem entrada do comando?";
-"cli.diagnose.troubleshoot_rebuild" = "    -> Execute: ./scripts/ojd build install dev";
+"cli.diagnose.troubleshoot_rebuild" = "    -> Execute: ./Scripts/ojd build install dev";
 "cli.diagnose.troubleshoot_report_command" = "    -> Execute: --headless diagnose report";
 "cli.diagnose.troubleshoot_reporting" = "  Relatar um problema de comando?";
 "cli.diagnose.troubleshoot_virtual_device" = "  Dispositivo virtual do espaço do utilizador indisponível?";
@@ -640,14 +640,14 @@
 "cli.error.missing_command" = "Um comando é obrigatório.";
 "cli.error.missing_subcommand" = "«%@» exige um subcomando.";
 "cli.error.no_output" = "  (sem saída)";
-"cli.error.rebuild_fast_step" = "  1) Execute: ./scripts/ojd build install-fast dev";
+"cli.error.rebuild_fast_step" = "  1) Execute: ./Scripts/ojd build install-fast dev";
 "cli.error.rerun_step" = "  2) Depois execute de novo: /Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless %@";
 "cli.error.signature_verification_failed" = "%@ falhou: a verificação da assinatura do app falhou:";
 "cli.error.unexpected_arguments" = "«%@» não aceita argumentos adicionais.";
 "cli.error.unknown_command" = "Comando desconhecido «%@».";
 "cli.extension.approval_required" = "Pedido de extensão de sistema enviado e exige aprovação em Definições do Sistema.";
 "cli.extension.bundle_missing" = "O bundle do app não contém %@.dext";
-"cli.extension.bundle_missing_fix" = "Correção: execute ./scripts/ojd build install dev e tente de novo a partir de /Applications.";
+"cli.extension.bundle_missing_fix" = "Correção: execute ./Scripts/ojd build install dev e tente de novo a partir de /Applications.";
 "cli.extension.cancelled" = "Pedido de extensão de sistema cancelado.";
 "cli.extension.completed" = "Pedido de extensão de sistema concluído com o resultado %@.";
 "cli.extension.failed" = "Pedido de extensão de sistema falhou: %@ code=%d %@";

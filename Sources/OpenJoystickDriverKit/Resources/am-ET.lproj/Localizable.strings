@@ -601,8 +601,8 @@
 "cli.diagnose.expected_id_present" = "  ውጤት: PASS (የሚጠበቀው id አለ: %@)";
 "cli.diagnose.extension_heading" = "የDriverKit ስርዓት ቅጥያ (በ/Applications ውስጥ):";
 "cli.diagnose.extensions_folder_missing" = "  ውጤት: FAIL (የSystemExtensions አቃፊ ጠፍቷል)";
-"cli.diagnose.fix_build_dext" = "  ጥገና: አሂድ: ./scripts/ojd build dext";
-"cli.diagnose.fix_rebuild_dev" = "  ጥገና: አሂድ: ./scripts/ojd build install dev";
+"cli.diagnose.fix_build_dext" = "  ጥገና: አሂድ: ./Scripts/ojd build dext";
+"cli.diagnose.fix_rebuild_dev" = "  ጥገና: አሂድ: ./Scripts/ojd build install dev";
 "cli.diagnose.heading" = "የOpenJoystickDriver ምርመራ";
 "cli.diagnose.interface_line" = "    በይነገጽ %d/%d: %02X/%@/%@";
 "cli.diagnose.macos_version" = "macOS: %d.%d.%d";
@@ -618,7 +618,7 @@
 "cli.diagnose.troubleshoot_driverkit" = "  የDriverKit ቅጥያ ጠፍቷል/ተሰብሯል?";
 "cli.diagnose.troubleshoot_input_monitoring" = "    -> የግቤት ክትትል ይስጡ: የስርዓት ቅንብሮች -> ግላዊነት እና ደህንነት -> የግቤት ክትትል";
 "cli.diagnose.troubleshoot_no_input" = "  ከመቆጣጠሪያ ግቤት የለም?";
-"cli.diagnose.troubleshoot_rebuild" = "    -> አሂድ: ./scripts/ojd build install dev";
+"cli.diagnose.troubleshoot_rebuild" = "    -> አሂድ: ./Scripts/ojd build install dev";
 "cli.diagnose.troubleshoot_report_command" = "    -> አሂድ: --headless diagnose report";
 "cli.diagnose.troubleshoot_reporting" = "  የመቆጣጠሪያ ችግር ሪፖርት እያደረጉ ነው?";
 "cli.diagnose.troubleshoot_virtual_device" = "  የተጠቃሚ-ቦታ ምናባዊ መሣሪያ አይገኝም?";
@@ -640,14 +640,14 @@
 "cli.error.missing_command" = "ትዕዛዝ ያስፈልጋል።";
 "cli.error.missing_subcommand" = "«%@» ንዑስ ትዕዛዝ ይፈልጋል።";
 "cli.error.no_output" = "  (ውጤት የለም)";
-"cli.error.rebuild_fast_step" = "  1) አሂድ: ./scripts/ojd build install-fast dev";
+"cli.error.rebuild_fast_step" = "  1) አሂድ: ./Scripts/ojd build install-fast dev";
 "cli.error.rerun_step" = "  2) ከዚያ እንደገና አሂድ: /Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless %@";
 "cli.error.signature_verification_failed" = "%@ አልተሳካም: የመተግበሪያ ፊርማ ማረጋገጫ አልተሳካም:";
 "cli.error.unexpected_arguments" = "«%@» ተጨማሪ ክርክሮችን አይቀበልም።";
 "cli.error.unknown_command" = "ያልታወቀ ትዕዛዝ «%@».";
 "cli.extension.approval_required" = "የስርዓት ቅጥያ ጥያቄ ቀርቧል እና በስርዓት ቅንብሮች ውስጥ ማጽደቅ ይፈልጋል።";
 "cli.extension.bundle_missing" = "የመተግበሪያ ጥቅሉ %@.dext አልያዘም";
-"cli.extension.bundle_missing_fix" = "ጥገና: ./scripts/ojd build install dev ያሂዱ፣ ከዚያ ከ/Applications እንደገና ይሞክሩ።";
+"cli.extension.bundle_missing_fix" = "ጥገና: ./Scripts/ojd build install dev ያሂዱ፣ ከዚያ ከ/Applications እንደገና ይሞክሩ።";
 "cli.extension.cancelled" = "የስርዓት ቅጥያ ጥያቄ ተሰርዟል።";
 "cli.extension.completed" = "የስርዓት ቅጥያ ጥያቄ በውጤት %@ አልቋል።";
 "cli.extension.failed" = "የስርዓት ቅጥያ ጥያቄ አልተሳካም: %@ code=%d %@";

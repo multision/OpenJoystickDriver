@@ -601,8 +601,8 @@
 "cli.diagnose.expected_id_present" = "  परिणाम: PASS (अपेक्षित id मौजूद: %@)";
 "cli.diagnose.extension_heading" = "DriverKit सिस्टम एक्सटेंशन (/Applications में):";
 "cli.diagnose.extensions_folder_missing" = "  परिणाम: FAIL (SystemExtensions फ़ोल्डर गायब)";
-"cli.diagnose.fix_build_dext" = "  सुधार: चलाएँ: ./scripts/ojd build dext";
-"cli.diagnose.fix_rebuild_dev" = "  सुधार: चलाएँ: ./scripts/ojd build install dev";
+"cli.diagnose.fix_build_dext" = "  सुधार: चलाएँ: ./Scripts/ojd build dext";
+"cli.diagnose.fix_rebuild_dev" = "  सुधार: चलाएँ: ./Scripts/ojd build install dev";
 "cli.diagnose.heading" = "OpenJoystickDriver डायग्नोस्टिक्स";
 "cli.diagnose.interface_line" = "    इंटरफ़ेस %d/%d: %02X/%@/%@";
 "cli.diagnose.macos_version" = "macOS: %d.%d.%d";
@@ -618,7 +618,7 @@
 "cli.diagnose.troubleshoot_driverkit" = "  DriverKit एक्सटेंशन गायब/टूटा हुआ?";
 "cli.diagnose.troubleshoot_input_monitoring" = "    -> इनपुट मॉनिटरिंग दें: सिस्टम सेटिंग्ज़ -> निजता और सुरक्षा -> इनपुट मॉनिटरिंग";
 "cli.diagnose.troubleshoot_no_input" = "  कंट्रोलर से कोई इनपुट नहीं?";
-"cli.diagnose.troubleshoot_rebuild" = "    -> चलाएँ: ./scripts/ojd build install dev";
+"cli.diagnose.troubleshoot_rebuild" = "    -> चलाएँ: ./Scripts/ojd build install dev";
 "cli.diagnose.troubleshoot_report_command" = "    -> चलाएँ: --headless diagnose report";
 "cli.diagnose.troubleshoot_reporting" = "  कंट्रोलर समस्या रिपोर्ट कर रहे हैं?";
 "cli.diagnose.troubleshoot_virtual_device" = "  यूज़र-स्पेस वर्चुअल डिवाइस उपलब्ध नहीं?";
@@ -640,14 +640,14 @@
 "cli.error.missing_command" = "एक कमांड ज़रूरी है।";
 "cli.error.missing_subcommand" = "“%@” को एक सबकमांड चाहिए।";
 "cli.error.no_output" = "  (कोई आउटपुट नहीं)";
-"cli.error.rebuild_fast_step" = "  1) चलाएँ: ./scripts/ojd build install-fast dev";
+"cli.error.rebuild_fast_step" = "  1) चलाएँ: ./Scripts/ojd build install-fast dev";
 "cli.error.rerun_step" = "  2) फिर फिर चलाएँ: /Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless %@";
 "cli.error.signature_verification_failed" = "%@ विफल: ऐप हस्ताक्षर सत्यापन विफल:";
 "cli.error.unexpected_arguments" = "“%@” अतिरिक्त आर्ग्युमेंट स्वीकार नहीं करता।";
 "cli.error.unknown_command" = "अज्ञात कमांड “%@”।";
 "cli.extension.approval_required" = "सिस्टम एक्सटेंशन अनुरोध सबमिट किया गया और सिस्टम सेटिंग्ज़ में स्वीकृति ज़रूरी है।";
 "cli.extension.bundle_missing" = "ऐप बंडल में %@.dext नहीं है";
-"cli.extension.bundle_missing_fix" = "सुधार: ./scripts/ojd build install dev चलाएँ, फिर /Applications से फिर कोशिश करें।";
+"cli.extension.bundle_missing_fix" = "सुधार: ./Scripts/ojd build install dev चलाएँ, फिर /Applications से फिर कोशिश करें।";
 "cli.extension.cancelled" = "सिस्टम एक्सटेंशन अनुरोध रद्द किया गया।";
 "cli.extension.completed" = "सिस्टम एक्सटेंशन अनुरोध परिणाम %@ के साथ समाप्त हुआ।";
 "cli.extension.failed" = "सिस्टम एक्सटेंशन अनुरोध विफल: %@ code=%d %@";

@@ -148,7 +148,7 @@ struct JoyConParserTests {
   @Test
   func conflictingSideSelectionIsRejected() throws {
     let record: [String: Any] = [
-      "$schema": ControllerRecordDocument.schemaID, "vendor_id": 1406, "product_id": 8198,
+      "$schema": ControllerRecordDocument.schemaID, "vendorID": 1406, "productID": 8198,
       "transport": "hid",
       "protocol": [
         "driver": "SwitchPro", "variant": "switchPro", "quirks": ["joyConLeft", "joyConRight"],

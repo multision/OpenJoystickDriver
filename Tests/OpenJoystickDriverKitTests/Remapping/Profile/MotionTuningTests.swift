@@ -19,8 +19,8 @@ struct MotionTuningTests {
   }
 
   @Test(arguments: [
-    #"{"yaw_sensitivity":-1}"#, #"{"smoothing_half_time_ms":1001}"#,
-    #"{"side_reduction_threshold":2}"#, #"{"space":"unknown"}"#,
+    #"{"yawSensitivity":-1}"#, #"{"smoothingHalfTimeMs":1001}"#, #"{"sideReductionThreshold":2}"#,
+    #"{"space":"unknown"}"#,
   ])
   func invalidDecodedTuningIsRejected(_ json: String) {
     #expect(throws: (any Error).self) {

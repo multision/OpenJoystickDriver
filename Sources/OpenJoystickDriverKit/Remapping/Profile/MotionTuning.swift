@@ -69,16 +69,16 @@ public struct RemappingMotionTuning: Codable, Equatable, Hashable, Sendable {
 
   private enum CodingKeys: String, CodingKey {
     case space
-    case pitchSensitivity = "pitch_sensitivity"
-    case yawSensitivity = "yaw_sensitivity"
-    case invertPitch = "invert_pitch"
-    case invertYaw = "invert_yaw"
-    case smoothingHalfTimeMs = "smoothing_half_time_ms"
-    case thresholdDegreesPerSecond = "threshold_degrees_per_second"
-    case automaticBias = "automatic_bias"
-    case yawRelaxation = "yaw_relaxation"
-    case sideReductionThreshold = "side_reduction_threshold"
-    case gravityCorrectionRate = "gravity_correction_rate"
+    case pitchSensitivity
+    case yawSensitivity
+    case invertPitch
+    case invertYaw
+    case smoothingHalfTimeMs
+    case thresholdDegreesPerSecond
+    case automaticBias
+    case yawRelaxation
+    case sideReductionThreshold
+    case gravityCorrectionRate
     case lean
     case steering
   }

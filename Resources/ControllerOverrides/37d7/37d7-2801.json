@@ -3,8 +3,8 @@
   "operation": "add",
   "record": {
     "$schema": "https://raw.githubusercontent.com/xsyetopz/OpenJoystickDriver/main/Resources/Schemas/controller.schema.json",
-    "vendor_id": 14295,
-    "product_id": 10241,
+    "vendorID": 14295,
+    "productID": 10241,
     "transport": "usb",
     "protocol": {
       "driver": "GIP",
@@ -16,7 +16,7 @@
         "out": 1
       },
       "configuration": "set1-before-claim",
-      "post_handshake_settle_ms": 200
+      "postHandshakeSettleMs": 200
     }
   }
 }

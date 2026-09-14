@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/xsyetopz/OpenJoystickDriver/main/Resources/Schemas/controller.schema.json",
-  "vendor_id": 1390,
-  "product_id": 8196,
+  "vendorID": 1390,
+  "productID": 8196,
   "transport": "usb",
   "protocol": {
     "driver": "XUSB",

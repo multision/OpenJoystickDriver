@@ -127,11 +127,7 @@ private final class RecoveryRumbleParser: RecoveryInputParser, PhysicalRumbleOut
     lt: UInt8,
     rt: UInt8
   ) -> PhysicalUSBOutputPacket {
-    PhysicalUSBOutputPacket(
-      endpoint: 2,
-      bytes: [left, right, lt, rt],
-      timeoutMilliseconds: 2_000
-    )
+    PhysicalUSBOutputPacket(endpoint: 2, bytes: [left, right, lt, rt], timeoutMilliseconds: 2_000)
   }
 }
 

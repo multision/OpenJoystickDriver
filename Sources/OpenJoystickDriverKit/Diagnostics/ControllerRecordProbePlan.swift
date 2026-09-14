@@ -29,10 +29,10 @@ public struct ControllerRecordProbePlan: Equatable, Sendable {
     }
 
     guard (1...65_535).contains(document.vendorID) else {
-      throw ControllerRecordProbeError.invalidProfile("vendor_id must be in 1...65535")
+      throw ControllerRecordProbeError.invalidProfile("vendorID must be in 1...65535")
     }
     guard (0...65_535).contains(document.productID) else {
-      throw ControllerRecordProbeError.invalidProfile("product_id must be in 0...65535")
+      throw ControllerRecordProbeError.invalidProfile("productID must be in 0...65535")
     }
     guard document.transport == "usb" else {
       throw ControllerRecordProbeError.invalidProfile(
@@ -70,14 +70,14 @@ public struct ControllerRecordProbePlan: Equatable, Sendable {
     let settleMilliseconds = document.usb?.postHandshakeSettleMilliseconds ?? 0
     guard settleMilliseconds >= 0 else {
       throw ControllerRecordProbeError.invalidProfile(
-        "usb.post_handshake_settle_ms must not be negative"
+        "usb.postHandshakeSettleMs must not be negative"
       )
     }
     let (settleNanoseconds, overflow) = UInt64(settleMilliseconds).multipliedReportingOverflow(
       by: DeviceTransportProfile.nanosecondsPerMillisecond
     )
     guard !overflow else {
-      throw ControllerRecordProbeError.invalidProfile("usb.post_handshake_settle_ms is too large")
+      throw ControllerRecordProbeError.invalidProfile("usb.postHandshakeSettleMs is too large")
     }
 
     let parsedStartupPackets = try Self.parseStartupPackets(
@@ -158,7 +158,7 @@ public struct ControllerRecordProbePlan: Equatable, Sendable {
     case .xusb:
       guard names == nil || names?.isEmpty == true else {
         throw ControllerRecordProbeError.invalidProfile(
-          "protocol.startup_packets is only valid for GIP records"
+          "protocol.startupPackets is only valid for GIP records"
         )
       }
       return []
@@ -171,7 +171,7 @@ public struct ControllerRecordProbePlan: Equatable, Sendable {
   ) throws -> GIPKeepAlivePolicy {
     guard driver == .gip || enabled == nil else {
       throw ControllerRecordProbeError.invalidProfile(
-        "protocol.keep_alive is only valid for GIP records"
+        "protocol.keepAlive is only valid for GIP records"
       )
     }
     return enabled.map { $0 ? .enabled : .disabled } ?? .enabled

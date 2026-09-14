@@ -601,8 +601,8 @@
 "cli.diagnose.expected_id_present" = "  תוצאה: PASS (מזהה צפוי קיים: %@)";
 "cli.diagnose.extension_heading" = "הרחבת מערכת DriverKit (ב-/Applications):";
 "cli.diagnose.extensions_folder_missing" = "  תוצאה: FAIL (תיקיית SystemExtensions חסרה)";
-"cli.diagnose.fix_build_dext" = "  תיקון: הריצו: ./scripts/ojd build dext";
-"cli.diagnose.fix_rebuild_dev" = "  תיקון: הריצו: ./scripts/ojd build install dev";
+"cli.diagnose.fix_build_dext" = "  תיקון: הריצו: ./Scripts/ojd build dext";
+"cli.diagnose.fix_rebuild_dev" = "  תיקון: הריצו: ./Scripts/ojd build install dev";
 "cli.diagnose.heading" = "אבחון OpenJoystickDriver";
 "cli.diagnose.interface_line" = "    ממשק %d/%d: %02X/%@/%@";
 "cli.diagnose.macos_version" = "macOS: %d.%d.%d";
@@ -618,7 +618,7 @@
 "cli.diagnose.troubleshoot_driverkit" = "  הרחבת DriverKit חסרה/שבורה?";
 "cli.diagnose.troubleshoot_input_monitoring" = "    -> העניקו ניטור קלט: הגדרות המערכת -> פרטיות ואבטחה -> ניטור קלט";
 "cli.diagnose.troubleshoot_no_input" = "  אין קלט מהבקר?";
-"cli.diagnose.troubleshoot_rebuild" = "    -> הריצו: ./scripts/ojd build install dev";
+"cli.diagnose.troubleshoot_rebuild" = "    -> הריצו: ./Scripts/ojd build install dev";
 "cli.diagnose.troubleshoot_report_command" = "    -> הריצו: --headless diagnose report";
 "cli.diagnose.troubleshoot_reporting" = "  מדווחים על בעיית בקר?";
 "cli.diagnose.troubleshoot_virtual_device" = "  התקן וירטואלי במרחב המשתמש אינו זמין?";
@@ -640,14 +640,14 @@
 "cli.error.missing_command" = "נדרשת פקודה.";
 "cli.error.missing_subcommand" = "«%@» דורש פקודת משנה.";
 "cli.error.no_output" = "  (אין פלט)";
-"cli.error.rebuild_fast_step" = "  1) הריצו: ./scripts/ojd build install-fast dev";
+"cli.error.rebuild_fast_step" = "  1) הריצו: ./Scripts/ojd build install-fast dev";
 "cli.error.rerun_step" = "  2) לאחר מכן הריצו שוב: /Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless %@";
 "cli.error.signature_verification_failed" = "%@ נכשל: אימות חתימת היישום נכשל:";
 "cli.error.unexpected_arguments" = "«%@» אינו מקבל ארגומנטים נוספים.";
 "cli.error.unknown_command" = "פקודה לא ידועה «%@».";
 "cli.extension.approval_required" = "בקשת הרחבת מערכת הוגשה ודורשת אישור בהגדרות המערכת.";
 "cli.extension.bundle_missing" = "חבילת היישום אינה מכילה %@.dext";
-"cli.extension.bundle_missing_fix" = "תיקון: הריצו ./scripts/ojd build install dev, ואז נסו שוב מ-/Applications.";
+"cli.extension.bundle_missing_fix" = "תיקון: הריצו ./Scripts/ojd build install dev, ואז נסו שוב מ-/Applications.";
 "cli.extension.cancelled" = "בקשת הרחבת מערכת בוטלה.";
 "cli.extension.completed" = "בקשת הרחבת מערכת הסתיימה בתוצאה %@.";
 "cli.extension.failed" = "בקשת הרחבת מערכת נכשלה: %@ code=%d %@";

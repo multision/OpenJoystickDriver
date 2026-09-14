@@ -48,12 +48,6 @@ extension RuntimePresentation {
           "error.profileLibrarySave",
           fallback: "The profile library could not be saved."
         )
-      case .unsupportedLibraryVersion:
-        return OJDLocalized.string(
-          "error.profileLibraryVersion",
-          fallback: "This profile library needs an update. Create a new profile or remove the old "
-            + "library file."
-        )
       case .corruptLibrary:
         return OJDLocalized.string(
           "error.profileLibraryCorrupt",

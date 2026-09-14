@@ -12,12 +12,32 @@ public struct UpdateInfo: Equatable, Sendable {
   }
 }
 
+public enum UpdateCheckFailureReason: Equatable, Sendable {
+  case invalidCurrentVersion
+  case noValidTags
+  case paginationCycle
+  case unsafePaginationLink
+  case invalidResponse
+  case httpStatus(Int)
+  case transport
+}
+
+public struct UpdateCheckFailure: Equatable, Sendable {
+  public let reason: UpdateCheckFailureReason
+  public let message: String
+
+  public init(reason: UpdateCheckFailureReason, message: String) {
+    self.reason = reason
+    self.message = message
+  }
+}
+
 public enum UpdateCheckState: Equatable, Sendable {
   case idle
   case checking
   case upToDate(String)
   case available(UpdateInfo)
-  case failed(String)
+  case failed(UpdateCheckFailure)
 }
 
 public struct UpdateChecker: Sendable {
@@ -67,7 +87,12 @@ public struct UpdateChecker: Sendable {
     includePrereleases: Bool = false
   ) async -> UpdateCheckState {
     guard let currentVersion = SemanticVersion(rawCurrentVersion) else {
-      return .failed("Current app version is not SemVer: \(rawCurrentVersion)")
+      return .failed(
+        UpdateCheckFailure(
+          reason: .invalidCurrentVersion,
+          message: "Current app version is not SemVer: \(rawCurrentVersion)"
+        )
+      )
     }
 
     do {
@@ -78,8 +103,10 @@ public struct UpdateChecker: Sendable {
         htmlURL: tagURL(candidate.tag.name)
       )
       return candidate.version > currentVersion ? .available(info) : .upToDate(candidate.tag.name)
-    } catch let error as UpdateCheckerError { return .failed(error.message) } catch {
-      return .failed(error.localizedDescription)
+    } catch let error as UpdateCheckerError {
+      return .failed(UpdateCheckFailure(reason: error.reason, message: error.message))
+    } catch {
+      return .failed(UpdateCheckFailure(reason: .transport, message: error.localizedDescription))
     }
   }
 
@@ -92,7 +119,7 @@ public struct UpdateChecker: Sendable {
     }
     guard let latest = candidates.max(by: { $0.version < $1.version }) else {
       let channel = includePrereleases ? "" : " stable"
-      throw UpdateCheckerError("No\(channel) SemVer GitHub tags found")
+      throw UpdateCheckerError(.noValidTags, "No\(channel) SemVer GitHub tags found")
     }
     return latest
   }
@@ -104,7 +131,7 @@ public struct UpdateChecker: Sendable {
 
     while let pageURL = nextURL {
       guard visited.insert(pageURL).inserted else {
-        throw UpdateCheckerError("GitHub tag pagination contains a cycle")
+        throw UpdateCheckerError(.paginationCycle, "GitHub tag pagination contains a cycle")
       }
 
       let page = try await tagPage(url: pageURL)
@@ -123,12 +150,17 @@ public struct UpdateChecker: Sendable {
 
     let (data, response) = try await data(for: request)
     guard let http = response as? HTTPURLResponse else {
-      throw UpdateCheckerError("GitHub returned a non-HTTP response")
+      throw UpdateCheckerError(.invalidResponse, "GitHub returned a non-HTTP response")
     }
     guard Self.httpSuccessStatusRange.contains(http.statusCode) else {
-      throw UpdateCheckerError("GitHub returned HTTP \(http.statusCode)")
+      throw UpdateCheckerError(
+        .httpStatus(http.statusCode),
+        "GitHub returned HTTP \(http.statusCode)"
+      )
     }
-    return (try JSONDecoder().decode([GitHubTag].self, from: data), http)
+    do { return (try JSONDecoder().decode([GitHubTag].self, from: data), http) } catch {
+      throw UpdateCheckerError(.invalidResponse, error.localizedDescription)
+    }
   }
 
   private func nextPageURL(response: HTTPURLResponse, currentURL: URL) throws -> URL? {
@@ -149,7 +181,12 @@ public struct UpdateChecker: Sendable {
         url.scheme?.caseInsensitiveCompare(tagsURL.scheme ?? "") == .orderedSame,
         url.host?.caseInsensitiveCompare(tagsURL.host ?? "") == .orderedSame,
         url.port == tagsURL.port
-      else { throw UpdateCheckerError("GitHub returned an unsafe tag pagination link") }
+      else {
+        throw UpdateCheckerError(
+          .unsafePaginationLink,
+          "GitHub returned an unsafe tag pagination link"
+        )
+      }
       return url
     }
     return nil
@@ -178,6 +215,10 @@ public struct UpdateChecker: Sendable {
 }
 
 private struct UpdateCheckerError: Error {
+  let reason: UpdateCheckFailureReason
   let message: String
-  init(_ message: String) { self.message = message }
+  init(_ reason: UpdateCheckFailureReason, _ message: String) {
+    self.reason = reason
+    self.message = message
+  }
 }

@@ -91,11 +91,8 @@ struct CommandValueParserTests {
     var object = try #require(
       JSONSerialization.jsonObject(with: Data(contentsOf: url)) as? [String: Any]
     )
-    object["schema_version"] = 2
-    object["bindings"] = "must not be decoded"
+    object["schemaVersion"] = 2
     try JSONSerialization.data(withJSONObject: object).write(to: url)
-    #expect(throws: RemappingValidationError.unsupportedSchemaVersion(2)) {
-      try RemappingProfileFileStore.load(from: url)
-    }
+    #expect(throws: DecodingError.self) { try RemappingProfileFileStore.load(from: url) }
   }
 }

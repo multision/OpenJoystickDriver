@@ -42,11 +42,11 @@ public struct RemappingLayer: Codable, Equatable, Hashable, Identifiable, Sendab
   private enum CodingKeys: String, CodingKey {
     case id
     case name
-    case activationMode = "activation_mode"
+    case activationMode
     case activator
     case bindings
     case chords
     case sequences
-    case motionTuning = "motion_tuning"
+    case motionTuning
   }
 }

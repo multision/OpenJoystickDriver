@@ -65,12 +65,12 @@ public struct RemappingGyroOutput: Codable, Equatable, Sendable {
 
   private enum CodingKeys: String, CodingKey {
     case mode, trackball
-    case virtualMotion = "virtual_motion"
-    case pointerPointsPerDegree = "pointer_points_per_degree"
-    case fullStickDegreesPerSecond = "full_stick_degrees_per_second"
-    case activationMode = "activation_mode"
-    case activationSource = "activation_source"
-    case consumesActivationSource = "consumes_activation_source"
+    case virtualMotion
+    case pointerPointsPerDegree
+    case fullStickDegreesPerSecond
+    case activationMode
+    case activationSource
+    case consumesActivationSource
   }
 
   public init(from decoder: any Decoder) throws {

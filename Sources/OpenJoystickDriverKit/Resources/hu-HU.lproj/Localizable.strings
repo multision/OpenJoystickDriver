@@ -601,8 +601,8 @@
 "cli.diagnose.expected_id_present" = "  Eredmény: PASS (a várt id jelen van: %@)";
 "cli.diagnose.extension_heading" = "DriverKit rendszerbővítmény (itt: /Applications):";
 "cli.diagnose.extensions_folder_missing" = "  Eredmény: FAIL (hiányzik a SystemExtensions mappa)";
-"cli.diagnose.fix_build_dext" = "  Javítás: futtassa: ./scripts/ojd build dext";
-"cli.diagnose.fix_rebuild_dev" = "  Javítás: futtassa: ./scripts/ojd build install dev";
+"cli.diagnose.fix_build_dext" = "  Javítás: futtassa: ./Scripts/ojd build dext";
+"cli.diagnose.fix_rebuild_dev" = "  Javítás: futtassa: ./Scripts/ojd build install dev";
 "cli.diagnose.heading" = "OpenJoystickDriver diagnosztika";
 "cli.diagnose.interface_line" = "    Interfész %d/%d: %02X/%@/%@";
 "cli.diagnose.macos_version" = "macOS: %d.%d.%d";
@@ -618,7 +618,7 @@
 "cli.diagnose.troubleshoot_driverkit" = "  Hiányzik vagy sérült a DriverKit-bővítmény?";
 "cli.diagnose.troubleshoot_input_monitoring" = "    -> Adja meg a Bevitel figyelése hozzáférést: Rendszerbeállítások -> Adatvédelem és biztonság -> Bevitel figyelése";
 "cli.diagnose.troubleshoot_no_input" = "  Nincs bemenet a vezérlőről?";
-"cli.diagnose.troubleshoot_rebuild" = "    -> Futtassa: ./scripts/ojd build install dev";
+"cli.diagnose.troubleshoot_rebuild" = "    -> Futtassa: ./Scripts/ojd build install dev";
 "cli.diagnose.troubleshoot_report_command" = "    -> Futtassa: --headless diagnose report";
 "cli.diagnose.troubleshoot_reporting" = "  Vezérlőhibát jelent?";
 "cli.diagnose.troubleshoot_virtual_device" = "  A felhasználói tér virtuális eszköze nem érhető el?";
@@ -640,14 +640,14 @@
 "cli.error.missing_command" = "Parancs szükséges.";
 "cli.error.missing_subcommand" = "„%@“ alparancsot igényel.";
 "cli.error.no_output" = "  (nincs kimenet)";
-"cli.error.rebuild_fast_step" = "  1) Futtassa: ./scripts/ojd build install-fast dev";
+"cli.error.rebuild_fast_step" = "  1) Futtassa: ./Scripts/ojd build install-fast dev";
 "cli.error.rerun_step" = "  2) Ezután futtassa újra: /Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless %@";
 "cli.error.signature_verification_failed" = "%@ sikertelen: az alkalmazásaláírás ellenőrzése sikertelen:";
 "cli.error.unexpected_arguments" = "„%@“ nem fogad további argumentumokat.";
 "cli.error.unknown_command" = "Ismeretlen parancs: „%@“.";
 "cli.extension.approval_required" = "A rendszerbővítmény-kérelem elküldve, és jóváhagyást igényel a Rendszerbeállításokban.";
 "cli.extension.bundle_missing" = "Az alkalmazáscsomag nem tartalmazza: %@.dext";
-"cli.extension.bundle_missing_fix" = "Javítás: futtassa a ./scripts/ojd build install dev parancsot, majd próbálja újra a /Applications mappából.";
+"cli.extension.bundle_missing_fix" = "Javítás: futtassa a ./Scripts/ojd build install dev parancsot, majd próbálja újra a /Applications mappából.";
 "cli.extension.cancelled" = "A rendszerbővítmény-kérelem megszakítva.";
 "cli.extension.completed" = "A rendszerbővítmény-kérelem %@ eredménnyel befejeződött.";
 "cli.extension.failed" = "A rendszerbővítmény-kérelem sikertelen: %@ code=%d %@";

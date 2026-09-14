@@ -601,8 +601,8 @@
 "cli.diagnose.expected_id_present" = "  Toradh: PAS (id a rabhthas ag súil leis i láthair: %@)";
 "cli.diagnose.extension_heading" = "Síneadh córais DriverKit (i /Applications):";
 "cli.diagnose.extensions_folder_missing" = "  Toradh: TEIP (fillteán SystemExtensions in easnamh)";
-"cli.diagnose.fix_build_dext" = "  Réiteach: rith: ./scripts/ojd build dext";
-"cli.diagnose.fix_rebuild_dev" = "  Réiteach: rith: ./scripts/ojd build install dev";
+"cli.diagnose.fix_build_dext" = "  Réiteach: rith: ./Scripts/ojd build dext";
+"cli.diagnose.fix_rebuild_dev" = "  Réiteach: rith: ./Scripts/ojd build install dev";
 "cli.diagnose.heading" = "Diagnóisic OpenJoystickDriver";
 "cli.diagnose.interface_line" = "    Comhéadan %d/%d: %02X/%@/%@";
 "cli.diagnose.macos_version" = "macOS: %d.%d.%d";
@@ -618,7 +618,7 @@
 "cli.diagnose.troubleshoot_driverkit" = "  Síneadh DriverKit in easnamh/briste?";
 "cli.diagnose.troubleshoot_input_monitoring" = "    -> Deonaigh Monatóireacht ionchuir: Socruithe an Chórais -> Príobháideachas agus slándáil -> Monatóireacht ionchuir";
 "cli.diagnose.troubleshoot_no_input" = "  Gan ionchur ón rialtóir?";
-"cli.diagnose.troubleshoot_rebuild" = "    -> Rith: ./scripts/ojd build install dev";
+"cli.diagnose.troubleshoot_rebuild" = "    -> Rith: ./Scripts/ojd build install dev";
 "cli.diagnose.troubleshoot_report_command" = "    -> Rith: --headless diagnose report";
 "cli.diagnose.troubleshoot_reporting" = "  Ag tuairisciú fadhb rialtóra?";
 "cli.diagnose.troubleshoot_virtual_device" = "  Gléas fíorúil spáis úsáideora nach bhfuil ar fáil?";
@@ -640,14 +640,14 @@
 "cli.error.missing_command" = "Tá ordú ag teastáil.";
 "cli.error.missing_subcommand" = "Teastaíonn fo-ordú ó «%@».";
 "cli.error.no_output" = "  (gan aschur)";
-"cli.error.rebuild_fast_step" = "  1) Rith: ./scripts/ojd build install-fast dev";
+"cli.error.rebuild_fast_step" = "  1) Rith: ./Scripts/ojd build install-fast dev";
 "cli.error.rerun_step" = "  2) Ansin rith arís: /Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless %@";
 "cli.error.signature_verification_failed" = "Theip ar %@: theip ar fhíorú sínithe na haipe:";
 "cli.error.unexpected_arguments" = "Ní ghlacann «%@» le hargóintí breise.";
 "cli.error.unknown_command" = "Ordú anaithnid «%@».";
 "cli.extension.approval_required" = "Iarratas sínidh chórais curtha isteach agus teastaíonn formheas i Socruithe an Chórais.";
 "cli.extension.bundle_missing" = "Níl %@.dext sa bheartán aipe";
-"cli.extension.bundle_missing_fix" = "Réiteach: rith ./scripts/ojd build install dev, ansin bain triail eile as ó /Applications.";
+"cli.extension.bundle_missing_fix" = "Réiteach: rith ./Scripts/ojd build install dev, ansin bain triail eile as ó /Applications.";
 "cli.extension.cancelled" = "Iarratas sínidh chórais cealaithe.";
 "cli.extension.completed" = "Críochnaíodh an t-iarratas sínidh chórais le toradh %@.";
 "cli.extension.failed" = "Theip ar an iarratas sínidh chórais: %@ code=%d %@";

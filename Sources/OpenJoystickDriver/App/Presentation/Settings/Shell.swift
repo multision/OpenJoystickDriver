@@ -189,7 +189,8 @@
     let console: ConsoleViewModel
     let developerTools: DeveloperToolsViewModel
     let controllers: ControllersViewModel
-    @ObservedObject var profiles: ProfilesViewModel
+    @ObservedObject
+    var profiles: ProfilesViewModel
     let restartApplication: @MainActor () -> Void
     let openInputTest: @MainActor (ApplicationServiceDeviceDescription) -> Void
 
@@ -238,10 +239,8 @@
           notificationPermission: notificationPermission,
           restartApplication: restartApplication
         )
-      case .controllers:
-        ControllersView(screen: controllers, openInputTest: openInputTest)
-      case .profiles:
-        ProfilesView(viewModel: viewModel, navigation: navigation, screen: profiles)
+      case .controllers: ControllersView(screen: controllers, openInputTest: openInputTest)
+      case .profiles: ProfilesView(viewModel: viewModel, navigation: navigation, screen: profiles)
       case .console: ConsoleView(model: console)
       case .developer: DeveloperToolsView(model: developerTools)
       case .settings: ApplicationSettingsView(preferences: preferences)

@@ -30,9 +30,9 @@ public struct RemappingAction: Codable, Equatable, Hashable, Identifiable, Senda
 
   private enum CodingKeys: String, CodingKey {
     case id, destination, behavior, turbo
-    case pulseDurationMs = "pulse_duration_ms"
-    case longHold = "long_hold"
-    case doubleTap = "double_tap"
+    case pulseDurationMs
+    case longHold
+    case doubleTap
   }
 
   public init(from decoder: any Decoder) throws {

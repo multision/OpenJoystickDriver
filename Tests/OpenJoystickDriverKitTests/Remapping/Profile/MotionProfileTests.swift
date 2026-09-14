@@ -4,12 +4,8 @@ import Testing
 @testable import OpenJoystickDriverKit
 
 struct MotionProfileTests {
-  private func profile(
-    version: Int = 3,
-    tuning: RemappingMotionTuning = .default
-  ) -> RemappingProfile {
+  private func profile(tuning: RemappingMotionTuning = .default) -> RemappingProfile {
     RemappingProfile(
-      schemaVersion: version,
       name: "Motion",
       device: RemappingDeviceScope(vendorID: 1, productID: 2),
       applicationScope: .global,
@@ -27,10 +23,7 @@ struct MotionProfileTests {
   }
 
   @Test
-  func profileValidationRejectsOlderSchemaAndInvalidProgrammaticTuning() {
-    #expect(throws: RemappingValidationError.unsupportedSchemaVersion(2)) {
-      try profile(version: 2, tuning: RemappingMotionTuning(invertYaw: true)).validate()
-    }
+  func profileValidationRejectsInvalidProgrammaticTuning() {
     let expected = RemappingValidationError.invalidMotionTuning(.invalidField("yaw_sensitivity"))
     #expect(throws: expected) {
       try profile(tuning: RemappingMotionTuning(yawSensitivity: .infinity)).validate()

@@ -601,8 +601,8 @@
 "cli.diagnose.expected_id_present" = "  Нәтиже: PASS (күтілетін id бар: %@)";
 "cli.diagnose.extension_heading" = "DriverKit жүйе кеңейтімі (/Applications ішінде):";
 "cli.diagnose.extensions_folder_missing" = "  Нәтиже: FAIL (SystemExtensions қалтасы жоқ)";
-"cli.diagnose.fix_build_dext" = "  Түзету: іске қосыңыз: ./scripts/ojd build dext";
-"cli.diagnose.fix_rebuild_dev" = "  Түзету: іске қосыңыз: ./scripts/ojd build install dev";
+"cli.diagnose.fix_build_dext" = "  Түзету: іске қосыңыз: ./Scripts/ojd build dext";
+"cli.diagnose.fix_rebuild_dev" = "  Түзету: іске қосыңыз: ./Scripts/ojd build install dev";
 "cli.diagnose.heading" = "OpenJoystickDriver диагностикасы";
 "cli.diagnose.interface_line" = "    Интерфейс %d/%d: %02X/%@/%@";
 "cli.diagnose.macos_version" = "macOS: %d.%d.%d";
@@ -618,7 +618,7 @@
 "cli.diagnose.troubleshoot_driverkit" = "  DriverKit кеңейтімі жоқ/бұзылған ба?";
 "cli.diagnose.troubleshoot_input_monitoring" = "    -> Енгізуді бақылау беріңіз: Жүйе баптаулары -> Құпиялылық және қауіпсіздік -> Енгізуді бақылау";
 "cli.diagnose.troubleshoot_no_input" = "  Контроллерден енгізу жоқ па?";
-"cli.diagnose.troubleshoot_rebuild" = "    -> Іске қосыңыз: ./scripts/ojd build install dev";
+"cli.diagnose.troubleshoot_rebuild" = "    -> Іске қосыңыз: ./Scripts/ojd build install dev";
 "cli.diagnose.troubleshoot_report_command" = "    -> Іске қосыңыз: --headless diagnose report";
 "cli.diagnose.troubleshoot_reporting" = "  Контроллер мәселесін хабарлап жатырсыз ба?";
 "cli.diagnose.troubleshoot_virtual_device" = "  Пайдаланушы кеңістігінің виртуалды құрылғысы қолжетімсіз бе?";
@@ -640,14 +640,14 @@
 "cli.error.missing_command" = "Пәрмен қажет.";
 "cli.error.missing_subcommand" = "«%@» ішкі пәрменді қажет етеді.";
 "cli.error.no_output" = "  (шығыс жоқ)";
-"cli.error.rebuild_fast_step" = "  1) Іске қосыңыз: ./scripts/ojd build install-fast dev";
+"cli.error.rebuild_fast_step" = "  1) Іске қосыңыз: ./Scripts/ojd build install-fast dev";
 "cli.error.rerun_step" = "  2) Содан кейін қайта іске қосыңыз: /Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless %@";
 "cli.error.signature_verification_failed" = "%@ сәтсіз: қолданба қолтаңбасын тексеру сәтсіз аяқталды:";
 "cli.error.unexpected_arguments" = "«%@» қосымша аргументтерді қабылдамайды.";
 "cli.error.unknown_command" = "Белгісіз пәрмен «%@».";
 "cli.extension.approval_required" = "Жүйе кеңейтімі сұрауы жіберілді және Жүйе баптауларында мақұлдауды қажет етеді.";
 "cli.extension.bundle_missing" = "Қолданба бумасында %@.dext жоқ";
-"cli.extension.bundle_missing_fix" = "Түзету: ./scripts/ojd build install dev іске қосыңыз, содан кейін /Applications ішінен қайта көріңіз.";
+"cli.extension.bundle_missing_fix" = "Түзету: ./Scripts/ojd build install dev іске қосыңыз, содан кейін /Applications ішінен қайта көріңіз.";
 "cli.extension.cancelled" = "Жүйе кеңейтімі сұрауы тоқтатылды.";
 "cli.extension.completed" = "Жүйе кеңейтімі сұрауы %@ нәтижесімен аяқталды.";
 "cli.extension.failed" = "Жүйе кеңейтімі сұрауы сәтсіз аяқталды: %@ code=%d %@";

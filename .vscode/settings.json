@@ -1,17 +1,3 @@
 {
-	"python.defaultInterpreterPath": "${workspaceFolder}/.build/schema-validator/bin/python",
-	"json.schemas": [
-		{
-			"fileMatch": ["**/OpenJoystickDriverKit/Resources/devices.json"],
-			"url": "./Resources/Schemas/devices.schema.json"
-		},
-		{
-			"fileMatch": ["**/OpenJoystickDriverKit/Resources/gip-commands.json"],
-			"url": "./Resources/Schemas/gip-commands.schema.json"
-		},
-		{
-			"fileMatch": ["**/Resources/Schemas/Devices/*.json"],
-			"url": "./Resources/Schemas/device-profile.schema.json"
-		}
-	]
+	"python.defaultInterpreterPath": "${workspaceFolder}/.build/schema-validator/bin/python"
 }

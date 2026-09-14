@@ -57,6 +57,7 @@ struct DeviceCatalog: Sendable {
   func runtimeProfile(for identifier: DeviceIdentifier) -> DeviceRuntimeProfile {
     profiles[key(for: identifier)]
       ?? DeviceRuntimeProfile(
+        catalogTransport: .hid,
         parserName: "GenericHID",
         virtualProfile: .default,
         transportProfile: .gipDefault,
@@ -172,6 +173,7 @@ struct DeviceCatalog: Sendable {
     }
 
     return DeviceRuntimeProfile(
+      catalogTransport: ControllerCatalogTransport(rawValue: record.transport)!,
       parserName: driver,
       virtualProfile: .default,
       transportProfile: DeviceTransportProfile(

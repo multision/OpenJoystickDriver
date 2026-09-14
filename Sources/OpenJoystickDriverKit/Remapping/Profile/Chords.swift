@@ -34,7 +34,7 @@ public struct RemappingChord: Codable, Equatable, Hashable, Identifiable, Sendab
     case sources
     case destination
     case mode
-    case windowMs = "window_ms"
+    case windowMs
   }
 
   public init(from decoder: any Decoder) throws {
@@ -83,7 +83,7 @@ public struct RemappingSequence: Codable, Equatable, Hashable, Identifiable, Sen
   private enum CodingKeys: String, CodingKey {
     case id
     case sources
-    case windowMs = "window_ms"
+    case windowMs
     case destination
   }
 }

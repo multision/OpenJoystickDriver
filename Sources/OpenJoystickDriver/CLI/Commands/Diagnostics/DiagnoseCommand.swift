@@ -104,7 +104,7 @@ struct DiagnoseCommand {
       CLIOutput.diagnostic(
         CLILocalized.text(
           "cli.diagnose.fix_rebuild_dev",
-          "  Fix: run: ./scripts/ojd build install dev"
+          "  Fix: run: ./Scripts/ojd build install dev"
         )
       )
       return
@@ -117,7 +117,7 @@ struct DiagnoseCommand {
         CLILocalized.text("cli.diagnose.no_dext", "  Result: FAIL (no .dext bundles found)")
       )
       CLIOutput.diagnostic(
-        CLILocalized.text("cli.diagnose.fix_build_dext", "  Fix: run: ./scripts/ojd build dext")
+        CLILocalized.text("cli.diagnose.fix_build_dext", "  Fix: run: ./Scripts/ojd build dext")
       )
       return
     }
@@ -150,7 +150,7 @@ struct DiagnoseCommand {
         )
       )
       CLIOutput.diagnostic(
-        CLILocalized.text("cli.diagnose.fix_build_dext", "  Fix: run: ./scripts/ojd build dext")
+        CLILocalized.text("cli.diagnose.fix_build_dext", "  Fix: run: ./Scripts/ojd build dext")
       )
     }
   }
@@ -356,7 +356,7 @@ struct DiagnoseCommand {
     CLIOutput.diagnostic(
       CLILocalized.text(
         "cli.diagnose.troubleshoot_rebuild",
-        "    -> Run: ./scripts/ojd build install dev"
+        "    -> Run: ./Scripts/ojd build install dev"
       )
     )
     CLIOutput.diagnostic(

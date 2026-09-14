@@ -601,8 +601,8 @@
 "cli.diagnose.expected_id_present" = "  Rezultat: SUCCES (id-ul așteptat este prezent: %@)";
 "cli.diagnose.extension_heading" = "Extensie de sistem DriverKit (în /Applications):";
 "cli.diagnose.extensions_folder_missing" = "  Rezultat: EȘEC (lipsește folderul SystemExtensions)";
-"cli.diagnose.fix_build_dext" = "  Remediere: rulează: ./scripts/ojd build dext";
-"cli.diagnose.fix_rebuild_dev" = "  Remediere: rulează: ./scripts/ojd build install dev";
+"cli.diagnose.fix_build_dext" = "  Remediere: rulează: ./Scripts/ojd build dext";
+"cli.diagnose.fix_rebuild_dev" = "  Remediere: rulează: ./Scripts/ojd build install dev";
 "cli.diagnose.heading" = "Diagnostic OpenJoystickDriver";
 "cli.diagnose.interface_line" = "    Interfață %d/%d: %02X/%@/%@";
 "cli.diagnose.macos_version" = "macOS: %d.%d.%d";
@@ -618,7 +618,7 @@
 "cli.diagnose.troubleshoot_driverkit" = "  Extensia DriverKit lipsește sau este defectă?";
 "cli.diagnose.troubleshoot_input_monitoring" = "    -> Acordă Monitorizarea introducerii: Configurări sistem -> Confidențialitate și securitate -> Monitorizarea introducerii";
 "cli.diagnose.troubleshoot_no_input" = "  Nicio intrare de la controller?";
-"cli.diagnose.troubleshoot_rebuild" = "    -> Rulează: ./scripts/ojd build install dev";
+"cli.diagnose.troubleshoot_rebuild" = "    -> Rulează: ./Scripts/ojd build install dev";
 "cli.diagnose.troubleshoot_report_command" = "    -> Rulează: --headless diagnose report";
 "cli.diagnose.troubleshoot_reporting" = "  Raportezi o problemă de controller?";
 "cli.diagnose.troubleshoot_virtual_device" = "  Dispozitivul virtual din spațiul utilizator este indisponibil?";
@@ -640,14 +640,14 @@
 "cli.error.missing_command" = "Este necesară o comandă.";
 "cli.error.missing_subcommand" = "«%@» necesită o subcomandă.";
 "cli.error.no_output" = "  (nicio ieșire)";
-"cli.error.rebuild_fast_step" = "  1) Rulează: ./scripts/ojd build install-fast dev";
+"cli.error.rebuild_fast_step" = "  1) Rulează: ./Scripts/ojd build install-fast dev";
 "cli.error.rerun_step" = "  2) Apoi rulează din nou: /Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless %@";
 "cli.error.signature_verification_failed" = "%@ a eșuat: verificarea semnăturii aplicației a eșuat:";
 "cli.error.unexpected_arguments" = "«%@» nu acceptă argumente suplimentare.";
 "cli.error.unknown_command" = "Comandă necunoscută «%@».";
 "cli.extension.approval_required" = "Cererea de extensie de sistem a fost trimisă și necesită aprobare în Configurări sistem.";
 "cli.extension.bundle_missing" = "Bundle-ul aplicației nu conține %@.dext";
-"cli.extension.bundle_missing_fix" = "Remediere: rulează ./scripts/ojd build install dev, apoi reîncearcă din /Applications.";
+"cli.extension.bundle_missing_fix" = "Remediere: rulează ./Scripts/ojd build install dev, apoi reîncearcă din /Applications.";
 "cli.extension.cancelled" = "Cererea de extensie de sistem a fost anulată.";
 "cli.extension.completed" = "Cererea de extensie de sistem s-a încheiat cu rezultatul %@.";
 "cli.extension.failed" = "Cererea de extensie de sistem a eșuat: %@ code=%d %@";

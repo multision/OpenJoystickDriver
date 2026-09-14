@@ -601,8 +601,8 @@
 "cli.diagnose.expected_id_present" = "  Αποτέλεσμα: PASS (υπάρχει το αναμενόμενο id: %@)";
 "cli.diagnose.extension_heading" = "Επέκταση συστήματος DriverKit (στο /Applications):";
 "cli.diagnose.extensions_folder_missing" = "  Αποτέλεσμα: FAIL (λείπει ο φάκελος SystemExtensions)";
-"cli.diagnose.fix_build_dext" = "  Διόρθωση: εκτελέστε: ./scripts/ojd build dext";
-"cli.diagnose.fix_rebuild_dev" = "  Διόρθωση: εκτελέστε: ./scripts/ojd build install dev";
+"cli.diagnose.fix_build_dext" = "  Διόρθωση: εκτελέστε: ./Scripts/ojd build dext";
+"cli.diagnose.fix_rebuild_dev" = "  Διόρθωση: εκτελέστε: ./Scripts/ojd build install dev";
 "cli.diagnose.heading" = "Διαγνωστικά OpenJoystickDriver";
 "cli.diagnose.interface_line" = "    Διεπαφή %d/%d: %02X/%@/%@";
 "cli.diagnose.macos_version" = "macOS: %d.%d.%d";
@@ -618,7 +618,7 @@
 "cli.diagnose.troubleshoot_driverkit" = "  Λείπει/είναι κατεστραμμένη η επέκταση DriverKit;";
 "cli.diagnose.troubleshoot_input_monitoring" = "    -> Χορηγήστε Παρακολούθηση εισόδου: Ρυθμίσεις συστήματος -> Απόρρητο και ασφάλεια -> Παρακολούθηση εισόδου";
 "cli.diagnose.troubleshoot_no_input" = "  Καμία είσοδος από το χειριστήριο;";
-"cli.diagnose.troubleshoot_rebuild" = "    -> Εκτελέστε: ./scripts/ojd build install dev";
+"cli.diagnose.troubleshoot_rebuild" = "    -> Εκτελέστε: ./Scripts/ojd build install dev";
 "cli.diagnose.troubleshoot_report_command" = "    -> Εκτελέστε: --headless diagnose report";
 "cli.diagnose.troubleshoot_reporting" = "  Αναφέρετε πρόβλημα χειριστηρίου;";
 "cli.diagnose.troubleshoot_virtual_device" = "  Μη διαθέσιμη η εικονική συσκευή χώρου χρήστη;";
@@ -640,14 +640,14 @@
 "cli.error.missing_command" = "Απαιτείται εντολή.";
 "cli.error.missing_subcommand" = "Το «%@» απαιτεί δευτερεύουσα εντολή.";
 "cli.error.no_output" = "  (χωρίς έξοδο)";
-"cli.error.rebuild_fast_step" = "  1) Εκτελέστε: ./scripts/ojd build install-fast dev";
+"cli.error.rebuild_fast_step" = "  1) Εκτελέστε: ./Scripts/ojd build install-fast dev";
 "cli.error.rerun_step" = "  2) Έπειτα εκτελέστε ξανά: /Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless %@";
 "cli.error.signature_verification_failed" = "Το %@ απέτυχε: η επαλήθευση υπογραφής εφαρμογής απέτυχε:";
 "cli.error.unexpected_arguments" = "Το «%@» δεν δέχεται πρόσθετα ορίσματα.";
 "cli.error.unknown_command" = "Άγνωστη εντολή «%@».";
 "cli.extension.approval_required" = "Το αίτημα επέκτασης συστήματος υποβλήθηκε και απαιτεί έγκριση στις Ρυθμίσεις συστήματος.";
 "cli.extension.bundle_missing" = "Το πακέτο εφαρμογής δεν περιέχει %@.dext";
-"cli.extension.bundle_missing_fix" = "Διόρθωση: εκτελέστε ./scripts/ojd build install dev, έπειτα δοκιμάστε ξανά από το /Applications.";
+"cli.extension.bundle_missing_fix" = "Διόρθωση: εκτελέστε ./Scripts/ojd build install dev, έπειτα δοκιμάστε ξανά από το /Applications.";
 "cli.extension.cancelled" = "Το αίτημα επέκτασης συστήματος ακυρώθηκε.";
 "cli.extension.completed" = "Το αίτημα επέκτασης συστήματος ολοκληρώθηκε με αποτέλεσμα %@.";
 "cli.extension.failed" = "Το αίτημα επέκτασης συστήματος απέτυχε: %@ code=%d %@";

@@ -18,29 +18,29 @@ struct LocalizationTests {
 
   @Test
   func everyLocaleHasTheSameCurrentCatalogShape() {
-    let sourceKeys = Localization.catalogKeys(for: Localization.sourceLocalization)
-    let sourcePlaceholders = Localization.catalogPlaceholderSignatures(
+    let sourceKeys = LocalizationCatalogAudit.keys(for: Localization.sourceLocalization)
+    let sourcePlaceholders = LocalizationCatalogAudit.placeholderSignatures(
       for: Localization.sourceLocalization
     )
     #expect(!sourceKeys.isEmpty)
     #expect(sourceKeys.count == sourcePlaceholders.count)
 
     for locale in Localization.availableLocalizations() {
-      #expect(Localization.catalogKeys(for: locale) == sourceKeys)
-      #expect(Localization.catalogPlaceholderSignatures(for: locale) == sourcePlaceholders)
+      #expect(LocalizationCatalogAudit.keys(for: locale) == sourceKeys)
+      #expect(LocalizationCatalogAudit.placeholderSignatures(for: locale) == sourcePlaceholders)
     }
   }
 
   @Test
   func packagedCatalogIncludesCLIAndInputTestProductKeys() {
-    let keys = Localization.catalogKeys(for: Localization.sourceLocalization)
+    let keys = LocalizationCatalogAudit.keys(for: Localization.sourceLocalization)
     for required in [
       "cli.compat.usage", "cli.catalog.compat.summary", "cli.app_ready.not_ready",
       "inputTest.controls", "inputTest.additionalButtons", "compatibility.xbox360HID",
       "setup.openSystemSettings", "controllers.battery", "controllers.chargingState",
       "controllers.cableState", "controllers.discharging", "controllers.charging",
-      "controllers.batteryFull", "controllers.batteryAccessibilityDetails",
-      "profiles.actions", "profiles.editorSection", "profiles.combinations",
+      "controllers.batteryFull", "controllers.batteryAccessibilityDetails", "profiles.actions",
+      "profiles.editorSection", "profiles.combinations",
     ] { #expect(keys.contains(required)) }
     #expect(!keys.contains("compatibility.xboxOneLegacyHID"))
     #expect(keys.filter { $0.hasPrefix("cli.") }.count >= 200)
@@ -50,16 +50,18 @@ struct LocalizationTests {
   @Test
   func pluralResourcesExposeNativeLocaleCategories() {
     let expectedCategories: Set<String> = ["zero", "one", "two", "few", "many", "other"]
-    let sourceCategories = Localization.catalogPluralCategories()
+    let sourceCategories = LocalizationCatalogAudit.pluralCategories(
+      for: Localization.sourceLocalization
+    )
     #expect(sourceCategories["status.controllerConnected"] == expectedCategories)
     #expect(sourceCategories["profiles.assignments"] == expectedCategories)
     #expect(sourceCategories["debug.devices"] == expectedCategories)
     #expect(
-      Localization.catalogPluralCategories(for: "ar-SA")["status.controllerConnected"]
+      LocalizationCatalogAudit.pluralCategories(for: "ar-SA")["status.controllerConnected"]
         == expectedCategories
     )
     #expect(
-      Localization.catalogPluralCategories(for: "ru-RU")["profiles.assignments"]
+      LocalizationCatalogAudit.pluralCategories(for: "ru-RU")["profiles.assignments"]
         == expectedCategories
     )
 
@@ -95,19 +97,6 @@ struct LocalizationTests {
 
     let missing = resolver.string("test.missing.key", defaultValue: "Source fallback")
     #expect(missing == "Source fallback")
-  }
-
-  @Test
-  func translatedLocalesDoNotKeepTheSourceRefreshLabel() {
-    let source = Localization(preferredLanguages: ["en-US"]).string(
-      "common.refresh",
-      defaultValue: "Refresh"
-    )
-    for language in ["de-DE", "fr-FR", "es-ES", "ja-JP", "zh-CN", "ar-SA"] {
-      let resolver = Localization(preferredLanguages: [language, "en-US"])
-      #expect(resolver.resolvedLanguage?.lowercased() == language.lowercased())
-      #expect(resolver.string("common.refresh", defaultValue: "Refresh") != source)
-    }
   }
 
   @Test

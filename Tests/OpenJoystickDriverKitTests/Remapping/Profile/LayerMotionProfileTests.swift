@@ -14,16 +14,15 @@ struct LayerMotionProfileTests {
     let data = try JSONEncoder().encode(layer)
     #expect(try JSONDecoder().decode(RemappingLayer.self, from: data) == layer)
     var object = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
-    object.removeValue(forKey: "motion_tuning")
+    object.removeValue(forKey: "motionTuning")
     let legacy = try JSONSerialization.data(withJSONObject: object)
     #expect(try JSONDecoder().decode(RemappingLayer.self, from: legacy).motionTuning == nil)
   }
 
   @Test
   func profileRejectsInvalidAndLegacyOverrides() {
-    func profile(version: Int, tuning: RemappingMotionTuning) -> RemappingProfile {
+    func profile(tuning: RemappingMotionTuning) -> RemappingProfile {
       RemappingProfile(
-        schemaVersion: version,
         name: "Layers",
         device: RemappingDeviceScope(vendorID: 1, productID: 2),
         applicationScope: .global,
@@ -38,12 +37,9 @@ struct LayerMotionProfileTests {
         ]
       )
     }
-    #expect(throws: RemappingValidationError.unsupportedSchemaVersion(2)) {
-      try profile(version: 2, tuning: .default).validate()
-    }
     let error = RemappingValidationError.invalidMotionTuning(.invalidField("yaw_sensitivity"))
     #expect(throws: error) {
-      try profile(version: 3, tuning: RemappingMotionTuning(yawSensitivity: -1)).validate()
+      try profile(tuning: RemappingMotionTuning(yawSensitivity: -1)).validate()
     }
   }
 }

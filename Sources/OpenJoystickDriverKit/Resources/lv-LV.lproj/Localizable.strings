@@ -601,8 +601,8 @@
 "cli.diagnose.expected_id_present" = "  Rezultāts: PASS (gaidītais id ir: %@)";
 "cli.diagnose.extension_heading" = "DriverKit sistēmas paplašinājums (iekš /Applications):";
 "cli.diagnose.extensions_folder_missing" = "  Rezultāts: FAIL (trūkst SystemExtensions mapes)";
-"cli.diagnose.fix_build_dext" = "  Labojums: palaidiet: ./scripts/ojd build dext";
-"cli.diagnose.fix_rebuild_dev" = "  Labojums: palaidiet: ./scripts/ojd build install dev";
+"cli.diagnose.fix_build_dext" = "  Labojums: palaidiet: ./Scripts/ojd build dext";
+"cli.diagnose.fix_rebuild_dev" = "  Labojums: palaidiet: ./Scripts/ojd build install dev";
 "cli.diagnose.heading" = "OpenJoystickDriver diagnostika";
 "cli.diagnose.interface_line" = "    Saskarne %d/%d: %02X/%@/%@";
 "cli.diagnose.macos_version" = "macOS: %d.%d.%d";
@@ -618,7 +618,7 @@
 "cli.diagnose.troubleshoot_driverkit" = "  DriverKit paplašinājums trūkst/salauzts?";
 "cli.diagnose.troubleshoot_input_monitoring" = "    -> Piešķiriet Ievades pārraudzību: Sistēmas iestatījumi -> Konfidencialitāte un drošība -> Ievades pārraudzība";
 "cli.diagnose.troubleshoot_no_input" = "  Nav ievades no kontroliera?";
-"cli.diagnose.troubleshoot_rebuild" = "    -> Palaidiet: ./scripts/ojd build install dev";
+"cli.diagnose.troubleshoot_rebuild" = "    -> Palaidiet: ./Scripts/ojd build install dev";
 "cli.diagnose.troubleshoot_report_command" = "    -> Palaidiet: --headless diagnose report";
 "cli.diagnose.troubleshoot_reporting" = "  Ziņojat par kontroliera problēmu?";
 "cli.diagnose.troubleshoot_virtual_device" = "  Lietotāja telpas virtuālā ierīce nav pieejama?";
@@ -640,14 +640,14 @@
 "cli.error.missing_command" = "Nepieciešama komanda.";
 "cli.error.missing_subcommand" = "„%@“ nepieciešama apakškomanda.";
 "cli.error.no_output" = "  (nav izvades)";
-"cli.error.rebuild_fast_step" = "  1) Palaidiet: ./scripts/ojd build install-fast dev";
+"cli.error.rebuild_fast_step" = "  1) Palaidiet: ./Scripts/ojd build install-fast dev";
 "cli.error.rerun_step" = "  2) Pēc tam palaidiet vēlreiz: /Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless %@";
 "cli.error.signature_verification_failed" = "%@ neizdevās: lietotnes paraksta pārbaude neizdevās:";
 "cli.error.unexpected_arguments" = "„%@“ nepieņem papildu argumentus.";
 "cli.error.unknown_command" = "Nezināma komanda „%@“.";
 "cli.extension.approval_required" = "Sistēmas paplašinājuma pieprasījums iesniegts un prasa apstiprinājumu Sistēmas iestatījumos.";
 "cli.extension.bundle_missing" = "Lietotnes pakotne nesatur %@.dext";
-"cli.extension.bundle_missing_fix" = "Labojums: palaidiet ./scripts/ojd build install dev, pēc tam mēģiniet vēlreiz no /Applications.";
+"cli.extension.bundle_missing_fix" = "Labojums: palaidiet ./Scripts/ojd build install dev, pēc tam mēģiniet vēlreiz no /Applications.";
 "cli.extension.cancelled" = "Sistēmas paplašinājuma pieprasījums atcelts.";
 "cli.extension.completed" = "Sistēmas paplašinājuma pieprasījums pabeigts ar rezultātu %@.";
 "cli.extension.failed" = "Sistēmas paplašinājuma pieprasījums neizdevās: %@ code=%d %@";

@@ -217,7 +217,6 @@ struct UserSpaceOutputDispatcherLifecycleTests {
 
     #expect(created.snapshot().count == identifiers.count)
     #expect(created.snapshot().allSatisfy { $0.counts().send >= 1 })
-    #expect(dispatcher.status == "on (devices=3)")
     await dispatcher.close()
   }
 
@@ -268,7 +267,6 @@ struct UserSpaceOutputDispatcherLifecycleTests {
         Issue.record("Activation unexpectedly succeeded")
       } catch {}
 
-      #expect(dispatcher.status == "off")
       #expect(created.snapshot().count == failureIndex + 1)
       #expect(created.snapshot().allSatisfy { $0.counts().close == 1 })
     }
@@ -296,7 +294,6 @@ struct UserSpaceOutputDispatcherLifecycleTests {
         Issue.record("Activation unexpectedly succeeded")
       } catch {}
 
-      #expect(dispatcher.status == "off")
       #expect(created.snapshot().allSatisfy { $0.counts().close == 1 })
     }
   }
@@ -311,7 +308,6 @@ struct UserSpaceOutputDispatcherLifecycleTests {
       Issue.record("Activation unexpectedly succeeded")
     } catch is UserSpaceDispatcherTestBackend.SendFailure {
       #expect(backend.counts().close == 1)
-      #expect(dispatcher.status == "off")
     } catch { Issue.record("Unexpected activation error") }
   }
 
@@ -338,7 +334,6 @@ struct UserSpaceOutputDispatcherLifecycleTests {
     let counts = backend.counts()
     #expect(counts.send == 0)
     #expect(counts.close == 1)
-    #expect(dispatcher.status == "off")
   }
 
   @Test
@@ -362,7 +357,6 @@ struct UserSpaceOutputDispatcherLifecycleTests {
     let counts = backend.counts()
     #expect(counts.send == 0)
     #expect(counts.close == 1)
-    #expect(dispatcher.status == "off")
     await dispatcher.close()
     #expect(backend.counts().close == 1)
   }

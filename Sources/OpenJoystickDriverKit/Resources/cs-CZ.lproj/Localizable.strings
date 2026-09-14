@@ -601,8 +601,8 @@
 "cli.diagnose.expected_id_present" = "  Výsledek: PASS (očekávané id je přítomno: %@)";
 "cli.diagnose.extension_heading" = "Systémové rozšíření DriverKit (v /Applications):";
 "cli.diagnose.extensions_folder_missing" = "  Výsledek: FAIL (chybí složka SystemExtensions)";
-"cli.diagnose.fix_build_dext" = "  Náprava: spusťte: ./scripts/ojd build dext";
-"cli.diagnose.fix_rebuild_dev" = "  Náprava: spusťte: ./scripts/ojd build install dev";
+"cli.diagnose.fix_build_dext" = "  Náprava: spusťte: ./Scripts/ojd build dext";
+"cli.diagnose.fix_rebuild_dev" = "  Náprava: spusťte: ./Scripts/ojd build install dev";
 "cli.diagnose.heading" = "Diagnostika OpenJoystickDriver";
 "cli.diagnose.interface_line" = "    Rozhraní %d/%d: %02X/%@/%@";
 "cli.diagnose.macos_version" = "macOS: %d.%d.%d";
@@ -618,7 +618,7 @@
 "cli.diagnose.troubleshoot_driverkit" = "  Chybí nebo je poškozené rozšíření DriverKit?";
 "cli.diagnose.troubleshoot_input_monitoring" = "    -> Udělte Monitorování vstupu: Nastavení systému -> Soukromí a zabezpečení -> Monitorování vstupu";
 "cli.diagnose.troubleshoot_no_input" = "  Žádný vstup z ovladače?";
-"cli.diagnose.troubleshoot_rebuild" = "    -> Spusťte: ./scripts/ojd build install dev";
+"cli.diagnose.troubleshoot_rebuild" = "    -> Spusťte: ./Scripts/ojd build install dev";
 "cli.diagnose.troubleshoot_report_command" = "    -> Spusťte: --headless diagnose report";
 "cli.diagnose.troubleshoot_reporting" = "  Hlášení problému s ovladačem?";
 "cli.diagnose.troubleshoot_virtual_device" = "  Virtuální zařízení uživatelského prostoru je nedostupné?";
@@ -640,14 +640,14 @@
 "cli.error.missing_command" = "Je vyžadován příkaz.";
 "cli.error.missing_subcommand" = "„%@“ vyžaduje podpříkaz.";
 "cli.error.no_output" = "  (žádný výstup)";
-"cli.error.rebuild_fast_step" = "  1) Spusťte: ./scripts/ojd build install-fast dev";
+"cli.error.rebuild_fast_step" = "  1) Spusťte: ./Scripts/ojd build install-fast dev";
 "cli.error.rerun_step" = "  2) Poté znovu spusťte: /Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless %@";
 "cli.error.signature_verification_failed" = "%@ se nezdařilo: ověření podpisu aplikace se nezdařilo:";
 "cli.error.unexpected_arguments" = "„%@“ nepřijímá další argumenty.";
 "cli.error.unknown_command" = "Neznámý příkaz „%@“.";
 "cli.extension.approval_required" = "Žádost o systémové rozšíření byla odeslána a vyžaduje schválení v Nastavení systému.";
 "cli.extension.bundle_missing" = "Balíček aplikace neobsahuje %@.dext";
-"cli.extension.bundle_missing_fix" = "Náprava: spusťte ./scripts/ojd build install dev a poté to zopakujte z /Applications.";
+"cli.extension.bundle_missing_fix" = "Náprava: spusťte ./Scripts/ojd build install dev a poté to zopakujte z /Applications.";
 "cli.extension.cancelled" = "Žádost o systémové rozšíření byla zrušena.";
 "cli.extension.completed" = "Žádost o systémové rozšíření skončila výsledkem %@.";
 "cli.extension.failed" = "Žádost o systémové rozšíření se nezdařila: %@ code=%d %@";

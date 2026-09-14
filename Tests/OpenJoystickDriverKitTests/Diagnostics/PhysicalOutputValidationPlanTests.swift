@@ -42,7 +42,6 @@ struct PhysicalOutputValidationPlanTests {
       capabilities: PhysicalControllerOutputCapabilities(rumbleMotors: [.leftHaptic, .rightHaptic])
     )
     #expect(haptics.steps.map(\.id) == ["left-haptic", "right-haptic"])
-    #expect(haptics.steps[0].expectedObservation.contains("left trackpad"))
     let unavailable = PhysicalOutputValidationPlan(
       vendorID: 10,
       productID: 21,

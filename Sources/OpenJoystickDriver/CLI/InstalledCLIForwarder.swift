@@ -51,7 +51,7 @@ enum InstalledCLIForwarder {
     case .staleInstallation:
       fputs(
         "error: repository sources are newer than the installed OpenJoystickDriver CLI; "
-          + "run './scripts/ojd build install-fast dev' before using repository CLI paths, "
+          + "run './Scripts/ojd build install-fast dev' before using repository CLI paths, "
           + "or set OJD_RUN_REPOSITORY_CLI=1 for local-only commands\n",
         stderr
       )

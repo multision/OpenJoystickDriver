@@ -237,8 +237,7 @@ struct DeveloperToolsTests {
         secondDevice.runtimeIdentifier: [secondPacket],
       ],
       deviceReadDelaysNanoseconds: [
-        firstDevice.runtimeIdentifier: 5_000_000,
-        secondDevice.runtimeIdentifier: 5_000_000,
+        firstDevice.runtimeIdentifier: 5_000_000, secondDevice.runtimeIdentifier: 5_000_000,
       ]
     )
     let model = DeveloperToolsViewModel(gateway: gateway)

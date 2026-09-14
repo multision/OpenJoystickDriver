@@ -601,8 +601,8 @@
 "cli.diagnose.expected_id_present" = "  Resultat: PASS (forventa id til stades: %@)";
 "cli.diagnose.extension_heading" = "DriverKit-systemutviding (i /Applications):";
 "cli.diagnose.extensions_folder_missing" = "  Resultat: FAIL (mappa SystemExtensions manglar)";
-"cli.diagnose.fix_build_dext" = "  Løysing: køyr: ./scripts/ojd build dext";
-"cli.diagnose.fix_rebuild_dev" = "  Løysing: køyr: ./scripts/ojd build install dev";
+"cli.diagnose.fix_build_dext" = "  Løysing: køyr: ./Scripts/ojd build dext";
+"cli.diagnose.fix_rebuild_dev" = "  Løysing: køyr: ./Scripts/ojd build install dev";
 "cli.diagnose.heading" = "OpenJoystickDriver-diagnostikk";
 "cli.diagnose.interface_line" = "    Interface %d/%d: %02X/%@/%@";
 "cli.diagnose.macos_version" = "macOS: %d.%d.%d";
@@ -618,7 +618,7 @@
 "cli.diagnose.troubleshoot_driverkit" = "  DriverKit-utviding manglar/øydelagd?";
 "cli.diagnose.troubleshoot_input_monitoring" = "    -> Gje Inndataovervaking: Systeminnstillingar -> Personvern og sikkerheit -> Inndataovervaking";
 "cli.diagnose.troubleshoot_no_input" = "  Inga inndata frå kontrollaren?";
-"cli.diagnose.troubleshoot_rebuild" = "    -> Køyr: ./scripts/ojd build install dev";
+"cli.diagnose.troubleshoot_rebuild" = "    -> Køyr: ./Scripts/ojd build install dev";
 "cli.diagnose.troubleshoot_report_command" = "    -> Køyr: --headless diagnose report";
 "cli.diagnose.troubleshoot_reporting" = "  Rapportere eit kontrollarproblem?";
 "cli.diagnose.troubleshoot_virtual_device" = "  Virtuell user-space-eining ikkje tilgjengeleg?";
@@ -640,14 +640,14 @@
 "cli.error.missing_command" = "Ein kommando er påkravd.";
 "cli.error.missing_subcommand" = "“%@” krev ein underkommando.";
 "cli.error.no_output" = "  (inga utdata)";
-"cli.error.rebuild_fast_step" = "  1) Køyr: ./scripts/ojd build install-fast dev";
+"cli.error.rebuild_fast_step" = "  1) Køyr: ./Scripts/ojd build install-fast dev";
 "cli.error.rerun_step" = "  2) Køyr deretter på nytt: /Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless %@";
 "cli.error.signature_verification_failed" = "%@ mislukkast: verifisering av appsignatur mislukkast:";
 "cli.error.unexpected_arguments" = "“%@” godtek ikkje fleire argument.";
 "cli.error.unknown_command" = "Ukjend kommando “%@”.";
 "cli.extension.approval_required" = "Førespurnad om systemutviding send inn og krev godkjenning i Systeminnstillingar.";
 "cli.extension.bundle_missing" = "App-bunten inneheld ikkje %@.dext";
-"cli.extension.bundle_missing_fix" = "Løysing: køyr ./scripts/ojd build install dev, og prøv deretter på nytt frå /Applications.";
+"cli.extension.bundle_missing_fix" = "Løysing: køyr ./Scripts/ojd build install dev, og prøv deretter på nytt frå /Applications.";
 "cli.extension.cancelled" = "Førespurnad om systemutviding avbroten.";
 "cli.extension.completed" = "Førespurnad om systemutviding fullført med resultat %@.";
 "cli.extension.failed" = "Førespurnad om systemutviding mislukkast: %@ code=%d %@";

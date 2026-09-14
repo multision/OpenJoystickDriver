@@ -13,7 +13,6 @@ enum RemappingProfileLibraryError: Error, Equatable, LocalizedError, Sendable {
   case pairProfileRequiresExplicitSession
   case profileUpdateConflict(UUID)
   case unreadableLibrary
-  case unsupportedLibraryVersion(Int)
   case unwritableLibrary
 
   var errorDescription: String? {
@@ -32,8 +31,6 @@ enum RemappingProfileLibraryError: Error, Equatable, LocalizedError, Sendable {
     case .profileUpdateConflict(let id):
       "The remapping profile \(id.uuidString) changed since it was read."
     case .unreadableLibrary: "The remapping profile library could not be read."
-    case .unsupportedLibraryVersion(let version):
-      "Unsupported remapping profile library version: \(version)."
     case .unwritableLibrary: "The remapping profile library could not be written."
     }
   }
@@ -379,9 +376,6 @@ actor RemappingProfileLibrary {
   }
 
   private func validate(_ library: RemappingProfileLibraryState) throws {
-    guard library.schemaVersion == RemappingProfileLibraryState.currentSchemaVersion else {
-      throw RemappingProfileLibraryError.unsupportedLibraryVersion(library.schemaVersion)
-    }
     guard library.profiles.count <= Self.maximumProfileCount else {
       throw RemappingProfileLibraryError.profileCountExceeded(library.profiles.count)
     }

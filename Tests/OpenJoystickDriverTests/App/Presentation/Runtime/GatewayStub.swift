@@ -124,9 +124,7 @@ actor GatewayStub: ApplicationServiceGateway {
     if statusReadDelayNanoseconds > 0 {
       try await Task.sleep(nanoseconds: statusReadDelayNanoseconds)
     }
-    if statusReadsAreGated {
-      await withCheckedContinuation { statusReadContinuations.append($0) }
-    }
+    if statusReadsAreGated { await withCheckedContinuation { statusReadContinuations.append($0) } }
     if statusShouldFail { throw ApplicationServiceClientError.timeout }
     return statusPayload
   }

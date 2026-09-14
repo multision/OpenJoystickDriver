@@ -601,8 +601,8 @@
 "cli.diagnose.expected_id_present" = "  결과: PASS (예상 id 있음: %@)";
 "cli.diagnose.extension_heading" = "DriverKit 시스템 확장 (/Applications에 있음):";
 "cli.diagnose.extensions_folder_missing" = "  결과: FAIL (SystemExtensions 폴더 없음)";
-"cli.diagnose.fix_build_dext" = "  수정: 실행: ./scripts/ojd build dext";
-"cli.diagnose.fix_rebuild_dev" = "  수정: 실행: ./scripts/ojd build install dev";
+"cli.diagnose.fix_build_dext" = "  수정: 실행: ./Scripts/ojd build dext";
+"cli.diagnose.fix_rebuild_dev" = "  수정: 실행: ./Scripts/ojd build install dev";
 "cli.diagnose.heading" = "OpenJoystickDriver 진단";
 "cli.diagnose.interface_line" = "    인터페이스 %d/%d: %02X/%@/%@";
 "cli.diagnose.macos_version" = "macOS: %d.%d.%d";
@@ -618,7 +618,7 @@
 "cli.diagnose.troubleshoot_driverkit" = "  DriverKit 확장이 없거나 손상되었습니까?";
 "cli.diagnose.troubleshoot_input_monitoring" = "    -> 입력 모니터링 허용: 시스템 설정 -> 개인정보 보호 및 보안 -> 입력 모니터링";
 "cli.diagnose.troubleshoot_no_input" = "  컨트롤러에서 입력이 없습니까?";
-"cli.diagnose.troubleshoot_rebuild" = "    -> 실행: ./scripts/ojd build install dev";
+"cli.diagnose.troubleshoot_rebuild" = "    -> 실행: ./Scripts/ojd build install dev";
 "cli.diagnose.troubleshoot_report_command" = "    -> 실행: --headless diagnose report";
 "cli.diagnose.troubleshoot_reporting" = "  컨트롤러 문제를 보고하시겠습니까?";
 "cli.diagnose.troubleshoot_virtual_device" = "  사용자 공간 가상 기기를 사용할 수 없습니까?";
@@ -640,14 +640,14 @@
 "cli.error.missing_command" = "명령이 필요합니다.";
 "cli.error.missing_subcommand" = "“%@”에는 하위 명령이 필요합니다.";
 "cli.error.no_output" = "  (출력 없음)";
-"cli.error.rebuild_fast_step" = "  1) 실행: ./scripts/ojd build install-fast dev";
+"cli.error.rebuild_fast_step" = "  1) 실행: ./Scripts/ojd build install-fast dev";
 "cli.error.rerun_step" = "  2) 그런 다음 다시 실행: /Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless %@";
 "cli.error.signature_verification_failed" = "%@ 실패: 앱 서명 검증에 실패했습니다:";
 "cli.error.unexpected_arguments" = "“%@”은(는) 추가 인수를 받지 않습니다.";
 "cli.error.unknown_command" = "알 수 없는 명령 “%@”.";
 "cli.extension.approval_required" = "시스템 확장 요청이 제출되었으며 시스템 설정에서 승인이 필요합니다.";
 "cli.extension.bundle_missing" = "앱 번들에 %@.dext가 포함되어 있지 않습니다";
-"cli.extension.bundle_missing_fix" = "수정: ./scripts/ojd build install dev를 실행한 다음 /Applications에서 다시 시도하십시오.";
+"cli.extension.bundle_missing_fix" = "수정: ./Scripts/ojd build install dev를 실행한 다음 /Applications에서 다시 시도하십시오.";
 "cli.extension.cancelled" = "시스템 확장 요청이 취소되었습니다.";
 "cli.extension.completed" = "시스템 확장 요청이 결과 %@로 완료되었습니다.";
 "cli.extension.failed" = "시스템 확장 요청 실패: %@ code=%d %@";

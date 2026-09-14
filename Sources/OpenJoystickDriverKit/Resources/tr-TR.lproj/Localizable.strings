@@ -601,8 +601,8 @@
 "cli.diagnose.expected_id_present" = "  Sonuç: PASS (beklenen id var: %@)";
 "cli.diagnose.extension_heading" = "DriverKit Sistem Eklentisi (/Applications içinde):";
 "cli.diagnose.extensions_folder_missing" = "  Sonuç: FAIL (SystemExtensions klasörü yok)";
-"cli.diagnose.fix_build_dext" = "  Düzeltme: çalıştırın: ./scripts/ojd build dext";
-"cli.diagnose.fix_rebuild_dev" = "  Düzeltme: çalıştırın: ./scripts/ojd build install dev";
+"cli.diagnose.fix_build_dext" = "  Düzeltme: çalıştırın: ./Scripts/ojd build dext";
+"cli.diagnose.fix_rebuild_dev" = "  Düzeltme: çalıştırın: ./Scripts/ojd build install dev";
 "cli.diagnose.heading" = "OpenJoystickDriver Tanılama";
 "cli.diagnose.interface_line" = "    Arayüz %d/%d: %02X/%@/%@";
 "cli.diagnose.macos_version" = "macOS: %d.%d.%d";
@@ -618,7 +618,7 @@
 "cli.diagnose.troubleshoot_driverkit" = "  DriverKit eklentisi eksik/bozuk mu?";
 "cli.diagnose.troubleshoot_input_monitoring" = "    -> Giriş İzleme verin: Sistem Ayarları -> Gizlilik ve Güvenlik -> Giriş İzleme";
 "cli.diagnose.troubleshoot_no_input" = "  Kontrolcüden giriş yok mu?";
-"cli.diagnose.troubleshoot_rebuild" = "    -> Çalıştırın: ./scripts/ojd build install dev";
+"cli.diagnose.troubleshoot_rebuild" = "    -> Çalıştırın: ./Scripts/ojd build install dev";
 "cli.diagnose.troubleshoot_report_command" = "    -> Çalıştırın: --headless diagnose report";
 "cli.diagnose.troubleshoot_reporting" = "  Bir kontrolcü sorunu mu bildiriyorsunuz?";
 "cli.diagnose.troubleshoot_virtual_device" = "  Kullanıcı alanı sanal aygıtı kullanılamıyor mu?";
@@ -640,14 +640,14 @@
 "cli.error.missing_command" = "Bir komut gerekli.";
 "cli.error.missing_subcommand" = "“%@” bir alt komut gerektirir.";
 "cli.error.no_output" = "  (çıktı yok)";
-"cli.error.rebuild_fast_step" = "  1) Çalıştırın: ./scripts/ojd build install-fast dev";
+"cli.error.rebuild_fast_step" = "  1) Çalıştırın: ./Scripts/ojd build install-fast dev";
 "cli.error.rerun_step" = "  2) Ardından yeniden çalıştırın: /Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless %@";
 "cli.error.signature_verification_failed" = "%@ başarısız: uygulama imza doğrulaması başarısız:";
 "cli.error.unexpected_arguments" = "“%@” ek argüman kabul etmez.";
 "cli.error.unknown_command" = "Bilinmeyen komut “%@”.";
 "cli.extension.approval_required" = "Sistem eklentisi isteği gönderildi ve Sistem Ayarları’nda onay gerektiriyor.";
 "cli.extension.bundle_missing" = "Uygulama paketi %@.dext içermiyor";
-"cli.extension.bundle_missing_fix" = "Düzeltme: ./scripts/ojd build install dev çalıştırın, sonra /Applications konumundan yeniden deneyin.";
+"cli.extension.bundle_missing_fix" = "Düzeltme: ./Scripts/ojd build install dev çalıştırın, sonra /Applications konumundan yeniden deneyin.";
 "cli.extension.cancelled" = "Sistem eklentisi isteği iptal edildi.";
 "cli.extension.completed" = "Sistem eklentisi isteği %@ sonucuyla bitti.";
 "cli.extension.failed" = "Sistem eklentisi isteği başarısız: %@ code=%d %@";

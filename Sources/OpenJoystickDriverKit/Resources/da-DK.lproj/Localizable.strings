@@ -601,8 +601,8 @@
 "cli.diagnose.expected_id_present" = "  Resultat: PASS (forventet id til stede: %@)";
 "cli.diagnose.extension_heading" = "DriverKit-systemudvidelse (i /Applications):";
 "cli.diagnose.extensions_folder_missing" = "  Resultat: FAIL (mappen SystemExtensions mangler)";
-"cli.diagnose.fix_build_dext" = "  Løsning: kør: ./scripts/ojd build dext";
-"cli.diagnose.fix_rebuild_dev" = "  Løsning: kør: ./scripts/ojd build install dev";
+"cli.diagnose.fix_build_dext" = "  Løsning: kør: ./Scripts/ojd build dext";
+"cli.diagnose.fix_rebuild_dev" = "  Løsning: kør: ./Scripts/ojd build install dev";
 "cli.diagnose.heading" = "OpenJoystickDriver-diagnostik";
 "cli.diagnose.interface_line" = "    Interface %d/%d: %02X/%@/%@";
 "cli.diagnose.macos_version" = "macOS: %d.%d.%d";
@@ -618,7 +618,7 @@
 "cli.diagnose.troubleshoot_driverkit" = "  DriverKit-udvidelse mangler/ødelagt?";
 "cli.diagnose.troubleshoot_input_monitoring" = "    -> Giv Inputovervågning: Systemindstillinger -> Anonymitet og sikkerhed -> Inputovervågning";
 "cli.diagnose.troubleshoot_no_input" = "  Intet input fra controlleren?";
-"cli.diagnose.troubleshoot_rebuild" = "    -> Kør: ./scripts/ojd build install dev";
+"cli.diagnose.troubleshoot_rebuild" = "    -> Kør: ./Scripts/ojd build install dev";
 "cli.diagnose.troubleshoot_report_command" = "    -> Kør: --headless diagnose report";
 "cli.diagnose.troubleshoot_reporting" = "  Rapportere et controllerproblem?";
 "cli.diagnose.troubleshoot_virtual_device" = "  Virtuel user-space-enhed utilgængelig?";
@@ -640,14 +640,14 @@
 "cli.error.missing_command" = "En kommando er påkrævet.";
 "cli.error.missing_subcommand" = "“%@” kræver en underkommando.";
 "cli.error.no_output" = "  (intet output)";
-"cli.error.rebuild_fast_step" = "  1) Kør: ./scripts/ojd build install-fast dev";
+"cli.error.rebuild_fast_step" = "  1) Kør: ./Scripts/ojd build install-fast dev";
 "cli.error.rerun_step" = "  2) Kør derefter igen: /Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless %@";
 "cli.error.signature_verification_failed" = "%@ mislykkedes: bekræftelse af appsignatur mislykkedes:";
 "cli.error.unexpected_arguments" = "“%@” accepterer ikke yderligere argumenter.";
 "cli.error.unknown_command" = "Ukendt kommando “%@”.";
 "cli.extension.approval_required" = "Anmodning om systemudvidelse indsendt og kræver godkendelse i Systemindstillinger.";
 "cli.extension.bundle_missing" = "App-bundle indeholder ikke %@.dext";
-"cli.extension.bundle_missing_fix" = "Løsning: kør ./scripts/ojd build install dev, og prøv derefter igen fra /Applications.";
+"cli.extension.bundle_missing_fix" = "Løsning: kør ./Scripts/ojd build install dev, og prøv derefter igen fra /Applications.";
 "cli.extension.cancelled" = "Anmodning om systemudvidelse annulleret.";
 "cli.extension.completed" = "Anmodning om systemudvidelse afsluttet med resultat %@.";
 "cli.extension.failed" = "Anmodning om systemudvidelse mislykkedes: %@ code=%d %@";

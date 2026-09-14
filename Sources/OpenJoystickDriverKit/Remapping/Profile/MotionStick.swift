@@ -22,8 +22,8 @@ public struct RemappingMotionLean: Codable, Equatable, Hashable, Sendable {
   }
 
   private enum CodingKeys: String, CodingKey {
-    case thresholdDegrees = "threshold_degrees"
-    case hysteresisDegrees = "hysteresis_degrees"
+    case thresholdDegrees
+    case hysteresisDegrees
   }
 }
 
@@ -70,9 +70,9 @@ public struct RemappingMotionSteering: Codable, Equatable, Hashable, Sendable {
 
   private enum CodingKeys: String, CodingKey {
     case output
-    case deadzoneDegrees = "deadzone_degrees"
-    case fullScaleDegrees = "full_scale_degrees"
-    case responseExponent = "response_exponent"
+    case deadzoneDegrees
+    case fullScaleDegrees
+    case responseExponent
     case inverted
   }
 }

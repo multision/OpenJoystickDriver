@@ -258,6 +258,7 @@ struct USBProtocolClassificationTests {
 
   private func profile(variant: ControllerProtocolVariant) -> DeviceRuntimeProfile {
     DeviceRuntimeProfile(
+      catalogTransport: .usb,
       parserName: "test",
       virtualProfile: .default,
       transportProfile: .gipDefault,

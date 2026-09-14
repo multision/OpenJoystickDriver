@@ -398,7 +398,6 @@ actor RemappingRequestCoordinator {
     case .pairProfileRequiresExplicitSession: code = .invalidArguments
     case .profileUpdateConflict: code = .profileUpdateConflict
     case .unreadableLibrary: code = .unreadableLibrary
-    case .unsupportedLibraryVersion: code = .unsupportedLibraryVersion
     case .unwritableLibrary: code = .unwritableLibrary
     }
     return ApplicationServiceRemappingRPCError(code: code, message: error.localizedDescription)

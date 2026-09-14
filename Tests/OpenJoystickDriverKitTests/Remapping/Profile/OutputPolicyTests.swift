@@ -86,20 +86,10 @@ struct RemappingOutputPolicyTests {
   }
 
   @Test
-  func versionTwoIsRejectedAtValidationAndDecode() throws {
-    let profile = makeProfile(schemaVersion: 2)
-    #expect(throws: RemappingValidationError.unsupportedSchemaVersion(2)) { try profile.validate() }
-    let data = try JSONEncoder().encode(profile)
-    #expect(throws: RemappingValidationError.unsupportedSchemaVersion(2)) {
-      try JSONDecoder().decode(RemappingProfile.self, from: data)
-    }
-  }
-
-  @Test
   func unknownOutputPolicyIsRejected() throws {
     let data = try JSONEncoder().encode(makeProfile())
     var object = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
-    object["output_policy"] = ["virtual_gamepad": "future", "physical_input": "shared"]
+    object["outputPolicy"] = ["virtualGamepad": "future", "physicalInput": "shared"]
     let invalid = try JSONSerialization.data(withJSONObject: object)
     #expect(throws: DecodingError.self) {
       try JSONDecoder().decode(RemappingProfile.self, from: invalid)
@@ -107,7 +97,6 @@ struct RemappingOutputPolicyTests {
   }
 
   private func makeProfile(
-    schemaVersion: Int = RemappingProfile.currentSchemaVersion,
     outputPolicy: RemappingOutputPolicy = .systemInput,
     bindings: [RemappingBinding] = [],
     chords: [RemappingChord] = [],
@@ -115,7 +104,6 @@ struct RemappingOutputPolicyTests {
     layers: [RemappingLayer] = []
   ) -> RemappingProfile {
     RemappingProfile(
-      schemaVersion: schemaVersion,
       name: "Output",
       device: RemappingDeviceScope(vendorID: 1, productID: 2),
       applicationScope: .global,

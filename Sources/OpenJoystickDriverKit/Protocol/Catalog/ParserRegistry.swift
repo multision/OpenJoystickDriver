@@ -13,6 +13,15 @@ public final class ParserRegistry: Sendable {
     catalog.parserName(for: identifier)
   }
 
+  /// Returns the parser name only when the observed transport matches its record.
+  public func parserName(
+    for identifier: DeviceIdentifier,
+    transport: ControllerCatalogTransport
+  ) -> String {
+    let profile = catalog.runtimeProfile(for: identifier)
+    return profile.catalogTransport == transport ? profile.parserName : "GenericHID"
+  }
+
   /// Exact profile-backed HID devices that may not advertise GamePad usage.
   public func hidProfileIdentifiers() -> [DeviceIdentifier] { catalog.hidProfileIdentifiers }
 
@@ -21,7 +30,12 @@ public final class ParserRegistry: Sendable {
 
   /// Returns parser for given device identifier.
   public func parser(for identifier: DeviceIdentifier) -> any InputParser {
-    parser(for: identifier, transportProfile: catalog.transportProfile(for: identifier))
+    let profile = catalog.runtimeProfile(for: identifier)
+    return parser(
+      for: identifier,
+      transport: profile.catalogTransport,
+      transportProfile: profile.transportProfile
+    )
   }
 
   /// Returns the parser using transport facts resolved from the connected USB device.
@@ -29,7 +43,20 @@ public final class ParserRegistry: Sendable {
     for identifier: DeviceIdentifier,
     transportProfile: DeviceTransportProfile
   ) -> any InputParser {
+    return parser(for: identifier, transport: .usb, transportProfile: transportProfile)
+  }
+
+  /// Returns only the parser declared for this exact catalog identity and transport.
+  public func parser(
+    for identifier: DeviceIdentifier,
+    transport: ControllerCatalogTransport,
+    transportProfile: DeviceTransportProfile? = nil
+  ) -> any InputParser {
     let runtimeProfile = catalog.runtimeProfile(for: identifier)
+    guard runtimeProfile.catalogTransport == transport else {
+      return GenericHIDParser(identifier: identifier)
+    }
+    let transportProfile = transportProfile ?? runtimeProfile.transportProfile
     switch catalog.parserName(for: identifier) {
     case "GIP":
       return GIPParser(
@@ -43,7 +70,7 @@ public final class ParserRegistry: Sendable {
       let protocolVariant: GameSirProtocol =
         runtimeProfile.protocolVariant == .gameSirG7ProUSB ? .g7ProUSB : .enhancedHID
       let model: GameSirModel =
-        (0x10C5...0x10C8).contains(identifier.productID)
+        [0x10C5, 0x10C6, 0x10C7, 0x10C8].contains(identifier.productID)
         ? .g7Pro8K : protocolVariant == .g7ProUSB ? .g7Pro : .cyclone2
       return GameSirParser(protocol: protocolVariant, model: model)
     case "DS3": return DS3Parser()
@@ -70,7 +97,7 @@ public final class ParserRegistry: Sendable {
         outEndpoint: transportProfile.outputEndpoint,
         isWirelessReceiver: runtimeProfile.protocolVariant == .xbox360Wireless
       )
-    case "XID": return XIDParser()
+    case "XID": return XIDParser(outEndpoint: transportProfile.outputEndpoint)
     default: return GenericHIDParser(identifier: identifier)
     }
   }

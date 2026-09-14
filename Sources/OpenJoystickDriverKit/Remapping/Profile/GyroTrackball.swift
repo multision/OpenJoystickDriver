@@ -35,8 +35,8 @@ public struct RemappingGyroTrackball: Codable, Equatable, Sendable {
 
   private enum CodingKeys: String, CodingKey {
     case source, axes
-    case decayHalvingsPerSecond = "decay_halvings_per_second"
-    case consumesSource = "consumes_source"
+    case decayHalvingsPerSecond
+    case consumesSource
   }
 
   public init(from decoder: any Decoder) throws {

@@ -15,5 +15,5 @@ public struct RemappingJoyConPairSettings: Codable, Equatable, Sendable {
     self.gyroSelection = gyroSelection
   }
 
-  private enum CodingKeys: String, CodingKey { case gyroSelection = "gyro_selection" }
+  private enum CodingKeys: String, CodingKey { case gyroSelection }
 }

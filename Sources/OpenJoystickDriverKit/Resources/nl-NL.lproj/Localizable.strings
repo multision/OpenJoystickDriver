@@ -601,8 +601,8 @@
 "cli.diagnose.expected_id_present" = "  Resultaat: PASS (verwachte id aanwezig: %@)";
 "cli.diagnose.extension_heading" = "DriverKit-systeemextensie (in /Applications):";
 "cli.diagnose.extensions_folder_missing" = "  Resultaat: FAIL (map SystemExtensions ontbreekt)";
-"cli.diagnose.fix_build_dext" = "  Oplossing: voer uit: ./scripts/ojd build dext";
-"cli.diagnose.fix_rebuild_dev" = "  Oplossing: voer uit: ./scripts/ojd build install dev";
+"cli.diagnose.fix_build_dext" = "  Oplossing: voer uit: ./Scripts/ojd build dext";
+"cli.diagnose.fix_rebuild_dev" = "  Oplossing: voer uit: ./Scripts/ojd build install dev";
 "cli.diagnose.heading" = "OpenJoystickDriver-diagnostiek";
 "cli.diagnose.interface_line" = "    Interface %d/%d: %02X/%@/%@";
 "cli.diagnose.macos_version" = "macOS: %d.%d.%d";
@@ -618,7 +618,7 @@
 "cli.diagnose.troubleshoot_driverkit" = "  DriverKit-extensie ontbreekt/kapot?";
 "cli.diagnose.troubleshoot_input_monitoring" = "    -> Verleen Invoermonitoring: Systeeminstellingen -> Privacy en beveiliging -> Invoermonitoring";
 "cli.diagnose.troubleshoot_no_input" = "  Geen invoer van de controller?";
-"cli.diagnose.troubleshoot_rebuild" = "    -> Uitvoeren: ./scripts/ojd build install dev";
+"cli.diagnose.troubleshoot_rebuild" = "    -> Uitvoeren: ./Scripts/ojd build install dev";
 "cli.diagnose.troubleshoot_report_command" = "    -> Uitvoeren: --headless diagnose report";
 "cli.diagnose.troubleshoot_reporting" = "  Een controllerprobleem melden?";
 "cli.diagnose.troubleshoot_virtual_device" = "  Virtueel user-space-apparaat niet beschikbaar?";
@@ -640,14 +640,14 @@
 "cli.error.missing_command" = "Een opdracht is vereist.";
 "cli.error.missing_subcommand" = "“%@” vereist een subopdracht.";
 "cli.error.no_output" = "  (geen uitvoer)";
-"cli.error.rebuild_fast_step" = "  1) Uitvoeren: ./scripts/ojd build install-fast dev";
+"cli.error.rebuild_fast_step" = "  1) Uitvoeren: ./Scripts/ojd build install-fast dev";
 "cli.error.rerun_step" = "  2) Voer daarna opnieuw uit: /Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless %@";
 "cli.error.signature_verification_failed" = "%@ mislukt: verificatie van de app-handtekening is mislukt:";
 "cli.error.unexpected_arguments" = "“%@” accepteert geen extra argumenten.";
 "cli.error.unknown_command" = "Onbekende opdracht “%@”.";
 "cli.extension.approval_required" = "Verzoek om systeemextensie ingediend en vereist goedkeuring in Systeeminstellingen.";
 "cli.extension.bundle_missing" = "App-bundle bevat %@.dext niet";
-"cli.extension.bundle_missing_fix" = "Oplossing: voer ./scripts/ojd build install dev uit en probeer opnieuw vanuit /Applications.";
+"cli.extension.bundle_missing_fix" = "Oplossing: voer ./Scripts/ojd build install dev uit en probeer opnieuw vanuit /Applications.";
 "cli.extension.cancelled" = "Verzoek om systeemextensie geannuleerd.";
 "cli.extension.completed" = "Verzoek om systeemextensie voltooid met resultaat %@.";
 "cli.extension.failed" = "Verzoek om systeemextensie mislukt: %@ code=%d %@";

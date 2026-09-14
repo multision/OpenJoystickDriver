@@ -94,16 +94,16 @@ struct RemappingProfileTests {
     let root = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
     #expect(
       Set(root.keys) == [
-        "schema_version", "id", "name", "device", "application_scope", "bindings", "chords",
-        "sequences", "layers", "output_policy",
+        "id", "name", "device", "applicationScope", "bindings", "chords", "sequences", "layers",
+        "outputPolicy",
       ]
     )
 
     let device = try #require(root["device"] as? [String: Any])
-    #expect(Set(device.keys) == ["vendor_id", "product_id"])
-    let scope = try #require(root["application_scope"] as? [String: Any])
+    #expect(Set(device.keys) == ["vendorID", "productID"])
+    let scope = try #require(root["applicationScope"] as? [String: Any])
     #expect(scope["type"] as? String == "application")
-    #expect(scope["bundle_id"] as? String == "com.example.Game")
+    #expect(scope["bundleIdentifier"] as? String == "com.example.Game")
 
     let bindings = try #require(root["bindings"] as? [[String: Any]])
     let firstBinding = try #require(bindings.first)
@@ -125,10 +125,28 @@ struct RemappingProfileTests {
 
     let data = try JSONEncoder().encode(profile)
     let root = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
-    let scope = try #require(root["application_scope"] as? [String: Any])
+    let scope = try #require(root["applicationScope"] as? [String: Any])
     #expect(scope["type"] as? String == "global")
-    #expect(scope["bundle_id"] == nil)
+    #expect(scope["bundleIdentifier"] == nil)
     try profile.validate()
+  }
+
+  @Test
+  func versionTaggedProfilesAreRejected() throws {
+    let profile = RemappingProfile(
+      name: "Current",
+      device: RemappingDeviceScope(vendorID: 1, productID: 2),
+      applicationScope: .global,
+      bindings: []
+    )
+    var object = try #require(
+      JSONSerialization.jsonObject(with: JSONEncoder().encode(profile)) as? [String: Any]
+    )
+    object["schemaVersion"] = 3
+    let tagged = try JSONSerialization.data(withJSONObject: object)
+    #expect(throws: DecodingError.self) {
+      try JSONDecoder().decode(RemappingProfile.self, from: tagged)
+    }
   }
 
   @Test

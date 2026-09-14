@@ -42,37 +42,50 @@ jobs:
 
       - name: Install dependencies
         run: |
-          brew list --versions swiftlint >/dev/null 2>&1 || brew install swiftlint
+          for dependency in pkg-config pyright ruff sdl3 shellcheck swiftlint xmake; do
+            brew list --versions "$dependency" >/dev/null 2>&1 || brew install "$dependency"
+          done
           python3 -m venv .build/schema-validator
-          .build/schema-validator/bin/python -m pip install -r scripts/quality/requirements.txt
+          .build/schema-validator/bin/python -m pip install -r Scripts/Quality/requirements.txt
           echo "$PWD/.build/schema-validator/bin" >> "$GITHUB_PATH"
 
       - name: Verify generated controller catalog
         env:
           GH_TOKEN: ${{ github.token }}
-        run: ./scripts/ojd catalog regenerate --check
+        run: ./Scripts/ojd catalog regenerate --check
 
       - name: Check controller records
         run: |
-          ./scripts/ojd check profiles
+          ./Scripts/ojd check profiles
 
-      - name: Check scripts
-        run: ./scripts/ojd check scripts
+      - name: Check Python
+        run: |
+          ruff format --check Scripts Tests/RepositoryScripts
+          ruff check Scripts Tests/RepositoryScripts
+          pyright
+          python3 -m unittest discover -s Tests/RepositoryScripts
+
+      - name: Check shell
+        run: find Scripts -type f \( -name '*.sh' -o -name ojd \) -print0 | xargs -0 shellcheck --external-sources --source-path=SCRIPTDIR
+
+      - name: Check native tools
+        run: ./Scripts/ojd check tools
 
       - name: Check schemas
-        run: ./scripts/ojd check schemas
+        run: ./Scripts/ojd check schemas
 
-      - name: Check Swift structure
-        run: ./scripts/ojd check swift-structure
+      - name: Test macOS 14 parser compatibility
+        run: ./Scripts/ojd test parsers-macos14
 
       - name: Check generated DriverKit project
         run: |
           test "$OJD_USE_LOCAL_SWIFTERKIT" != "1"
-          ./scripts/ojd check driverkit
+          ./Scripts/ojd check driverkit
 
-      - name: Lint Swift
+      - name: Check Swift formatting and lint
         run: |
-          ./scripts/ojd lint
+          swift-format lint --recursive --strict Package.swift Sources Tests
+          swiftlint lint --no-cache --strict
 
       - name: Build package
         run: |

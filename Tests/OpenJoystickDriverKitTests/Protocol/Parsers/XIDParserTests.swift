@@ -38,6 +38,37 @@ private func makeXIDReport(
 }
 
 struct XIDParserTests {
+  @Test
+  func rumbleUsesXIDBigEndianFullRangeMotorsAndCatalogEndpoint() throws {
+    let parser = XIDParser(outEndpoint: 0x07)
+    let catalogParser = try #require(
+      ParserRegistry().parser(for: DeviceIdentifier(vendorID: 0x045E, productID: 0x0202))
+        as? XIDParser
+    )
+
+    #expect(parser.physicalRumbleMotors == [.leftMain, .rightMain])
+    #expect(parser.supportsPhysicalRumble)
+    #expect(catalogParser.physicalRumblePacket(left: 0, right: 0, lt: 0, rt: 0).endpoint == 0x02)
+    #expect(
+      parser.physicalRumblePacket(left: 0, right: 0, lt: 255, rt: 255)
+        == PhysicalUSBOutputPacket(
+          endpoint: 0x07,
+          bytes: [0x00, 0x06, 0x00, 0x00, 0x00, 0x00],
+          timeoutMilliseconds: 2_000
+        )
+    )
+    #expect(
+      parser.physicalRumblePacket(left: 0x12, right: 0x34, lt: 0, rt: 0).bytes == [
+        0x00, 0x06, 0x12, 0x12, 0x34, 0x34,
+      ]
+    )
+    #expect(
+      parser.physicalRumblePacket(left: 255, right: 255, lt: 0, rt: 0).bytes == [
+        0x00, 0x06, 0xFF, 0xFF, 0xFF, 0xFF,
+      ]
+    )
+  }
+
   @Test(arguments: UInt8(0)...UInt8(15))
   func allDpadMasks(mask: UInt8) throws {
     let directions: [DpadDirection] = [

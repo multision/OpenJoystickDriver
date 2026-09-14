@@ -25,23 +25,25 @@ struct RemappingProfileLibraryCheckpoint: Sendable {
 }
 
 struct RemappingProfileLibraryState: Codable, Sendable {
-  static let currentSchemaVersion = 2
-
-  var schemaVersion = Self.currentSchemaVersion
   var profiles: [RemappingProfile] = []
   var activeProfiles: [RemappingPersistedActiveProfile] = []
 
   private enum CodingKeys: String, CodingKey {
-    case schemaVersion = "schema_version"
     case profiles
-    case activeProfiles = "active_profiles"
+    case activeProfiles
   }
 
   init() {}
 
   init(from decoder: any Decoder) throws {
+    let allKeys = try decoder.container(keyedBy: LibraryJSONKey.self).allKeys
+    let unknown = Set(allKeys.map(\.stringValue)).subtracting(["profiles", "activeProfiles"])
+    guard unknown.isEmpty else {
+      throw DecodingError.dataCorrupted(
+        .init(codingPath: decoder.codingPath, debugDescription: "unknown library field")
+      )
+    }
     let container = try decoder.container(keyedBy: CodingKeys.self)
-    schemaVersion = try container.decode(Int.self, forKey: .schemaVersion)
     profiles = try container.decode([RemappingProfile].self, forKey: .profiles)
     activeProfiles =
       try container.decodeIfPresent([RemappingPersistedActiveProfile].self, forKey: .activeProfiles)
@@ -50,10 +52,17 @@ struct RemappingProfileLibraryState: Codable, Sendable {
 
   func encode(to encoder: any Encoder) throws {
     var container = encoder.container(keyedBy: CodingKeys.self)
-    try container.encode(schemaVersion, forKey: .schemaVersion)
     try container.encode(profiles, forKey: .profiles)
     try container.encode(activeProfiles, forKey: .activeProfiles)
   }
+}
+
+private struct LibraryJSONKey: CodingKey {
+  let stringValue: String
+  let intValue: Int? = nil
+
+  init?(stringValue: String) { self.stringValue = stringValue }
+  init?(intValue: Int) { return nil }
 }
 
 struct RemappingPersistedActiveProfile: Codable, Sendable {
@@ -73,8 +82,8 @@ struct RemappingPersistedActiveProfile: Codable, Sendable {
 
   private enum CodingKeys: String, CodingKey {
     case model
-    case profileID = "profile_id"
-    case applicationScope = "application_scope"
+    case profileID
+    case applicationScope
   }
 
   init(from decoder: any Decoder) throws {
@@ -109,7 +118,7 @@ struct RemappingProfileModel: Codable, Equatable, Hashable, Sendable {
   }
 
   private enum CodingKeys: String, CodingKey {
-    case vendorID = "vendor_id"
-    case productID = "product_id"
+    case vendorID
+    case productID
   }
 }

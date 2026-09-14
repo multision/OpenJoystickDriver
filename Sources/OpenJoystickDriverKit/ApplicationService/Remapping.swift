@@ -30,7 +30,7 @@ public struct ApplicationServiceRemappingProfileIDArguments: Codable, Sendable {
 
   public init(profileID: UUID) { self.profileID = profileID }
 
-  private enum CodingKeys: String, CodingKey { case profileID = "profile_id" }
+  private enum CodingKeys: String, CodingKey { case profileID }
 }
 
 public struct ApplicationServiceRemappingProfileArguments: Codable, Sendable {
@@ -51,7 +51,7 @@ public struct ApplicationServiceRemappingProfileUpdateArguments: Codable, Sendab
 
   private enum CodingKeys: String, CodingKey {
     case profile
-    case expectedCurrent = "expected_current"
+    case expectedCurrent
   }
 }
 
@@ -65,8 +65,8 @@ public struct ApplicationServiceRemappingModelArguments: Codable, Sendable {
   }
 
   private enum CodingKeys: String, CodingKey {
-    case vendorID = "vendor_id"
-    case productID = "product_id"
+    case vendorID
+    case productID
   }
 }
 
@@ -82,9 +82,9 @@ public struct ApplicationServiceJoyConPairArguments: Codable, Sendable {
   }
 
   private enum CodingKeys: String, CodingKey {
-    case leftRuntimeIdentifier = "left_runtime_identifier"
-    case rightRuntimeIdentifier = "right_runtime_identifier"
-    case profileID = "profile_id"
+    case leftRuntimeIdentifier
+    case rightRuntimeIdentifier
+    case profileID
   }
 }
 
@@ -93,7 +93,7 @@ public struct ApplicationServiceJoyConUnpairArguments: Codable, Sendable {
 
   public init(sessionID: UUID) { self.sessionID = sessionID }
 
-  private enum CodingKeys: String, CodingKey { case sessionID = "session_id" }
+  private enum CodingKeys: String, CodingKey { case sessionID }
 }
 
 public struct ApplicationServiceJoyConPairPayload: Codable, Equatable, Sendable {
@@ -121,12 +121,12 @@ public struct ApplicationServiceJoyConPairPayload: Codable, Equatable, Sendable 
   }
 
   private enum CodingKeys: String, CodingKey {
-    case sessionID = "session_id"
-    case leftRuntimeIdentifier = "left_runtime_identifier"
-    case rightRuntimeIdentifier = "right_runtime_identifier"
-    case profileID = "profile_id"
-    case profileName = "profile_name"
-    case gyroSelection = "gyro_selection"
+    case sessionID
+    case leftRuntimeIdentifier
+    case rightRuntimeIdentifier
+    case profileID
+    case profileName
+    case gyroSelection
   }
 }
 
@@ -152,11 +152,11 @@ public struct ApplicationServiceRemappingActiveProfilePayload: Codable, Equatabl
   }
 
   private enum CodingKeys: String, CodingKey {
-    case vendorID = "vendor_id"
-    case productID = "product_id"
-    case profileID = "profile_id"
-    case profileName = "profile_name"
-    case applicationScope = "application_scope"
+    case vendorID
+    case productID
+    case profileID
+    case profileName
+    case applicationScope
   }
 }
 
@@ -226,16 +226,16 @@ public struct ApplicationServiceRemappingRoutePayload: Codable, Equatable, Senda
   }
 
   private enum CodingKeys: String, CodingKey {
-    case vendorID = "vendor_id"
-    case productID = "product_id"
-    case runtimeIdentifier = "runtime_identifier"
+    case vendorID
+    case productID
+    case runtimeIdentifier
     case selection
     case eligibility
-    case activeProfileID = "active_profile_id"
-    case activeProfileName = "active_profile_name"
-    case applicationScope = "application_scope"
-    case frontmostBundleIdentifier = "frontmost_bundle_id"
-    case postEventAccess = "post_event_access"
+    case activeProfileID
+    case activeProfileName
+    case applicationScope
+    case frontmostBundleIdentifier
+    case postEventAccess
     case failure
   }
 }
@@ -263,10 +263,10 @@ public struct ApplicationServiceRemappingSnapshotPayload: Codable, Equatable, Se
 
   private enum CodingKeys: String, CodingKey {
     case profiles
-    case activeProfiles = "active_profiles"
+    case activeProfiles
     case routes
-    case joyConPairs = "joy_con_pairs"
-    case postEventAccess = "post_event_access"
+    case joyConPairs
+    case postEventAccess
   }
 
   public init(from decoder: any Decoder) throws {
@@ -315,7 +315,6 @@ public struct ApplicationServiceRemappingRPCError: Error, Codable, Equatable, Lo
     case routerShutDown = "router_shut_down"
     case transactionUnreconciled = "transaction_unreconciled"
     case unreadableLibrary = "library_unreadable"
-    case unsupportedLibraryVersion = "unsupported_library_version"
     case unwritableLibrary = "library_unwritable"
     case unexpected = "unexpected"
   }

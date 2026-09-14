@@ -95,7 +95,9 @@ extension RuntimeViewModel {
       let payload = try await gateway.status()
       guard generation == liveStatusGeneration else { return }
       let previousStatus: RuntimeStatusPresentation?
-      if case .available(let status) = statusState { previousStatus = status } else {
+      if case .available(let status) = statusState {
+        previousStatus = status
+      } else {
         previousStatus = nil
       }
       let permissions: RuntimePermissionSummary

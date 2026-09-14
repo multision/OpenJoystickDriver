@@ -601,8 +601,8 @@
 "cli.diagnose.expected_id_present" = "  Rezultatas: PASS (tikėtinas id yra: %@)";
 "cli.diagnose.extension_heading" = "DriverKit sistemos plėtinys (/Applications):";
 "cli.diagnose.extensions_folder_missing" = "  Rezultatas: FAIL (trūksta SystemExtensions aplanko)";
-"cli.diagnose.fix_build_dext" = "  Taisymas: vykdykite: ./scripts/ojd build dext";
-"cli.diagnose.fix_rebuild_dev" = "  Taisymas: vykdykite: ./scripts/ojd build install dev";
+"cli.diagnose.fix_build_dext" = "  Taisymas: vykdykite: ./Scripts/ojd build dext";
+"cli.diagnose.fix_rebuild_dev" = "  Taisymas: vykdykite: ./Scripts/ojd build install dev";
 "cli.diagnose.heading" = "OpenJoystickDriver diagnostika";
 "cli.diagnose.interface_line" = "    Sąsaja %d/%d: %02X/%@/%@";
 "cli.diagnose.macos_version" = "macOS: %d.%d.%d";
@@ -618,7 +618,7 @@
 "cli.diagnose.troubleshoot_driverkit" = "  DriverKit plėtinys trūksta / sugadintas?";
 "cli.diagnose.troubleshoot_input_monitoring" = "    -> Suteikite Įvesties stebėseną: Sistemos nuostatos -> Privatumas ir sauga -> Įvesties stebėsena";
 "cli.diagnose.troubleshoot_no_input" = "  Nėra įvesties iš valdiklio?";
-"cli.diagnose.troubleshoot_rebuild" = "    -> Vykdykite: ./scripts/ojd build install dev";
+"cli.diagnose.troubleshoot_rebuild" = "    -> Vykdykite: ./Scripts/ojd build install dev";
 "cli.diagnose.troubleshoot_report_command" = "    -> Vykdykite: --headless diagnose report";
 "cli.diagnose.troubleshoot_reporting" = "  Pranešate apie valdiklio problemą?";
 "cli.diagnose.troubleshoot_virtual_device" = "  Naudotojo erdvės virtualusis įrenginys nepasiekiamas?";
@@ -640,14 +640,14 @@
 "cli.error.missing_command" = "Reikalinga komanda.";
 "cli.error.missing_subcommand" = "„%@“ reikalauja pokomandės.";
 "cli.error.no_output" = "  (nėra išvesties)";
-"cli.error.rebuild_fast_step" = "  1) Vykdykite: ./scripts/ojd build install-fast dev";
+"cli.error.rebuild_fast_step" = "  1) Vykdykite: ./Scripts/ojd build install-fast dev";
 "cli.error.rerun_step" = "  2) Tada paleiskite iš naujo: /Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless %@";
 "cli.error.signature_verification_failed" = "%@ nepavyko: programos parašo tikrinimas nepavyko:";
 "cli.error.unexpected_arguments" = "„%@“ nepriima papildomų argumentų.";
 "cli.error.unknown_command" = "Nežinoma komanda „%@“.";
 "cli.extension.approval_required" = "Sistemos plėtinio užklausa pateikta ir reikalauja patvirtinimo Sistemos nuostatose.";
 "cli.extension.bundle_missing" = "Programos pakete nėra %@.dext";
-"cli.extension.bundle_missing_fix" = "Taisymas: vykdykite ./scripts/ojd build install dev, tada bandykite iš naujo iš /Applications.";
+"cli.extension.bundle_missing_fix" = "Taisymas: vykdykite ./Scripts/ojd build install dev, tada bandykite iš naujo iš /Applications.";
 "cli.extension.cancelled" = "Sistemos plėtinio užklausa atšaukta.";
 "cli.extension.completed" = "Sistemos plėtinio užklausa baigta su rezultatu %@.";
 "cli.extension.failed" = "Sistemos plėtinio užklausa nepavyko: %@ code=%d %@";

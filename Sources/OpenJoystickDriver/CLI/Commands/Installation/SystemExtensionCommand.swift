@@ -95,7 +95,7 @@ struct SystemExtensionCommand {
       CLIOutput.diagnostic(
         CLILocalized.text(
           "cli.extension.bundle_missing_fix",
-          "Fix: run ./scripts/ojd build install dev, then retry from /Applications."
+          "Fix: run ./Scripts/ojd build install dev, then retry from /Applications."
         )
       )
       exit(1)

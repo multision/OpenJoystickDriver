@@ -342,7 +342,7 @@
         return OJDLocalized.string("settings.contactingGitHub", fallback: "Contacting GitHub...")
       case .upToDate(let tag): return tag
       case .available(let info): return info.tagName
-      case .failed(let message): return message
+      case .failed(let failure): return failure.message
       }
     }
   }

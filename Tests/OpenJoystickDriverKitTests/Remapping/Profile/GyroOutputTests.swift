@@ -25,11 +25,8 @@ struct GyroOutputTests {
     let mouse = profile(output: RemappingGyroOutput(mode: .mouse))
     try mouse.validate()
     let encoded = try JSONEncoder().encode(mouse)
-    #expect(String(data: encoded, encoding: .utf8)?.contains("gyro_output") == true)
+    #expect(String(data: encoded, encoding: .utf8)?.contains("gyroOutput") == true)
     #expect(try JSONDecoder().decode(RemappingProfile.self, from: encoded) == mouse)
-    #expect(throws: RemappingValidationError.unsupportedSchemaVersion(2)) {
-      try profile(output: RemappingGyroOutput(mode: .mouse), schemaVersion: 2).validate()
-    }
     for mode in [RemappingGyroOutputMode.leftStick, .rightStick] {
       #expect(throws: RemappingValidationError.virtualOutputRequired) {
         try profile(output: RemappingGyroOutput(mode: mode)).validate()
@@ -37,9 +34,8 @@ struct GyroOutputTests {
     }
   }
 
-  private func profile(output: RemappingGyroOutput, schemaVersion: Int = 3) -> RemappingProfile {
+  private func profile(output: RemappingGyroOutput) -> RemappingProfile {
     RemappingProfile(
-      schemaVersion: schemaVersion,
       name: "Gyro",
       device: RemappingDeviceScope(vendorID: 1, productID: 2),
       applicationScope: .global,
@@ -84,7 +80,7 @@ struct GyroOutputTests {
     #expect(throws: RemappingGyroOutputError.invalidField("full_stick_degrees_per_second")) {
       try JSONDecoder().decode(
         RemappingGyroOutput.self,
-        from: Data(#"{"mode":"right_stick","full_stick_degrees_per_second":0}"#.utf8)
+        from: Data(#"{"mode":"right_stick","fullStickDegreesPerSecond":0}"#.utf8)
       )
     }
   }

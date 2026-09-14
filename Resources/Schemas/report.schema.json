@@ -1,7 +1,6 @@
 {
 	"$schema": "https://json-schema.org/draft/2020-12/schema",
 	"$id": "https://raw.githubusercontent.com/xsyetopz/OpenJoystickDriver/main/Resources/Schemas/report.schema.json",
-	"title": "OpenJoystickDriver support report",
 	"type": "object",
 	"required": [
 		"specversion",
@@ -124,10 +123,10 @@
 		},
 		"system": {
 			"type": "object",
-			"required": ["build_identity", "macOSVersion", "architecture"],
+			"required": ["buildIdentity", "macOSVersion", "architecture"],
 			"additionalProperties": false,
 			"properties": {
-				"build_identity": {
+				"buildIdentity": {
 					"$ref": "#/$defs/buildIdentity"
 				},
 				"macOSVersion": {
@@ -141,17 +140,25 @@
 		"buildIdentity": {
 			"type": "object",
 			"required": [
-				"semantic_version",
-				"app_bundle_version",
-				"source_commit",
-				"source_state"
+				"semanticVersion",
+				"appBundleVersion",
+				"sourceCommit",
+				"sourceState"
 			],
 			"additionalProperties": false,
 			"properties": {
-				"semantic_version": { "type": "string" },
-				"app_bundle_version": { "type": "string" },
-				"source_commit": { "type": "string" },
-				"source_state": { "enum": ["clean", "dirty", "unknown"] }
+				"semanticVersion": {
+					"type": "string"
+				},
+				"appBundleVersion": {
+					"type": "string"
+				},
+				"sourceCommit": {
+					"type": "string"
+				},
+				"sourceState": {
+					"enum": ["clean", "dirty", "unknown"]
+				}
 			}
 		},
 		"permissions": {

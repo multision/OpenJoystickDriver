@@ -225,11 +225,10 @@ struct ProfileMutationTests {
     #expect(rejectedOperation == .update(profileID: original.id))
 
     let rejectedState = await MainActor.run { viewModel.mutationState }
-    guard case .error(let rejectionMessage) = rejectedState else {
+    guard case .error = rejectedState else {
       Issue.record("Expected the overlapping update to be rejected explicitly")
       return
     }
-    #expect(rejectionMessage == "Another profile action is already in progress.")
     #expect(
       await MainActor.run { viewModel.lastMutationOperation == .update(profileID: original.id) }
     )

@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/xsyetopz/OpenJoystickDriver/main/Resources/Schemas/controller.schema.json",
-  "vendor_id": 10462,
-  "product_id": 4418,
+  "vendorID": 10462,
+  "productID": 4418,
   "transport": "hid",
   "protocol": {
     "driver": "SteamController",

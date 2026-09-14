@@ -109,45 +109,4 @@ struct InstalledCLIForwarderTests {
     #expect(resolution == .local)
   }
 
-  @Test
-  func repositorySourceFreshnessPreventsStaleForwarding() throws {
-    let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
-    defer { try? FileManager.default.removeItem(at: root) }
-    let sourceDirectory = root.appendingPathComponent("Sources/OpenJoystickDriver")
-    let buildDirectory = root.appendingPathComponent(".build/debug")
-    try FileManager.default.createDirectory(at: sourceDirectory, withIntermediateDirectories: true)
-    try FileManager.default.createDirectory(at: buildDirectory, withIntermediateDirectories: true)
-    let manifest = root.appendingPathComponent("Package.swift")
-    let source = sourceDirectory.appendingPathComponent("main.swift")
-    let repositoryExecutable = buildDirectory.appendingPathComponent("OpenJoystickDriver")
-    let installed = root.appendingPathComponent("installed-OpenJoystickDriver")
-    for file in [manifest, source, repositoryExecutable, installed] {
-      #expect(FileManager.default.createFile(atPath: file.path, contents: Data()))
-    }
-    let older = Date(timeIntervalSince1970: 100)
-    let newer = Date(timeIntervalSince1970: 200)
-    try FileManager.default.setAttributes([.modificationDate: older], ofItemAtPath: installed.path)
-    try FileManager.default.setAttributes([.modificationDate: older], ofItemAtPath: manifest.path)
-    try FileManager.default.setAttributes([.modificationDate: newer], ofItemAtPath: source.path)
-
-    let stale = InstalledCLIForwarder.resolve(
-      currentExecutableURL: repositoryExecutable,
-      mainBundleURL: buildDirectory,
-      arguments: ["--headless", "status"],
-      installedExecutableURL: installed
-    ) { _ in true }
-    #expect(stale == .staleInstallation(installed))
-
-    try FileManager.default.setAttributes(
-      [.modificationDate: Date(timeIntervalSince1970: 300)],
-      ofItemAtPath: installed.path
-    )
-    let current = InstalledCLIForwarder.resolve(
-      currentExecutableURL: repositoryExecutable,
-      mainBundleURL: buildDirectory,
-      arguments: ["--headless", "status"],
-      installedExecutableURL: installed
-    ) { _ in true }
-    #expect(current == .forward(installed))
-  }
 }

@@ -91,9 +91,9 @@ public struct RemappingTriggerMapping: Codable, Equatable, Hashable, Sendable {
 
   private enum CodingKeys: String, CodingKey {
     case source, mode, hysteresis, passthrough
-    case softThreshold = "soft_threshold"
-    case fullThreshold = "full_threshold"
-    case skipWindowMs = "skip_window_ms"
+    case softThreshold
+    case fullThreshold
+    case skipWindowMs
   }
 
   public init(from decoder: any Decoder) throws {

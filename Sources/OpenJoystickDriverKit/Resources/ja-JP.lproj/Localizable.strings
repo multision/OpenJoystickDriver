@@ -601,8 +601,8 @@
 "cli.diagnose.expected_id_present" = "  結果: PASS (期待する id があります: %@)";
 "cli.diagnose.extension_heading" = "DriverKitシステム拡張 (/Applications 内):";
 "cli.diagnose.extensions_folder_missing" = "  結果: FAIL (SystemExtensions フォルダがありません)";
-"cli.diagnose.fix_build_dext" = "  修正: 実行: ./scripts/ojd build dext";
-"cli.diagnose.fix_rebuild_dev" = "  修正: 実行: ./scripts/ojd build install dev";
+"cli.diagnose.fix_build_dext" = "  修正: 実行: ./Scripts/ojd build dext";
+"cli.diagnose.fix_rebuild_dev" = "  修正: 実行: ./Scripts/ojd build install dev";
 "cli.diagnose.heading" = "OpenJoystickDriver 診断";
 "cli.diagnose.interface_line" = "    インターフェイス %d/%d: %02X/%@/%@";
 "cli.diagnose.macos_version" = "macOS: %d.%d.%d";
@@ -618,7 +618,7 @@
 "cli.diagnose.troubleshoot_driverkit" = "  DriverKit拡張が欠落または破損していますか?";
 "cli.diagnose.troubleshoot_input_monitoring" = "    -> 入力監視を許可: システム設定 -> プライバシーとセキュリティ -> 入力監視";
 "cli.diagnose.troubleshoot_no_input" = "  コントローラから入力がありませんか?";
-"cli.diagnose.troubleshoot_rebuild" = "    -> 実行: ./scripts/ojd build install dev";
+"cli.diagnose.troubleshoot_rebuild" = "    -> 実行: ./Scripts/ojd build install dev";
 "cli.diagnose.troubleshoot_report_command" = "    -> 実行: --headless diagnose report";
 "cli.diagnose.troubleshoot_reporting" = "  コントローラの問題を報告しますか?";
 "cli.diagnose.troubleshoot_virtual_device" = "  ユーザ空間の仮想デバイスを利用できませんか?";
@@ -640,14 +640,14 @@
 "cli.error.missing_command" = "コマンドが必要です。";
 "cli.error.missing_subcommand" = "「%@」 にはサブコマンドが必要です。";
 "cli.error.no_output" = "  (出力なし)";
-"cli.error.rebuild_fast_step" = "  1) 実行: ./scripts/ojd build install-fast dev";
+"cli.error.rebuild_fast_step" = "  1) 実行: ./Scripts/ojd build install-fast dev";
 "cli.error.rerun_step" = "  2) 再実行: /Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless %@";
 "cli.error.signature_verification_failed" = "%@ は失敗しました: アプリ署名の検証に失敗しました:";
 "cli.error.unexpected_arguments" = "「%@」 は追加の引数を受け付けません。";
 "cli.error.unknown_command" = "不明なコマンド 「%@」。";
 "cli.extension.approval_required" = "システム拡張の要求を送信しました。システム設定での承認が必要です。";
 "cli.extension.bundle_missing" = "アプリバンドルに %@.dext が含まれていません";
-"cli.extension.bundle_missing_fix" = "修正: ./scripts/ojd build install dev を実行し、/Applications から再試行してください。";
+"cli.extension.bundle_missing_fix" = "修正: ./Scripts/ojd build install dev を実行し、/Applications から再試行してください。";
 "cli.extension.cancelled" = "システム拡張の要求はキャンセルされました。";
 "cli.extension.completed" = "システム拡張の要求が結果 %@ で完了しました。";
 "cli.extension.failed" = "システム拡張の要求に失敗しました: %@ code=%d %@";

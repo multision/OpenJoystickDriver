@@ -601,8 +601,8 @@
 "cli.diagnose.expected_id_present" = "  Niðurstaða: PASS (væntanlegt id til staðar: %@)";
 "cli.diagnose.extension_heading" = "DriverKit-kerfisviðbót (í /Applications):";
 "cli.diagnose.extensions_folder_missing" = "  Niðurstaða: FAIL (mappa SystemExtensions vantar)";
-"cli.diagnose.fix_build_dext" = "  Lagfæring: keyra: ./scripts/ojd build dext";
-"cli.diagnose.fix_rebuild_dev" = "  Lagfæring: keyra: ./scripts/ojd build install dev";
+"cli.diagnose.fix_build_dext" = "  Lagfæring: keyra: ./Scripts/ojd build dext";
+"cli.diagnose.fix_rebuild_dev" = "  Lagfæring: keyra: ./Scripts/ojd build install dev";
 "cli.diagnose.heading" = "OpenJoystickDriver-greining";
 "cli.diagnose.interface_line" = "    Interface %d/%d: %02X/%@/%@";
 "cli.diagnose.macos_version" = "macOS: %d.%d.%d";
@@ -618,7 +618,7 @@
 "cli.diagnose.troubleshoot_driverkit" = "  DriverKit-viðbót vantar/bilað?";
 "cli.diagnose.troubleshoot_input_monitoring" = "    -> Veita Inntaksköktun: Kerfisstillingar -> Persónuvernd og öryggi -> Inntaksköktun";
 "cli.diagnose.troubleshoot_no_input" = "  Ekkert inntak frá stýringu?";
-"cli.diagnose.troubleshoot_rebuild" = "    -> Keyra: ./scripts/ojd build install dev";
+"cli.diagnose.troubleshoot_rebuild" = "    -> Keyra: ./Scripts/ojd build install dev";
 "cli.diagnose.troubleshoot_report_command" = "    -> Keyra: --headless diagnose report";
 "cli.diagnose.troubleshoot_reporting" = "  Tilkynna stýrivandamál?";
 "cli.diagnose.troubleshoot_virtual_device" = "  Sýndar user-space-tæki ótiltækt?";
@@ -640,14 +640,14 @@
 "cli.error.missing_command" = "Skipun er nauðsynleg.";
 "cli.error.missing_subcommand" = "„%@“ krefst undirskipunar.";
 "cli.error.no_output" = "  (ekkert úttak)";
-"cli.error.rebuild_fast_step" = "  1) Keyra: ./scripts/ojd build install-fast dev";
+"cli.error.rebuild_fast_step" = "  1) Keyra: ./Scripts/ojd build install-fast dev";
 "cli.error.rerun_step" = "  2) Keyra síðan aftur: /Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless %@";
 "cli.error.signature_verification_failed" = "%@ mistókst: staðfesting forritsundirritunar mistókst:";
 "cli.error.unexpected_arguments" = "„%@“ tekur ekki við viðbótarviðföngum.";
 "cli.error.unknown_command" = "Óþekkt skipun „%@“.";
 "cli.extension.approval_required" = "Beiðni um kerfisviðbót send inn og krefst samþykkis í Kerfisstillingum.";
 "cli.extension.bundle_missing" = "Forritsbúnt inniheldur ekki %@.dext";
-"cli.extension.bundle_missing_fix" = "Lagfæring: keyra ./scripts/ojd build install dev og reyna síðan aftur frá /Applications.";
+"cli.extension.bundle_missing_fix" = "Lagfæring: keyra ./Scripts/ojd build install dev og reyna síðan aftur frá /Applications.";
 "cli.extension.cancelled" = "Beiðni um kerfisviðbót hætt við.";
 "cli.extension.completed" = "Beiðni um kerfisviðbót lokið með niðurstöðu %@.";
 "cli.extension.failed" = "Beiðni um kerfisviðbót mistókst: %@ code=%d %@";

@@ -1,7 +1,6 @@
 import Foundation
 
 public enum RemappingValidationError: Error, Equatable, LocalizedError, Sendable {
-  case unsupportedSchemaVersion(Int)
   case bindingBehaviorConflict(index: Int)
   case unsupportedGamepadButton(RemappingButton)
   case virtualOutputRequired
@@ -85,8 +84,6 @@ public enum RemappingValidationError: Error, Equatable, LocalizedError, Sendable
       "The virtual controller cannot output \(button.rawValue)."
     case .virtualOutputRequired: "Gamepad destinations require virtual gamepad output."
     case .invalidPhysicalOutput: "A physical-controller output value is invalid."
-    case .unsupportedSchemaVersion(let version):
-      "Unsupported remapping profile schema version: \(version)."
     case .invalidProfileName: "Profile names must contain 1 through 80 printable characters."
     case .tooManyBindings(let count): "A remapping profile cannot contain \(count) bindings."
     case .duplicateBindingID(let id): "The binding identifier \(id.uuidString) is duplicated."
@@ -146,9 +143,6 @@ public enum RemappingValidationError: Error, Equatable, LocalizedError, Sendable
 extension RemappingProfile {
   /// Validates the complete persistence and dispatch contract for this profile.
   public func validate() throws {
-    guard schemaVersion == Self.currentSchemaVersion else {
-      throw RemappingValidationError.unsupportedSchemaVersion(schemaVersion)
-    }
     try validateName()
     if joyConPair != nil, device != RemappingDeviceScope(vendorID: 0x057E, productID: 0x2006) {
       throw RemappingValidationError.invalidJoyConPairDevice

@@ -601,8 +601,8 @@
 "cli.diagnose.expected_id_present" = "  Արդյունք. PASS (սպասվող id-ն առկա է. %@)";
 "cli.diagnose.extension_heading" = "DriverKit համակարգի ընդլայնում (/Applications-ում).";
 "cli.diagnose.extensions_folder_missing" = "  Արդյունք. FAIL (SystemExtensions պանակը բացակայում է)";
-"cli.diagnose.fix_build_dext" = "  Ուղղում. գործարկեք. ./scripts/ojd build dext";
-"cli.diagnose.fix_rebuild_dev" = "  Ուղղում. գործարկեք. ./scripts/ojd build install dev";
+"cli.diagnose.fix_build_dext" = "  Ուղղում. գործարկեք. ./Scripts/ojd build dext";
+"cli.diagnose.fix_rebuild_dev" = "  Ուղղում. գործարկեք. ./Scripts/ojd build install dev";
 "cli.diagnose.heading" = "OpenJoystickDriver ախտորոշում";
 "cli.diagnose.interface_line" = "    Միջերես %d/%d. %02X/%@/%@";
 "cli.diagnose.macos_version" = "macOS. %d.%d.%d";
@@ -618,7 +618,7 @@
 "cli.diagnose.troubleshoot_driverkit" = "  DriverKit ընդլայնումը բացակայում է/վնասված է՞";
 "cli.diagnose.troubleshoot_input_monitoring" = "    -> Տրամադրեք մուտքի մոնիթորինգ. Համակարգի կարգավորումներ -> Գաղտնիություն և անվտանգություն -> Մուտքի մոնիթորինգ";
 "cli.diagnose.troubleshoot_no_input" = "  Կարգավորիչից մուտք չկա՞";
-"cli.diagnose.troubleshoot_rebuild" = "    -> Գործարկեք. ./scripts/ojd build install dev";
+"cli.diagnose.troubleshoot_rebuild" = "    -> Գործարկեք. ./Scripts/ojd build install dev";
 "cli.diagnose.troubleshoot_report_command" = "    -> Գործարկեք. --headless diagnose report";
 "cli.diagnose.troubleshoot_reporting" = "  Կարգավորիչի խնդիր եք հաղորդում՞";
 "cli.diagnose.troubleshoot_virtual_device" = "  Օգտատիրոջ տարածքի վիրտուալ սարքն անհասանելի է՞";
@@ -640,14 +640,14 @@
 "cli.error.missing_command" = "Հրաման է պահանջվում:";
 "cli.error.missing_subcommand" = "«%@»-ը պահանջում է ենթահրաման:";
 "cli.error.no_output" = "  (ելք չկա)";
-"cli.error.rebuild_fast_step" = "  1) Գործարկեք. ./scripts/ojd build install-fast dev";
+"cli.error.rebuild_fast_step" = "  1) Գործարկեք. ./Scripts/ojd build install-fast dev";
 "cli.error.rerun_step" = "  2) Ապա կրկին գործարկեք. /Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless %@";
 "cli.error.signature_verification_failed" = "%@ ձախողվեց. հավելվածի ստորագրության ստուգումը ձախողվեց.";
 "cli.error.unexpected_arguments" = "«%@»-ը լրացուցիչ արգումենտներ չի ընդունում:";
 "cli.error.unknown_command" = "Անհայտ հրաման «%@»:";
 "cli.extension.approval_required" = "Համակարգի ընդլայնման հարցումը ներկայացված է և պահանջում է հաստատում Համակարգի կարգավորումներում:";
 "cli.extension.bundle_missing" = "Հավելվածի փաթեթը չի պարունակում %@.dext";
-"cli.extension.bundle_missing_fix" = "Ուղղում. գործարկեք ./scripts/ojd build install dev, ապա կրկին փորձեք /Applications-ից:";
+"cli.extension.bundle_missing_fix" = "Ուղղում. գործարկեք ./Scripts/ojd build install dev, ապա կրկին փորձեք /Applications-ից:";
 "cli.extension.cancelled" = "Համակարգի ընդլայնման հարցումը չեղարկվել է:";
 "cli.extension.completed" = "Համակարգի ընդլայնման հարցումն ավարտվել է %@ արդյունքով:";
 "cli.extension.failed" = "Համակարգի ընդլայնման հարցումը ձախողվեց. %@ code=%d %@";

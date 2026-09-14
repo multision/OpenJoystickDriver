@@ -53,6 +53,7 @@ playground.xcworkspace
 
 # C / C++
 
+.xmake/
 *.o
 *.obj
 *.lo

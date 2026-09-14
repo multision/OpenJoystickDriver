@@ -101,9 +101,8 @@ struct DeviceIdentifierTests {
     for value in [description, route] as [any Encodable] {
       let encoded = try JSONEncoder().encode(AnyEncodable(value))
       let object = try #require(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
-      let token = try #require(
-        (object["runtime_identifier"] ?? object["runtimeIdentifier"]) as? String
-      )
+      #expect(object["runtime_identifier"] == nil)
+      let token = try #require(object["runtimeIdentifier"] as? String)
       #expect(token == identifier.runtimeIdentifier)
       try assertOpaqueExactToken(token, privateIdentity: serial)
     }

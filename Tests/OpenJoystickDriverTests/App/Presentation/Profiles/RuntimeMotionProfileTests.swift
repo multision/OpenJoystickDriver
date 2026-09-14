@@ -20,7 +20,6 @@ struct RuntimeMotionProfileTests {
     let draft = RuntimeProfileDraft(profile: original)
     let tuning = RemappingMotionTuning(space: .local, yawSensitivity: 4)
     let edited = try draft.settingMotionTuning(tuning)
-    #expect(edited.profile.schemaVersion == RemappingProfile.currentSchemaVersion)
     #expect(edited.profile.id == original.id)
     #expect(edited.profile.bindings == original.bindings)
     #expect(edited.profile.device == original.device)

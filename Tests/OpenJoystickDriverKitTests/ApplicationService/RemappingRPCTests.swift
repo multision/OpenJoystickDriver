@@ -16,8 +16,8 @@ struct RemappingRPCTests {
 
     #expect(route["selection"] as? String == "remapping")
     #expect(route["eligibility"] as? String == "eligible")
-    #expect(route["runtime_identifier"] as? String == "045e:028e:location:1")
-    #expect(route["serial_number"] == nil)
+    #expect(route["runtimeIdentifier"] as? String == "045e:028e:location:1")
+    #expect(route["serialNumber"] == nil)
     #expect(
       try JSONDecoder().decode(ApplicationServiceRemappingSnapshotPayload.self, from: data)
         == snapshot
@@ -28,7 +28,7 @@ struct RemappingRPCTests {
   func olderSnapshotPayloadDoesNotInventPairedSessions() throws {
     let encoded = try JSONEncoder().encode(makeSnapshot(profile: makeProfile()))
     var object = try #require(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
-    object.removeValue(forKey: "joy_con_pairs")
+    object.removeValue(forKey: "joyConPairs")
     let data = try JSONSerialization.data(withJSONObject: object)
 
     #expect(
@@ -217,7 +217,6 @@ struct RemappingRPCTests {
   func updateArgumentsRoundTripExactlyAndFitArgumentBounds() throws {
     let expectedCurrent = maximumProfile(0)
     let updated = RemappingProfile(
-      schemaVersion: expectedCurrent.schemaVersion,
       id: expectedCurrent.id,
       name: "Updated",
       device: expectedCurrent.device,

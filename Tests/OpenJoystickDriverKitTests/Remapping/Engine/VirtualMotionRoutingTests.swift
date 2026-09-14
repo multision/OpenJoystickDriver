@@ -74,7 +74,7 @@ struct VirtualMotionRoutingTests {
   func profilePersistsVirtualMotionAndRequiresVirtualOutput() throws {
     let profile = try virtualMotionProfile()
     let data = try JSONEncoder().encode(profile)
-    #expect(String(bytes: data, encoding: .utf8)?.contains(#""virtual_motion":true"#) == true)
+    #expect(String(bytes: data, encoding: .utf8)?.contains(#""virtualMotion":true"#) == true)
     #expect(try JSONDecoder().decode(RemappingProfile.self, from: data) == profile)
     #expect(throws: RemappingValidationError.virtualOutputRequired) {
       try RemappingProfile(

@@ -25,7 +25,6 @@ struct RuntimeLayerMotionDraftTests {
     let draft = RuntimeProfileDraft(profile: original)
     let tuning = RemappingMotionTuning(yawSensitivity: 0.5)
     let edited = try draft.settingLayerMotionTuning(tuning, for: layer.id)
-    #expect(edited.profile.schemaVersion == RemappingProfile.currentSchemaVersion)
     #expect(edited.profile.id == original.id)
     #expect(edited.profile.layers[0].bindings == [binding])
     #expect(edited.profile.layers[0].motionTuning == tuning)

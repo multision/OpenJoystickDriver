@@ -68,11 +68,11 @@ struct UpdateCheckerTests {
 
     let state = await checker.check(currentVersion: "1.0.0")
 
-    guard case .failed(let message) = state else {
+    guard case .failed(let failure) = state else {
       Issue.record("Expected failed state, got \(state)")
       return
     }
-    #expect(message.contains("cycle"))
+    #expect(failure.reason == .paginationCycle)
   }
 
   @Test("unsafe pagination links fail")
@@ -81,11 +81,11 @@ struct UpdateCheckerTests {
 
     let state = await checker.check(currentVersion: "1.0.0")
 
-    guard case .failed(let message) = state else {
+    guard case .failed(let failure) = state else {
       Issue.record("Expected failed state, got \(state)")
       return
     }
-    #expect(message.contains("unsafe"))
+    #expect(failure.reason == .unsafePaginationLink)
   }
 
   @Test("HTTP errors fail")
@@ -94,7 +94,11 @@ struct UpdateCheckerTests {
 
     let state = await checker.check(currentVersion: "1.0.0")
 
-    #expect(state == .failed("GitHub returned HTTP 503"))
+    guard case .failed(let failure) = state else {
+      Issue.record("Expected failed state, got \(state)")
+      return
+    }
+    #expect(failure.reason == .httpStatus(503))
   }
 
   @Test("non-HTTP responses fail")
@@ -103,7 +107,11 @@ struct UpdateCheckerTests {
 
     let state = await checker.check(currentVersion: "1.0.0")
 
-    #expect(state == .failed("GitHub returned a non-HTTP response"))
+    guard case .failed(let failure) = state else {
+      Issue.record("Expected failed state, got \(state)")
+      return
+    }
+    #expect(failure.reason == .invalidResponse)
   }
 
   @Test("a channel without valid tags fails", arguments: [false, true])
@@ -112,11 +120,11 @@ struct UpdateCheckerTests {
 
     let state = await checker.check(currentVersion: "1.0.0", includePrereleases: includePrereleases)
 
-    guard case .failed(let message) = state else {
+    guard case .failed(let failure) = state else {
       Issue.record("Expected failed state, got \(state)")
       return
     }
-    #expect(message.contains("SemVer GitHub tags"))
+    #expect(failure.reason == .noValidTags)
   }
 
   private static func checker(path: String) throws -> UpdateChecker {

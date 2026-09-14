@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/xsyetopz/OpenJoystickDriver/main/Resources/Schemas/controller.schema.json",
-  "vendor_id": 1406,
-  "product_id": 8199,
+  "vendorID": 1406,
+  "productID": 8199,
   "transport": "hid",
   "protocol": {
     "driver": "SwitchPro",

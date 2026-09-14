@@ -55,35 +55,46 @@ jobs:
 
       - name: Install dependencies
         run: |
-          brew list --versions swiftlint >/dev/null 2>&1 || brew install swiftlint
+          for dependency in pkg-config pyright ruff sdl3 shellcheck swiftlint xmake; do
+            brew list --versions "$dependency" >/dev/null 2>&1 || brew install "$dependency"
+          done
           python3 -m venv .build/schema-validator
-          .build/schema-validator/bin/python -m pip install -r scripts/quality/requirements.txt
+          .build/schema-validator/bin/python -m pip install -r Scripts/Quality/requirements.txt
           echo "$PWD/.build/schema-validator/bin" >> "$GITHUB_PATH"
 
       - name: Verify generated controller catalog
         env:
           GH_TOKEN: ${{ github.token }}
-        run: ./scripts/ojd catalog regenerate --check
+        run: ./Scripts/ojd catalog regenerate --check
 
       - name: Check records
-        run: ./scripts/ojd check profiles
+        run: ./Scripts/ojd check profiles
 
-      - name: Check scripts
-        run: ./scripts/ojd check scripts
+      - name: Check Python
+        run: |
+          ruff format --check Scripts Tests/RepositoryScripts
+          ruff check Scripts Tests/RepositoryScripts
+          pyright
+          python3 -m unittest discover -s Tests/RepositoryScripts
+
+      - name: Check shell
+        run: find Scripts -type f \( -name '*.sh' -o -name ojd \) -print0 | xargs -0 shellcheck --external-sources --source-path=SCRIPTDIR
+
+      - name: Check native tools
+        run: ./Scripts/ojd check tools
 
       - name: Check schemas
-        run: ./scripts/ojd check schemas
-
-      - name: Check Swift structure
-        run: ./scripts/ojd check swift-structure
+        run: ./Scripts/ojd check schemas
 
       - name: Check generated DriverKit project
         run: |
           test "$OJD_USE_LOCAL_SWIFTERKIT" != "1"
-          ./scripts/ojd check driverkit
+          ./Scripts/ojd check driverkit
 
-      - name: Lint Swift
-        run: ./scripts/ojd lint
+      - name: Check Swift formatting and lint
+        run: |
+          swift-format lint --recursive --strict Package.swift Sources Tests
+          swiftlint lint --no-cache --strict
 
       - name: Run tests
         run: swift test --no-parallel
@@ -120,7 +131,7 @@ jobs:
           KEYCHAIN_SECRET: ${{ secrets.KEYCHAIN_SECRET }}
           OPENJOYSTICKDRIVER_GUI_DEVID_PROFILE_BASE64: ${{ secrets.OPENJOYSTICKDRIVER_GUI_DEVID_PROFILE_BASE64 }}
           OPENJOYSTICKDRIVER_DEXT_DEVID_PROFILE_BASE64: ${{ secrets.OPENJOYSTICKDRIVER_DEXT_DEVID_PROFILE_BASE64 }}
-        run: ./scripts/ojd signing ci-release-setup
+        run: ./Scripts/ojd signing ci-release-setup
 
       - name: Package release build
         env:
@@ -128,7 +139,7 @@ jobs:
           NOTARIZE_APPLE_ID: ${{ secrets.NOTARIZE_APPLE_ID }}
           NOTARIZE_PASSWORD: ${{ secrets.NOTARIZE_PASSWORD }}
           RELEASE_TAG: ${{ steps.release.outputs.tag }}
-        run: ./scripts/ojd release package "$RELEASE_TAG"
+        run: ./Scripts/ojd release package "$RELEASE_TAG"
 
       - name: Upload release artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

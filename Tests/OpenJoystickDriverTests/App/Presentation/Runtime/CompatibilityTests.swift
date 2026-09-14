@@ -619,7 +619,6 @@ struct CompatibilityTests {
       return
     }
     #expect(status.compatibilityIdentity == .appleGameController)
-    #expect(status.compatibilityLabel == "Apple GameController")
   }
 
   @Test

@@ -17,6 +17,14 @@ private final class RoutingConsumer: @unchecked Sendable {
   var value = CompatibilityConsumerFamily.unknown
 }
 
+private final class TargetCapture: @unchecked Sendable {
+  private let lock = NSLock()
+  private var values: [AutomaticCompatibilityTarget] = []
+
+  func append(_ value: AutomaticCompatibilityTarget) { lock.withLock { values.append(value) } }
+  func last() -> AutomaticCompatibilityTarget? { lock.withLock { values.last } }
+}
+
 private final class RoutingBackend: CompatibilityUserSpaceOutputDispatching, @unchecked Sendable {
   var suppressOutput = false
   var status: String { "probe" }
@@ -52,7 +60,7 @@ struct CompatibilityConsumerRoutingTests {
   }
 
   @Test
-  func automaticDiagnosticsExposeConsumerVariantAndVirtualIdentity() async throws {
+  func automaticRoutingSelectsConsumerVariantAndVirtualIdentity() async throws {
     let identifier = DeviceIdentifier(vendorID: 1, productID: 2)
     let description = ApplicationServiceDeviceDescription(
       name: "probe",
@@ -65,6 +73,7 @@ struct CompatibilityConsumerRoutingTests {
       runtimeIdentifier: identifier.runtimeIdentifier
     )
     let consumer = RoutingConsumer()
+    let targets = TargetCapture()
     let descriptionsProvider: @Sendable () async -> [ApplicationServiceDeviceDescription] = {
       [description]
     }
@@ -72,7 +81,10 @@ struct CompatibilityConsumerRoutingTests {
       deviceManager: DeviceManager(dispatcher: LoggingOutputDispatcher()),
       ownershipProvider: { _ in .exclusiveRawUSB },
       consumerProvider: { consumer.value },
-      builder: { _ in RoutingBackend() },
+      builder: { target in
+        targets.append(target)
+        return RoutingBackend()
+      },
       observeConsumerChanges: false,
       descriptionsProvider: descriptionsProvider
     )
@@ -81,12 +93,16 @@ struct CompatibilityConsumerRoutingTests {
     consumer.value = .geckoGamepad
     await dispatcher.refreshForCurrentConsumer()
     #expect(
-      dispatcher.status == "automatic, consumer: geckoGamepad, targets: gecko-xbox-one-s 045E:02E0"
+      targets.last()
+        == AutomaticCompatibilityTarget(
+          identity: .appleGameController,
+          reportVariant: .geckoXboxOneS
+        )
     )
 
     consumer.value = .webkitGamepad
     await dispatcher.refreshForCurrentConsumer()
-    #expect(dispatcher.status == "automatic, consumer: webkitGamepad, targets: canonical 045E:0B13")
+    #expect(targets.last() == .appleGameController)
     await dispatcher.close()
   }
 }

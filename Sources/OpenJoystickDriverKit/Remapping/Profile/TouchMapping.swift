@@ -104,8 +104,8 @@ public struct RemappingTouchMapping: Codable, Equatable, Hashable, Identifiable,
     case id
     case surface
     case mode
-    case pointerSensitivity = "pointer_sensitivity"
-    case stickRadius = "stick_radius"
+    case pointerSensitivity
+    case stickRadius
     case deadzone
   }
 }

@@ -129,7 +129,7 @@ struct ControllerRecordProbePlanTests {
     for mutation in [
       { (record: inout [String: Any]) in record["usb"] = [:] },
       { (record: inout [String: Any]) in record["usb"] = ["interface": 0] },
-      { (record: inout [String: Any]) in record["usb"] = ["post_handshake_settle_ms": 60_001] },
+      { (record: inout [String: Any]) in record["usb"] = ["postHandshakeSettleMs": 60_001] },
       { (record: inout [String: Any]) in record["usb"] = NSNull() },
       { (record: inout [String: Any]) in
         var protocolConfig = record["protocol"] as? [String: Any] ?? [:]
@@ -138,7 +138,7 @@ struct ControllerRecordProbePlanTests {
       },
       { (record: inout [String: Any]) in
         var protocolConfig = record["protocol"] as? [String: Any] ?? [:]
-        protocolConfig["startup_packets"] = ["powerOn", "powerOn"]
+        protocolConfig["startupPackets"] = ["powerOn", "powerOn"]
         record["protocol"] = protocolConfig
       },
       { (record: inout [String: Any]) in
@@ -173,15 +173,15 @@ struct ControllerRecordProbePlanTests {
       usb["endpoints"] = ["in": inputEndpoint, "out": outputEndpoint]
     }
     if let configuration { usb["configuration"] = configuration }
-    if let settleMilliseconds { usb["post_handshake_settle_ms"] = settleMilliseconds }
+    if let settleMilliseconds { usb["postHandshakeSettleMs"] = settleMilliseconds }
 
     var protocolConfig: [String: Any] = ["driver": driver, "variant": variant]
-    if let startupPackets { protocolConfig["startup_packets"] = startupPackets }
-    if let keepAliveEnabled { protocolConfig["keep_alive"] = keepAliveEnabled }
+    if let startupPackets { protocolConfig["startupPackets"] = startupPackets }
+    if let keepAliveEnabled { protocolConfig["keepAlive"] = keepAliveEnabled }
     if let extraProtocolField { protocolConfig[extraProtocolField] = true }
 
     var record: [String: Any] = [
-      "vendor_id": 5_426, "product_id": 2_627, "transport": transport, "protocol": protocolConfig,
+      "vendorID": 5_426, "productID": 2_627, "transport": transport, "protocol": protocolConfig,
     ]
     if let schemaID { record["$schema"] = schemaID }
     if let extraRootField { record[extraRootField] = ["source": "legacy"] }

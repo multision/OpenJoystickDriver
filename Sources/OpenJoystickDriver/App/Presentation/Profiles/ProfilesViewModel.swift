@@ -16,12 +16,18 @@
   @MainActor
   final class ProfilesViewModel: ObservableObject {
     let documents: ProfileDocumentService
-    @Published var selectedProfileID: UUID?
-    @Published var isCreatingProfile = false
-    @Published var activeAlert: ProfilesAlert?
-    @Published var profileActionError: String?
-    @Published var pairingProfile: RemappingProfile?
-    @Published var selectedEditorSection = ProfilePresentationPolicy.defaultSection
+    @Published
+    var selectedProfileID: UUID?
+    @Published
+    var isCreatingProfile = false
+    @Published
+    var activeAlert: ProfilesAlert?
+    @Published
+    var profileActionError: String?
+    @Published
+    var pairingProfile: RemappingProfile?
+    @Published
+    var selectedEditorSection = ProfilePresentationPolicy.defaultSection
 
     var editorTransition = ProfileEditorTransitionState()
     var observedDiscardGeneration = 0
@@ -35,10 +41,7 @@
       self.documents = documents
     }
 
-    func editor(
-      for profile: RemappingProfile,
-      discardGeneration: Int
-    ) -> ProfileEditorViewModel {
+    func editor(for profile: RemappingProfile, discardGeneration: Int) -> ProfileEditorViewModel {
       let generation = (discard: discardGeneration, refresh: editorGeneration)
       if let editorViewModel, editorViewModel.expectedCurrent.id == profile.id,
         editorViewModelGeneration?.discard == generation.discard,
@@ -60,14 +63,21 @@
 
   @MainActor
   final class ProfileEditorViewModel: ObservableObject {
-    @Published var draft: RuntimeProfileDraft
-    @Published var activeSheet: ProfileEditorSheet?
-    @Published var showingConflict = false
-    @Published var localError: String?
-    @Published var saveError: String?
+    @Published
+    var draft: RuntimeProfileDraft
+    @Published
+    var activeSheet: ProfileEditorSheet?
+    @Published
+    var showingConflict = false
+    @Published
+    var localError: String?
+    @Published
+    var saveError: String?
 
-    @Published var expectedCurrent: RemappingProfile
-    @Published var saveState = ProfileEditorSaveState()
+    @Published
+    var expectedCurrent: RemappingProfile
+    @Published
+    var saveState = ProfileEditorSaveState()
 
     init(profile: RemappingProfile) {
       draft = RuntimeProfileDraft(profile: profile)

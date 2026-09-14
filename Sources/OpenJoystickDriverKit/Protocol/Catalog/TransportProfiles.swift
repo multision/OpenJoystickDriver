@@ -65,6 +65,12 @@ public enum ControllerProtocolVariant: String, Codable, Hashable, Sendable {
   case unknown
 }
 
+/// Physical transport declared by one exact controller catalog record.
+public enum ControllerCatalogTransport: String, Sendable {
+  case hid
+  case usb
+}
+
 /// Stable encoding quirks modeled after Linux xpad packing deviations.
 ///
 /// These quirks never mean that a named control exists. Presence is the parser
@@ -97,6 +103,7 @@ public enum GIPKeepAlivePolicy: String, Codable, Sendable {
 
 /// Complete runtime profile for one physical controller model.
 public struct DeviceRuntimeProfile: Sendable {
+  public let catalogTransport: ControllerCatalogTransport
   public let parserName: String
   public let virtualProfile: VirtualDeviceProfile
   public let transportProfile: DeviceTransportProfile

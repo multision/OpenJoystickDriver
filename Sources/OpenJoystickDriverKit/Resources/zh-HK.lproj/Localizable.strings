@@ -601,8 +601,8 @@
 "cli.diagnose.expected_id_present" = "  結果: PASS (存在預期 id: %@)";
 "cli.diagnose.extension_heading" = "DriverKit 系統延伸功能 (位於 /Applications):";
 "cli.diagnose.extensions_folder_missing" = "  結果: FAIL (缺少 SystemExtensions 檔案夾)";
-"cli.diagnose.fix_build_dext" = "  修復: 執行: ./scripts/ojd build dext";
-"cli.diagnose.fix_rebuild_dev" = "  修復: 執行: ./scripts/ojd build install dev";
+"cli.diagnose.fix_build_dext" = "  修復: 執行: ./Scripts/ojd build dext";
+"cli.diagnose.fix_rebuild_dev" = "  修復: 執行: ./Scripts/ojd build install dev";
 "cli.diagnose.heading" = "OpenJoystickDriver 診斷";
 "cli.diagnose.interface_line" = "    介面 %d/%d: %02X/%@/%@";
 "cli.diagnose.macos_version" = "macOS: %d.%d.%d";
@@ -618,7 +618,7 @@
 "cli.diagnose.troubleshoot_driverkit" = "  DriverKit 延伸功能缺失或損毀？";
 "cli.diagnose.troubleshoot_input_monitoring" = "    -> 授予輸入監控: 系統設定 -> 隱私權與安全性 -> 輸入監控";
 "cli.diagnose.troubleshoot_no_input" = "  控制器沒有輸入？";
-"cli.diagnose.troubleshoot_rebuild" = "    -> 執行: ./scripts/ojd build install dev";
+"cli.diagnose.troubleshoot_rebuild" = "    -> 執行: ./Scripts/ojd build install dev";
 "cli.diagnose.troubleshoot_report_command" = "    -> 執行: --headless diagnose report";
 "cli.diagnose.troubleshoot_reporting" = "  要回報控制器問題？";
 "cli.diagnose.troubleshoot_virtual_device" = "  使用者空間虛擬裝置無法使用？";
@@ -640,14 +640,14 @@
 "cli.error.missing_command" = "需要指令。";
 "cli.error.missing_subcommand" = "「%@」 需要子指令。";
 "cli.error.no_output" = "  (無輸出)";
-"cli.error.rebuild_fast_step" = "  1) 執行: ./scripts/ojd build install-fast dev";
+"cli.error.rebuild_fast_step" = "  1) 執行: ./Scripts/ojd build install-fast dev";
 "cli.error.rerun_step" = "  2) 然後重新執行: /Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless %@";
 "cli.error.signature_verification_failed" = "%@ 失敗: App 簽名驗證失敗:";
 "cli.error.unexpected_arguments" = "「%@」 不接受額外引數。";
 "cli.error.unknown_command" = "未知指令 「%@」。";
 "cli.extension.approval_required" = "已提交系統延伸功能要求，需要在系統設定中核准。";
 "cli.extension.bundle_missing" = "App 套件不包含 %@.dext";
-"cli.extension.bundle_missing_fix" = "修復: 執行 ./scripts/ojd build install dev，然後從 /Applications 再試一次。";
+"cli.extension.bundle_missing_fix" = "修復: 執行 ./Scripts/ojd build install dev，然後從 /Applications 再試一次。";
 "cli.extension.cancelled" = "系統延伸功能要求已取消。";
 "cli.extension.completed" = "系統延伸功能要求已完成，結果為 %@。";
 "cli.extension.failed" = "系統延伸功能要求失敗: %@ code=%d %@";

@@ -601,8 +601,8 @@
 "cli.diagnose.expected_id_present" = "  Үр дүн: PASS (хүлээгдэх id байна: %@)";
 "cli.diagnose.extension_heading" = "DriverKit системийн өргөтгөл (/Applications дотор):";
 "cli.diagnose.extensions_folder_missing" = "  Үр дүн: FAIL (SystemExtensions хавтас байхгүй)";
-"cli.diagnose.fix_build_dext" = "  Засвар: ажиллуул: ./scripts/ojd build dext";
-"cli.diagnose.fix_rebuild_dev" = "  Засвар: ажиллуул: ./scripts/ojd build install dev";
+"cli.diagnose.fix_build_dext" = "  Засвар: ажиллуул: ./Scripts/ojd build dext";
+"cli.diagnose.fix_rebuild_dev" = "  Засвар: ажиллуул: ./Scripts/ojd build install dev";
 "cli.diagnose.heading" = "OpenJoystickDriver оношлогоо";
 "cli.diagnose.interface_line" = "    Интерфейс %d/%d: %02X/%@/%@";
 "cli.diagnose.macos_version" = "macOS: %d.%d.%d";
@@ -618,7 +618,7 @@
 "cli.diagnose.troubleshoot_driverkit" = "  DriverKit өргөтгөл байхгүй/эвдэрсэн үү?";
 "cli.diagnose.troubleshoot_input_monitoring" = "    -> Оролтыг хянах өгнө үү: Системийн тохиргоо -> Нууцлал ба аюулгүй байдал -> Оролтыг хянах";
 "cli.diagnose.troubleshoot_no_input" = "  Удирдлагаас оролт байхгүй юу?";
-"cli.diagnose.troubleshoot_rebuild" = "    -> Ажиллуул: ./scripts/ojd build install dev";
+"cli.diagnose.troubleshoot_rebuild" = "    -> Ажиллуул: ./Scripts/ojd build install dev";
 "cli.diagnose.troubleshoot_report_command" = "    -> Ажиллуул: --headless diagnose report";
 "cli.diagnose.troubleshoot_reporting" = "  Удирдлагын асуудлыг мэдээлж байна уу?";
 "cli.diagnose.troubleshoot_virtual_device" = "  Хэрэглэгчийн орон зайн виртуал төхөөрөмж боломжгүй юу?";
@@ -640,14 +640,14 @@
 "cli.error.missing_command" = "Команд шаардлагатай.";
 "cli.error.missing_subcommand" = "«%@» дэд команд шаардана.";
 "cli.error.no_output" = "  (гаралт байхгүй)";
-"cli.error.rebuild_fast_step" = "  1) Ажиллуул: ./scripts/ojd build install-fast dev";
+"cli.error.rebuild_fast_step" = "  1) Ажиллуул: ./Scripts/ojd build install-fast dev";
 "cli.error.rerun_step" = "  2) Дараа нь дахин ажиллуул: /Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless %@";
 "cli.error.signature_verification_failed" = "%@ амжилтгүй: аппын гарын үсгийн баталгаажуулалт амжилтгүй:";
 "cli.error.unexpected_arguments" = "«%@» нэмэлт аргумент хүлээж авдаггүй.";
 "cli.error.unknown_command" = "Үл мэдэгдэх команд «%@».";
 "cli.extension.approval_required" = "Системийн өргөтгөлийн хүсэлт илгээгдсэн бөгөөд Системийн тохиргоонд зөвшөөрөл шаардана.";
 "cli.extension.bundle_missing" = "Аппын багцад %@.dext байхгүй";
-"cli.extension.bundle_missing_fix" = "Засвар: ./scripts/ojd build install dev ажиллуулаад /Applications-оос дахин оролдоно уу.";
+"cli.extension.bundle_missing_fix" = "Засвар: ./Scripts/ojd build install dev ажиллуулаад /Applications-оос дахин оролдоно уу.";
 "cli.extension.cancelled" = "Системийн өргөтгөлийн хүсэлтийг цуцаллаа.";
 "cli.extension.completed" = "Системийн өргөтгөлийн хүсэлт %@ үр дүнтэй дууссан.";
 "cli.extension.failed" = "Системийн өргөтгөлийн хүсэлт амжилтгүй: %@ code=%d %@";

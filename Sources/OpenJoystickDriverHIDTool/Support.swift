@@ -245,7 +245,7 @@ func printUsageAndExit(_ code: Int32) -> Never {
     """
     OpenJoystickDriverHIDTool. Internal hardware diagnostic utility.
 
-    Use `./scripts/ojd diagnose` for supported workflows. Run this utility directly
+    Use `./Scripts/ojd diagnose` for supported workflows. Run this utility directly
     only for focused hardware debugging.
 
     Usage:

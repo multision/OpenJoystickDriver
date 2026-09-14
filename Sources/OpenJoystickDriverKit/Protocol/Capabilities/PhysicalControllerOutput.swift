@@ -63,7 +63,7 @@ public struct PhysicalAdaptiveTriggerEffect: Codable, Equatable, Hashable, Senda
 
   private enum CodingKeys: String, CodingKey {
     case kind
-    case startPosition = "start_position"
+    case startPosition
     case strength
   }
 }

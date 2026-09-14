@@ -97,7 +97,7 @@ public enum RemappingSource: Codable, Equatable, Hashable, Sendable {
     case rows
     case column
     case row
-    case minimumDistance = "minimum_distance"
+    case minimumDistance
     case trigger
     case stage
   }

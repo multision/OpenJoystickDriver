@@ -1,0 +1,285 @@
+"""Behavior tests for release version and package metadata helpers."""
+
+from __future__ import annotations
+
+import os
+import plistlib
+import shutil
+import subprocess
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+
+from Scripts.Release import package_tester
+from Scripts.Release.bundle_version import (
+    advance_tester_sequence,
+    dext_bundle_version_from_semver,
+    resolve_dext_bundle_version,
+    tester_bundle_version,
+    tester_short_version,
+    validate_dext_bundle_version,
+)
+from Scripts.Release.package_common import (
+    require_clean_source,
+    source_identity,
+    verify_bundle_versions,
+)
+
+PROJECT_DIR = Path(__file__).resolve().parents[2]
+
+
+def expect_failure(callable_, *args, **kwargs) -> None:
+    try:
+        callable_(*args, **kwargs)
+    except SystemExit:
+        return
+    raise AssertionError(f"expected failure from {callable_.__name__}")
+
+
+def executable_version(*args: str) -> str:
+    result = subprocess.run(
+        [sys.executable, "-m", "Scripts.Release.bundle_version", *args],
+        cwd=PROJECT_DIR,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode:
+        raise AssertionError(result.stderr)
+    return result.stdout.strip()
+
+
+def expect_executable_failure(*args: str) -> None:
+    result = subprocess.run(
+        [sys.executable, "-m", "Scripts.Release.bundle_version", *args],
+        cwd=PROJECT_DIR,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode == 0:
+        raise AssertionError(f"expected executable failure for {args}")
+
+
+def validate_tester_packaging_flow(*, fail_after_dmg: bool) -> None:
+    with tempfile.TemporaryDirectory() as directory:
+        project = Path(directory)
+        events: list[str] = []
+        captured_build_info = ""
+        original_environment = os.environ.copy()
+        overrides = {
+            "PROJECT_DIR": project,
+            "default_bundle_short_version": lambda _: "0.5.0-beta.4",
+            "require_clean_source": lambda *_: "a" * 40,
+            "advance_tester_sequence": lambda *_: 7,
+            "current_commit_bundle_version": lambda _: "42",
+            "dext_bundle_version_from_semver": lambda _: "0.5.0b4",
+            "command_output": lambda _: "aaaaaaaaaaaa",
+            "release_environment": lambda: os.environ.copy(),
+            "verify_bundle_versions": lambda *_: None,
+        }
+        originals = {name: getattr(package_tester, name) for name in overrides}
+        originals["run"] = package_tester.run
+        originals["make_dmg"] = package_tester.make_dmg
+
+        def fake_run(command: list[str], *, env: dict[str, str] | None = None) -> None:
+            if command[-2:] == ["build", "release"]:
+                dext = (
+                    project
+                    / ".build/debug/OpenJoystickDriver.app/Contents/Library/SystemExtensions"
+                    / "com.openjoystickdriver.XboxUSBDevice.dext"
+                )
+                dext.mkdir(parents=True)
+            elif command[0] == "/usr/bin/ditto":
+                shutil.copytree(command[1], command[2])
+            elif "notarize.sh" in " ".join(command):
+                events.append("notarize")
+                assert env is not None
+                Path(env["OJD_NOTARIZE_ZIP"]).write_text("temporary upload")
+            elif command[:3] == ["/usr/bin/xcrun", "stapler", "validate"]:
+                events.append("stapler")
+            elif command[0] == "/usr/sbin/spctl":
+                events.append("gatekeeper")
+            elif command[:2] == ["/usr/bin/hdiutil", "verify"] and fail_after_dmg:
+                raise package_tester.CommandFailure(19)
+
+        def fake_make_dmg(staging: Path, _: str, artifact: Path) -> None:
+            nonlocal captured_build_info
+            events.append("dmg")
+            captured_build_info = (
+                staging / "OpenJoystickDriver-TESTER-BUILD.txt"
+            ).read_text()
+            artifact.write_text("dmg")
+
+        try:
+            for name, value in overrides.items():
+                setattr(package_tester, name, value)
+            package_tester.run = fake_run
+            package_tester.make_dmg = fake_make_dmg
+            os.environ.clear()
+            os.environ["OJD_ENV"] = "release"
+            result = package_tester.main(["tester"])
+        finally:
+            os.environ.clear()
+            os.environ.update(original_environment)
+            for name, value in originals.items():
+                setattr(package_tester, name, value)
+
+        artifacts = list((project / ".build/tester-artifacts").glob("*.dmg"))
+        if fail_after_dmg:
+            assert result == 19
+            assert artifacts == []
+        else:
+            assert result == 0
+            assert len(artifacts) == 1
+            assert events == ["notarize", "stapler", "gatekeeper", "dmg"]
+            for line in (
+                "notarization: accepted",
+                "stapling: validated",
+                "gatekeeper: accepted",
+            ):
+                assert line in captured_build_info
+        for path in (
+            project / ".build/tester-dmg-staging",
+            project / ".build/tester-dmg-mount",
+            project / ".build/OpenJoystickDriver-tester-notarize.zip",
+        ):
+            assert not path.exists()
+
+
+def main() -> int:
+    assert dext_bundle_version_from_semver("0.5.0-beta.3") == "0.5.0b3"
+    assert dext_bundle_version_from_semver("1.2.3-alpha.1") == "1.2.3a1"
+    assert dext_bundle_version_from_semver("1.2.3-rc.2") == "1.2.3fc2"
+    for value in ("0.5.0", "0.5.0a1", "0.5.0b3", "0.5.0fc2"):
+        assert validate_dext_bundle_version(value) == value
+    assert (
+        resolve_dext_bundle_version("0.5.0-beta.3", "0.5.0b3", release=True)
+        == "0.5.0b3"
+    )
+    assert (
+        resolve_dext_bundle_version("0.5.0-beta.3-next.1", "0.5.0b3", release=True)
+        == "0.5.0b3"
+    )
+    expect_failure(resolve_dext_bundle_version, "0.5.0-beta.3", "0.5.0b2", release=True)
+    expect_failure(
+        resolve_dext_bundle_version,
+        "0.5.0-beta.3-next.1",
+        "0.5.0b2",
+        release=True,
+    )
+    expect_failure(
+        resolve_dext_bundle_version,
+        "0.5.0-beta.3-next.256",
+        "0.5.0b3",
+        release=True,
+    )
+    for value in ("500003", "0.5.0b0", "0.5.0b256", "0.5.0beta3", "1.100.0"):
+        expect_failure(validate_dext_bundle_version, value)
+    assert (
+        executable_version("--resolve-dext", "0.5.0-beta.3", "0.5.0b3", "--release")
+        == "0.5.0b3"
+    )
+    assert executable_version("--resolve-dext", "0.5.0-beta.3", "0.5.0b2") == "0.5.0b2"
+    expect_executable_failure("--resolve-dext", "0.5.0-beta.3", "0.5.0b2", "--release")
+    for value in ("1.2.3-beta.1.2", "1.2.3-beta.0", "1.2.3-beta", "1.2.3+meta"):
+        expect_failure(dext_bundle_version_from_semver, value)
+    for value in ("65536.0.0", "1.100.0", "1.2.100", "1.2.3-beta.256"):
+        expect_failure(dext_bundle_version_from_semver, value)
+
+    with tempfile.TemporaryDirectory() as directory:
+        state = Path(directory) / "tester-state"
+        assert tester_bundle_version("1.2.3", state).endswith("d1")
+        assert tester_bundle_version("1.2.3", state).endswith("d2")
+        assert tester_bundle_version("1.2.4", state).endswith("d1")
+
+        next_state = Path(directory) / "tester-next-state"
+        assert advance_tester_sequence("0.5.0-beta.4", next_state) == 1
+        assert advance_tester_sequence("0.5.0-beta.4", next_state) == 2
+        assert advance_tester_sequence("0.5.0-beta.5", next_state) == 1
+        nested_state = Path(directory) / "missing" / "tester-state"
+        assert advance_tester_sequence("0.5.0-beta.4", nested_state) == 1
+        assert nested_state.is_file()
+        assert tester_short_version("0.5.0-beta.4", 1) == "0.5.0-beta.4-next.1"
+        assert tester_short_version("0.5.0", 2) == "0.5.0-next.2"
+        expect_failure(tester_short_version, "0.5.0-beta.4-next.1", 1)
+        expect_failure(tester_short_version, "0.5.0-beta.4", 0)
+        expect_failure(advance_tester_sequence, "0.5.0-beta.4-next.1", next_state)
+
+        app = Path(directory) / "app.plist"
+        dext = Path(directory) / "dext.plist"
+        for path, build in ((app, "1.2.3d1"), (dext, "0.5.0b3")):
+            path.write_bytes(
+                plistlib.dumps(
+                    {
+                        "CFBundleShortVersionString": "0.5.0-beta.3-next.1",
+                        "CFBundleVersion": build,
+                        "OJDSourceCommit": "a" * 40,
+                        "OJDSourceState": "clean",
+                    }
+                )
+            )
+        verify_bundle_versions(
+            app,
+            dext,
+            "1.2.3d1",
+            "0.5.0b3",
+            "0.5.0-beta.3-next.1",
+            "a" * 40,
+            "clean",
+        )
+        expect_failure(
+            verify_bundle_versions,
+            app,
+            dext,
+            "wrong",
+            "0.5.0b3",
+            "0.5.0-beta.3-next.1",
+            "a" * 40,
+            "clean",
+        )
+        metadata = package_tester.tester_metadata(
+            "tester.dmg", "0.5.0-beta.3-next.1", "1.2.3d1", "0.5.0b3"
+        )
+        assert metadata == {
+            "artifact": "tester.dmg",
+            "version": "0.5.0-beta.3-next.1",
+            "app_bundle_build_version": "1.2.3d1",
+            "dext_bundle_version": "0.5.0b3",
+            "notarization": "accepted",
+            "stapling": "validated",
+            "gatekeeper": "accepted",
+        }
+
+        repository = Path(directory) / "repository"
+        repository.mkdir()
+        subprocess.run(["git", "-C", str(repository), "init", "-q"], check=True)
+        subprocess.run(
+            ["git", "-C", str(repository), "config", "user.name", "Version Test"],
+            check=True,
+        )
+        subprocess.run(
+            ["git", "-C", str(repository), "config", "user.email", "test@localhost"],
+            check=True,
+        )
+        tracked = repository / "tracked"
+        tracked.write_text("clean\n")
+        subprocess.run(["git", "-C", str(repository), "add", "tracked"], check=True)
+        subprocess.run(
+            ["git", "-C", str(repository), "commit", "-q", "-m", "initial"],
+            check=True,
+        )
+        commit = require_clean_source(repository, "Tester")
+        assert source_identity(repository) == (commit, "clean")
+        tracked.write_text("dirty\n")
+        assert source_identity(repository) == (commit, "dirty")
+        expect_failure(require_clean_source, repository, "Tester")
+    validate_tester_packaging_flow(fail_after_dmg=False)
+    validate_tester_packaging_flow(fail_after_dmg=True)
+    return 0
+
+
+class ReleaseVersioningTests(unittest.TestCase):
+    def test_release_versioning_behavior(self) -> None:
+        self.assertEqual(main(), 0)

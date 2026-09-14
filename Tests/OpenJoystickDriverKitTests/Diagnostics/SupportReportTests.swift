@@ -148,9 +148,9 @@ struct SupportReportTests {
     let payload = try #require(object["data"] as? [String: Any])
     _ = try #require(payload["hidGamepads"] as? [[String: Any]])
     let system = try #require(payload["system"] as? [String: Any])
-    let buildIdentity = try #require(system["build_identity"] as? [String: Any])
-    #expect(buildIdentity["app_bundle_version"] as? String == "1.4.89")
-    #expect(buildIdentity["source_commit"] as? String == String(repeating: "a", count: 40))
+    let buildIdentity = try #require(system["buildIdentity"] as? [String: Any])
+    #expect(buildIdentity["appBundleVersion"] as? String == "1.4.89")
+    #expect(buildIdentity["sourceCommit"] as? String == String(repeating: "a", count: 40))
     #expect(report.data.appleGameControllerAudit?.catalogListedOJDRecordCount == 1)
 
     let decoded = try JSONDecoder().decode(SupportReport.self, from: data)

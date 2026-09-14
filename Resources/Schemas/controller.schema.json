@@ -1,26 +1,19 @@
 {
 	"$schema": "https://json-schema.org/draft/2020-12/schema",
 	"$id": "https://raw.githubusercontent.com/xsyetopz/OpenJoystickDriver/main/Resources/Schemas/controller.schema.json",
-	"title": "OpenJoystickDriver controller identity record",
 	"type": "object",
-	"required": [
-		"$schema",
-		"vendor_id",
-		"product_id",
-		"transport",
-		"protocol"
-	],
+	"required": ["$schema", "vendorID", "productID", "transport", "protocol"],
 	"additionalProperties": false,
 	"properties": {
 		"$schema": {
 			"const": "https://raw.githubusercontent.com/xsyetopz/OpenJoystickDriver/main/Resources/Schemas/controller.schema.json"
 		},
-		"vendor_id": {
+		"vendorID": {
 			"type": "integer",
 			"minimum": 1,
 			"maximum": 65535
 		},
-		"product_id": {
+		"productID": {
 			"type": "integer",
 			"minimum": 0,
 			"maximum": 65535
@@ -85,7 +78,7 @@
 					},
 					"minItems": 1
 				},
-				"startup_packets": {
+				"startupPackets": {
 					"type": "array",
 					"minItems": 1,
 					"uniqueItems": true,
@@ -102,7 +95,7 @@
 						]
 					}
 				},
-				"keep_alive": {
+				"keepAlive": {
 					"type": "boolean"
 				}
 			},
@@ -140,7 +133,7 @@
 					},
 					"then": {
 						"not": {
-							"required": ["keep_alive"]
+							"required": ["keepAlive"]
 						}
 					}
 				},
@@ -235,11 +228,7 @@
 							},
 							"quirks": {
 								"items": {
-									"enum": [
-										"accelerometer",
-										"battery",
-										"gyro"
-									]
+									"enum": ["accelerometer", "battery", "gyro"]
 								},
 								"type": "array"
 							}
@@ -363,8 +352,16 @@
 								},
 								"not": {
 									"allOf": [
-										{"contains": {"const": "joyConLeft"}},
-										{"contains": {"const": "joyConRight"}}
+										{
+											"contains": {
+												"const": "joyConLeft"
+											}
+										},
+										{
+											"contains": {
+												"const": "joyConRight"
+											}
+										}
 									]
 								},
 								"type": "array"
@@ -388,10 +385,7 @@
 							},
 							"quirks": {
 								"items": {
-									"enum": [
-										"genericHIDPackets",
-										"rawUSBPackets"
-									]
+									"enum": ["genericHIDPackets", "rawUSBPackets"]
 								},
 								"type": "array"
 							}
@@ -452,7 +446,7 @@
 				"configuration": {
 					"const": "set1-before-claim"
 				},
-				"post_handshake_settle_ms": {
+				"postHandshakeSettleMs": {
 					"type": "integer",
 					"minimum": 1,
 					"maximum": 60000
@@ -496,9 +490,9 @@
 				"properties": {
 					"protocol": {
 						"properties": {
-							"startup_packets": {}
+							"startupPackets": {}
 						},
-						"required": ["startup_packets"],
+						"required": ["startupPackets"],
 						"type": "object"
 					}
 				},

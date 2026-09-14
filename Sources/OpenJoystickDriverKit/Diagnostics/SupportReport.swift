@@ -35,7 +35,7 @@ public struct SupportReport: Codable, Sendable {
     public let architecture: String
 
     private enum CodingKeys: String, CodingKey {
-      case buildIdentity = "build_identity"
+      case buildIdentity
       case macOSVersion, architecture
     }
   }

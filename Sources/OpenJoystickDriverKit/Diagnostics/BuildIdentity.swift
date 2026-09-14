@@ -41,9 +41,9 @@ public struct BuildIdentity: Codable, Equatable, Sendable {
   }
 
   private enum CodingKeys: String, CodingKey {
-    case semanticVersion = "semantic_version"
-    case appBundleVersion = "app_bundle_version"
-    case sourceCommit = "source_commit"
-    case sourceState = "source_state"
+    case semanticVersion
+    case appBundleVersion
+    case sourceCommit
+    case sourceState
   }
 }

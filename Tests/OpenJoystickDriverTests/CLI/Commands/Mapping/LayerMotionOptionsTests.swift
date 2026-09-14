@@ -22,12 +22,10 @@ struct LayerMotionOptionsTests {
       layerID: layer.id,
       options: MappingOptions(["--motion-yaw-sensitivity", "2"])
     )
-    #expect(edited.schemaVersion == RemappingProfile.currentSchemaVersion)
     #expect(edited.id == original.id)
     #expect(edited.device == original.device)
     #expect(edited.bindings == original.bindings)
     #expect(edited.layers[0].id == layer.id)
-    #expect(original.schemaVersion == RemappingProfile.currentSchemaVersion)
     #expect(original.layers[0].motionTuning == nil)
     let cleared = try MappingProfileEditor.settingLayerMotion(
       original,

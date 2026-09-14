@@ -14,7 +14,7 @@ public struct RemappingLongHold: Codable, Equatable, Hashable, Sendable {
   }
 
   private enum CodingKeys: String, CodingKey {
-    case durationMs = "duration_ms"
+    case durationMs
     case destination
   }
 }
@@ -33,7 +33,7 @@ public struct RemappingDoubleTap: Codable, Equatable, Hashable, Sendable {
   }
 
   private enum CodingKeys: String, CodingKey {
-    case windowMs = "window_ms"
+    case windowMs
     case destination
   }
 }

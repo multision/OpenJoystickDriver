@@ -9,7 +9,7 @@ public struct ApplicationServiceMotionCalibrationArguments: Codable, Sendable {
   }
 
   private enum CodingKeys: String, CodingKey {
-    case runtimeIdentifier = "runtime_identifier"
+    case runtimeIdentifier
     case command
   }
 }

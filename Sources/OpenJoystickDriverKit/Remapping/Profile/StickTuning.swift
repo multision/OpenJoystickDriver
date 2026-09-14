@@ -34,11 +34,11 @@ public struct RemappingStickTuning: Codable, Equatable, Hashable, Sendable {
   }
 
   private enum CodingKeys: String, CodingKey {
-    case innerDeadzone = "inner_deadzone"
-    case outerDeadzone = "outer_deadzone"
-    case responseExponent = "response_exponent"
-    case invertX = "invert_x"
-    case invertY = "invert_y"
+    case innerDeadzone
+    case outerDeadzone
+    case responseExponent
+    case invertX
+    case invertY
   }
 
   public init(from decoder: any Decoder) throws {

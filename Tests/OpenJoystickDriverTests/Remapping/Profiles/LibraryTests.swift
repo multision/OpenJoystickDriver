@@ -171,22 +171,21 @@ struct ProfileLibraryTests {
     }
   }
 
-  @Test(arguments: [0, 1, 3, Int.max])
-  func unsupportedEmptyLibraryIsPreserved(version: Int) async throws {
+  @Test(arguments: ["schemaVersion", "schema_version"])
+  func versionTaggedLibraryIsRejectedWithoutChangingBytes(key: String) async throws {
     try await withLibrary { library, url in
       let original = Data(
         """
-        {"profiles":[],"schema_version":\(version),"active_profiles":[],
-         "future_metadata":{"preserve":"unknown fields and formatting"}}
+        {"profiles":[],"\(key)":2,"activeProfiles":[]}
         """.utf8
       )
       try original.write(to: url)
 
-      await #expect(throws: RemappingProfileLibraryError.unsupportedLibraryVersion(version)) {
+      await #expect(throws: RemappingProfileLibraryError.corruptLibrary) {
         _ = try await library.profiles()
       }
       #expect(try Data(contentsOf: url) == original)
-      await #expect(throws: RemappingProfileLibraryError.unsupportedLibraryVersion(version)) {
+      await #expect(throws: RemappingProfileLibraryError.corruptLibrary) {
         try await library.create(makeProfile(name: "Primary"))
       }
       #expect(try Data(contentsOf: url) == original)
@@ -194,7 +193,7 @@ struct ProfileLibraryTests {
   }
 
   @Test
-  func nonEmptyLegacyLibraryStillRejectsUnsupportedVersion() async throws {
+  func legacyLibraryIsRejectedWithoutRewriting() async throws {
     try await withLibrary { library, url in
       let profile = makeProfile(name: "Primary")
       let encodedProfile = try JSONEncoder().encode(profile)
@@ -204,31 +203,13 @@ struct ProfileLibraryTests {
       let legacyObject: [String: Any] = [
         "schema_version": 1, "profiles": [profileObject], "active_profiles": [],
       ]
-      try JSONSerialization.data(withJSONObject: legacyObject).write(to: url)
+      let original = try JSONSerialization.data(withJSONObject: legacyObject)
+      try original.write(to: url)
 
-      await #expect(throws: RemappingProfileLibraryError.unsupportedLibraryVersion(1)) {
+      await #expect(throws: RemappingProfileLibraryError.corruptLibrary) {
         _ = try await library.profiles()
       }
-    }
-  }
-
-  @Test
-  func olderProfileVersionIsReportedWithoutParsingItsFields() async throws {
-    try await withLibrary { library, url in
-      var profileObject = try #require(
-        JSONSerialization.jsonObject(with: JSONEncoder().encode(makeProfile(name: "Old")))
-          as? [String: Any]
-      )
-      profileObject["schema_version"] = 2
-      profileObject["bindings"] = "must not be decoded"
-      let object: [String: Any] = [
-        "schema_version": 2, "profiles": [profileObject], "active_profiles": [],
-      ]
-      try JSONSerialization.data(withJSONObject: object).write(to: url)
-
-      await #expect(
-        throws: RemappingProfileLibraryError.invalidProfile(.unsupportedSchemaVersion(2))
-      ) { _ = try await library.profiles() }
+      #expect(try Data(contentsOf: url) == original)
     }
   }
 

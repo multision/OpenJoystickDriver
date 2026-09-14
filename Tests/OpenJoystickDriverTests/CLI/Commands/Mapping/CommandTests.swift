@@ -520,7 +520,7 @@ struct MappingCommandTests {
     let profile = makeProfile(name: "JSON")
     let first = try MappingRenderer.json(profile)
     #expect(first == (try MappingRenderer.json(profile)))
-    #expect(first.contains("\n  \"application_scope\""))
+    #expect(first.contains("\n  \"applicationScope\""))
     let keys = try #require(JSONSerialization.jsonObject(with: Data(first.utf8)) as? [String: Any])
     #expect(keys["name"] as? String == "JSON")
   }

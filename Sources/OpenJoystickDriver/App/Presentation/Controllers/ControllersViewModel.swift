@@ -21,8 +21,7 @@
 
     var selectedDevice: ApplicationServiceDeviceDescription? {
       guard let selectedRuntimeIdentifier else { return devices.first }
-      return devices.first { $0.runtimeIdentifier == selectedRuntimeIdentifier }
-        ?? devices.first
+      return devices.first { $0.runtimeIdentifier == selectedRuntimeIdentifier } ?? devices.first
     }
 
     func synchronizeSelection() {

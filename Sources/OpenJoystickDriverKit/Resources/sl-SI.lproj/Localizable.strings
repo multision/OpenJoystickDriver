@@ -601,8 +601,8 @@
 "cli.diagnose.expected_id_present" = "  Rezultat: PASS (pričakovani id je prisoten: %@)";
 "cli.diagnose.extension_heading" = "Sistemska razširitev DriverKit (v /Applications):";
 "cli.diagnose.extensions_folder_missing" = "  Rezultat: FAIL (manjka mapa SystemExtensions)";
-"cli.diagnose.fix_build_dext" = "  Popravek: zaženite: ./scripts/ojd build dext";
-"cli.diagnose.fix_rebuild_dev" = "  Popravek: zaženite: ./scripts/ojd build install dev";
+"cli.diagnose.fix_build_dext" = "  Popravek: zaženite: ./Scripts/ojd build dext";
+"cli.diagnose.fix_rebuild_dev" = "  Popravek: zaženite: ./Scripts/ojd build install dev";
 "cli.diagnose.heading" = "Diagnostika OpenJoystickDriver";
 "cli.diagnose.interface_line" = "    Vmesnik %d/%d: %02X/%@/%@";
 "cli.diagnose.macos_version" = "macOS: %d.%d.%d";
@@ -618,7 +618,7 @@
 "cli.diagnose.troubleshoot_driverkit" = "  Razširitev DriverKit manjka ali je pokvarjena?";
 "cli.diagnose.troubleshoot_input_monitoring" = "    -> Podelite Nadzor vnosa: Sistemske nastavitve -> Zasebnost in varnost -> Nadzor vnosa";
 "cli.diagnose.troubleshoot_no_input" = "  Ni vhoda s krmilnika?";
-"cli.diagnose.troubleshoot_rebuild" = "    -> Zaženite: ./scripts/ojd build install dev";
+"cli.diagnose.troubleshoot_rebuild" = "    -> Zaženite: ./Scripts/ojd build install dev";
 "cli.diagnose.troubleshoot_report_command" = "    -> Zaženite: --headless diagnose report";
 "cli.diagnose.troubleshoot_reporting" = "  Poročate o težavi s krmilnikom?";
 "cli.diagnose.troubleshoot_virtual_device" = "  Navidezna naprava uporabniškega prostora ni na voljo?";
@@ -640,14 +640,14 @@
 "cli.error.missing_command" = "Zahtevan je ukaz.";
 "cli.error.missing_subcommand" = "„%@“ zahteva podukaz.";
 "cli.error.no_output" = "  (ni izhoda)";
-"cli.error.rebuild_fast_step" = "  1) Zaženite: ./scripts/ojd build install-fast dev";
+"cli.error.rebuild_fast_step" = "  1) Zaženite: ./Scripts/ojd build install-fast dev";
 "cli.error.rerun_step" = "  2) Nato znova zaženite: /Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless %@";
 "cli.error.signature_verification_failed" = "%@ ni uspelo: preverjanje podpisa aplikacije ni uspelo:";
 "cli.error.unexpected_arguments" = "„%@“ ne sprejema dodatnih argumentov.";
 "cli.error.unknown_command" = "Neznan ukaz „%@“.";
 "cli.extension.approval_required" = "Zahteva za sistemsko razširitev je poslana in zahteva odobritev v Sistemskih nastavitvah.";
 "cli.extension.bundle_missing" = "Paket aplikacije ne vsebuje %@.dext";
-"cli.extension.bundle_missing_fix" = "Popravek: zaženite ./scripts/ojd build install dev, nato poskusite znova iz /Applications.";
+"cli.extension.bundle_missing_fix" = "Popravek: zaženite ./Scripts/ojd build install dev, nato poskusite znova iz /Applications.";
 "cli.extension.cancelled" = "Zahteva za sistemsko razširitev je preklicana.";
 "cli.extension.completed" = "Zahteva za sistemsko razširitev se je končala z rezultatom %@.";
 "cli.extension.failed" = "Zahteva za sistemsko razširitev ni uspela: %@ code=%d %@";

@@ -122,18 +122,18 @@ public struct RemappingStickMapping: Codable, Equatable, Hashable, Sendable {
 
   private enum CodingKeys: String, CodingKey {
     case source, mode, tuning
-    case aimDegreesPerSecond = "aim_degrees_per_second"
-    case pointerPointsPerDegree = "pointer_points_per_degree"
-    case flickDurationMs = "flick_duration_ms"
-    case flickThreshold = "flick_threshold"
-    case flickHysteresis = "flick_hysteresis"
-    case pointerRadiusPoints = "pointer_radius_points"
-    case scrollDegreesPerLine = "scroll_degrees_per_line"
-    case scrollAxis = "scroll_axis"
-    case rotationDirection = "rotation_direction"
-    case steeringDegreesAtFullScale = "steering_degrees_at_full_scale"
-    case steeringReturnDegreesPerSecond = "steering_return_degrees_per_second"
-    case steeringOutput = "steering_output"
+    case aimDegreesPerSecond
+    case pointerPointsPerDegree
+    case flickDurationMs
+    case flickThreshold
+    case flickHysteresis
+    case pointerRadiusPoints
+    case scrollDegreesPerLine
+    case scrollAxis
+    case rotationDirection
+    case steeringDegreesAtFullScale
+    case steeringReturnDegreesPerSecond
+    case steeringOutput
     case passthrough
   }
 

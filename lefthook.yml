@@ -1,10 +1,10 @@
 pre-commit:
   commands:
     check-index:
-      run: bash scripts/quality/check-index-snapshot.sh
+      run: bash Scripts/Quality/check-index-snapshot.sh
 
 pre-push:
   commands:
     check-pushed-tips:
-      run: bash scripts/quality/check-pushed-tips.sh
+      run: bash Scripts/Quality/check-pushed-tips.sh
       use_stdin: true

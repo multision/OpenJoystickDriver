@@ -601,8 +601,8 @@
 "cli.diagnose.expected_id_present" = "  Resultat: PASS (förväntat id finns: %@)";
 "cli.diagnose.extension_heading" = "DriverKit-systemtillägg (i /Applications):";
 "cli.diagnose.extensions_folder_missing" = "  Resultat: FAIL (mappen SystemExtensions saknas)";
-"cli.diagnose.fix_build_dext" = "  Åtgärd: kör: ./scripts/ojd build dext";
-"cli.diagnose.fix_rebuild_dev" = "  Åtgärd: kör: ./scripts/ojd build install dev";
+"cli.diagnose.fix_build_dext" = "  Åtgärd: kör: ./Scripts/ojd build dext";
+"cli.diagnose.fix_rebuild_dev" = "  Åtgärd: kör: ./Scripts/ojd build install dev";
 "cli.diagnose.heading" = "OpenJoystickDriver-diagnostik";
 "cli.diagnose.interface_line" = "    Interface %d/%d: %02X/%@/%@";
 "cli.diagnose.macos_version" = "macOS: %d.%d.%d";
@@ -618,7 +618,7 @@
 "cli.diagnose.troubleshoot_driverkit" = "  DriverKit-tillägg saknas/trasigt?";
 "cli.diagnose.troubleshoot_input_monitoring" = "    -> Bevilja Inmatningsövervakning: Systeminställningar -> Integritet och säkerhet -> Inmatningsövervakning";
 "cli.diagnose.troubleshoot_no_input" = "  Ingen inmatning från kontrollen?";
-"cli.diagnose.troubleshoot_rebuild" = "    -> Kör: ./scripts/ojd build install dev";
+"cli.diagnose.troubleshoot_rebuild" = "    -> Kör: ./Scripts/ojd build install dev";
 "cli.diagnose.troubleshoot_report_command" = "    -> Kör: --headless diagnose report";
 "cli.diagnose.troubleshoot_reporting" = "  Rapportera ett kontrollproblem?";
 "cli.diagnose.troubleshoot_virtual_device" = "  Virtuell user-space-enhet otillgänglig?";
@@ -640,14 +640,14 @@
 "cli.error.missing_command" = "Ett kommando krävs.";
 "cli.error.missing_subcommand" = "“%@” kräver ett underkommando.";
 "cli.error.no_output" = "  (ingen utdata)";
-"cli.error.rebuild_fast_step" = "  1) Kör: ./scripts/ojd build install-fast dev";
+"cli.error.rebuild_fast_step" = "  1) Kör: ./Scripts/ojd build install-fast dev";
 "cli.error.rerun_step" = "  2) Kör sedan igen: /Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless %@";
 "cli.error.signature_verification_failed" = "%@ misslyckades: verifiering av appsignatur misslyckades:";
 "cli.error.unexpected_arguments" = "“%@” tar inte emot ytterligare argument.";
 "cli.error.unknown_command" = "Okänt kommando “%@”.";
 "cli.extension.approval_required" = "Begäran om systemtillägg skickad och kräver godkännande i Systeminställningar.";
 "cli.extension.bundle_missing" = "Appbunten innehåller inte %@.dext";
-"cli.extension.bundle_missing_fix" = "Åtgärd: kör ./scripts/ojd build install dev och försök sedan igen från /Applications.";
+"cli.extension.bundle_missing_fix" = "Åtgärd: kör ./Scripts/ojd build install dev och försök sedan igen från /Applications.";
 "cli.extension.cancelled" = "Begäran om systemtillägg avbruten.";
 "cli.extension.completed" = "Begäran om systemtillägg avslutad med resultat %@.";
 "cli.extension.failed" = "Begäran om systemtillägg misslyckades: %@ code=%d %@";

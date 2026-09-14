@@ -601,8 +601,8 @@
 "cli.diagnose.expected_id_present" = "  Tulos: PASS (odotettu id paikalla: %@)";
 "cli.diagnose.extension_heading" = "DriverKit-järjestelmälaajennus (kansiossa /Applications):";
 "cli.diagnose.extensions_folder_missing" = "  Tulos: FAIL (SystemExtensions-kansio puuttuu)";
-"cli.diagnose.fix_build_dext" = "  Korjaus: suorita: ./scripts/ojd build dext";
-"cli.diagnose.fix_rebuild_dev" = "  Korjaus: suorita: ./scripts/ojd build install dev";
+"cli.diagnose.fix_build_dext" = "  Korjaus: suorita: ./Scripts/ojd build dext";
+"cli.diagnose.fix_rebuild_dev" = "  Korjaus: suorita: ./Scripts/ojd build install dev";
 "cli.diagnose.heading" = "OpenJoystickDriver-diagnostiikka";
 "cli.diagnose.interface_line" = "    Interface %d/%d: %02X/%@/%@";
 "cli.diagnose.macos_version" = "macOS: %d.%d.%d";
@@ -618,7 +618,7 @@
 "cli.diagnose.troubleshoot_driverkit" = "  DriverKit-laajennus puuttuu/rikki?";
 "cli.diagnose.troubleshoot_input_monitoring" = "    -> Myönnä Syötteen valvonta: Järjestelmäasetukset -> Yksityisyys ja suojaus -> Syötteen valvonta";
 "cli.diagnose.troubleshoot_no_input" = "  Ei syötettä ohjaimesta?";
-"cli.diagnose.troubleshoot_rebuild" = "    -> Suorita: ./scripts/ojd build install dev";
+"cli.diagnose.troubleshoot_rebuild" = "    -> Suorita: ./Scripts/ojd build install dev";
 "cli.diagnose.troubleshoot_report_command" = "    -> Suorita: --headless diagnose report";
 "cli.diagnose.troubleshoot_reporting" = "  Ilmoitatko ohjainongelmasta?";
 "cli.diagnose.troubleshoot_virtual_device" = "  Virtuaalinen user-space-laite ei käytettävissä?";
@@ -640,14 +640,14 @@
 "cli.error.missing_command" = "Komento vaaditaan.";
 "cli.error.missing_subcommand" = "”%@” edellyttää alikomentoa.";
 "cli.error.no_output" = "  (ei tulostetta)";
-"cli.error.rebuild_fast_step" = "  1) Suorita: ./scripts/ojd build install-fast dev";
+"cli.error.rebuild_fast_step" = "  1) Suorita: ./Scripts/ojd build install-fast dev";
 "cli.error.rerun_step" = "  2) Suorita sitten uudelleen: /Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless %@";
 "cli.error.signature_verification_failed" = "%@ epäonnistui: sovelluksen allekirjoituksen tarkistus epäonnistui:";
 "cli.error.unexpected_arguments" = "”%@” ei hyväksy lisäargumentteja.";
 "cli.error.unknown_command" = "Tuntematon komento ”%@”.";
 "cli.extension.approval_required" = "Järjestelmälaajennuspyyntö lähetetty ja vaatii hyväksynnän Järjestelmäasetuksissa.";
 "cli.extension.bundle_missing" = "Sovellusbundle ei sisällä tiedostoa %@.dext";
-"cli.extension.bundle_missing_fix" = "Korjaus: suorita ./scripts/ojd build install dev ja yritä sitten uudelleen kansiosta /Applications.";
+"cli.extension.bundle_missing_fix" = "Korjaus: suorita ./Scripts/ojd build install dev ja yritä sitten uudelleen kansiosta /Applications.";
 "cli.extension.cancelled" = "Järjestelmälaajennuspyyntö peruutettu.";
 "cli.extension.completed" = "Järjestelmälaajennuspyyntö valmistui tuloksella %@.";
 "cli.extension.failed" = "Järjestelmälaajennuspyyntö epäonnistui: %@ code=%d %@";

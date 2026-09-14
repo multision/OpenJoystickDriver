@@ -10,8 +10,8 @@ public struct RemappingDeviceScope: Codable, Equatable, Hashable, Sendable {
   }
 
   private enum CodingKeys: String, CodingKey {
-    case vendorID = "vendor_id"
-    case productID = "product_id"
+    case vendorID
+    case productID
   }
 }
 
@@ -33,7 +33,7 @@ public enum RemappingApplicationScope: Codable, Equatable, Hashable, Sendable {
 
   private enum CodingKeys: String, CodingKey {
     case type
-    case bundleIdentifier = "bundle_id"
+    case bundleIdentifier
   }
 
   public init(from decoder: any Decoder) throws {
@@ -54,6 +54,29 @@ public enum RemappingApplicationScope: Codable, Equatable, Hashable, Sendable {
       try container.encode(Kind.application, forKey: .type)
       try container.encode(bundleIdentifier, forKey: .bundleIdentifier)
     case .global: try container.encode(Kind.global, forKey: .type)
+    }
+  }
+}
+
+private struct RemappingJSONKey: CodingKey {
+  let stringValue: String
+  let intValue: Int? = nil
+
+  init?(stringValue: String) { self.stringValue = stringValue }
+  init?(intValue: Int) { return nil }
+}
+
+private extension Decoder {
+  func rejectUnknownRemappingProfileFields(_ allowed: Set<String>) throws {
+    let container = try self.container(keyedBy: RemappingJSONKey.self)
+    let unknown = Set(container.allKeys.map(\.stringValue)).subtracting(allowed).sorted()
+    guard unknown.isEmpty else {
+      throw DecodingError.dataCorrupted(
+        .init(
+          codingPath: codingPath,
+          debugDescription: "unknown field(s): \(unknown.joined(separator: ", "))"
+        )
+      )
     }
   }
 }
@@ -100,8 +123,8 @@ public struct RemappingAxisTuning: Codable, Equatable, Hashable, Sendable {
     case deadzone
     case gain
     case inverted
-    case responseCurve = "response_curve"
-    case digitalActivationThreshold = "digital_activation_threshold"
+    case responseCurve
+    case digitalActivationThreshold
   }
 }
 
@@ -118,8 +141,8 @@ public struct RemappingTurbo: Codable, Equatable, Hashable, Sendable {
   }
 
   private enum CodingKeys: String, CodingKey {
-    case repeatRateHz = "repeat_rate_hz"
-    case dutyCycle = "duty_cycle"
+    case repeatRateHz
+    case dutyCycle
   }
 }
 
@@ -176,12 +199,12 @@ public struct RemappingBinding: Codable, Equatable, Hashable, Identifiable, Send
     case source
     case destination
     case behavior
-    case pulseDurationMs = "pulse_duration_ms"
-    case axisTuning = "axis_tuning"
+    case pulseDurationMs
+    case axisTuning
     case turbo
-    case longHold = "long_hold"
-    case doubleTap = "double_tap"
-    case additionalActions = "additional_actions"
+    case longHold
+    case doubleTap
+    case additionalActions
   }
 
   public init(from decoder: any Decoder) throws {
@@ -221,7 +244,6 @@ public struct RemappingBinding: Codable, Equatable, Hashable, Identifiable, Send
   }
 }
 
-/// A versioned, locally persisted controller-to-system-input mapping profile.
 public struct RemappingPhysicalColor: Codable, Equatable, Sendable {
   public let red: UInt8
   public let green: UInt8
@@ -235,14 +257,12 @@ public struct RemappingPhysicalColor: Codable, Equatable, Sendable {
 }
 
 public struct RemappingProfile: Codable, Equatable, Identifiable, Sendable {
-  public static let currentSchemaVersion = 3
   public static let maximumBindingCount = 512
   public static let maximumEncodedBytes = RemappingPayloadLimits.maximumEncodedBytes
   public static let profileNameLengthRange = 1...80
   public static let layerNameLengthRange = 1...40
   public static let bundleIdentifierLengthRange = 3...255
 
-  public let schemaVersion: Int
   public let id: UUID
   public let name: String
   public let device: RemappingDeviceScope
@@ -261,7 +281,6 @@ public struct RemappingProfile: Codable, Equatable, Identifiable, Sendable {
   public let layers: [RemappingLayer]
 
   public init(
-    schemaVersion: Int = Self.currentSchemaVersion,
     id: UUID = UUID(),
     name: String,
     device: RemappingDeviceScope,
@@ -279,7 +298,6 @@ public struct RemappingProfile: Codable, Equatable, Identifiable, Sendable {
     sequences: [RemappingSequence] = [],
     layers: [RemappingLayer] = []
   ) {
-    self.schemaVersion = schemaVersion
     self.id = id
     self.name = name
     self.device = device
@@ -299,19 +317,18 @@ public struct RemappingProfile: Codable, Equatable, Identifiable, Sendable {
   }
 
   private enum CodingKeys: String, CodingKey {
-    case schemaVersion = "schema_version"
     case id
     case name
     case device
-    case applicationScope = "application_scope"
-    case outputPolicy = "output_policy"
-    case physicalColor = "physical_color"
-    case motionTuning = "motion_tuning"
-    case gyroOutput = "gyro_output"
-    case joyConPair = "joy_con_pair"
-    case stickMappings = "stick_mappings"
-    case triggerMappings = "trigger_mappings"
-    case touchMappings = "touch_mappings"
+    case applicationScope
+    case outputPolicy
+    case physicalColor
+    case motionTuning
+    case gyroOutput
+    case joyConPair
+    case stickMappings
+    case triggerMappings
+    case touchMappings
     case bindings
     case chords
     case sequences
@@ -319,11 +336,12 @@ public struct RemappingProfile: Codable, Equatable, Identifiable, Sendable {
   }
 
   public init(from decoder: any Decoder) throws {
+    try decoder.rejectUnknownRemappingProfileFields([
+      "id", "name", "device", "applicationScope", "outputPolicy", "physicalColor", "motionTuning",
+      "gyroOutput", "joyConPair", "stickMappings", "triggerMappings", "touchMappings", "bindings",
+      "chords", "sequences", "layers",
+    ])
     let container = try decoder.container(keyedBy: CodingKeys.self)
-    schemaVersion = try container.decode(Int.self, forKey: .schemaVersion)
-    guard schemaVersion == Self.currentSchemaVersion else {
-      throw RemappingValidationError.unsupportedSchemaVersion(schemaVersion)
-    }
     id = try container.decode(UUID.self, forKey: .id)
     name = try container.decode(String.self, forKey: .name)
     device = try container.decode(RemappingDeviceScope.self, forKey: .device)
@@ -360,7 +378,6 @@ public struct RemappingProfile: Codable, Equatable, Identifiable, Sendable {
 
   public func encode(to encoder: any Encoder) throws {
     var container = encoder.container(keyedBy: CodingKeys.self)
-    try container.encode(schemaVersion, forKey: .schemaVersion)
     try container.encode(id, forKey: .id)
     try container.encode(name, forKey: .name)
     try container.encode(device, forKey: .device)

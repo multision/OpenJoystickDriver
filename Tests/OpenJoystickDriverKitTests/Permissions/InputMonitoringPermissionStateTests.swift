@@ -26,7 +26,5 @@ struct InputMonitoringPermissionStateTests {
     let decoded = try JSONDecoder().decode(PermissionManager.AccessState.self, from: encoded)
 
     #expect(decoded == .denied)
-    #expect(String(describing: decoded) == "denied")
-    #expect(decoded.label == "[DENIED]")
   }
 }

@@ -13,10 +13,7 @@ private actor ControllerRecordProbeIsolation {
     renderProbeRecord(plan: plan, parser: parser, isolation: self)
   }
 
-  func sendStartupPackets(
-    session: any USBTransportSession,
-    endpoint: UInt8
-  ) async throws {
+  func sendStartupPackets(session: any USBTransportSession, endpoint: UInt8) async throws {
     try await writeProbeStartupPackets(
       parser: parser,
       session: session,
@@ -89,20 +86,13 @@ func runControllerRecordProbe(recordPath: String, seconds: Int, validateOnly: Bo
           + " route=\(device.route.rawValue) result=opened"
       )
 
-      try await isolation.sendStartupPackets(
-        session: session,
-        endpoint: transport.outputEndpoint
-      )
+      try await isolation.sendStartupPackets(session: session, endpoint: transport.outputEndpoint)
       print("RECORD_HANDSHAKE driver=\(plan.driver.rawValue) result=complete")
 
       if transport.postHandshakeSettleNanoseconds > 0 {
         try await Task.sleep(nanoseconds: transport.postHandshakeSettleNanoseconds)
       }
-      let summary = try await isolation.monitor(
-        plan: plan,
-        session: session,
-        seconds: seconds
-      )
+      let summary = try await isolation.monitor(plan: plan, session: session, seconds: seconds)
       await session.close()
       print(
         "RECORD_SUMMARY packets=\(summary.packets)"

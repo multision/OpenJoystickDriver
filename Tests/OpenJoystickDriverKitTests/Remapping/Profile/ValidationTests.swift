@@ -171,18 +171,6 @@ struct RemappingValidationTests {
     )
     #expect(throws: RemappingValidationError.invalidProfileName) { try invalidName.validate() }
 
-    let futureVersion = RemappingProfile.currentSchemaVersion + 1
-    let unsupportedVersion = RemappingProfile(
-      schemaVersion: futureVersion,
-      name: "Future",
-      device: RemappingDeviceScope(vendorID: 1, productID: 2),
-      applicationScope: .global,
-      bindings: []
-    )
-    #expect(throws: RemappingValidationError.unsupportedSchemaVersion(futureVersion)) {
-      try unsupportedVersion.validate()
-    }
-
     let binding = RemappingBinding(
       source: .button(.south),
       destination: .keyboard(key: .space, modifiers: [])

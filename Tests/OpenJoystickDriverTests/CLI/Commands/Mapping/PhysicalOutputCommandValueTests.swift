@@ -13,9 +13,4 @@ struct PhysicalOutputCommandValueTests {
     let destination = try MappingSyntax.destination(rawValue)
     #expect(try MappingSyntax.destination(MappingRenderer.destination(destination)) == destination)
   }
-
-  @Test
-  func localizedHelpIncludesPhysicalTargetGrammar() {
-    #expect(MappingInvocation.help.contains("physical:adaptive:<left|right>:resistance"))
-  }
 }

@@ -601,8 +601,8 @@
 "cli.diagnose.expected_id_present" = "  Tulemus: PASS (oodatud id on olemas: %@)";
 "cli.diagnose.extension_heading" = "DriverKiti süsteemilaiend (kaustas /Applications):";
 "cli.diagnose.extensions_folder_missing" = "  Tulemus: FAIL (kaust SystemExtensions puudub)";
-"cli.diagnose.fix_build_dext" = "  Parandus: käivita: ./scripts/ojd build dext";
-"cli.diagnose.fix_rebuild_dev" = "  Parandus: käivita: ./scripts/ojd build install dev";
+"cli.diagnose.fix_build_dext" = "  Parandus: käivita: ./Scripts/ojd build dext";
+"cli.diagnose.fix_rebuild_dev" = "  Parandus: käivita: ./Scripts/ojd build install dev";
 "cli.diagnose.heading" = "OpenJoystickDriveri diagnostika";
 "cli.diagnose.interface_line" = "    Liides %d/%d: %02X/%@/%@";
 "cli.diagnose.macos_version" = "macOS: %d.%d.%d";
@@ -618,7 +618,7 @@
 "cli.diagnose.troubleshoot_driverkit" = "  Kas DriverKiti laiend puudub või on katki?";
 "cli.diagnose.troubleshoot_input_monitoring" = "    -> Anna Sisendi jälgimine: Süsteemiseaded -> Privaatsus ja turvalisus -> Sisendi jälgimine";
 "cli.diagnose.troubleshoot_no_input" = "  Kontrollerist pole sisendit?";
-"cli.diagnose.troubleshoot_rebuild" = "    -> Käivita: ./scripts/ojd build install dev";
+"cli.diagnose.troubleshoot_rebuild" = "    -> Käivita: ./Scripts/ojd build install dev";
 "cli.diagnose.troubleshoot_report_command" = "    -> Käivita: --headless diagnose report";
 "cli.diagnose.troubleshoot_reporting" = "  Kas teatad kontrolleriprobleemist?";
 "cli.diagnose.troubleshoot_virtual_device" = "  Kasutajaruumi virtuaalseade pole saadaval?";
@@ -640,14 +640,14 @@
 "cli.error.missing_command" = "Käsk on nõutav.";
 "cli.error.missing_subcommand" = "„%@“ nõuab alamkäsku.";
 "cli.error.no_output" = "  (väljundit pole)";
-"cli.error.rebuild_fast_step" = "  1) Käivita: ./scripts/ojd build install-fast dev";
+"cli.error.rebuild_fast_step" = "  1) Käivita: ./Scripts/ojd build install-fast dev";
 "cli.error.rerun_step" = "  2) Seejärel käivita uuesti: /Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless %@";
 "cli.error.signature_verification_failed" = "%@ nurjus: rakenduse allkirja kontroll nurjus:";
 "cli.error.unexpected_arguments" = "„%@“ ei võta lisakäsundeid.";
 "cli.error.unknown_command" = "Tundmatu käsk „%@“.";
 "cli.extension.approval_required" = "Süsteemilaiendi taotlus on esitatud ja vajab kinnitust Süsteemiseadetes.";
 "cli.extension.bundle_missing" = "Rakenduspakett ei sisalda faili %@.dext";
-"cli.extension.bundle_missing_fix" = "Parandus: käivita ./scripts/ojd build install dev, seejärel proovi uuesti kaustast /Applications.";
+"cli.extension.bundle_missing_fix" = "Parandus: käivita ./Scripts/ojd build install dev, seejärel proovi uuesti kaustast /Applications.";
 "cli.extension.cancelled" = "Süsteemilaiendi taotlus tühistati.";
 "cli.extension.completed" = "Süsteemilaiendi taotlus lõppes tulemusega %@.";
 "cli.extension.failed" = "Süsteemilaiendi taotlus nurjus: %@ code=%d %@";

@@ -12,7 +12,8 @@ private let xidStickMax = Float(Int16.max)
 /// analog black/white shoulders in bytes 8–9, analog triggers in bytes 10–11,
 /// and Int16 LE sticks at bytes 12–19. Any nonzero analog face or shoulder
 /// value is pressed, matching `input_report_key` in `xpad.c`.
-public final class XIDParser: InputParser {
+public final class XIDParser: InputParser, PhysicalRumbleOutput {
+  private let outEndpoint: UInt8
   private var prevDigital: UInt8 = 0
   private var prevA: UInt8 = 0
   private var prevB: UInt8 = 0
@@ -27,7 +28,25 @@ public final class XIDParser: InputParser {
   private var prevRSX: Int16 = 0
   private var prevRSY: Int16 = 0
 
-  public init() {}
+  public init(outEndpoint: UInt8 = 0x02) { self.outEndpoint = outEndpoint }
+
+  public func physicalRumblePacket(
+    left: UInt8,
+    right: UInt8,
+    lt _: UInt8,
+    rt _: UInt8
+  ) -> PhysicalUSBOutputPacket {
+    let leftValue = UInt16(left) * 257
+    let rightValue = UInt16(right) * 257
+    return PhysicalUSBOutputPacket(
+      endpoint: outEndpoint,
+      bytes: [
+        0x00, 0x06, UInt8(leftValue >> 8), UInt8(leftValue & 0xFF), UInt8(rightValue >> 8),
+        UInt8(rightValue & 0xFF),
+      ],
+      timeoutMilliseconds: 2_000
+    )
+  }
 
   public func parse(data: Data) throws -> [ControllerEvent] {
     guard data.count >= xidInputReportLength else { return [] }

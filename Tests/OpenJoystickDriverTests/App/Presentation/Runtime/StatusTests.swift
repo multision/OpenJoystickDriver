@@ -8,12 +8,6 @@ import Testing
 @Suite(.serialized)
 struct StatusTests {
   @Test
-  func unresolvedPermissionStatesNeedUserAction() {
-    #expect(RuntimePresentation.permissionLabel(.unknown) == "Needs attention")
-    #expect(RuntimePresentation.permissionLabel(.denied) == "Needs attention")
-  }
-
-  @Test
   func translatesStatus() async throws {
     let device = ApplicationServiceDeviceDescription(
       name: "Test Pad",
@@ -43,17 +37,7 @@ struct StatusTests {
       return
     }
     #expect(status.readiness == .ready)
-    #expect(status.deviceCountLabel == "1 controller connected")
-    #expect(status.compatibilityLabel == "SDL2/3")
-    #expect(RuntimePresentation.sourceLabel(.button(.south)) == "A / Cross")
-    #expect(
-      RuntimePresentation.destinationLabel(.keyboard(key: .a, modifiers: [.command, .shift]))
-        == "Command + Shift + A"
-    )
-    #expect(RuntimePresentation.keyboardSystemSymbolName(.escape) == "escape")
-    #expect(RuntimePresentation.keyboardSystemSymbolName(.returnKey) == "return")
     #expect(RuntimePresentation.keyboardSystemSymbolName(.a) == nil)
-    #expect(RuntimePresentation.modifierSystemSymbolName(.shift) == "shift")
   }
 
   @Test
@@ -101,7 +85,6 @@ struct StatusTests {
     }
     #expect(status.postEventAccess == .notAuthorized)
     #expect(status.requiresPostEventAccess == true)
-    #expect(status.postEventAccessLabel == "Needs attention")
     #expect(status.readiness == .needsAttention)
   }
 

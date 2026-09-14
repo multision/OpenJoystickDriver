@@ -15,9 +15,9 @@ enum CoreHIDInputSubscriptionPlan {
     for identifier: DeviceIdentifier,
     registry: ParserRegistry = ParserRegistry()
   ) -> Self {
-    guard let parser = registry.parser(for: identifier) as? any HIDElementValueParser else {
-      return .rawReports
-    }
+    guard
+      let parser = registry.parser(for: identifier, transport: .hid) as? any HIDElementValueParser
+    else { return .rawReports }
     return .elements(parser)
   }
 
