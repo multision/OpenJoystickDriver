@@ -1,6 +1,6 @@
-# Test a controller record
+# Test A Controller Record
 
-You can validate a candidate OJD JSON record without an Apple Developer Program membership. A raw
+Validate candidate OJD JSON records without Apple Developer Program membership. A raw
 USB probe uses direct IOUSBHost when macOS permits app ownership. A device claimed by OJD's
 restricted USBDriverKit route also requires the signed application and extension.
 
@@ -24,7 +24,7 @@ DEXT route requires the development signing assets described in
 its user client. Direct IOUSBHost probes do not use that user client. OJD does
 not use libusb.
 
-## 1. Save the candidate record
+## 1. Save The Candidate Record
 
 Save the proposed controller JSON outside the bundled record directory until you verify its VID, PID, interface, endpoints, and startup behavior. For example:
 
@@ -32,7 +32,7 @@ Save the proposed controller JSON outside the bundled record directory until you
 /tmp/controller-candidate.json
 ```
 
-Use decimal numbers in the JSON. Before probing, review `protocol.startupPackets`. The command sends only the startup behavior already modeled by OJD:
+Use decimal numbers in the JSON. Before probing, review `protocol.startupPackets`. The command sends only OJD-modeled startup behavior:
 
 - GIP: the named startup sequence; profiles may disable the default keep-alive
   when hardware evidence requires it.
@@ -44,7 +44,7 @@ Use decimal numbers in the JSON. Before probing, review `protocol.startupPackets
 the default-enabled behavior. Set it to `false` only when device evidence
 requires periodic host output to be disabled.
 
-## 2. Validate without opening hardware
+## 2. Validate Without Opening Hardware
 
 ```bash
 ./Scripts/ojd diagnose record /tmp/controller-candidate.json --validate-only
@@ -58,7 +58,7 @@ RECORD_VALIDATION result=valid
 
 Validation rejects unsupported protocol drivers, HID transports, invalid endpoint directions, invalid variants, and unknown startup packet names before opening a device.
 
-## 3. Probe the physical controller
+## 3. Probe The Physical Controller
 
 Quit games, Steam, and other controller tools first. Install and approve a signed
 development build, connect the controller directly by USB, then run:
@@ -81,17 +81,17 @@ If the interface is unavailable, preserve the selected route and live registry
 owner. Use `./Scripts/ojd diagnose dext` when the selected model requires the
 restricted extension. There is no detach or cross-transport fallback.
 
-## 4. Report results
+## 4. Report Results
 
-First identify which distribution path produced the behavior. An installed app
+Identify the distribution path that produced the behavior. An installed app
 and a source-built record probe are different test subjects:
 
 - **Installed app / shared DMG:** report the exact DMG filename and attach
   `OpenJoystickDriver-TESTER-BUILD.txt` from the DMG. For an installed copy,
   also run `/Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless diagnose report`.
   This exercises the packaged Developer ID-signed app and its embedded DEXT; it
-  does not use the Swift sources in a checkout. The community tester package is
-  notarized and stapled so it can replace the DriverKit extension with SIP enabled.
+  does not use the Swift sources in a checkout. The notarized, stapled community tester package
+  can replace the DriverKit extension with SIP enabled.
 - **Source-built record probe:** report the checkout commit and working-tree
   state, the record path, and the complete `./Scripts/ojd diagnose record ...`
   command and output. This route builds/runs the probe from the current source
@@ -101,7 +101,7 @@ Do not mix these reports: a source probe can validate a record while an older
 installed app or DEXT is still the behavior being observed, and an installed
 DMG cannot prove that an uncommitted source change was included.
 
-Attach the complete command and output to the controller's GitHub issue. Include:
+Attach the complete command, output, and these details to the controller's GitHub issue:
 
 - macOS version and Mac model
 - controller name and connection mode

@@ -1,8 +1,8 @@
-# Test Steam Controller hardware
+# Test Steam Controller Hardware
 
-We have experimental Steam Controller support based on Linux `hid-steam.c`. We still need real macOS output before calling it verified.
+Experimental Steam Controller support is based on Linux `hid-steam.c`; verification requires real macOS output.
 
-You can test:
+Supported test paths:
 
 - wired Steam Controller: `0x28de:0x1102`
 - wireless receiver: `0x28de:0x1142`
@@ -11,9 +11,9 @@ Keep Steam fully quit for the first pass. If you later repeat with Steam open, s
 
 OJD production discovery now matches both normal GamePad top-level collections and exact HID VID/PID identities loaded from bundled records. This specifically covers Steam Controller collections that remain exposed as keyboard or mouse lizard-mode devices.
 
-## What to send back
+## What To Send Back
 
-Start with the easiest evidence. If OJD cannot see the controller, a native macOS listing is still useful. Raw packets also help.
+Start with the easiest evidence: native macOS listings and raw packets help even if OJD cannot see the controller.
 
 Include:
 
@@ -25,7 +25,7 @@ Include:
 - full output for commands that found no device or no packets
 - any terminal text caused by the controller, such as escape sequences
 
-## 1. macOS native checks
+## 1. macOS Native Checks
 
 Plug in the wired controller or receiver, then run these before any OJD command:
 
@@ -39,7 +39,7 @@ Paste the entries that mention Valve, Steam, gamepad, keyboard, mouse, or `28de`
 
 For wired testing, click in a plain Terminal window and press a few Steam Controller buttons or the d-pad. Paste any escape sequences the terminal prints, such as `^[[A`. This shows that the controller is alive and still in lizard keyboard mode, even if OJD cannot open it yet.
 
-## 2. OJD device listing
+## 2. OJD Device Listing
 
 From the repository root:
 
@@ -47,9 +47,9 @@ From the repository root:
 swift run OpenJoystickDriverHIDTool --list
 ```
 
-Paste every `VID:0x28de` line. If there is no `VID:0x28de` line, say that and paste any nearby keyboard, mouse, or game controller lines that appear only while the controller is plugged in.
+Paste every `VID:0x28de` line. If none appear, say so and paste nearby keyboard, mouse, or game controller lines present only while connected.
 
-## 3. Wired controller capture
+## 3. Wired Controller Capture
 
 Run the HID monitor for the expected wired PID:
 
@@ -86,7 +86,7 @@ If you get `REPORT` or `USB_REPORT` lines, collect one neutral packet and one pa
 
 One action per capture is enough. Return to neutral between captures.
 
-## 4. Wireless receiver capture
+## 4. Wireless Receiver Capture
 
 Plug in only the receiver. Keep the controller off at first.
 
@@ -104,7 +104,7 @@ During the 60 second monitor run:
 5. Wait 10 seconds.
 6. Turn it back on without restarting the monitor.
 
-Paste all `REPORT ... bytes=...` lines around connect and disconnect. We are looking for these source-backed cases:
+Paste all `REPORT ... bytes=...` lines around connect and disconnect. Check these source-backed cases:
 
 - lifecycle report `0x03` with connected payload `0x02`
 - lifecycle report `0x03` with disconnected payload `0x01`
@@ -114,14 +114,14 @@ Also say whether Controller Settings lists the controller only after connect, cl
 
 ## 5. Lizard Mode
 
-Linux turns off the Steam Controller's mouse/keyboard lizard mappings while the driver owns the controller, then restores them on close. OJD sends the same feature report sequence. We need hardware confirmation on macOS.
+Linux turns off the Steam Controller's mouse/keyboard lizard mappings while the driver owns the controller, then restores them on close. OJD sends the same feature-report sequence; confirm its effect on macOS hardware.
 
 Check these states:
 
-- before OJD opens it, does the controller type keys or move the cursor?
-- while OJD Controller Settings Live is receiving input, does lizard keyboard/mouse behavior stop?
-- after OJD quits or the controller disconnects, does lizard behavior return?
-- if you repeat with Steam open, does Steam fight OJD or duplicate input?
+- Before OJD opens it: record whether the controller types keys or moves the cursor.
+- While Controller Settings Live receives input: check that lizard keyboard/mouse behavior stops.
+- After OJD quits or the controller disconnects: check that lizard behavior returns.
+- If repeating with Steam open: record conflicts with OJD or duplicate input.
 
 ## Paste-Back Report Form
 

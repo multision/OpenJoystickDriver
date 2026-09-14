@@ -4,7 +4,7 @@ Bluetooth Low Energy identity `D7D7:0041`, firmware 6.9.5.5, observed on
 macOS 26.5. The 2.4 GHz dongle and wired modes enumerate as different
 identities and are not covered by this record.
 
-## Why the record exists
+## Why The Record Exists
 
 The device advertises Generic Desktop GamePad usage, so descriptor-driven
 discovery finds it, but three descriptor properties defeat the generic parser:
@@ -21,7 +21,7 @@ triggers, LT and RT reported stick clicks, X reported Y, Y reported left
 bumper, RB reported Start, LB reported Back, Select reported Guide, Start
 reported nothing, and left-stick Y was inverted. The D-pad was correct.
 
-## Report layout
+## Report Layout
 
 Report ID `0x01`, 15 bytes. Neutral:
 `01 FF FF FF FF 00 00 00 00 00 00 00 00 00 00`.
@@ -39,10 +39,10 @@ Report ID `0x01`, 15 bytes. Neutral:
 | 13 | Left trigger, unsigned `0...255` |
 | 14 | Right trigger, unsigned `0...255` |
 
-Bytes 5 through 8 were `0x00` in every observed report.
+Bytes 5–8 were `0x00` in every observed report.
 
-The digital trigger bits in byte 10 accompany the analog values rather than
-replacing them, so the parser reads position from bytes 13 and 14 only.
+Byte 10's digital trigger bits accompany, not replace, analog values; the parser
+reads position only from bytes 13 and 14.
 
 C, Z, and M1 through M4 are decoded but have no `Button` case and no bit in
 the 16-button compatibility report, so they do not reach a consumer.
@@ -74,7 +74,7 @@ The entry should report `protocol=flydigi`. Then check each control:
   --headless controller state
 ```
 
-Push the left stick fully up and confirm the reported Y is negative. Deflect
+Push the left stick fully up; confirm negative Y. Deflect
 the right stick and confirm the triggers stay at rest. Press each face button,
 bumper, stick click, Select, Start, and Home in turn and confirm the reported
 name matches the physical label.

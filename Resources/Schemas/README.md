@@ -1,9 +1,9 @@
-# Machine-readable contracts
+# Machine-Readable Contracts
 
 `Resources/Schemas/` is the sole registry for OpenJoystickDriver-authored JSON.
 Its Draft 2020-12 schemas are resolved locally; runtime code never fetches them.
 
-## Live contracts
+## Live Contracts
 
 - `controller.schema.json`: generated runtime controller records.
 - `controller-override.schema.json`: authored additions and factual patches.
@@ -12,9 +12,9 @@ Its Draft 2020-12 schemas are resolved locally; runtime code never fetches them.
 Each artifact class has one current, unversioned contract. OJD-owned property
 names use lowerCamelCase, including `vendorID`, `profileID`, `startupPackets`,
 `keepAlive`, and `postHandshakeSettleMs`. JSON Schema keywords, CloudEvents
-context attributes, external API fields, and dynamic map keys retain the spelling
-owned by their standards or sources. Enum values, protocol identifiers, hashes,
-URLs, and user text are values, not property names, and are not recased.
+context attributes, external API fields, and dynamic map keys retain their
+standards' or sources' spelling. Do not recase values: enums,
+protocol identifiers, hashes, URLs, or user text.
 
 Change a schema atomically with every producer, consumer, authored input,
 generated output, and test. Do not add versioned schemas, aliases, migrations,

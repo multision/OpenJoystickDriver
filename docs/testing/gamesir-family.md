@@ -1,10 +1,10 @@
-# Test the GameSir G7 Pro, Cyclone 2, and G7 Pro 8K PC
+# Test The GameSir G7 Pro, Cyclone 2, And G7 Pro 8K PC
 
 These records and packet encoders are source-backed, not hardware-verified.
-Test the exact identity shown by the connected controller; do not infer one
-GameSir model from another.
+Test the connected controller's exact identity; never infer one GameSir model
+from another.
 
-## Covered identities
+## Covered Identities
 
 - G7 Pro configuration-ready USB: `3537:1003`, `105D`, `105E`, `109B`,
   `109C`, and `10BA`
@@ -16,7 +16,7 @@ GameSir model from another.
 T4 Kaleid and the White G7 Pro dongle report shares that identity. Existing
 Linux-backed `3537:100F` and `1010` routes are also unchanged.
 
-## Validate records and input
+## Validate Records And Input
 
 Run from the repository root:
 
@@ -36,7 +36,7 @@ Leave enhanced HID and configuration-ready USB modes connected for at least
 30 seconds to verify the 500 ms heartbeat. Unplug and reconnect, then confirm
 that no stale button, battery, lighting-slot, or sequence state survives.
 
-## Validate physical output
+## Validate Physical Output
 
 Use the installed app's Input Test output controls. On Cyclone 2, confirm that
 color applies one solid RGB value across controllable zones and brightness

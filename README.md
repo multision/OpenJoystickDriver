@@ -8,9 +8,8 @@
 [![BuyMeACoffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-ffdd00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/jarveaarkry)
 [![Ko-Fi](https://img.shields.io/badge/Ko--fi-F16061?style=for-the-badge&logo=ko-fi&logoColor=white)](https://ko-fi.com/krystian3219)
 
-A macOS userspace gamepad driver. The signed app runs the runtime; the same
-binary is the CLI. Use it when a controller works here but not in a game,
-emulator, SDL app, or native macOS app.
+A macOS userspace gamepad driver. The signed app binary hosts the runtime and CLI.
+Use it when a controller works here but not in a game, emulator, SDL app, or native macOS app.
 
 Xbox and PlayStation names in the UI are trademarks of Microsoft and Sony. This
 project is not affiliated with either.
@@ -38,7 +37,7 @@ One bundle, no helper app: `/Applications/OpenJoystickDriver.app`.
 Uninstall: `--headless app login disable`, quit, delete the app. Optionally
 remove it from Input Monitoring and Accessibility.
 
-## Compatibility identity
+## Compatibility Identity
 
 | Target | Setting |
 | --- | --- |

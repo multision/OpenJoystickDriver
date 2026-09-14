@@ -1,109 +1,11 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+All notable project changes are recorded here.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+The project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-
-### Fixed
-
-- Physical HID discovery no longer opens Apple GameController synthetic nodes
-  (`AppleGCSyntheticDevice` / `GamePad-1`). Matching now includes Apple's
-  documented `GCSyntheticDevice = false` exclusion so `IOHIDDeviceCreate` and
-  CoreHID `HIDDeviceClient` never `IOServiceOpen` that shim. The previous skip
-  looked up the C macro name instead of the IORegistry key and ran after the
-  open. Stock SDL `hid_init` match-all still hangs on a leftover wedged
-  GamePad-1 until reboot; OJD does not create that shim (gamecontrollerd does
-  when GameController binds an Xbox identity) and cannot drain stuck user
-  clients.
-- Development rebuilds keep Input Monitoring: the host is signed with a stable
-  team and bundle-id designated requirement instead of a unique-certificate pin.
-- After a TCC permission Quit & Reopen, a detached waiter waits until this
-  process is gone, boots out leftover Launch Services jobs whose pid is
-  dead, then opens the `.app` bundle via Launch Services. Menu Quit and
-  SIGTERM still exit without relaunch; they only retire a stale job so
-  Spotlight can open again. Do not spawn during terminate. Do not exec the
-  Mach-O.
-
-### Changed
-
-- BREAKING: Repository automation now uses the Apple-style `Scripts/` and
-  `Tools/` roots. `./Scripts/ojd` is the only supported script entrypoint; the
-  former lowercase developer paths have no compatibility aliases.
-- BREAKING: OpenJoystickDriver-owned JSON properties now use one unversioned
-  lowerCamelCase contract. Remapping libraries and profiles no longer carry or
-  accept schema-version tags or legacy snake-case property names.
-- Name physical wire families XID, XUSB, GIP, and HID. Catalog driver
-  `Xbox360` is now `XUSB`. Automatic compatibility uses one spoof route per
-  family: XUSB publishes `045E:028E`, GIP publishes `045E:0B13`, matching HID
-  dialects publish DualShock 4 / DualSense / Switch Pro, and remaining HID and
-  XID stay Generic HID.
-- Menu extra, controller list, and Input Test glyphs follow the published
-  virtual identity (official USB product name and system symbol), not the
-  physical pad family. Controller list subtitle, detail, and Input Test
-  header/title show that published USB product name and VID/PID. GameSir
-  G7 SE USB GIP publishing `045E:0B13` is hardware-verified for Apple
-  GameController. The Series Bluetooth packer
-  emits unsigned stick rest `0x8000` so HIDAPI xboxone BLE idle is signed 0
-  (`raw - 0x8000`) without jitter hiding a −1 from `0x7FFF`. Explicit picker
-  DualShock 4 (`054C:09CC`), DualSense (`054C:0CE6`), Switch Pro
-  (`057E:2009` "Pro Controller"), and Xbox 360 Wired (`045E:028E`) published
-  those USB identities from the same GIP pad: `GCController.supportsHIDDevice`
-  yes (Switch Pro no longer hangs), and a custom SDL 3.4.16 HIDAPI+IOKit build
-  (no GameController.framework) opened them as ps4, ps5, switchpro, and
-  xbox360. Switch Pro USB handshake replies are published on the IOKit
-  interrupt path so HIDAPI can finish `0x80`/`0x81` setup; Xbox 360 Wired
-  uses `bcdDevice` `0x0114` so SDL does not ignore `045E:028E` as a Steam
-  virtual pad. GameSir G7 SE GIP init completes: Hello `0x02` then one rest
-  `0x20` (36-byte Share report). Later `0x20` is change-only, so a status-only
-  packet log is ring-buffer eviction, not missing handshake. No physical
-  button bit was captured this session. Steam `hid_init` still hangs.
-  Automatic GIP routing stays Series.
-
-### Added
-
-- Just and CI now invoke Ruff, Pyright, ShellCheck, swift-format, SwiftLint,
-  Python unittest, and SwiftPM directly. The repository dispatcher remains for
-  repository-specific artifact and operational behavior.
-- Source-backed physical rumble for exact cataloged original-Xbox XID routes,
-  using the protocol's independent 16-bit left and right motor values. Physical
-  hardware verification remains outstanding.
-- Source-backed GameSir G7 Pro, Cyclone 2, and G7 Pro 8K PC input support with
-  exact wired and dongle identities, protocol-specific heartbeats, documented
-  extra controls, telemetry, and model-specific lighting output. G7 Pro
-  `3537:100A` and `3537:1022` remain input-only until physically switched to a
-  configuration-ready mode.
-- Wired SCUF Envision Pro `2E95:434D` Generic HID input using report 6, its
-  device-specific stick and trigger axis layout, buttons 1–10, and hat switch.
-  Existing SCUF `2E95:0504` GIP behavior is unchanged.
-- Selectable DualShock 4 (`dualshock4`, `054C:09CC`), DualSense
-  (`dualsense`, `054C:0CE6`), and Switch Pro (`switchpro`, `057E:2009`)
-  USB HID packers. Automatic routing publishes the matching first-party
-  identity when the physical pad is that dialect. Other HID stays Generic HID.
-- Userspace XID parser for original Xbox pads from Linux `xpad`
-  `XTYPE_XBOX`. Virtual output stays Generic HID; XID is not a HID identity.
-- DualShock 4, DualSense, and Switch Pro virtual HID descriptors now follow
-  captured USB layouts (sticks/hat/buttons, not an opaque 63-byte input).
-  Switch Pro reports are padded to the 64-byte descriptor length.
-- Explicit picker/CLI may publish first-party packer identities on a GIP pad
-  for live consumer-bind. Automatic routing stays family-strict (GIP → Series).
-- macOS 15+ virtual-device diagnostics fill `GCController.supportsHIDDevice`
-  by matching CoreHID snapshots to IOHID devices.
-- Report when CoreHID virtual HID creation fails because the Apple Development
-  provisioning profile does not include this Mac.
-
-### Removed
-
-- Retire the standalone HID set-report, isolated haptics-backend, and DMG
-  background probes, plus the undispatched build `nuke` route. Supported
-  diagnostics remain available through `./Scripts/ojd diagnose ...`.
-- Retire repository-local source-layout, source-size, script-prose, and
-  SwiftLint-wrapper checks, along with the generic dispatcher lint, format,
-  aggregate-check, capability-test, and Swift-test routes.
-
-## [0.5.0-beta.4] - 2026-09-05
 
 ### Added
 
@@ -116,23 +18,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   as analog triggers. Apple GameController identity is available so
   `GameController.framework` consumers can see the virtual device. Physical
   rumble is not claimed.
+- Run Ruff, Pyright, ShellCheck, swift-format, SwiftLint, Python unittest, and SwiftPM directly from Just and CI. Keep `./Scripts/ojd` for repository-specific operations.
+- Add source-backed XID input and independent 16-bit motor output for cataloged original-Xbox controllers. Physical rumble remains unverified; virtual output remains Generic HID because XID is not HID.
+- Add GameSir G7 Pro, Cyclone 2, and G7 Pro 8K PC input, heartbeats, extra controls, telemetry, and model-specific lighting. G7 Pro `3537:100A` and `3537:1022` stay input-only until a configuration-ready mode is hardware-verified.
+- Add wired SCUF Envision Pro `2E95:434D` Generic HID input from report 6. Existing `2E95:0504` GIP behavior is unchanged.
+- Add selectable DualShock 4 (`dualshock4`, `054C:09CC`), DualSense (`dualsense`, `054C:0CE6`), and Switch Pro (`switchpro`, `057E:2009`) USB HID packers and captured-layout descriptors. Switch Pro reports are padded to 64 bytes.
+- Let the picker and CLI publish those first-party identities from a GIP pad for consumer testing; automatic GIP routing remains Xbox Series.
+- On macOS 15+, correlate CoreHID and IOHID snapshots for `GCController.supportsHIDDevice` diagnostics, and report provisioning profiles that exclude the current Mac.
 
 ### Changed
 
 - Consult device-level compatibility availability when exposing a virtual
-  identity, instead of the physical-family overload alone.
-- Automatic compatibility uses a protocol × backend catalog: if the physical
-  VID/PID is already a first-party device that backend knows, keep that
-  identity; otherwise spoof the closest official device for that protocol.
-  Xbox 360-family pads publish Microsoft `045E:028E`. GIP pads publish Xbox
-  Series `045E:0B13`. DualShock 3/4/5, Switch, Steam Controller, and Flydigi
-  wait for virtual report formats. DualShock 1/2 is not a USB HIDAPI protocol.
+  identity, rather than the physical-family overload alone.
+- **BREAKING:** Repository automation now uses `Scripts/` and `Tools/`. `./Scripts/ojd` is the only supported script entry point; lowercase aliases were removed.
+- **BREAKING:** OpenJoystickDriver JSON now has one unversioned lowerCamelCase contract. Profiles and remapping libraries reject schema-version tags and legacy snake-case names.
+- Name wire families XID, XUSB, GIP, and HID; rename catalog driver `Xbox360` to `XUSB`. Automatic publishing is family-specific: XUSB uses Xbox 360, GIP uses Xbox Series, matching HID dialects use their first-party identity, and other HID or XID devices use Generic HID.
+- Show the published identity's official product name, VID/PID, symbol, and glyphs throughout the UI. Consumer-bind results, report details, and evidence limits are recorded in [consumer-binding evidence](docs/testing/consumer-binding.md), [wire protocols](docs/development/wire-protocols.md), and the [GameSir record](docs/testing/gamesir-family.md). Automatic GIP routing remains Xbox Series.
+
+### Removed
+
+- Remove standalone HID set-report, haptics-backend, and DMG-background probes, plus the undispatched build `nuke` route. Supported diagnostics remain under `./Scripts/ojd diagnose`.
+- Remove repository-local source-layout, source-size, script-prose, and SwiftLint-wrapper checks, plus generic dispatcher lint, format, aggregate-check, capability-test, and Swift-test routes.
 
 ### Fixed
 
-- Honor macOS Quit & Reopen from a permission grant. The menu-bar app no
-  longer relaunches itself during terminate, which left the extra running
-  and raced Launch Services (`open` error -600 / “not open anymore”).
+- Exclude Apple GameController synthetic HID nodes before opening them. This avoids creating new wedged `GamePad-1` clients; existing stuck clients still require a reboot. See [Apple controller ownership](docs/development/apple-controller-ownership.md).
+- Keep Input Monitoring across development rebuilds by signing the host with a stable team and bundle-ID requirement.
+- Complete TCC Quit & Reopen through Launch Services after the old process exits. Normal Quit and SIGTERM do not relaunch the app.
 - Write rumble and player-indicator packets for ZD Ultimate Legend
   (`413D:2104`) to interrupt OUT `0x02`. The Xbox 360 default OUT `0x01` is
   absent on this pad, so those writes failed with `notFound`.
@@ -394,7 +306,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Keep the menu-bar app alive after launch.
 
 [Unreleased]: https://github.com/xsyetopz/OpenJoystickDriver/compare/0.5.0-beta.4...HEAD
-[0.5.0-beta.4]: https://github.com/xsyetopz/OpenJoystickDriver/compare/0.5.0-beta.3...0.5.0-beta.4
 [0.5.0-beta.3]: https://github.com/xsyetopz/OpenJoystickDriver/compare/0.5.0-beta.2...0.5.0-beta.3
 [0.5.0-beta.2]: https://github.com/xsyetopz/OpenJoystickDriver/compare/0.5.0-beta.1...0.5.0-beta.2
 [0.5.0-beta.1]: https://github.com/xsyetopz/OpenJoystickDriver/releases/tag/0.5.0-beta.1

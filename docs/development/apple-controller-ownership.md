@@ -1,10 +1,10 @@
-# Apple controller ownership and transport evidence
+# Apple Controller Ownership And Transport Evidence
 
-OJD controller support is not defined by an Apple controller-personality list. Controller records
-and protocol implementations remain OJD's support sources. macOS ownership determines which Apple
+Controller records and protocol implementations define OJD support, not Apple's
+controller-personality lists. macOS ownership determines which Apple
 USB transport can reach a particular physical interface.
 
-## Current transport rule
+## Current Transport Rule
 
 - Standard HID input uses the OS-generation HID wrapper: IOHID on macOS 10.15–14 and CoreHID on
   macOS 15 and later.
@@ -18,11 +18,10 @@ USB transport can reach a particular physical interface.
 
 `OpenJoystickDriverUSB` records the selected route with each discovered service. It does not infer
 transport from a brand name and does not retry an open failure through a different backend. The
-Apple-entitled Microsoft models are always reserved for the DEXT, even when that DEXT is not
-currently available, because silently claiming them directly would bypass the established
-ownership and provisioning boundary.
+Apple-entitled Microsoft models are always reserved for the DEXT, even when unavailable: direct claims would bypass the established ownership and provisioning
+boundary.
 
-## Apple-issued OJD scope
+## Apple-Issued OJD Scope
 
 Apple granted the host user-client entitlement for the existing external identity
 `com.openjoystickdriver.XboxUSBDevice`. The production USB transport entitlement covers only:
@@ -39,9 +38,9 @@ Development uses the same exact entitlement. The GameSir G7 SE is discovered as 
 `IOUSBHostDevice`, configured from its catalog requirement, and opened by the app after its GIP
 interface appears.
 
-## Installed-system observations
+## Installed-System Observations
 
-The following is a local observation from macOS 26.6.1, not a public compatibility contract:
+Local macOS 26.6.1 observations, not a public compatibility contract:
 
 - `/System/Library/DriverExtensions/XboxGamepad.dext/Contents/Info.plist` has bundle identifier
   `com.apple.gamecontroller.driver.XboxGamepad` and specific Microsoft matches including
@@ -50,12 +49,11 @@ The following is a local observation from macOS 26.6.1, not a public compatibili
 - the installed `AppleGameControllerPersonality.kext` contains selected Sony, Nintendo, Amazon,
   and generic HID recognition personalities.
 
-Those plists explain why macOS can report an exclusive owner for some controllers. They are an
-implementation snapshot that Apple can change, and absence from them does not prove a controller
-is unsupported. OJD must still use live registry ownership, its signed entitlement scope, its
+Those plists explain why macOS can report an exclusive owner for some controllers. Apple can change this
+implementation snapshot; absence does not prove a controller is unsupported. OJD must still use live registry ownership, its signed entitlement scope, its
 catalog, and hardware evidence.
 
-## Security boundary
+## Security Boundary
 
 The host allowlist contains only `com.openjoystickdriver.XboxUSBDevice`; allow-any DriverKit
 user-client access is forbidden. The DEXT's USB entitlement contains exact device

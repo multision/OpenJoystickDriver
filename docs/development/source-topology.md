@@ -1,9 +1,9 @@
-# Source topology
+# Source Topology
 
 OpenJoystickDriver uses capability directories and narrow SwiftPM module boundaries. Source and
 test paths name durable owners; generated DriverKit output is never source.
 
-## Package boundaries
+## Package Boundaries
 
 ```text
 OpenJoystickDriverKit          controller domain, HID/USB ports, parsers, policy, shared RPC
@@ -26,7 +26,7 @@ Only `OpenJoystickDriverUSB` and `DriverKitGenerator` import SwifterKit. Kit own
 transport values and protocols; USBDriverKit/IOUSBHost/SwifterKit lifetimes stay in the USB wrapper.
 The app owns one `ApplicationServiceRuntime` and authenticated RPC server.
 
-## Capability ownership
+## Capability Ownership
 
 ```text
 Sources/OpenJoystickDriverKit/
@@ -52,8 +52,7 @@ Tests mirror their owners under `Tests/OpenJoystickDriverKitTests/`,
 
 ## Rules
 
-- Keep one canonical owner for each capability; do not retain aliases, forwarding files, or old
-  entry points.
+- Give each capability one canonical owner; retain no aliases, forwarding files, or old entry points.
 - Keep `OpenJoystickDriverKit` independent of SwifterKit and app/platform composition.
 - Put IOUSBHost/DriverKit adaptation in `OpenJoystickDriverUSB`; keep parsing in Kit.
 - Keep CoreHID calls behind macOS 15 availability and IOKit HID calls behind the macOS 10.15–14

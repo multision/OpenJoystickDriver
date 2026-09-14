@@ -1,7 +1,7 @@
-# Documentation instructions
+# Documentation Instructions
 
-Documentation is human-readable guidance and accepted evidence, not a storage
-area for new machine-readable contracts.
+Documentation holds human-readable guidance and accepted evidence, not new
+machine-readable contracts.
 
 - Do not add JSON schemas, JSON/JSONL evidence dumps, source manifests, worktree
   snapshots, validation transcripts, generated matrices, or dated agent artifacts

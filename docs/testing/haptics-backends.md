@@ -1,4 +1,4 @@
-# Probe macOS haptics backends
+# Probe macOS Haptics Backends
 
 Use the supported diagnostics routes to distinguish backend inventory,
 GameController haptics, SDL output, and direct physical rumble. Run one route at
@@ -8,10 +8,10 @@ a time and record physical behavior before changing identities:
 ./Scripts/ojd diagnose backends --seconds 5
 ./Scripts/ojd diagnose gamecontroller --seconds 5 --rumble
 ./Scripts/ojd diagnose sdl3 --seconds 5 --rumble
-./Scripts/ojd diagnose rumble-motors <vid> <pid>
+./Scripts/ojd diagnose rumble-motors 13623 4112
 ```
 
-The SDL route can exercise OJD's first-party Microsoft Xbox 360 Wired
+The final example uses the GameSir G7 SE decimal VID/PID; substitute the exact decimal identifiers reported for the connected device. The SDL route can exercise OJD's first-party Microsoft Xbox 360 Wired
 `045E:028E` with the Xbox 360 HIDAPI descriptor/report format. OJD publishes it through CoreHID on macOS 15 and later and through
 `IOHIDUserDevice` on macOS 10.15 through 14. The probe uses the installed OJD
 CLI to change identities so its application-service protocol always matches
@@ -26,7 +26,7 @@ The GameController diagnostic checks the supported public controller and
 haptics path. CoreHID virtual-device access alone does not synthesize a public
 `GCController.haptics` engine.
 
-## GameSir G7 SE observations
+## GameSir G7 SE Observations
 
 On September 2, 2026, the four physical GIP output channels were isolated with:
 
@@ -34,7 +34,7 @@ On September 2, 2026, the four physical GIP output channels were isolated with:
 just diagnose-rumble-motors 0x3537 0x1010 200 750
 ```
 
-The connected GameSir G7 SE produced the following one-to-one actuator map:
+The connected GameSir G7 SE produced this one-to-one actuator map:
 
 | Logical channel | Physical observation |
 | --- | --- |
@@ -48,8 +48,8 @@ pulse. This verifies independent addressing of all four motors through OJD's
 physical raw-USB GIP output path. It does not imply that every virtual consumer
 or API supplies four independent motor values.
 
-The following observations were recorded on August 25, 2026 for the connected
-GameSir G7 SE (`3537:1010`) using OJD's raw USB GIP transport:
+August 25, 2026 observations for the connected GameSir G7 SE (`3537:1010`)
+using OJD's raw USB GIP transport:
 
 | Route | Framework evidence | Physical observation |
 | --- | --- | --- |
@@ -67,8 +67,7 @@ this setup. They do not establish that every application accepts the spoofed
 identity or that PID and GameController haptics are unavailable for every real
 controller.
 
-The controller LED reflects the physical GIP session rather than proof of a
-haptics backend. It remained on while OJD owned the controller and went off
+The controller LED reflects the physical GIP session, not a proven haptics backend. It remained on while OJD owned the controller and went off
 after OJD was quit and the session ended.
 
 In a dedicated SDL `1BAD:F901` run, the installed OJD app logged virtual-device
@@ -78,8 +77,7 @@ another consumer path and must not be treated as successful rumble. Earlier
 output-report lines were captured during an Xbox 360 identity run and do not
 apply to the SDL identity.
 
-Separately, OJD now cancels a superseded delayed stop before scheduling a
-replacement command, so an older accepted request cannot silence a newer
+OJD now cancels a superseded delayed stop before scheduling a replacement command, so an older accepted request cannot silence a newer
 rumble request after 250 milliseconds. That scheduling hardening does not make
 an application emit reports for an identity whose output protocol it does not
 support. Current `sdl2-3` publishes first-party Microsoft `045E:028E`; the ASTRO

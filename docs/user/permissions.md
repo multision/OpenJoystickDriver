@@ -11,7 +11,7 @@ Input Monitoring lets the app read reports from physical controllers.
 System Settings > Privacy & Security > Input Monitoring
 ```
 
-## Controller publication
+## Controller Publication
 
 The virtual controller is published through the permission macOS lists under Accessibility.
 
@@ -21,7 +21,7 @@ System Settings > Privacy & Security > Accessibility
 
 This permission is separate from the access used for keyboard and pointer output.
 
-## Keyboard & pointer
+## Keyboard & Pointer
 
 Profiles can send keyboard keys, mouse buttons, pointer movement, and scroll events to the frontmost
 app. macOS may list this access under Accessibility, but it is separate from controller publication.
@@ -33,20 +33,20 @@ still blocked, open:
 System Settings > Privacy & Security > Accessibility
 ```
 
-## Request access
+## Request Access
 
 Use the matching **Request...** action in Overview for Input Monitoring, controller publication, or
 Keyboard & pointer. The menu-bar **Request access...** action opens the same native macOS flow.
 
-If macOS asks for a relaunch, quit and reopen OpenJoystickDriver. The app checks the permission again
-after each request; a request result alone is not treated as approval.
+If macOS asks for a relaunch, quit and reopen OpenJoystickDriver. The app rechecks permission
+after each request; the request result alone is not approval.
 
 Ordinary menu, signal, external, and session-end quits leave the app stopped.
 Repeated quit requests wait for runtime teardown. The app does not infer restart
 intent from a generic Apple Event or remove Launch Services jobs on exit.
 When TCC offers **Quit & Reopen**, macOS owns the reopen.
 
-## Other approvals
+## Other Approvals
 
 macOS may also ask for:
 
@@ -55,8 +55,8 @@ macOS may also ask for:
 
 These approvals do not grant Input Monitoring, controller publication, or Keyboard & pointer access.
 
-## Older alpha entries
+## Older Alpha Entries
 
-An older alpha may leave an `OpenJoystickDriverDaemon` entry or stale privacy row. Current builds do
-not use that helper or its launchd registration. If System Settings offers a remove control for the
+An older alpha may leave an `OpenJoystickDriverDaemon` entry or stale privacy row. Current builds use
+neither that helper nor its launchd registration. If System Settings offers a remove control for the
 stale entry, remove it manually. OpenJoystickDriver does not reset macOS privacy records.

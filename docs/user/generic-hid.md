@@ -1,4 +1,4 @@
-# Generic HID fallback
+# Generic HID Fallback
 
 Unknown HID gamepads use parsed IOKit elements instead of guessed byte offsets. Known records keep their protocol-specific raw parsers.
 
@@ -6,4 +6,4 @@ The generic HID parser maps button usages 1 through 19. It also maps X/Y and Rx/
 
 The sixteenth virtual button carries the first extra generic button. Further buttons remain visible in OJD diagnostics but do not fit the 16-button compatibility reports.
 
-A HID descriptor names fields, but it does not define a universal physical button order. Vendor reports and unusual axes need a record and parser. So do handshakes, paddles, and extra controls. Verify every control in Controller Settings Live or the headless input diagnostic before claiming support.
+HID descriptors name fields, not a universal physical button order. Vendor reports and unusual axes need a record and parser. So do handshakes, paddles, and extra controls. Verify every control in Controller Settings Live or the headless input diagnostic before claiming support.

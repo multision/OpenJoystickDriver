@@ -1,4 +1,4 @@
-# Implementation status
+# Implementation Status
 
 OpenJoystickDriver 0.5 uses a persistent application runtime. The signed app host owns controller
 processing, virtual output, login registration, permission state, and the authenticated local RPC
@@ -26,13 +26,13 @@ to the USBDriverKit extension only for an observed DEXT-owned service or a model
 covered by OJD's restricted production entitlement. That extension is not a
 consumer virtual-controller path. SwifterKit generates its native project at
 build time, while this repository authors the USB configuration. Generation and
-unsigned native builds are validated locally. Signed activation, macOS approval,
+unsigned native builds are locally validated. Signed activation, macOS approval,
 and physical USB delivery require an appropriately provisioned Mac and recorded
 evidence.
-The current issue-by-issue acceptance state is recorded in the
+Issue-by-issue acceptance is recorded in the
 [controller issue audit](issue-audit.md).
 
-## Platform boundaries
+## Platform Boundaries
 
 On macOS 10.15–14, physical HID access uses IOHID and consumer virtual output
 uses `IOHIDUserDevice`. On macOS 15 and later, those roles use CoreHID. Raw USB

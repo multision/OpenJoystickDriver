@@ -1,8 +1,8 @@
-# Experimental controller status
+# Experimental Controller Status
 
 Experimental entries have implementation work but incomplete accepted hardware evidence. Runtime
-controller records contain operational facts only; record verification status in the matching
-testing document and issue instead of adding metadata to a controller record.
+controller records contain operational facts only; keep verification status in the matching
+testing document and issue, not controller metadata.
 
 For parser or record changes, run the parser validation gates in `AGENTS.md`.
 
@@ -72,7 +72,7 @@ capabilities expose only the available motor. SL/SR are distinct remapping sourc
 half. Constructed tests cover calibration, motion actions, and explicit paired sessions. See [Joy-Con validation](../testing/joy-con.md) for the source
 revision, product evidence, and outstanding physical acceptance.
 
-## Xbox 360 wireless receiver
+## Xbox 360 Wireless Receiver
 
 Implemented from Linux `xpad.c`:
 
@@ -87,7 +87,7 @@ Run [the receiver request](../testing/xbox-360-wireless-receiver.md) with real r
 
 The bundled GIP record replaces the ineffective Generic HID fallback for `1532:0A43`. Endpoint, handshake, input, and output behavior still need the [Razer hardware test](../testing/razer/v3-te.md).
 
-## Microsoft Xbox One Controller (model 1537)
+## Microsoft Xbox One Controller (Model 1537)
 
 Reporter packet evidence from an IOUSBHost harness verifies the GIP handshake,
 player LED, every input including Guide, and rumble for `045E:02D1`. The record
@@ -111,8 +111,8 @@ Chunk headers are drained and acknowledged, but payload reassembly is not yet
 implemented because no issue capture requires a multi-chunk input report.
 
 Current Linux `xpad.c` supports the Nacon vendor and Xbox One fallback, but does
-not name this exact PID. That supports classification only; it does not prove
-the captured endpoint addresses or the OJD USBDriverKit session. The
+not name this exact PID. That supports classification only, not
+the captured endpoint addresses or OJD USBDriverKit session. The
 [Nacon hardware procedure](../testing/nacon-revolution-x.md) remains the human-readable
 acceptance record for input, continuous-read, reconnect, and no-host-keep-alive checks.
 
@@ -134,7 +134,7 @@ No parser claim exists. Product descriptions do not provide a packet layout. Cap
 
 The bundled HID record for `D7D7:0041` selects `FlydigiParser` instead of the Generic HID fallback. Input is packet-backed from captured 15-byte BLE reports. Consumer-visible virtual input, reconnect, rumble, and the 2.4 GHz/wired identities still need the [Vader 4 Pro hardware test](../testing/flydigi-vader-4-pro.md). See also [pull request #30](https://github.com/xsyetopz/OpenJoystickDriver/pull/30).
 
-## WR-007 USB HID receiver
+## WR-007 USB HID Receiver
 
 The bundled HID record for `11C1:5600` stays on Generic HID. The parser maps this tuple's sparse Xbox-style button usages, Z/Rz right stick, and Simulation Accelerator/Brake triggers. Apple GameController identity is available for the tuple. Physical rumble is unavailable: the receiver accepts its 4-byte output report but channel probes produced no motor or LED response. Run the [WR-007 hardware test](../testing/wr-007.md). See also [issue #31](https://github.com/xsyetopz/OpenJoystickDriver/issues/31).
 

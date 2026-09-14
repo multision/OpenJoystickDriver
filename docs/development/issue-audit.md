@@ -1,8 +1,7 @@
-# Controller issue audit
+# Controller Issue Audit
 
-This matrix separates behavior implemented in source from behavior observed on
-the reported hardware. A green unit test is not a substitute for a physical
-controller result. The referenced GitHub issues remain authoritative when an
+This matrix separates implementation from observations on reported hardware.
+Passing unit tests cannot replace physical controller results. The referenced GitHub issues remain authoritative when an
 archived report or this audit becomes stale.
 
 Audit baseline: 2026-07-24, OpenJoystickDriver 0.5 development tree.
@@ -18,7 +17,7 @@ Dependency baseline:
   on 2026-07-23. The pinned source is the catalog import authority; upstream is
   a verification reference and does not require catalog regeneration.
 
-## Evidence matrix
+## Evidence Matrix
 
 | Scope | Reported acceptance behavior | Current evidence | Assessment | Remaining closure evidence |
 | --- | --- | --- | --- | --- |
@@ -33,7 +32,7 @@ Dependency baseline:
 | [#22 bDeviceClass=0 discovery](https://github.com/xsyetopz/OpenJoystickDriver/issues/22) | Controllers with `bDeviceClass = 0` that declare vendor-specific class only at the interface level are discovered and matched to their catalog profile. | The IOUSBHost backend discovers catalog-supported `IOUSBHostDevice` services before interfaces exist, applies a catalog-declared configuration when required, and then resolves the vendor-specific interface. `USBDescriptorTransportResolver` retains the interface-level admission rule. | **Code-resolved, hardware unverified.** | Test with a `bDeviceClass=0` controller (e.g. ZD Ultimate Legend `413D:2104`) and confirm discovery without manual intervention. |
 | USBDriverKit to SwifterKit | The manual DriverKit project is absent; generation is deterministic; host and extension policies are exact; and the extension builds for supported architectures. | SwifterKit owns DEXT generation and the restricted host adapter. The sole authored configuration and entitlement contain exactly Apple's approved Microsoft GIP pairs in development and production. Accessible third-party controllers such as the GameSir G7 SE remain app-owned through IOUSBHost. Virtual HID remains app-owned and is absent from the DEXT. | **Code migration complete; signed Microsoft USB runtime unverified.** | Keep the activated DEXT idle without an entitled Microsoft device. Complete signed DEXT input/output validation when one of Apple's approved Microsoft pairs is available; validate GameSir separately through direct IOUSBHost. |
 
-## Code-level gates
+## Code-Level Gates
 
 The audit baseline passed:
 
@@ -47,7 +46,7 @@ python3 -m unittest discover -s Tests/RepositoryScripts
 MACOSX_DEPLOYMENT_TARGET=14.0 /usr/bin/xcrun swift test
 ```
 
-The final Swift suite executed 393 tests in 68 suites with target
+The final Swift suite ran 393 tests in 68 suites targeting
 `arm64e-apple-macos14.0`. The DriverKit gate produced an unsigned universal
 `arm64` and `x86_64` extension.
 
@@ -58,11 +57,10 @@ and #22.
 These filters prove the recorded parser, catalog, admission, and startup
 contracts; they do not replace the hardware procedures named in the matrix.
 
-## Installed runtime evidence
+## Installed Runtime Evidence
 
 The removed HID relay was previously signed and installed on macOS 15.7.7. That
-evidence does not validate the replacement USB DEXT. The historical observed
-runtime state was:
+evidence does not validate the replacement USB DEXT. Historical runtime observations:
 
 - the app passed AMFI validation and `--headless status` exited successfully;
 - Input Monitoring and Accessibility reported granted;
@@ -72,7 +70,7 @@ runtime state was:
 - the kernel reported `SwifterKitRuntimeService::start(...) ok`;
 - `--headless test 2` observed four compatibility reports and exited successfully.
 
-### Required replacement signing evidence
+### Required Replacement Signing Evidence
 
 The installed host profile contains a malformed legacy user-client value and the
 replacement DEXT development profile is absent. Current signing tooling requires
@@ -85,7 +83,7 @@ the exact single-DEXT host grant. Install refreshed profiles and rerun:
 ./Scripts/ojd build install dev
 ```
 
-### Remaining release blocker
+### Remaining Release Blocker
 
 The Developer ID profile remains unsuitable for release because its embedded
 certificate does not match the installed Developer ID Application identity.

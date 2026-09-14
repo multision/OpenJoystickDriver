@@ -1,4 +1,4 @@
-# Menu-bar and settings UI architecture
+# Menu-Bar And Settings UI Architecture
 
 - **Status:** Architecture decision
 - **Scope:** The macOS menu-bar app, reusable settings window, and controller-mapping editor.
@@ -20,7 +20,7 @@ Keep the UI in the existing `OpenJoystickDriver` executable.
 - The consumer UI covers ordinary button, D-pad, axis, trigger, keyboard, mouse, pointer, scroll, and
   axis-tuning workflows. Advanced automation remains CLI-only.
 
-## Runtime boundary
+## Runtime Boundary
 
 `ApplicationServiceRuntime` is the `@MainActor` composition and process-lifecycle owner. It starts and
 stops the service actors but does not perform controller I/O or serve as a presentation gateway.
@@ -50,10 +50,10 @@ Input Test uses this same seam for live input, rumble, player indicators, bright
 calibration, and tokenized temporary color previews. It does not bypass RPC through the in-process
 runtime. Releasing a preview token restores the next authoritative physical-color owner.
 
-## Presentation ownership
+## Presentation Ownership
 
-Feature and screen ViewModels are `@MainActor` and own asynchronous workflow state. Service payloads
-are stored once and presentation values are derived from them. Views own only transient visual state;
+Feature and screen ViewModels are `@MainActor` and own asynchronous workflow state. Store service payloads
+once and derive presentation values from them. Views own only transient visual state;
 coordinators own AppKit lifecycle and panels.
 
 `RuntimeViewModel` is the single controller-inventory refresh coordinator for settings and the menu
@@ -81,12 +81,12 @@ lifecycle only.
 | Presentation state | `App/Presentation/Runtime/{State,SupportState}.swift` | Loading, permission, input, compatibility, mutation, diagnostics, and conflict state |
 | Service adapter | `App/Presentation/Runtime/Gateway.swift` | Typed `ApplicationServiceClient` calls and stable presentation errors |
 
-Add a new file only for a focused, independently testable capability. Keep related helpers together
-rather than splitting them by individual control or visual role.
+Add files only for focused, independently testable capabilities. Group related helpers rather than
+splitting by individual control or visual role.
 
-## Settings surface
+## Settings Surface
 
-### Menu bar
+### Menu Bar
 
 Menu items:
 
@@ -99,7 +99,7 @@ Menu items:
 Do not put packet streams, raw identifiers, catalog audits, support tests, or metrics dashboards in
 the menu. A popover is optional and limited to transient status, capture, or axis-adjustment content.
 
-### Settings window
+### Settings Window
 
 Use one visible native `NSToolbarItemGroup` for the four panes. The selected pane and window geometry
 persist across launches. Dirty profile edits intercept pane changes and offer Cancel or Discard.
@@ -112,10 +112,10 @@ persist across launches. Dirty profile edits intercept pane changes and offer Ca
 4. **Debug:** typed runtime/controller details, diagnostics collection, Save report, and Save logs.
    Raw packet, watch, and catalog workflows remain CLI-only.
 
-The window opens at its initial size, remains resizable, and reuses one controller.
+The resizable window opens at its initial size and reuses one controller.
 Profile rows use native list/table controls, not a bitmap or coordinate hit map.
 
-### Profile editing
+### Profile Editing
 
 - Capture is non-blocking, cancellable with Cancel or Escape, and keeps the window usable.
 - Axis adjustment is available only for axis and axis-direction sources.
@@ -127,7 +127,7 @@ Profile rows use native list/table controls, not a bitmap or coordinate hit map.
 - Profile alerts use one `alert(item:)`; capture and adjustment use one `sheet(item:)` for the 10.15
   presentation path.
 
-## Gateway contract
+## Gateway Contract
 
 `ApplicationServiceGateway` covers the current presentation surfaces:
 
@@ -151,18 +151,18 @@ compatibilityIdentity()/setCompatibilityIdentity(identity)
 The adapter connects the existing client, returns typed payloads, and maps transport failures to
 stable presentation errors. It does not expose socket paths, CLI text, or raw RPC descriptions.
 
-## State and permission rules
+## State And Permission Rules
 
 - Loading, unavailable, empty, denied, requesting, saving, conflict, and failed states are explicit.
 - A stale async response cannot replace newer permission, post-event, compatibility, or input state.
 - A superseded permission request does not open a Privacy & Security pane.
-- A denied result opens the matching native recovery destination. A request return is never treated as
-  a grant without the authoritative follow-up read.
+- A denied result opens the matching native recovery destination. Only the authoritative
+  follow-up read establishes a grant.
 - Controller publication and CoreGraphics keyboard/pointer posting remain separate permission paths.
 - Failed controller-identity requests remain retry intent only; the picker and accessibility value use
   the last authoritative identity.
 
-## Compatibility and accessibility
+## Compatibility And Accessibility
 
 - Keep newer APIs behind `#available`; use AppKit template images and SwiftUI compatibility modifiers
   for macOS 10.15.
@@ -195,7 +195,7 @@ and settings navigation. Runtime acceptance still requires a signed app on suppo
 - appearance and reduced motion;
 - hardware and DriverKit activation checks.
 
-## Design references
+## Design References
 
 - [Apple Settings HIG](https://developer.apple.com/design/human-interface-guidelines/settings)
 - [Apple Accessibility HIG](https://developer.apple.com/design/human-interface-guidelines/accessibility)

@@ -1,4 +1,4 @@
-# Wire protocols
+# Wire Protocols
 
 OJD classifies physical pads by host wire protocol, not by consumer API.
 XInput, DirectInput, SDL, and `GCController` are consumers of a virtual HID
@@ -28,8 +28,8 @@ before releasing the device.
 
 Native SetReport buffers follow IOKit/HIDAPI framing: numbered reports include
 the report ID at byte zero; unnumbered reports contain only data. The internal
-request type also accepts explicitly marked payloads without an ID. It does not
-guess framing from payload contents. GetReport returns a complete report bounded
+request type also accepts explicitly marked ID-less payloads, never guessing
+framing from contents. GetReport returns a complete report bounded
 by the caller's positive capacity. Unsupported type/ID combinations and malformed
 requests fail with native CoreHID/IOKit errors.
 
@@ -52,5 +52,4 @@ Sony/Nintendo automatic identities remain selected as described above. Virtual
 calibration and session addresses are generated values, not hardware captures;
 touchpad button state is supported, while touch contacts and motion remain inactive.
 
-Building uses SwiftPM. Xcode.app is not required. Disabling SIP is not
-required.
+Build with SwiftPM; neither Xcode.app nor disabling SIP is required.

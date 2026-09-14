@@ -1,16 +1,19 @@
 # Documentation
 
-## Use the app
+Choose the shortest path for your task.
+
+## Use The App
 
 - [Compatibility](user/compatibility.md)
 - [Permissions](user/permissions.md)
 - [Generic HID](user/generic-hid.md)
 
-## Test hardware
+## Test Hardware
 
 - [Physical output](testing/physical-output.md)
 - [Haptics backends](testing/haptics-backends.md)
 - [Browser Gamepad API](testing/browser-gamepad-api.md)
+- [Consumer-binding evidence](testing/consumer-binding.md)
 - [Controller record](testing/controller-record.md)
 - [Logitech F310](testing/logitech-f310.md)
 - [Xbox One 1537](testing/xbox/1537.md)
@@ -30,7 +33,11 @@
 
 - [Architecture](development/architecture.md)
 - [Remapping](development/remapping.md)
-- [Beta.4 remapping status](development/remapping-status.md)
+- [Remapping input samples](development/remapping-input-samples.md)
+- [Remapping calibration](development/remapping-calibration.md)
+- [Remapping motion processing](development/remapping-motion.md)
+- [Advanced remapping controls](development/remapping-advanced-controls.md)
+- [`0.5.0-beta.4` remapping status](development/remapping-status.md)
 - [Localization](../LOCALIZATION.md)
 - [Apple controller ownership](development/apple-controller-ownership.md)
 - [Source topology](development/source-topology.md)

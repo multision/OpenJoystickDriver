@@ -1,4 +1,4 @@
-# CLI and application runtime
+# CLI And Application Runtime
 
 The signed application bundle provides the menu-bar and settings interface for the
 in-process controller runtime. With `--headless`, the same executable provides the
@@ -16,7 +16,7 @@ contracts, local-RPC boundary, and process lifecycle.
 | Logs | `ApplicationServiceLogService` |
 | Updates and reports | CLI commands and shared report/update services |
 
-## Application host
+## Application Host
 
 Launching `OpenJoystickDriver.app` starts `ApplicationServiceRuntime` once, then
 installs the AppKit status-item menu and reusable settings window facade. See
@@ -25,12 +25,12 @@ registration.
 
 ## CLI
 
-The installed `OpenJoystickDriver --headless` CLI remains the supported expert
+The installed `/Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless` CLI remains the supported expert
 interface for automation, complete mapping operations, streaming input, and
 diagnostics. The menu-bar/settings facade is the supported consumer interface for
 readiness, permissions, connected controllers, profiles, and ordinary remapping.
-When `swift run OpenJoystickDriver` or `.build/debug/OpenJoystickDriver` receives
-CLI arguments, it uses the installed signed executable if one is available. The
+With CLI arguments, `swift run OpenJoystickDriver` or
+`.build/debug/OpenJoystickDriver` uses the installed signed executable when available. The
 server still checks the user, signing identifier, and team identifier. If the
 repository sources are newer than the installed executable, the command stops
 and asks for a new install instead of running stale code.
@@ -43,7 +43,7 @@ Repository development, build, validation, and release tasks use the separate
 maintainer command, `./Scripts/ojd`. Direct use of `OpenJoystickDriverHIDTool` is
 internal and supported only for focused hardware investigation.
 
-The CLI command families are:
+CLI command families:
 
 ```text
 status [--json]
@@ -63,6 +63,6 @@ operations retain opaque `--device` selection and ambiguity rejection.
 Machine-readable output uses `--json` where supported. Stream commands use
 their documented JSONL mode.
 
-Raw packet data, runtime soaking, catalog inspection, permission audits, and
-virtual-device self-tests stay in the CLI. Their output is diagnostic, verbose,
-or unsuitable for an always-present consumer interface.
+Keep raw packets, runtime soaking, catalog inspection, permission audits, and
+virtual-device self-tests in the CLI: their output is diagnostic, verbose, or
+unsuitable for an always-present consumer interface.

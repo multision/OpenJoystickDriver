@@ -1,48 +1,29 @@
-# OpenJoystickDriver Apple UI seams
+# Apple Platform Seams
 
-Use with `$apple-design-hig` for platform guidance and
-`$skizzles:design-proof-gate` for screenshot/accessibility evidence.
+Load this reference for window ownership, menu behavior, permissions, loading, error states, or accessibility.
 
-## Presentation ownership
+## Ownership
 
-Presentation source lives under `Sources/OpenJoystickDriver/App/Presentation/`.
-The source owners are `Controllers`, `InputCapture`, `Profiles`, `Runtime`,
-`Settings`, and `MenuBar`. The documented test owners mirror the four user-flow
-surfaces `InputCapture`, `Profiles`, `Runtime`, and `Settings`; Controllers,
-MenuBar, and app Diagnostics use their nearest presentation/runtime owner.
+Presentation lives in `Sources/OpenJoystickDriver/App/Presentation/`. Its owners are `Controllers`, `InputCapture`, `Profiles`, `Runtime`, `Settings`, and `MenuBar`. Matching tests live under `Tests/OpenJoystickDriverTests/App/Presentation/`; Controllers, MenuBar, and Diagnostics use their nearest flow or runtime owner.
 
-Keep shared controller/protocol behavior in
-`Sources/OpenJoystickDriverKit/`; the app composes it and owns the single
-`ApplicationServiceRuntime` gateway.
+Keep controller and protocol behavior in `Sources/OpenJoystickDriverKit/`. The app owns one `ApplicationServiceRuntime` gateway.
 
 ```mermaid
-flowchart TD
-  MenuBar[Menu-bar entry] --> Settings[Reusable settings window]
-  Settings --> Presentation[Presentation state and user flow]
-  Presentation --> Gateway[Typed runtime gateway]
+flowchart LR
+  Menu[Menu bar] --> Window[Reusable settings window]
+  Window --> State[Presentation state]
+  State --> Gateway[Typed runtime gateway]
   Gateway --> Runtime[ApplicationServiceRuntime]
-  Runtime --> States[Truthful loading / empty / error / permission states]
 ```
 
-## Required states
+## Required States
 
-Every changed user flow should identify the visual and interaction behavior for:
+Define applicable behavior for loading and cancellation, empty or unavailable data, denied permission, unavailable system extension, IPC failure, stale responses, recovery, and success. Never rely on animation or prose alone.
 
-- loading and cancellation;
-- empty and unavailable data;
-- permission denied or system-extension not ready;
-- runtime/network/IPC failure and recovery;
-- stale responses after a view disappears or a profile changes;
-- success confirmation without relying on animation or prose-only hints.
+## Proof Points
 
-## Apple proof points
-
-- One reusable settings window; no duplicate lifecycle or runtime instance.
-- Semantic native controls with labels, focus order, keyboard behavior, and
-  VoiceOver announcements.
-- Full Keyboard Access, Dynamic Type/system text sizing, contrast, light/dark
-  appearance, and reduced-motion behavior.
-- Truthful permission affordances: guide users to a system setting without
-  claiming access the runtime has not observed.
-- Screenshot-backed proof for layout and state changes; product behavior tests
-  for gateways and state, never source or view-prose assertions.
+- One reusable settings window and runtime instance.
+- Semantic native controls, visible labels, logical focus order, keyboard access, and VoiceOver names.
+- Usable system text sizing, contrast, light/dark appearance, minimum window size, long localization, and reduced motion.
+- Permission copy that links to system settings without claiming unobserved access.
+- Behavioral tests for gateway and state changes. Use visual inspection for layout; never assert view prose from source text.

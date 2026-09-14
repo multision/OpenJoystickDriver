@@ -1,10 +1,10 @@
-# Compatibility source notes
+# Compatibility Source Notes
 
-External projects are design or protocol evidence, not runtime dependencies and
-not proof that a device works on macOS. Relevant archived SDL discussions live
+External projects provide design or protocol evidence, not runtime dependencies
+or proof of macOS hardware support. Relevant archived SDL discussions live
 under `docs/external/sdl/`.
 
-## Admission policy
+## Admission Policy
 
 - Select Flydigi, GameSir, XID, XUSB, GIP, or another specialized parser only
   for an exact cataloged VID/PID, transport, and protocol variant.
@@ -16,7 +16,7 @@ under `docs/external/sdl/`.
   fixtures establish source-backed behavior; hardware verification requires a
   matching physical run.
 
-## Pinned XID and XUSB evidence
+## Pinned XID And XUSB Evidence
 
 - [Xbox360Controller `9aa224a`](https://github.com/xdccrlz/Xbox360Controller/tree/9aa224a89732cc42d2955762b47d8a5a281de75f):
   [`Controller.cpp`](https://github.com/xdccrlz/Xbox360Controller/blob/9aa224a89732cc42d2955762b47d8a5a281de75f/360Controller/Controller.cpp),
@@ -44,7 +44,7 @@ under `docs/external/sdl/`.
   and [`XInputHooker.cpp`](https://github.com/nefarius/XInputHooker/blob/f31d64470831ac39644dc088e632898afa4dd926/XInputHooker/XInputHooker.cpp)
   describe Windows XUSB discovery and IOCTL capture, not an OJD route.
 
-## Current evidence boundaries
+## Current Evidence Boundaries
 
 - Pinned Linux `xpad.c`, `hid-playstation.c`, `hid-sony.c`,
   `hid-nintendo.c`, and `hid-steam.c` establish protocol or identity facts, not

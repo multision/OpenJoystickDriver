@@ -9,9 +9,9 @@ signing-free. This pair is not in the current production Apple USB entitlement,
 so the USB facade tries direct IOUSBHost. Use an exact development DEXT experiment
 only if live ownership evidence requires it.
 
-## Validate the bundled record
+## Validate The Bundled Record
 
-Run this command from the repository root:
+Run from the repository root:
 
 ```bash
 ./Scripts/ojd diagnose record \
@@ -25,7 +25,7 @@ Expected result:
 PROFILE_VALIDATION result=valid
 ```
 
-## Run the USB probe
+## Run The USB Probe
 
 Quit Steam, games, and controller utilities. Connect the controller directly by USB. Then run:
 
@@ -45,6 +45,5 @@ controller firmware if known, exact OJD commit, selected USB route, and any miss
 incorrect controls. The output can contain raw controller packets; inspect it
 before publishing.
 
-Passing schema validation alone does not prove complete support. Keep the testing document explicit
-about missing handshake, input, reconnect, rumble, and lighting observations until they are observed
-on the device.
+Schema validation alone does not prove complete support. Document missing physical handshake,
+input, reconnect, rumble, and lighting observations until obtained.

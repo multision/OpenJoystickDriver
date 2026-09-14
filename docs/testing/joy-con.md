@@ -1,4 +1,4 @@
-# Joy-Con input validation
+# Joy-Con Input Validation
 
 The catalog imports left Joy-Con `057e:2006` and right Joy-Con `057e:2007` from the
 Nintendo HID registrations and HID IDs pinned in `ControllerSources.lock.json`
@@ -6,7 +6,7 @@ Nintendo HID registrations and HID IDs pinned in `ControllerSources.lock.json`
 HID records with `joyConLeft` or `joyConRight` layout selection. No local override
 or manually authored generated record is used.
 
-## Current evidence
+## Current Evidence
 
 Source-backed: numeric identities, Nintendo full-report layout, IMU enable request,
 side-specific primary and SL/SR controls, and the available side's rumble channel.
@@ -15,16 +15,16 @@ left SR/SL use bits 20/21, and right SR/SL use bits 4/5 of the 24-bit button fie
 
 Product tests cover registry selection, HID discovery identities, absent-stick filtering,
 opposite-half button filtering, three raw IMU samples, startup command shape, and neutral
-rumble bytes for the absent motor. These fixtures are constructed from protocol facts;
-they are not captures from physical Joy-Cons.
+rumble bytes for the absent motor. These fixtures use protocol facts,
+not physical Joy-Con captures.
 
 Implemented in constructed tests: explicit exact-identity paired sessions, one combined remapping
 and virtual-output state, configurable left/right/disabled gyro selection, calibrated gyro routing,
 stable side normalization, disconnect cleanup, and stale session-ID rejection. Pairing is
-process-local and must be explicitly recreated after a disconnect. Charging Grip USB identity and
+process-local; recreate it explicitly after disconnect. Charging Grip USB identity and
 composite-controller behavior are not covered by these two Bluetooth identities.
 
-## Physical acceptance still required
+## Physical Acceptance Still Required
 
 Use the candidate signed app and record its version, commit, macOS version, and each exact
 runtime device selector. Connect each half by Bluetooth separately, then connect both.

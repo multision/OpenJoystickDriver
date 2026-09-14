@@ -1,18 +1,21 @@
-# Native tools
+# Native Repository Tools
 
-`SDLGamepadProbe` is the maintained native probe. Build it without opening any
-hardware devices:
+Use these probes only for intentional hardware tests.
+
+Build the maintained `SDLGamepadProbe` without opening hardware:
 
 ```bash
 ./Scripts/ojd check tools
 ```
 
-It uses Apple Clang, the system `SDL3` package discovered through `pkg-config`,
-and the Foundation and GameController frameworks. Run it only when intentionally
-testing connected hardware:
+The build uses Apple Clang, the system `SDL3` package found through `pkg-config`,
+and the Foundation and GameController frameworks.
+
+To test a connected controller for 10 seconds:
 
 ```bash
 ./Scripts/ojd diagnose sdl3 --seconds 10
 ```
 
-Add `--rumble` only when output to each SDL gamepad is intended.
+Expected result: the probe lists SDL gamepad events and exits after 10 seconds.
+Add `--rumble` only when you intend to activate output on every SDL gamepad.

@@ -1,6 +1,6 @@
-# Xbox fallback identities
+# Xbox Fallback Identities
 
-A product name is not enough to create a safe spoof identity. Each selectable identity needs:
+A safe selectable spoof needs more than a product name:
 
 1. an exact virtual VID/PID;
 2. the matching descriptor and report bytes;
@@ -18,7 +18,7 @@ evidence level. Normalized input is internal only; the published identity,
 transport, descriptor, packer, and output tuple remains atomic. There is no
 Xbox-to-PlayStation, Nintendo-to-Xbox, or PlayStation-to-Xbox shortcut.
 
-## Evidence by family
+## Evidence By Family
 
 ### Xbox Wireless Controller
 
@@ -58,12 +58,12 @@ ASTRO C40 PS4 mode `9886:0025` remains an experimental research candidate only;
 the required complete descriptor, feature/calibration, input, and output
 evidence is absent, so no supported spoof is provided.
 
-## Apple audit
+## Apple Audit
 
-The GameController MobileAsset version `10.5.2` downloaded on 2026-07-12 had no exact entry for `045e:028e`, `045e:02ea`, or `9886:0024`. That result applies only to the audited system and asset version. Check again after macOS or MobileAsset updates:
+The GameController MobileAsset version `10.5.2` downloaded on 2026-07-12 had no exact entry for `045e:028e`, `045e:02ea`, or `9886:0024`. This applies only to that system and asset version. Check again after macOS or MobileAsset updates:
 
 ```bash
-OpenJoystickDriver --headless diagnose catalog --json
+/Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless diagnose catalog --json
 ```
 
 The developer CLI and support report use the same audit.
@@ -78,9 +78,9 @@ descriptor/report/output evidence. Automatic routing substitutes first-party
 Microsoft `045e:028e` for XUSB pads. It does not substitute ASTRO C40
 for any physical family.
 
-## Promotion checks
+## Promotion Checks
 
-After recording the required identity evidence, verify that SDL and GameController probes identify a useful consumer. Hardware tests must cover input, reconnect, rumble, and lights where claimed.
+After recording identity evidence, verify a useful consumer with SDL and GameController probes. Hardware tests must cover input, reconnect, rumble, and lights where claimed.
 
 Use `generic-hid` as the fallback when no specialized consumer profile applies.
 Use `sdl2-3` only for XUSB SDL 2/3 consumers; it publishes first-party

@@ -1,4 +1,4 @@
-# Test the SCUF Envision Pro
+# Test The SCUF Envision Pro
 
 The wired SCUF Envision Pro record is exact HID identity `2E95:434D`. Issue 33
 provides hardware-recorded descriptor and element evidence for report 6. OJD
@@ -6,7 +6,7 @@ maps X/Y to the left stick, Z/Rz to the right stick, Rx/Ry to independent
 triggers, buttons 1–10, and the standard hat. Buttons 11–19 and physical output
 are not claimed. SCUF `2E95:0504` remains an independent GIP identity.
 
-## Validate the record and parser
+## Validate The Record And Parser
 
 Run from the repository root:
 
@@ -22,9 +22,9 @@ cover report-ID filtering, both physical HID backend conversions, the exact
 axis layout, button limit, hat diagonals and neutral, and the unaffected
 descriptor-driven fallback for other controllers.
 
-## Verify hardware
+## Verify Hardware
 
-Connect the controller by wire and capture its runtime identity. Test on both a
+Connect by wire and capture the controller's runtime identity. Test on both a
 macOS 15-or-newer CoreHID system and, when available, a macOS 14 legacy IOHID
 system. Confirm that only report 6 changes normalized state. Exercise both
 sticks to every edge, each trigger independently, buttons 1–10, all D-pad

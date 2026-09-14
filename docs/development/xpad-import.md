@@ -1,10 +1,10 @@
-# Import controller identities from Linux xpad
+# Import Controller Identities From Linux xpad
 
 The runtime catalog is generated from the exact Linux revision and source hash in
 ControllerSources.lock.json. Moving branches such as master are not runtime
 inputs.
 
-## Reproduce the catalog
+## Reproduce The Catalog
 
 Verify committed output:
 
@@ -19,7 +19,7 @@ The generator downloads every locked Linux source and verifies each SHA-256. It 
 
 ## Translation
 
-Supported Linux inputs map as follows:
+Supported Linux input mappings:
 
 - `XTYPE_XBOX` becomes XID/xid (original Xbox USB).
 - `XTYPE_XBOX360` becomes XUSB/xbox360 (wired Krypton).
@@ -36,7 +36,7 @@ mappings, or startup macros are skipped with an explicit count. Linux xpad's
 `0xFFFF:0xFFFF` catch-all row is skipped; it is not a USB identity. Partial
 source-table parsing fails generation.
 
-## Local source overrides
+## Local Source Overrides
 
 Override inputs live at:
 
@@ -53,14 +53,14 @@ existing imported record. The generator rejects:
 - malformed or misplaced override files.
 
 Review evidence belongs in the controller's testing document, upstream issue,
-and Git history. It is deliberately not copied into runtime controller records.
+and Git history. Do not copy it into runtime controller records.
 
-## Review-only source inspection
+## Review-Only Source Inspection
 
-The lower-level importer remains available for inspecting another exact Linux
-revision without changing runtime data:
+Use the lower-level importer to inspect another exact Linux revision without
+changing runtime data:
 
-    ./Scripts/ojd catalog xpad --github-ref <full-commit> \
+    ./Scripts/ojd catalog xpad --github-ref 893e11787f78e43b534e252249ac3fff4d1333f8 \
       --vid 0x1532 --pid 0x0a29 --output-dir /tmp/ojd-xpad
 
 Its manifest belongs only to the temporary inspection output. The runtime tree

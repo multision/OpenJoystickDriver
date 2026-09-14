@@ -1,4 +1,4 @@
-# Environment files
+# Environment Files
 
 Repository scripts load exactly one optional local file from the project root:
 
@@ -15,8 +15,8 @@ Audit the file structure without exposing values:
 ./Scripts/ojd env audit
 ```
 
-The examples are annotated output forms, not a source for identities,
-profiles, Team IDs, or credentials. Read [Signing assets](signing.md) before
+Examples show annotated output; never source identities, profiles, Team IDs, or credentials from them.
+Read [Signing assets](signing.md) before
 creating either local file. Development configuration requires the two
 development profiles and an Apple Development identity; publisher-only
 Developer ID assets are optional and do not block `.env.dev` generation.
@@ -26,11 +26,10 @@ Unsigned `swift build` and `./Scripts/ojd check driverkit` do not load
 before building. Notarization keys belong only in
 `.env.release`; they are not inputs to unsigned or Apple Development builds.
 
-The signing configurator updates recognized signing keys in the appropriate root
-file (`.env.dev` or `.env.release`) while preserving unrelated recognized
-publisher keys. Never commit actual `.env.dev` or `.env.release` files.
+The signing configurator updates recognized signing keys in the selected root
+file, preserving unrelated recognized publisher keys. Never commit actual `.env.dev` or `.env.release` files.
 
-## GitHub Actions secrets
+## GitHub Actions Secrets
 
 `.github/workflows/release.yml` remains the source of truth for GitHub Secret names. Only inputs used by the single-app release remain:
 
@@ -42,7 +41,7 @@ publisher keys. Never commit actual `.env.dev` or `.env.release` files.
 - `NOTARIZE_APPLE_ID`
 - `NOTARIZE_PASSWORD`
 
-Workflow secrets are injected directly by GitHub; CI does not create or depend on a local `.env` file.
+GitHub injects workflow secrets directly; CI neither creates nor requires a local `.env` file.
 GitHub does not allow reading those values back. The local analogues are:
 
 - certificate and profile secrets → Keychain identities plus the Developer ID

@@ -2,9 +2,9 @@
 
 ## Direction
 
-Controller Workbench is a native macOS operations surface. It uses the system's source-list,
-materials, typography, controls, focus behavior, and semantic colors rather than simulating a game
-console or a web dashboard. Density is deliberate: status is quick to scan, detailed values remain
+Controller Workbench is a native macOS operations surface. It uses native source lists,
+materials, typography, controls, focus, and semantic colors, not a simulated game console or web
+dashboard. Density is deliberate: status is quick to scan, detailed values remain
 readable, and every pane can scroll or reflow without resizing its window.
 
 ## Window Structure
@@ -13,12 +13,12 @@ readable, and every pane can scroll or reflow without resizing its window.
   Console, optional Developer Tools, and Settings.
 - The Settings window opens at `960 × 640` points with a `720 × 480` minimum content size.
 - Input Test opens at `900 × 620` points with a `700 × 500` minimum content size.
-- Saved geometry is retained and clamped to the current screen's usable frame. Pane changes never
-  force a resize. There is no arbitrary maximum window size.
+- Retain saved geometry, clamped to the current screen's usable frame. Pane changes never
+  force a resize. No arbitrary maximum window size applies.
 - Readable detail content may constrain its own measure while workspaces and logs use available
   width.
 
-## Materials and Color
+## Materials And Color
 
 - Window surfaces use `NSColor.windowBackgroundColor`; sidebars and secondary list surfaces use
   native source-list or control backgrounds.
@@ -28,16 +28,16 @@ readable, and every pane can scroll or reflow without resizing its window.
   orange, and red only when those meanings apply.
 - Xbox and PlayStation accents identify controller family or active input. Nintendo, Steam, and
   generic controllers remain semantic unless a recorded family color exists.
-- Light and dark appearances come from semantic system colors; no appearance-specific decorative
-  palette is introduced.
+- Light and dark appearances use semantic system colors, not appearance-specific decorative
+  palettes.
 
-## Typography and Data
+## Typography And Data
 
 - Use system title/headline/body/caption roles and Dynamic Type behavior supplied by SwiftUI.
 - Use monospaced design only for logs, packet values, identifiers, and numeric measurements.
 - Headers lead with the destination name and an optional factual subtitle. Do not add decorative
   eyebrows.
-- Data rows keep labels secondary and values primary. Unknown or absent values are named explicitly.
+- Data rows use secondary labels and primary values. Name unknown or absent values explicitly.
 
 ## Components
 
@@ -57,7 +57,7 @@ readable, and every pane can scroll or reflow without resizing its window.
 
 ## Responsive Policies
 
-### Workbench panes
+### Workbench Panes
 
 - Overview leads with readiness, then reflows permission cards from four columns to two and then one.
 - Controllers and Profiles share list/detail width when possible; below `620` points of pane width,
@@ -68,8 +68,8 @@ readable, and every pane can scroll or reflow without resizing its window.
 
 ### Profiles
 
-- The selected editor section lives only for the current Profiles session and remains unchanged
-  when profiles switch. It defaults to Assignments and never participates in draft or save state.
+- The selected editor section lasts only for the current Profiles session, survives profile
+  switches, defaults to Assignments, and never enters draft or save state.
 - The detail header keeps the editable name, scope, assignment count, activation state, save state,
   one primary activation action, and one native profile-actions pull-down. Delete, feedback, save
   status, and Save remain in a persistent footer.
@@ -78,8 +78,8 @@ readable, and every pane can scroll or reflow without resizing its window.
   edit, and removal controls; Controller owns metadata, output policy, motion, sticks, triggers,
   touch, and lighting while advanced configuration stays in specialized sheets.
 - Section navigation is segmented at `620` points or wider and becomes a labeled native pop-up
-  below that width. Assignment source and destination fields are inline at `680` points or wider
-  and stack below that width.
+  below it. Assignment source and destination fields are inline at `680` points or wider
+  and stack below it.
 - Joy-Con runtime pairing remains a compact banner above the editor and retains its existing sheet
   ownership. Section changes never save, discard, or bypass dirty-draft confirmation.
 - Controller-family symbols and compact identity marks are permitted. Representative controller
@@ -95,7 +95,7 @@ readable, and every pane can scroll or reflow without resizing its window.
 - Cards use content-driven heights. The controller map has a bounded ideal width; controls do not
   expand merely to fill empty space.
 
-## Interaction and Accessibility
+## Interaction And Accessibility
 
 - Preserve destination persistence and protect dirty profile drafts before navigation.
 - Preserve automatic Input Test sampling, reconnect recovery, controller-specific symbols,

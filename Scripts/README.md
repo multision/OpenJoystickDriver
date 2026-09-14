@@ -1,4 +1,4 @@
-# Repository scripts
+# Repository Scripts
 
 `./Scripts/ojd` is the supported entrypoint for repository-specific behavior.
 Just orchestrates standard formatters, linters, type checkers, tests, and those
@@ -28,5 +28,5 @@ swift test --no-parallel
 ```
 
 `catalog regenerate --write` writes generated controller records. DriverKit
-project generation writes generated DriverKit output. All other commands retain
+project generation writes DriverKit output. All other commands retain
 their documented route-specific effects and requirements.

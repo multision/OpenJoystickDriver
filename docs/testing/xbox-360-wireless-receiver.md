@@ -1,4 +1,4 @@
-# Test an Xbox 360 wireless receiver
+# Test An Xbox 360 Wireless Receiver
 
 This request covers [OpenJoystickDriver issue #9](https://github.com/xsyetopz/OpenJoystickDriver/issues/9). Linux `xpad.c` identifies three Microsoft receiver IDs that OJD now imports as unverified records:
 
@@ -13,7 +13,7 @@ production Apple USB entitlement, so physical capture tries direct IOUSBHost.
 Use an exact development DEXT experiment only if live ownership evidence proves
 direct access is unavailable.
 
-## Find and validate the receiver record
+## Find And Validate The Receiver Record
 
 Use System Information or the OJD HID tool to identify the receiver PID, then select the matching JSON file under `Sources/OpenJoystickDriverKit/Resources/Controllers/`.
 
@@ -23,7 +23,7 @@ For the common `045e:0719` receiver:
 ./Scripts/ojd diagnose record   Sources/OpenJoystickDriverKit/Resources/Controllers/045e/045e-0719.json   --validate-only
 ```
 
-## Capture connection and input
+## Capture Connection And Input
 
 Quit Steam, games, and other controller tools. Connect the receiver, pair one controller, then run:
 
@@ -31,7 +31,7 @@ Quit Steam, games, and other controller tools. Connect the receiver, pair one co
 ./Scripts/ojd diagnose record   Sources/OpenJoystickDriverKit/Resources/Controllers/045e/045e-0719.json   --seconds 45
 ```
 
-The useful evidence is:
+Record:
 
 - `CONTROLLER_CONNECTION state=connected` after pairing.
 - `USB_TX` with the receiver-wrapped Player 1 ring-light packet.
@@ -47,4 +47,4 @@ receiver VID/PID and branding, controller model, exact OJD commit, selected rout
 reconnect results, and any missing or incorrect inputs. Raw packet output is
 included; inspect it before publishing.
 
-After input passes, use the app or application service-backed `physical-output plan` workflow to verify both rumble motors and all four ring-light player patterns. Do not mark these records hardware-verified until receiver presence, input, reconnect, rumble, and LEDs pass on physical hardware.
+After input passes, use the app or application service-backed `physical-output plan` workflow to verify both rumble motors and all four ring-light player patterns. Mark records hardware-verified only after physical receiver presence, input, reconnect, rumble, and LED checks pass.

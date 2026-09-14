@@ -1,8 +1,8 @@
-# Third-party notices
+# Third-Party Notices
 
 ## GamepadMotionHelpers
 
-Player-space and world-space gyro projection in `MotionProjection.swift` is adapted from
+The player-space and world-space gyro projection in `MotionProjection.swift` is adapted from
 [GamepadMotionHelpers](https://github.com/JibbSmart/GamepadMotionHelpers/tree/39b578aacf34c3a1c584d8f7f194adc776f88055),
 revision `39b578aacf34c3a1c584d8f7f194adc776f88055`.
 

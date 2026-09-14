@@ -1,13 +1,13 @@
-# Test the Nacon Revolution X Pro
+# Test The Nacon Revolution X Pro
 
-Use this procedure to test USB device `12933:1588` (`3285:0634` in hexadecimal) for [OpenJoystickDriver issue #21](https://github.com/xsyetopz/OpenJoystickDriver/issues/21).
+Test USB device `12933:1588` (`3285:0634` in hexadecimal) for [OpenJoystickDriver issue #21](https://github.com/xsyetopz/OpenJoystickDriver/issues/21).
 
 The bundled record selects GIP/xboxOne on interface 0 with interrupt IN `0x87`
 and OUT `0x07`. It disables the periodic host-side `0x03` packet reported to
 destabilize native sessions. The record remains unverified. The issue's WebUSB
 result is independent evidence, not an OJD USBDriverKit acceptance result.
 
-## Validate the bundled record
+## Validate The Bundled Record
 
 Run from the repository root:
 
@@ -23,7 +23,7 @@ Expected result:
 RECORD_VALIDATION result=valid
 ```
 
-## Run the raw USB probe
+## Run The Raw USB Probe
 
 This VID/PID is not in the current production Apple USB entitlement, so the
 facade tries direct IOUSBHost. Quit games, Steam, and other controller utilities,
@@ -42,8 +42,7 @@ record.
 Exercise every button, D-pad direction, trigger, stick axis, stick click, and
 Guide control. Leave the controller idle long enough to cover the normal
 four-second keep-alive cadence. It must remain available without a host `0x03`
-packet. Unplug and reconnect. Then repeat the handshake and a representative
-control check.
+packet. Unplug and reconnect. Repeat the handshake and a representative control check.
 
 If the interface is unavailable, record the selected route and live registry
 owner. Direct IOUSBHost is the normal raw path for this unentitled model. Do not
@@ -54,15 +53,14 @@ The parser test fixtures cover split, stacked, extended-length, and requested
 ACK frames. A physical run must still establish that the native USB session is
 stable and that the controls reach the installed virtual-gamepad output path.
 
-## Check physical output with an installed app
+## Check Physical Output With An Installed App
 
-LED and rumble checks require a separately installed current OpenJoystickDriver
-app. Use the [physical-output procedure](physical-output.md) to generate a
+Check LED and rumble with a separately installed current OpenJoystickDriver app. Use the [physical-output procedure](physical-output.md) to generate a
 device-specific plan:
 
 ```bash
-OpenJoystickDriver --headless controller output list
-OpenJoystickDriver --headless controller output plan 12933 1588
+/Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless controller output list
+/Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless controller output plan 12933 1588
 ```
 
 Attach the probe and output results to issue #21. Include the macOS version,

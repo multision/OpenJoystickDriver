@@ -1,4 +1,4 @@
-# Beta.4 remapping status
+# `0.5.0-beta.4` Remapping Status
 
 - [x] Reconcile the existing worktree and establish a green validation baseline.
 - [x] Finalize the schema-3 profile and action contract.
@@ -11,7 +11,7 @@
 - [x] Finish authoring and accessibility parity with one validated mutation path.
 - [x] Finish integration/performance evidence, release documentation, and final validation.
 
-External gates that cannot be established by constructed tests:
+External gates requiring more than constructed tests:
 
 - [ ] Signed-runtime controller and virtual-device validation.
 - [ ] Physical controller isolation, motion direction/scale, touch, haptics, lighting, and

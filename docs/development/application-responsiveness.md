@@ -1,4 +1,4 @@
-# Application responsiveness
+# Application Responsiveness
 
 The signed application host and headless commands must not wait indefinitely
 for system tools, login registration, permission APIs, or live-runtime calls.
@@ -9,5 +9,5 @@ for system tools, login registration, permission APIs, or live-runtime calls.
 - System-extension and signing checks return explicit timeout or failure states.
 - The host keeps its runtime on the main dispatch queue and exits through the runtime's retained signal handlers.
 
-A missing runtime or stalled system tool may produce an error, but it must not
-freeze the host shutdown path or any CLI invocation.
+A missing runtime or stalled system tool may error, but must not freeze host
+shutdown or any CLI invocation.

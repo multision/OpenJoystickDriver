@@ -1,8 +1,8 @@
-# Catalina foreground test kit
+# Catalina Foreground Test Kit
 
 macOS 10.15 can run the foreground app and headless CLI. Login-item registration through `SMAppService.mainApp` requires macOS 13 or later, so Catalina testing must not install a LaunchAgent fallback.
 
-Copy the signed universal app to the Catalina machine. Then run:
+Copy the signed universal app to Catalina, then run:
 
 ```bash
 ./Scripts/ojd diagnose catalina /Applications/OpenJoystickDriver.app
@@ -18,4 +18,4 @@ The check verifies:
 
 For functional testing, open the app directly and grant the requested privacy permissions to `OpenJoystickDriver.app`. Connect a controller, then enable Live in that controller's Settings.
 
-If the window is unavailable, use `OpenJoystickDriver --headless controller state`. Automatic launch at login is not supported on Catalina.
+If the window is unavailable, use `/Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless controller state`. Automatic launch at login is not supported on Catalina.

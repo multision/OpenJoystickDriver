@@ -1,97 +1,49 @@
-# Product-only validation
+# Product Validation
 
-This skill validates the Swift product, not the implementation of repository
-scripts. `Tests/` must call `Sources/` APIs (or a supported relay/generator
-product API) and observe behavior. Never create `Tests/Scripts`, read a script,
-Swift source, or documentation file as a fixture, or assert source/prose
-substrings. Machine-readable product identifiers or protocol/persistence fields
-may be asserted when they are observable, documented contracts; never assert
-human-readable message/help text. Prefer typed state, return codes, routes,
-identifiers, events, and payload structure.
+Load this reference after defining the observable test contract. Tests call Swift product APIs and observe typed behavior; they never inspect source, scripts, documentation, generated output, or human-readable help text.
 
-## Focused proof
+## First Proof
 
-Choose the smallest owning target and test first:
-
-| Change | First proof |
+| Change | Run first |
 | --- | --- |
-| Parser/protocol/HID | The affected `OpenJoystickDriverKitTests` filter, then `./Scripts/ojd test parsers-macos14`. |
-| Controller record/catalog | The relevant Kit test filter, then `./Scripts/ojd catalog regenerate --check` and `./Scripts/ojd check profiles`. |
-| App CLI/remapping/runtime/status | The affected `OpenJoystickDriverTests` filter; exercise the public or `@testable` product seam. |
-| Relay/generator | The affected relay/generator test target, then `./Scripts/ojd check driverkit`; never edit generated output. |
-| Hardware/permissions/installation | Run the documented diagnostic or manual proof; state when local hardware, signing, or macOS access is unavailable. |
+| Parser, protocol, or HID | Matching `OpenJoystickDriverKitTests` filter, then `./Scripts/ojd test parsers-macos14` |
+| Controller record or catalog | Matching Kit test, catalog check, then profile check |
+| App CLI, remapping, runtime, or status | Matching `OpenJoystickDriverTests` filter |
+| Relay or generator | Matching test, then `./Scripts/ojd check driverkit` |
+| Hardware, permission, or installation | Documented diagnostic or manual procedure |
 
-Use SwiftPM filters against product targets, for example:
+Example filters:
 
-```sh
+```bash
 swift test --filter OpenJoystickDriverKitTests.Protocol.Parsers
 swift test --filter OpenJoystickDriverTests.CLI
 ```
 
-Adjust filters to the actual test names. Do not replace a missing hardware test
-  with a source-text fixture or a human-readable message assertion.
+Adjust filters to names that exist in the repository.
 
-## Required gate order
+## Gates
 
-From the repository root, after focused proof, run the applicable gates in this
-order:
+After focused proof, run applicable commands in this order:
 
-```sh
+```bash
 ./Scripts/ojd catalog regenerate --check
 ./Scripts/ojd check profiles
+./Scripts/ojd check schemas
 just lint
 python3 -m unittest discover -s Tests/RepositoryScripts
 ./Scripts/ojd check driverkit
 swift test
 ```
 
-Not every change needs every gate, but explain omissions. `just lint` invokes
-the configured standard formatters, linters, and type checker directly. The parser harness is a supported
-`ojd` route and must remain outside `Tests/`.
+Explain omitted gates. For the documented SwiftPM module-cache mismatch only:
 
-If `swift test` reports the documented SwiftPM module-cache mismatch, run:
-
-```sh
+```bash
 ./Scripts/ojd repair swiftpm-module-cache
 swift test
 ```
 
-Do not weaken the test command or silently ignore a failed gate.
+Before handoff, run `git diff --check`, inspect target membership, and confirm no stale path, generated output, or `Tests/Scripts` fixture was added.
 
-```mermaid
-flowchart LR
-  Focused[Focused product test] --> Parser[Parser harness when applicable]
-  Parser --> Catalog[Catalog and profile checks]
-  Catalog --> Lint[Direct standard tools]
-  Lint --> DriverKit[DriverKit generation check]
-  DriverKit --> Full[Full swift test]
-```
+## Blockers
 
-## Structural and architecture review
-
-Before handoff:
-
-1. Run `python3 "$HOME/.agents/scripts/validate_skill.py"` for a skill change,
-   using the owned skill directory.
-2. Run `git diff --check` and inspect the diff and target membership.
-3. Confirm tests map to one canonical source owner and no stale duplicate path,
-   generated DriverKit output, or test-only script bucket was introduced.
-4. If source/test topology changed, run the full `$architecture-enforce` audit
-   with no suppressions or baseline edits; resolve or report every warning/error.
-5. Keep parser and hardware evidence separate: a passing parser harness proves
-   parser behavior, not physical controller support, signing, or permissions.
-
-## Reporting blockers
-
-Report an exact blocker instead of claiming completion. Include:
-
-- command and working directory;
-- exit status and the relevant non-secret output;
-- whether the failure is attributable to the change or pre-existing/toolchain,
-  hardware, signing, permission, or environment state;
-- attempted recovery (including module-cache repair when applicable);
-- focused evidence that did pass and the remaining risk.
-
-Do not publish secrets, raw serial values, or unredacted packet captures. A
-hardware diagnostic may be valid evidence while still being unavailable locally;
-record that limitation and route the next proof to the documented procedure.
+Report the command, working directory, exit status, relevant non-secret output, attribution, attempted recovery, evidence that passed, and remaining risk. Hardware, signing, and permission checks may be unavailable; never replace them with source inspection.

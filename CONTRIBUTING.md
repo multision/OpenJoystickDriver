@@ -9,16 +9,16 @@ cd OpenJoystickDriver
 just check
 ```
 
-Invoke the command you need and follow its native prompts. The dispatcher creates
-repository-local Python environments automatically and, in an interactive
-terminal, offers to install only the missing Homebrew formulas required by that
-command. Homebrew, Xcode, Apple-issued assets, credentials, system permissions,
+Run the needed command and follow its native prompts. The dispatcher automatically
+creates repository-local Python environments. In interactive terminals, it offers
+to install only that command's missing Homebrew formulas. Homebrew, Xcode,
+Apple-issued assets, credentials, system permissions,
 publication, destructive writes, and hardware actions retain their official or
 explicit authorization flows. CI never prompts or installs host software.
 
 The pre-commit hook runs `just check-fast` against the exact staged snapshot.
 The pre-push hook runs `just check` in an isolated worktree for each commit tip
-being pushed. Run either recipe directly to perform the same checks manually.
+being pushed. Run either recipe directly for the same manual checks.
 
 Signing, DriverKit, and packaging: `Scripts/README.md`. Dev install:
 `./Scripts/ojd build install dev`. Do not edit `.build/driverkit/generated/`.
@@ -39,7 +39,7 @@ report.
 
 Open tasks: [issues](https://github.com/xsyetopz/OpenJoystickDriver/issues).
 
-## Adding a controller
+## Adding A Controller
 
 1. `system_profiler SPUSBDataType`. `bDeviceClass` `0xff` is vendor-specific
    (often GIP); `0x03` is HID.
@@ -64,7 +64,7 @@ Open tasks: [issues](https://github.com/xsyetopz/OpenJoystickDriver/issues).
    swift test
    ```
 
-## Code rules
+## Code Rules
 
 Toolchain: `.swift-version` and `Package.swift`. Warnings are errors. Justify
 `nonisolated(unsafe)` on the same line.
@@ -90,10 +90,9 @@ paths, and structure — not help text, and not `.swift` source via
 - Host `com.apple.developer.driverkit.userclient-access` lists only
   `com.openjoystickdriver.XboxUSBDevice`.
 
-## Pull requests
+## Pull Requests
 
-One logical change. Say whether you tested on hardware you own. Say what you
-ran.
+Submit one logical change. List checks run and whether you tested on your own hardware.
 
 Layout: `docs/development/source-topology.md`. RPC payloads:
 `Sources/OpenJoystickDriverKit/ApplicationService/`. CLI help:

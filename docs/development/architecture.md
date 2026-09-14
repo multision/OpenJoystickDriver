@@ -20,7 +20,7 @@ flowchart LR
   I --> J[Consumer applications]
 ```
 
-## Controller ownership and concurrency
+## Controller Ownership And Concurrency
 
 `DeviceManager` is the inventory actor and the only owner of physical discovery and exact-device
 selection. Each connected device has one `DevicePipeline` actor, created, replaced, and stopped by
@@ -43,7 +43,7 @@ flowchart LR
 
 - HID and USB adapters own platform handles and translate callbacks or transfers into copied data.
 - Decoding and controller state mutation execute only on the pipeline actor, never on `@MainActor`.
-- Parser protocols are intentionally not `Sendable`; a parser is transferred once into its session.
+- Parser protocols are not `Sendable`; a parser is transferred once into its session.
 - USB startup, keep-alive, and physical output are parser-produced value plans executed by the
   pipeline's transport session, keeping device I/O out of decoding objects.
 - Replacement and shutdown cancel and await established session tasks before the old pipeline is
@@ -51,7 +51,7 @@ flowchart LR
   its late result observes the inactive generation and is closed without publishing state.
 - `@MainActor` owns application, window, menu, panel, and observable presentation state only.
 
-### Developer diagnostics lifetime
+### Developer Diagnostics Lifetime
 
 Developer diagnostics observe the existing service-owned sessions; they never open a second HID or
 USB reader. One replaceable operation owns the selected controller snapshot and packet-capture
@@ -78,7 +78,7 @@ owns only AppKit/SwiftUI lifecycle and publication of bounded, already-derived p
 snapshots. The complete raw capture remains authoritative for copy and export; table virtualization
 changes rendering cost, not capture contents or device cadence.
 
-## Platform split
+## Platform Split
 
 The package deployment floor remains macOS 10.15. Availability selection happens once inside each
 HID wrapper; callers do not repeat OS checks.
@@ -95,7 +95,7 @@ The older implementations are marked
 `@available(macOS 15.0, *)`, CoreHID is weak-linked, and the wrapper selects with `#available`.
 The macOS 10.15–14 implementation is an active platform variant, not a fallback on macOS 15+.
 
-## USB transport boundary
+## USB Transport Boundary
 
 `OpenJoystickDriverKit` owns the asynchronous `USBTransportProvider` and `USBTransportSession`
 ports plus all parsing and controller policy. It never imports SwifterKit.
@@ -129,20 +129,20 @@ See [Apple controller ownership evidence](apple-controller-ownership.md) for the
 observations, entitlement scope, and why an Apple personality list is not OJD's support catalog.
 
 Every DriverKit build generates a fresh native project under `.build/driverkit/generated/` and
-builds under `.build/driverkit/derived-data/`. Generated output is ephemeral and is never edited or
-committed. `./Scripts/ojd check driverkit` checks the entitlement, personality, determinism,
+builds under `.build/driverkit/derived-data/`. Generated output is ephemeral; never edit or
+commit it. `./Scripts/ojd check driverkit` checks the entitlement, personality, determinism,
 dependency direction, and an unsigned universal build.
 
-## Process and command lifecycle
+## Process And Command Lifecycle
 
 Launching the signed app starts the runtime, one status item, and one reusable settings window.
 Closing settings does not stop controller processing. `SIGTERM` and `SIGINT` stop the runtime
 cleanly. Headless commands invoke the same executable and reach live state through the private
 Unix-domain socket at `/tmp/com.openjoystickdriver.<uid>.rpc`. The socket is mode `0600`; the server
 requires the same user, signing identifier, and team identifier. Frames and deadlines are bounded.
-Repository-built CLI commands use the installed signed executable when it is available. This keeps
-`swift run` and direct `.build` commands within the same RPC authentication boundary; the server does
-not need to trust unsigned development clients. Forwarding stops when the installed executable is
+Repository-built CLI commands use the installed signed executable when available. This keeps
+`swift run` and direct `.build` commands within the same RPC authentication boundary without trusting
+unsigned development clients. Forwarding stops when the installed executable is
 older than the repository sources, so validation cannot silently run stale CLI code.
 
 ## Permissions

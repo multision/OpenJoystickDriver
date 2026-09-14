@@ -1,8 +1,8 @@
-# Testing the Razer Wolverine V2
+# Testing The Razer Wolverine V2
 
 This procedure covers [OpenJoystickDriver issue #19](https://github.com/xsyetopz/OpenJoystickDriver/issues/19) for USB device `5426:2601` (`1532:0A29` in hexadecimal).
 
-The bundled record comes from Linux xpad, patched with the locally captured interface-0 endpoints `0x81`/`0x01`. It deliberately omits the proposed `shareButton` and `paddles` flags. The report contains no input packet layout that identifies either control, and OJD has no paddle packet decoder.
+The bundled record comes from Linux xpad, patched with the locally captured interface-0 endpoints `0x81`/`0x01`. It omits the proposed `shareButton` and `paddles` flags. The report contains no input packet layout that identifies either control, and OJD has no paddle packet decoder.
 
 The record also omits `set1-before-claim` and a 200 ms post-handshake delay. Enumeration reports configuration 1 but does not establish that OJD must select it, and no timing evidence supports the delay. The GIP parser, Xbox One defaults, input mapping, reconnect, LED, and rumble remain unverified.
 
@@ -10,7 +10,7 @@ Validation is signing-free. This pair is not in the current production Apple USB
 entitlement, so the USB facade tries direct IOUSBHost. Use an exact development
 DEXT experiment only if live ownership evidence requires it.
 
-## Validate the bundled record
+## Validate The Bundled Record
 
 From the repository root:
 
@@ -26,7 +26,7 @@ Expected result:
 RECORD_VALIDATION result=valid
 ```
 
-## Run the raw USB probe
+## Run The Raw USB Probe
 
 Quit Steam, games, and controller utilities. Connect the controller directly by USB. Then run:
 
@@ -45,13 +45,13 @@ handshake and a representative control check.
 If the interface is unavailable, preserve the selected route and registry owner;
 there is no detach or cross-transport fallback.
 
-## Check physical output with an installed app
+## Check Physical Output With An Installed App
 
-LED and rumble checks require a separately installed current OpenJoystickDriver app. Use the [physical-output procedure](physical-output.md) to generate a device-specific plan:
+Check LED and rumble with a separately installed current OpenJoystickDriver app. Use the [physical-output procedure](../physical-output.md) to generate a device-specific plan:
 
 ```bash
-OpenJoystickDriver --headless controller output list
-OpenJoystickDriver --headless controller output plan 5426 2601
+/Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless controller output list
+/Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless controller output plan 5426 2601
 ```
 
 Run each generated step individually. Record the player-indicator result and,
@@ -64,6 +64,5 @@ and results for handshake, every control, reconnect, the indicator, and each
 exposed actuator. Probe output can contain raw controller packets; inspect and
 redact it before publication.
 
-The endpoint capture, passing validation, or generating an output plan do not prove complete
-support. Keep the testing document explicit about missing input, reconnect, indicator, and output
-observations until accepted physical evidence covers them.
+Endpoint captures, validation, and output plans do not prove complete support. Document missing
+input, reconnect, indicator, and output observations until accepted physical evidence covers them.

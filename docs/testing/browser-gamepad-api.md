@@ -1,9 +1,9 @@
-# Browser Gamepad API manual evidence
+# Browser Gamepad API Manual Evidence
 
-This page defines the manual protocol for Plan 06. **ControllerTest.io is the
+Manual protocol for Plan 06. **ControllerTest.io is the
 canonical external manual site:** <https://controllertest.io/>.
 
-## Clean-state protocol
+## Clean-State Protocol
 
 Run every row independently.
 
@@ -17,9 +17,9 @@ Run every row independently.
 8. Close the page, stop OJD output, and verify no stale browser entries/callbacks before the next row.
 9. Repeat once after a deliberate identity switch. A difference from the clean-start result is classified as identity-transition contamination until lifecycle integrity is established.
 
-Run the matrix on both publication paths: `IOHIDUserDevice` on macOS 10.15–14 and CoreHID on macOS 15 and later. If a path is not tested, keep it explicitly unverified rather than inferring parity.
+Run the matrix on both publication paths: `IOHIDUserDevice` on macOS 10.15–14 and CoreHID on macOS 15 and later. Mark untested paths explicitly unverified; do not infer parity.
 
-## Generic HID browser contract
+## Generic HID Browser Contract
 
 Generic HID publishes the stable OJD identity `4F4A:4449`, product name
 `OpenJoystickDriver Generic HID Gamepad`, and a device-neutral HID Game Pad
@@ -50,7 +50,7 @@ apply the following mapping only after recognizing `4F4A:4449`:
 Do not create or submit browser-engine patches as part of OJD's Generic HID
 fallback work.
 
-## Current accepted browser evidence
+## Current Accepted Browser Evidence
 
 Blink's fully correct Apple GameController result is the canonical
 report-layout oracle. Automatic retains the Xbox Series `045E:0B13` descriptor,
@@ -72,12 +72,11 @@ Re-test each row in a fresh document after reconnect and after compatibility
 switching. Engine classification comes from bundle structure rather than a
 browser allowlist; unknown or ambiguous fingerprints must use the canonical row.
 
-## Post-reinstall beta.4 observations
+## Post-Reinstall `0.5.0-beta.4` Observations
 
-The following observations were reported after a full development reinstall
-with a GameSir G7 SE, Chrome 153, macOS 26.6.2, and OJD beta.4. They were not
-recorded with the complete clean-state protocol above and remain user-reported
-evidence:
+User-reported observations after a full development reinstall with a GameSir
+G7 SE, Chrome 153, macOS 26.6.2, and OJD `0.5.0-beta.4`; the complete clean-state protocol
+above was not followed:
 
 - Generic HID enumerated with `mapping: n/a`. The left stick occupied axes 0–1,
   the right stick occupied axes 2–3, LT/RT appeared as binary B6/B7, and no
@@ -98,9 +97,9 @@ evidence:
 Repeat these observations with the complete protocol before treating them as
 clean-state verification.
 
-## Exact beta.3 matrix
+## Exact `0.5.0-beta.3` Matrix
 
-The following nine rows are **user-reported observations**, not verified facts. Repeat each row from clean state, then repeat after a deliberate post-switch identity change. Keep browser name and exact version with each row.
+These nine rows are **user-reported observations**, not verified facts. Repeat each row from clean state, then repeat after a deliberate post-switch identity change. Keep browser name and exact version with each row.
 
 | Row | Engine | Virtual identity | User-reported beta.3 observation | Required manual disposition |
 | --- | --- | --- | --- | --- |
@@ -114,13 +113,13 @@ The following nine rows are **user-reported observations**, not verified facts. 
 | 8 | Safari/WebKit | Apple GameController | Otherwise functional, but four system/stick-click bindings are inverted as in Blink | Check B8/B9/B10/B11 semantics and Guide behavior |
 | 9 | Firefox/Gecko | Apple GameController, Generic HID, X360 HID, SDL2/3 | No recognition for all four identities | Run each identity independently; separate OJD, Gecko, permission, and harness causes |
 
-Do not merge rows into a generic browser-support result. Enumeration alone, rumble alone, or a contaminated post-switch result does not verify a row. Distinguish the report from the observation: label each record **user-reported** until a clean-state manual observation exists, then describe only what was observed and the exact environment.
+Do not merge rows into a generic browser-support result. Enumeration alone, rumble alone, or a contaminated post-switch result does not verify a row. Label each record **user-reported** until a clean-state manual observation exists; then describe only the observation and exact environment.
 
 The Apple GameController profile can expose Share to native apps as
 `GCXboxGamepad.buttonShare` while the browser Gamepad API omits it. Treat those
 as separate consumer results. OJD cannot change a browser's controller-gesture
 settings or standard-layout mapping.
 
-## Evidence boundary
+## Evidence Boundary
 
 Browser engines may enumerate or map the same virtual HID differently. The matrix is closed only by complete control input, relevant release/neutral behavior, reconnect behavior, and actuator observations from the named browser/version and publication backend. No result here establishes universal browser support.

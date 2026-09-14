@@ -1,5 +1,7 @@
 # Localization
 
+Use this procedure to update one shipped locale without changing keys or runtime identifiers.
+
 One Foundation catalog in `OpenJoystickDriverKit`. macOS preferred-language
 order picks the locale. No in-app switcher.
 

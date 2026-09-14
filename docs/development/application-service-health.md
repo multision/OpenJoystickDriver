@@ -1,6 +1,6 @@
-# Application service runtime health
+# Application Service Runtime Health
 
-OpenJoystickDriver provides a bounded soak diagnostic for the installed application process:
+Run a bounded soak diagnostic against the installed application process:
 
 ```bash
 /Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver \
@@ -27,9 +27,9 @@ The sampler records:
 
 A window shorter than 60 seconds is `insufficientData` unless a configured high-water limit is exceeded. A stable run is evidence for the exercised workload, not proof that every path is leak-free.
 
-## Foreground-consumer monitor
+## Foreground-Consumer Monitor
 
-The foreground-consumer monitor owns one locked, process-lifetime `IOHIDManager`. Each scan refreshes `IOHIDManagerCopyDevices` without constructing another manager. Runtime soak tests should include controller activity and foreground application changes so this path is exercised.
+The foreground-consumer monitor owns one locked, process-lifetime `IOHIDManager`. Each scan refreshes `IOHIDManagerCopyDevices` without constructing another manager. Include controller activity and foreground application changes in runtime soak tests to exercise this path.
 
 ## Validation
 

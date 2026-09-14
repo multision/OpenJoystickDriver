@@ -1,12 +1,6 @@
-# Product boundaries
+# Product Boundaries
 
-Use this reference for behavior changes that stay inside an existing owner. The
-canonical topology decision remains `docs/development/source-topology.md`;
-source/test moves belong to `$organize-openjoystickdriver`.
-
-## Package dependencies
-
-The arrows below mean “depends on”; they point from dependent to dependency.
+Load this reference before changing imports, transport ownership, application service, canonical inputs, or generated output. `docs/development/source-topology.md` is authoritative for moves.
 
 ```mermaid
 flowchart LR
@@ -17,27 +11,15 @@ flowchart LR
   HIDTool[OpenJoystickDriverHIDTool] --> Kit
 ```
 
-`OpenJoystickDriverKit` is reusable controller/domain code and never imports
-`SwifterKit`. Only `OpenJoystickDriverRelay` and `DriverKitGenerator` import it.
-The app is the composition root and owns one `ApplicationServiceRuntime`, one
-authenticated RPC socket, and the app lifecycle.
+- `OpenJoystickDriverKit` owns reusable controller, protocol, remapping, output, and service contracts. It never imports SwifterKit.
+- `OpenJoystickDriver` is the composition root. It owns app lifecycle, platform adapters, one `ApplicationServiceRuntime`, and one authenticated RPC socket.
+- `OpenJoystickDriverRelay` and `DriverKitGenerator` own SwifterKit integration and generated native-project input.
+- `OpenJoystickDriverUSB` owns app-side IOUSBHost and USBDriverKit transport access.
 
-## Generated and canonical inputs
+## Generated Boundaries
 
-- `DriverKitGenerator` and `OpenJoystickDriverRelay` author the generated native
-  project; `.build/driverkit/generated/` is ephemeral and never hand-edited.
-- Controller runtime records under
-  `Sources/OpenJoystickDriverKit/Resources/Controllers/` are generated catalog
-  data. Change locked sources or `Resources/ControllerOverrides/`, then use the
-  catalog generator.
-- Package resources, entitlements, RPC payloads, and the exact DriverKit
-  user-client allowlist are contracts, not incidental file layout.
-- A behavior change keeps shared protocol logic in Kit, composition and platform
-  adapters in the app, and SwifterKit-specific behavior in Relay/Generator.
+- `.build/driverkit/generated/` is ephemeral. Change generator inputs and run `./Scripts/ojd driverkit generate`.
+- `Sources/OpenJoystickDriverKit/Resources/Controllers/` is generated. Change pinned sources or `Resources/ControllerOverrides/`, then regenerate the catalog.
+- Package resources, entitlements, RPC payloads, and the DriverKit user-client allowlist are contracts.
 
-## Boundary checklist
-
-Before editing, identify the existing target, public/internal seam, lifecycle,
-failure owner, canonical input, and generated output. If the change needs a new
-owner, source/test move, UI flow, or evidence plan, route it to the specialized
-skill instead of broadening this one.
+Before editing, identify the target, public seam, lifecycle, failure owner, canonical input, generated output, and matching test. Route a new owner or source/test move to `$organize-openjoystickdriver`.

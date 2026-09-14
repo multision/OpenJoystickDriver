@@ -1,4 +1,4 @@
-# Signing the app and XboxUSBDevice DEXT
+# Signing The App And XboxUSBDevice DEXT
 
 OpenJoystickDriver has two independently provisioned code items:
 
@@ -9,7 +9,7 @@ Follow [Kevin Elliott's DEXT signing guide](https://developer.apple.com/forums/t
 DriverKit entitlement values are customized provisioning data; do not infer, broaden, or repair a
 profile in source.
 
-## Entitlement ownership
+## Entitlement Ownership
 
 The host app requires:
 
@@ -43,10 +43,9 @@ any HIDDriverKit family/transport entitlement.
 The canonical authored DEXT entitlement input is
 `Sources/DriverKitGenerator/Entitlements/XboxUSBDevice.entitlements`.
 
-## Development profiles
+## Development Profiles
 
-Use Apple Development signing and separate profiles for the app and DEXT. The default local paths
-are:
+Use Apple Development signing and separate profiles for the app and DEXT. Default local paths:
 
 ```text
 ~/Library/MobileDevice/Provisioning Profiles/OpenJoystickDriver.provisionprofile
@@ -69,8 +68,8 @@ Normally, invoke the desired signed operation and follow its prompts:
 ```
 
 The command searches supported local profile locations, installs discovered
-profiles, configures matching Keychain identities, and resumes. Use the
-following only to diagnose an automatic repair that reports an asset mismatch:
+profiles, configures matching Keychain identities, and resumes. Use these commands
+only when automatic repair reports an asset mismatch:
 
 ```bash
 ./Scripts/ojd signing audit
@@ -82,7 +81,7 @@ The doctor fails closed if the DEXT profile is missing, the host allowlist names
 `VirtualHIDDevice` configuration, the USB entitlement shape differs, or forbidden entitlements are
 present.
 
-## Developer ID / distribution
+## Developer ID / Distribution
 
 The Developer ID profiles are installed separately as
 `OpenJoystickDriver_DevID.provisionprofile` and
@@ -127,6 +126,5 @@ codesign -d --entitlements - --xml \
 security cms -D -i /path/to/profile.provisionprofile
 ```
 
-For both development and production artifacts, verify the seven Microsoft product IDs and confirm
-the wildcard is absent. Verify the host allowlist contains only
+For development and production artifacts, verify the seven Microsoft product IDs and no wildcard. Verify the host allowlist contains only
 `com.openjoystickdriver.XboxUSBDevice` and the DEXT has no virtual-HID entitlement.
