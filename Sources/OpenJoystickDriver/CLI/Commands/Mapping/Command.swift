@@ -36,13 +36,13 @@ struct MappingCommand {
 }
 
 struct MappingInvocation {
-  private static let bindingOptions: Set<String> = [
+  internal static let bindingOptions: Set<String> = [
     "--source", "--target", "--deadzone", "--gain", "--invert", "--response-curve",
     "--digital-threshold", "--turbo-rate", "--turbo-duty", "--long-hold", "--double-tap",
     "--behavior", "--pulse-ms", "--actions-json",
   ]
-  private let command: String
-  private let arguments: [String]
+  internal let command: String
+  internal let arguments: [String]
 
   var isHelp: Bool { command == "help" || command == "--help" || command == "-h" }
 
@@ -81,7 +81,7 @@ struct MappingInvocation {
     }
   }
 
-  private func renderSnapshot(client: any MappingServiceClient) async throws -> String {
+  internal func renderSnapshot(client: any MappingServiceClient) async throws -> String {
     let options = try MappingOptions(arguments, flags: ["--json"])
     try options.validate(allowed: ["--json"])
     let snapshot = try await client.snapshot()
@@ -89,7 +89,7 @@ struct MappingInvocation {
       ? MappingRenderer.json(snapshot) : MappingRenderer.snapshot(snapshot)
   }
 
-  private func show(client: any MappingServiceClient) async throws -> String {
+  internal func show(client: any MappingServiceClient) async throws -> String {
     let (selector, trailing) = try selectorArguments()
     let options = try MappingOptions(trailing, flags: ["--json"])
     try options.validate(allowed: ["--json"])
@@ -98,7 +98,7 @@ struct MappingInvocation {
       ? MappingRenderer.json(profile) : MappingRenderer.profile(profile)
   }
 
-  private func create(client: any MappingServiceClient) async throws -> String {
+  internal func create(client: any MappingServiceClient) async throws -> String {
     let (name, trailing) = try selectorArguments()
     let options = try MappingOptions(trailing, flags: ["--global"])
     try options.validate(
@@ -129,7 +129,7 @@ struct MappingInvocation {
     return render(try await client.create(profile), profileID: profile.id)
   }
 
-  private func update(client: any MappingServiceClient) async throws -> String {
+  internal func update(client: any MappingServiceClient) async throws -> String {
     let (selector, trailing) = try selectorArguments()
     let options = try MappingOptions(trailing, flags: ["--global"])
     try options.validate(
@@ -146,7 +146,7 @@ struct MappingInvocation {
     return render(try await client.update(updated, expectedCurrent: profile), profileID: profile.id)
   }
 
-  private func bind(client: any MappingServiceClient) async throws -> String {
+  internal func bind(client: any MappingServiceClient) async throws -> String {
     let (selector, trailing) = try selectorArguments()
     let options = try MappingOptions(trailing, flags: ["--invert"])
     try options.validate(allowed: Self.bindingOptions)
@@ -160,7 +160,7 @@ struct MappingInvocation {
     return render(try await client.update(updated, expectedCurrent: profile), profileID: profile.id)
   }
 
-  private func unbind(client: any MappingServiceClient) async throws -> String {
+  internal func unbind(client: any MappingServiceClient) async throws -> String {
     let (selector, trailing) = try selectorArguments()
     let options = try MappingOptions(trailing)
     try options.validate(allowed: ["--source"])
@@ -172,7 +172,7 @@ struct MappingInvocation {
     return render(try await client.update(updated, expectedCurrent: profile), profileID: profile.id)
   }
 
-  private func delete(client: any MappingServiceClient) async throws -> String {
+  internal func delete(client: any MappingServiceClient) async throws -> String {
     let selector = try soleArgument(
       CLILocalized.text("cli.mapping.usage.delete", "map delete <uuid-or-name>")
     )
@@ -180,13 +180,13 @@ struct MappingInvocation {
     return MappingRenderer.snapshot(try await client.delete(id: profile.id))
   }
 
-  private func importProfile(client: any MappingServiceClient) async throws -> String {
+  internal func importProfile(client: any MappingServiceClient) async throws -> String {
     let path = try soleArgument(CLILocalized.text("cli.mapping.usage.import", "map import <file>"))
     let profile = try RemappingProfileFileStore.load(from: URL(fileURLWithPath: path))
     return render(try await client.importProfile(profile), profileID: profile.id)
   }
 
-  private func export(client: any MappingServiceClient) async throws -> String {
+  internal func export(client: any MappingServiceClient) async throws -> String {
     let (selector, trailing) = try selectorArguments()
     let options = try MappingOptions(trailing)
     try options.validate(allowed: ["--output"])
@@ -199,7 +199,7 @@ struct MappingInvocation {
     return text
   }
 
-  private func activate(client: any MappingServiceClient) async throws -> String {
+  internal func activate(client: any MappingServiceClient) async throws -> String {
     let profile = try await resolve(
       soleArgument(CLILocalized.text("cli.mapping.usage.enable", "map enable <uuid-or-name>")),
       client: client
@@ -207,7 +207,7 @@ struct MappingInvocation {
     return MappingRenderer.snapshot(try await client.activate(id: profile.id))
   }
 
-  private func deactivate(client: any MappingServiceClient) async throws -> String {
+  internal func deactivate(client: any MappingServiceClient) async throws -> String {
     let options = try MappingOptions(arguments)
     try options.validate(allowed: ["--vid", "--pid", "--profile"])
     if let profileSelector = options["--profile"] {
@@ -221,7 +221,7 @@ struct MappingInvocation {
     )
   }
 
-  private func permission(client: any MappingServiceClient) async throws -> String {
+  internal func permission(client: any MappingServiceClient) async throws -> String {
     let operation = try soleArgument(
       CLILocalized.text("cli.mapping.usage.permission", "map permission status|request")
     )
@@ -233,7 +233,7 @@ struct MappingInvocation {
     return try await client.access(request: operation == "request").rawValue
   }
 
-  private func calibration(client: any MappingServiceClient) async throws -> String {
+  internal func calibration(client: any MappingServiceClient) async throws -> String {
     guard let operation = arguments.first,
       operation == "status" || RemappingMotionCalibrationCommand(rawValue: operation) != nil
     else {
@@ -263,7 +263,7 @@ struct MappingInvocation {
     )
   }
 
-  private func joyCon(client: any MappingServiceClient) async throws -> String {
+  internal func joyCon(client: any MappingServiceClient) async throws -> String {
     guard let operation = arguments.first else {
       throw MappingCommandError.invalidArguments(
         "Usage: map joy-con pair <profile> --left <runtime-id> --right <runtime-id> | "
@@ -294,271 +294,13 @@ struct MappingInvocation {
     }
   }
 
-  private func chord(client: any MappingServiceClient) async throws -> String {
-    guard let action = arguments.first, !action.hasPrefix("--") else {
-      throw MappingCommandError.invalidArguments(
-        CLILocalized.text("cli.mapping.usage.chord", "Usage: map chord add|delete <profile> ...")
-      )
-    }
-    switch action {
-    case "add":
-      let (selector, opts) = try selectorArguments()
-      let options = try MappingOptions(opts)
-      try options.validate(allowed: ["--sources", "--target", "--mode", "--window-ms"])
-      let profile = try await resolve(selector, client: client)
-      let sources = try MappingSyntax.sourceList(try options.required("--sources"))
-      let destination = try MappingSyntax.destination(try options.required("--target"))
-      let updated = try MappingProfileEditor.addingChord(
-        in: profile,
-        sources: sources,
-        destination: destination,
-        mode: try MappingProfileEditor.chordMode(options),
-        windowMs: try MappingProfileEditor.chordWindow(options)
-      )
-      return render(
-        try await client.update(updated, expectedCurrent: profile),
-        profileID: profile.id
-      )
-    case "delete":
-      return try await deleteByID(client: client) { profile, id in
-        try MappingProfileEditor.removingChord(from: profile, chordID: id)
-      }
-    default:
-      throw MappingCommandError.invalidArguments(
-        CLILocalized.format(
-          "cli.mapping.chord_action_unknown",
-          "Unknown chord action '%@'. Expected: add | delete",
-          action
-        )
-      )
-    }
-  }
-
-  private func sequence(client: any MappingServiceClient) async throws -> String {
-    guard let action = arguments.first, !action.hasPrefix("--") else {
-      throw MappingCommandError.invalidArguments(
-        CLILocalized.text(
-          "cli.mapping.usage.sequence",
-          "Usage: map sequence add|delete <profile> ..."
-        )
-      )
-    }
-    switch action {
-    case "add":
-      let (selector, opts) = try selectorArguments()
-      let options = try MappingOptions(opts)
-      try options.validate(allowed: ["--sources", "--window", "--target"])
-      let profile = try await resolve(selector, client: client)
-      let sources = try MappingSyntax.sourceList(try options.required("--sources"))
-      let window = try MappingSyntax.finiteDouble(
-        try options.required("--window"),
-        option: "--window"
-      )
-      let destination = try MappingSyntax.destination(try options.required("--target"))
-      let updated = try MappingProfileEditor.addingSequence(
-        in: profile,
-        sources: sources,
-        windowMs: window,
-        destination: destination
-      )
-      return render(
-        try await client.update(updated, expectedCurrent: profile),
-        profileID: profile.id
-      )
-    case "delete":
-      return try await deleteByID(client: client) { profile, id in
-        try MappingProfileEditor.removingSequence(from: profile, sequenceID: id)
-      }
-    default:
-      throw MappingCommandError.invalidArguments(
-        CLILocalized.format(
-          "cli.mapping.sequence_action_unknown",
-          "Unknown sequence action '%@'. Expected: add | delete",
-          action
-        )
-      )
-    }
-  }
-
-  private func layer(client: any MappingServiceClient) async throws -> String {
-    guard let action = arguments.first, !action.hasPrefix("--") else {
-      throw MappingCommandError.invalidArguments(
-        CLILocalized.text(
-          "cli.mapping.usage.layer",
-          "Usage: map layer create|delete|bind|unbind|motion|list <profile> ..."
-        )
-      )
-    }
-    switch action {
-    case "motion":
-      let (selector, opts) = try selectorArguments()
-      let options = try MappingOptions(opts, flags: ["--clear"])
-      let tuningOptions = MappingProfileEditor.motionOptions.filter { $0.hasPrefix("--motion-") }
-      try options.validate(allowed: Set(tuningOptions).union(["--layer", "--clear"]))
-      let profile = try await resolve(selector, client: client)
-      let id = try MappingSyntax.uuid(try options.required("--layer"), option: "--layer")
-      let updated = try MappingProfileEditor.settingLayerMotion(
-        profile,
-        layerID: id,
-        options: options
-      )
-      return render(
-        try await client.update(updated, expectedCurrent: profile),
-        profileID: profile.id
-      )
-    case "create":
-      let (selector, opts) = try selectorArguments()
-      let options = try MappingOptions(opts)
-      try options.validate(allowed: ["--name", "--activator", "--mode"])
-      let profile = try await resolve(selector, client: client)
-      let name = try options.required("--name")
-      let activator = try MappingSyntax.source(try options.required("--activator"))
-      let mode = try layerMode(try options.required("--mode"))
-      let updated = try MappingProfileEditor.creatingLayer(
-        in: profile,
-        name: name,
-        activator: activator,
-        mode: mode
-      )
-      return render(
-        try await client.update(updated, expectedCurrent: profile),
-        profileID: profile.id
-      )
-    case "delete":
-      return try await deleteByID(client: client) { profile, id in
-        try MappingProfileEditor.deletingLayer(from: profile, layerID: id)
-      }
-    case "bind":
-      let (selector, opts) = try selectorArguments()
-      let options = try MappingOptions(opts, flags: ["--invert"])
-      try options.validate(
-        allowed: Set(["--layer", "--source", "--target"]).union(Self.bindingOptions)
-      )
-      let profile = try await resolve(selector, client: client)
-      let layerID = try MappingSyntax.uuid(try options.required("--layer"), option: "--layer")
-      let source = try MappingSyntax.source(try options.required("--source"))
-      let destination = try MappingSyntax.destination(try options.required("--target"))
-      let updated = try MappingProfileEditor.bindingInLayer(
-        in: profile,
-        layerID: layerID,
-        source: source,
-        destination: destination,
-        options: options
-      )
-      return render(
-        try await client.update(updated, expectedCurrent: profile),
-        profileID: profile.id
-      )
-    case "unbind":
-      let (selector, opts) = try selectorArguments()
-      let options = try MappingOptions(opts)
-      try options.validate(allowed: ["--layer", "--source"])
-      let profile = try await resolve(selector, client: client)
-      let layerID = try MappingSyntax.uuid(try options.required("--layer"), option: "--layer")
-      let source = try MappingSyntax.source(try options.required("--source"))
-      let updated = try MappingProfileEditor.unbindingInLayer(
-        from: profile,
-        layerID: layerID,
-        source: source
-      )
-      return render(
-        try await client.update(updated, expectedCurrent: profile),
-        profileID: profile.id
-      )
-    case "list":
-      let selector = try soleArgument(
-        CLILocalized.text("cli.mapping.usage.layer_list", "map layer list <profile>")
-      )
-      let profile = try await resolve(selector, client: client)
-      return MappingRenderer.layers(profile)
-    default:
-      throw MappingCommandError.invalidArguments(
-        CLILocalized.format(
-          "cli.mapping.layer_action_unknown",
-          "Unknown layer action '%@'. Expected: create | delete | bind | unbind | motion | list",
-          action
-        )
-      )
-    }
-  }
-
-  private func layerMode(_ raw: String) throws -> RemappingLayerActivation {
+  internal func layerMode(_ raw: String) throws -> RemappingLayerActivation {
     guard let mode = RemappingLayerActivation(rawValue: raw) else {
       throw MappingCommandError.invalidArguments(
         CLILocalized.text("cli.mapping.mode_invalid", "--mode must be 'hold' or 'toggle'.")
       )
     }
     return mode
-  }
-
-  private func deleteByID(
-    client: any MappingServiceClient,
-    remove: (RemappingProfile, UUID) throws -> RemappingProfile
-  ) async throws -> String {
-    let (selector, opts) = try selectorArguments()
-    let options = try MappingOptions(opts)
-    try options.validate(allowed: ["--id"])
-    let profile = try await resolve(selector, client: client)
-    let id = try MappingSyntax.uuid(try options.required("--id"), option: "--id")
-    let updated = try remove(profile, id)
-    return render(try await client.update(updated, expectedCurrent: profile), profileID: profile.id)
-  }
-
-  private func resolve(
-    _ selector: String,
-    client: any MappingServiceClient
-  ) async throws -> RemappingProfile {
-    if let id = UUID(uuidString: selector) { return try await client.profile(id: id) }
-    let matches = try await client.snapshot().profiles.filter {
-      $0.name.caseInsensitiveCompare(selector) == .orderedSame
-    }
-    guard !matches.isEmpty else {
-      throw MappingCommandError.profileNotFound(
-        CLILocalized.format("cli.mapping.profile_missing", "No profile named '%@'.", selector)
-      )
-    }
-    guard matches.count == 1, let profile = matches.first else {
-      throw MappingCommandError.ambiguousProfile(
-        CLILocalized.format(
-          "cli.mapping.profile_ambiguous",
-          "Profile name '%@' is ambiguous.",
-          selector
-        )
-      )
-    }
-    return profile
-  }
-
-  private var profileArguments: ArraySlice<String> {
-    ["chord", "sequence", "layer"].contains(command) ? arguments.dropFirst() : arguments[...]
-  }
-
-  private func selectorArguments() throws -> (String, [String]) {
-    guard let selector = profileArguments.first, !selector.hasPrefix("--") else {
-      throw MappingCommandError.invalidArguments(
-        CLILocalized.text("cli.mapping.profile_required", "A profile UUID or name is required.")
-      )
-    }
-    return (selector, Array(profileArguments.dropFirst()))
-  }
-
-  private func soleArgument(_ usage: String) throws -> String {
-    guard profileArguments.count == 1, let value = profileArguments.first else {
-      throw MappingCommandError.invalidArguments(
-        CLILocalized.format("cli.mapping.usage_prefix", "Usage: %@", usage)
-      )
-    }
-    return value
-  }
-
-  private func render(
-    _ snapshot: ApplicationServiceRemappingSnapshotPayload,
-    profileID: UUID
-  ) -> String {
-    guard let profile = snapshot.profiles.first(where: { $0.id == profileID }) else {
-      return MappingRenderer.snapshot(snapshot)
-    }
-    return MappingRenderer.profile(profile)
   }
 
   static let help =

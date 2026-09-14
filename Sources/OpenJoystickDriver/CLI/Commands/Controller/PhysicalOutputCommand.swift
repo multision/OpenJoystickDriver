@@ -2,7 +2,7 @@ import Foundation
 import OpenJoystickDriverKit
 
 struct PhysicalOutputCommand {
-  private struct ListedDevice: Codable {
+  internal struct ListedDevice: Codable {
     let id: String
     let name: String
     let vendorID: UInt16
@@ -43,7 +43,7 @@ struct PhysicalOutputCommand {
     }
   }
 
-  private func list(arguments: [String]) {
+  internal func list(arguments: [String]) {
     guard arguments.allSatisfy({ $0 == "--json" }) && arguments.count <= 1 else {
       printHelp()
       exit(1)
@@ -93,7 +93,7 @@ struct PhysicalOutputCommand {
     }
   }
 
-  private func rumble(arguments: [String]) {
+  internal func rumble(arguments: [String]) {
     let parsed = parseDeviceOption(arguments)
     let arguments = parsed.arguments
     guard arguments.count >= 2 else {
@@ -227,7 +227,7 @@ struct PhysicalOutputCommand {
     )
   }
 
-  private func player(arguments: [String]) {
+  internal func player(arguments: [String]) {
     let parsed = parseDeviceOption(arguments)
     let arguments = parsed.arguments
     guard arguments.count == 3 else {
@@ -292,169 +292,7 @@ struct PhysicalOutputCommand {
     )
   }
 
-  private func plan(arguments: [String]) {
-    let parsed = parseDeviceOption(arguments)
-    let values = parsed.arguments
-    guard values.count == 2 else {
-      printHelp()
-      exit(1)
-    }
-    let vendorID = parseIdentifier(values[0], label: "VID")
-    let productID = parseIdentifier(values[1], label: "PID")
-    let device = requireDevice(
-      vendorID: vendorID,
-      productID: productID,
-      runtimeIdentifier: parsed.runtimeIdentifier
-    )
-    let plan = PhysicalOutputValidationPlan(device: device)
-    print(
-      CLILocalized.format(
-        "cli.controller.outputPlan",
-        "Physical output validation plan for %@:%@",
-        hex(vendorID),
-        hex(productID)
-      )
-    )
-    if plan.steps.isEmpty {
-      print(
-        CLILocalized.text(
-          "cli.controller.noOutputSteps",
-          "No source-backed physical output steps are available."
-        )
-      )
-    }
-    for (index, step) in plan.steps.enumerated() {
-      print("\(index + 1). \(step.id)")
-      print(CLILocalized.format("cli.controller.planRun", "   Run: %@", step.command))
-      print(
-        CLILocalized.format("cli.controller.planExpect", "   Expect: %@", step.expectedObservation)
-      )
-    }
-    for note in plan.notes {
-      print(CLILocalized.format("cli.controller.planNote", "Note: %@", note))
-    }
-  }
-
-  private func color(arguments: [String]) {
-    let parsed = parseDeviceOption(arguments)
-    let arguments = parsed.arguments
-    guard arguments.count == 5 else {
-      printHelp()
-      exit(1)
-    }
-    let vendorID = parseIdentifier(arguments[0], label: "VID")
-    let productID = parseIdentifier(arguments[1], label: "PID")
-    let components = zip(["red", "green", "blue"], arguments.dropFirst(2)).map { label, value in
-      let parsed = parseInteger(value, label: label)
-      guard (0...255).contains(parsed) else {
-        fail(CLILocalized.text("cli.controller.colorRange", "Color components must be 0...255."))
-      }
-      return UInt8(parsed)
-    }
-
-    let device = requireDevice(
-      vendorID: vendorID,
-      productID: productID,
-      runtimeIdentifier: parsed.runtimeIdentifier
-    )
-    guard device.physicalOutputCapabilities.lightingFeatures.contains(.programmableColor) else {
-      fail(
-        CLILocalized.text(
-          "cli.controller.noRGB",
-          "The selected controller has no source-backed RGB implementation."
-        )
-      )
-    }
-
-    let client = ApplicationServiceClient()
-    client.connect()
-    defer { client.disconnect() }
-    let sent: Bool? = runSyncOptionalResult(timeout: applicationServiceCallTimeoutSeconds) {
-      try? await client.setPhysicalColor(
-        vendorID: vendorID,
-        productID: productID,
-        runtimeIdentifier: device.runtimeIdentifier,
-        red: components[0],
-        green: components[1],
-        blue: components[2]
-      )
-    }
-    guard sent == true else {
-      fail(
-        CLILocalized.text(
-          "cli.controller.rgbFailed",
-          "The application service could not set physical RGB color."
-        )
-      )
-    }
-    print(
-      CLILocalized.format(
-        "cli.controller.rgbSet",
-        "Physical RGB color set on %@:%@.",
-        hex(vendorID),
-        hex(productID)
-      )
-    )
-  }
-
-  private func brightness(arguments: [String]) {
-    let parsed = parseDeviceOption(arguments)
-    let arguments = parsed.arguments
-    guard arguments.count == 3 else {
-      printHelp()
-      exit(1)
-    }
-    let vendorID = parseIdentifier(arguments[0], label: "VID")
-    let productID = parseIdentifier(arguments[1], label: "PID")
-    let rawBrightness = parseInteger(arguments[2], label: "brightness")
-    guard (0...255).contains(rawBrightness) else {
-      fail(CLILocalized.text("cli.controller.brightnessRange", "Brightness must be 0...255."))
-    }
-
-    let device = requireDevice(
-      vendorID: vendorID,
-      productID: productID,
-      runtimeIdentifier: parsed.runtimeIdentifier
-    )
-    guard device.physicalOutputCapabilities.supportsProgrammableBrightness else {
-      fail(
-        CLILocalized.text(
-          "cli.controller.noBrightness",
-          "The selected controller has no source-backed brightness implementation."
-        )
-      )
-    }
-
-    let client = ApplicationServiceClient()
-    client.connect()
-    defer { client.disconnect() }
-    let sent: Bool? = runSyncOptionalResult(timeout: applicationServiceCallTimeoutSeconds) {
-      try? await client.setPhysicalBrightness(
-        vendorID: vendorID,
-        productID: productID,
-        runtimeIdentifier: device.runtimeIdentifier,
-        brightness: UInt8(rawBrightness)
-      )
-    }
-    guard sent == true else {
-      fail(
-        CLILocalized.text(
-          "cli.controller.brightnessFailed",
-          "The application service could not set physical LED brightness."
-        )
-      )
-    }
-    print(
-      CLILocalized.format(
-        "cli.controller.brightnessSet",
-        "Physical LED brightness set on %@:%@.",
-        hex(vendorID),
-        hex(productID)
-      )
-    )
-  }
-
-  private func connectedDevices() -> [ApplicationServiceDeviceDescription] {
+  internal func connectedDevices() -> [ApplicationServiceDeviceDescription] {
     let client = ApplicationServiceClient()
     client.connect()
     defer { client.disconnect() }
@@ -474,7 +312,7 @@ struct PhysicalOutputCommand {
     return status.connectedDevices
   }
 
-  private func requireDevice(
+  internal func requireDevice(
     vendorID: UInt16,
     productID: UInt16,
     runtimeIdentifier: String?
@@ -489,7 +327,7 @@ struct PhysicalOutputCommand {
     } catch { fail(error.localizedDescription) }
   }
 
-  private func parseDeviceOption(
+  internal func parseDeviceOption(
     _ arguments: [String]
   ) -> (arguments: [String], runtimeIdentifier: String?) {
     var values: [String] = []
@@ -524,7 +362,7 @@ struct PhysicalOutputCommand {
     return (values, runtimeIdentifier)
   }
 
-  private func parseIdentifier(_ value: String, label: String) -> UInt16 {
+  internal func parseIdentifier(_ value: String, label: String) -> UInt16 {
     let radix = value.lowercased().hasPrefix("0x") ? 16 : 10
     let digits = radix == 16 ? String(value.dropFirst(2)) : value
     guard let parsed = UInt16(digits, radix: radix) else {
@@ -539,32 +377,32 @@ struct PhysicalOutputCommand {
     return parsed
   }
 
-  private func parseInteger(_ value: String, label: String) -> Int {
+  internal func parseInteger(_ value: String, label: String) -> Int {
     guard let parsed = Int(value) else {
       fail(CLILocalized.format("cli.controller.labelInteger", "%@ must be an integer.", label))
     }
     return parsed
   }
 
-  private func parseIntensity(_ value: Int, label: String) -> UInt8 {
+  internal func parseIntensity(_ value: Int, label: String) -> UInt8 {
     guard (0...255).contains(value) else {
       fail(CLILocalized.format("cli.controller.labelRange255", "%@ must be 0...255.", label))
     }
     return UInt8(value)
   }
 
-  private func names(_ values: [String]) -> String {
+  internal func names(_ values: [String]) -> String {
     values.isEmpty ? "none" : values.joined(separator: ",")
   }
 
-  private func hex(_ value: UInt16) -> String { String(format: "%04x", value) }
+  internal func hex(_ value: UInt16) -> String { String(format: "%04x", value) }
 
-  private func fail(_ message: String) -> Never {
+  internal func fail(_ message: String) -> Never {
     CLIOutput.error(message)
     exit(1)
   }
 
-  private func printHelp() {
+  internal func printHelp() {
     print(
       CLILocalized.text(
         "cli.controller.output.help",
