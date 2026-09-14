@@ -56,11 +56,24 @@ Feature and screen ViewModels are `@MainActor` and own asynchronous workflow sta
 are stored once and presentation values are derived from them. Views own only transient visual state;
 coordinators own AppKit lifecycle and panels.
 
+`RuntimeViewModel` is the single controller-inventory refresh coordinator for settings and the menu
+bar. Overlapping callers merge their requested scopes into one trailing refresh rather than dropping
+work, and only one gateway request executes at a time. A transient background failure preserves the
+last authoritative inventory. Controllers selection is reconciled only when that inventory changes.
+
+Developer snapshot and capture requests use one replaceable operation. Switching controllers,
+refreshing, stopping capture, and closing the window cancel and await the predecessor; publication
+also requires both the current operation generation and exact runtime identifier. Device I/O,
+parsing, packet differencing, classification, and bulk row formatting remain outside `@MainActor`.
+The main actor publishes observable snapshots and owns the Catalina-compatible SwiftUI/AppKit
+lifecycle only.
+
 | Area | Owner | Boundary |
 | --- | --- | --- |
 | App lifecycle and status item | `App/Presentation/MenuBar/Coordinator.swift` | AppKit activation, status menu, and termination only |
 | Settings window lifecycle | `App/Presentation/Settings/WindowController.swift` | One reusable window, toolbar selection, geometry persistence, and pane activation |
 | Settings panes and access summary | `App/Presentation/Settings/Shell.swift` | Pane navigation, native toolbar symbols, permission presentation, and shared accessibility compatibility |
+| Developer diagnostics | `App/Presentation/Settings/Developer*.swift` | Replaceable diagnostic operation, compact controller facts, bounded capture presentation, and virtualized packet rows |
 | Shared settings primitives | `App/Presentation/Settings/Support.swift` | Headers, rows, loading, empty, and error states |
 | Controller details and identity | `App/Presentation/Controllers/{ControllerViews,OutputViews}.swift` | Connected devices, identity selection, loading, failure, and retry |
 | Profiles and editor | `App/Presentation/Profiles/{MappingViews,ProfileEditorViews}.swift` | Selection, drafts, assignments, save/conflict flow, and profile actions |

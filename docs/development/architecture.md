@@ -51,6 +51,33 @@ flowchart LR
   its late result observes the inactive generation and is closed without publishing state.
 - `@MainActor` owns application, window, menu, panel, and observable presentation state only.
 
+### Developer diagnostics lifetime
+
+Developer diagnostics observe the existing service-owned sessions; they never open a second HID or
+USB reader. One replaceable operation owns the selected controller snapshot and packet-capture
+request. Replacing, refreshing, stopping, or closing first cancels and awaits that operation, then
+starts or publishes only for the current generation and exact runtime identifier.
+
+```mermaid
+flowchart LR
+  A[HID or USB adapter] --> B[DevicePipeline actor]
+  B --> C[Parser and packet ring]
+  C --> D[DeviceManager actor]
+  D --> E[Typed local RPC]
+  E --> F[Replaceable diagnostic operation]
+  F --> G{Generation and runtime ID current?}
+  G -->|yes| H[MainActor observable snapshot]
+  G -->|no| I[Discard stale result]
+  H --> J[SwiftUI facts and virtualized AppKit table]
+  K[Switch refresh stop or close] --> L[Cancel and await predecessor]
+  L --> F
+```
+
+Packet differencing, classification, and bulk formatting stay outside `@MainActor`. The main actor
+owns only AppKit/SwiftUI lifecycle and publication of bounded, already-derived presentation
+snapshots. The complete raw capture remains authoritative for copy and export; table virtualization
+changes rendering cost, not capture contents or device cadence.
+
 ## Platform split
 
 The package deployment floor remains macOS 10.15. Availability selection happens once inside each

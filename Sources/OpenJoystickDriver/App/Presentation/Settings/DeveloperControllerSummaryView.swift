@@ -33,19 +33,7 @@
 
           if let device = model.selectedDevice {
             Divider()
-            if compact {
-              VStack(alignment: .leading, spacing: 14) {
-                identityColumn(device)
-                transportColumn(device)
-                inputColumn
-              }
-            } else {
-              HStack(alignment: .top, spacing: 24) {
-                identityColumn(device)
-                transportColumn(device)
-                inputColumn
-              }
-            }
+            controllerFacts(device)
           }
         }.padding(4)
       } label: {
@@ -55,59 +43,67 @@
       }
     }
 
-    private func identityColumn(_ device: ApplicationServiceDeviceDescription) -> some View {
-      VStack(alignment: .leading, spacing: 6) {
-        DeveloperValueRow(
-          label: OJDLocalized.string("developer.usbID", fallback: "USB ID"),
-          value: String(format: "%04X:%04X", device.vendorID, device.productID)
-        )
-        DeveloperValueRow(
-          label: OJDLocalized.string("common.parser", fallback: "Parser"),
-          value: device.parser
-        )
-        DeveloperValueRow(
-          label: OJDLocalized.string("common.protocol", fallback: "Protocol"),
-          value: protocolName(device.protocolVariant)
-        )
-      }.frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    private func transportColumn(_ device: ApplicationServiceDeviceDescription) -> some View {
-      VStack(alignment: .leading, spacing: 6) {
-        DeveloperValueRow(
-          label: OJDLocalized.string("developer.route", fallback: "Route"),
-          value: routeName(device.discoverySource)
-        )
-        DeveloperValueRow(
-          label: OJDLocalized.string("developer.connection", fallback: "Connection"),
-          value: device.connection
-        )
-        DeveloperValueRow(
-          label: OJDLocalized.string("developer.usbEndpoints", fallback: "USB endpoints"),
-          value: String(
-            format: "Input 0x%02X · Output 0x%02X",
-            device.inputEndpoint,
-            device.outputEndpoint
+    private func controllerFacts(_ device: ApplicationServiceDeviceDescription) -> some View {
+      VStack(alignment: .leading, spacing: 10) {
+        factRow(
+          DeveloperValueRow(
+            label: OJDLocalized.string("developer.usbID", fallback: "USB ID"),
+            value: String(format: "%04X:%04X", device.vendorID, device.productID)
+          ),
+          DeveloperValueRow(
+            label: OJDLocalized.string("common.parser", fallback: "Parser"),
+            value: device.parser
+          ),
+          DeveloperValueRow(
+            label: OJDLocalized.string("common.protocol", fallback: "Protocol"),
+            value: protocolName(device.protocolVariant)
           )
         )
-      }.frame(maxWidth: .infinity, alignment: .leading)
+        factRow(
+          DeveloperValueRow(
+            label: OJDLocalized.string("developer.route", fallback: "Route"),
+            value: routeName(device.discoverySource)
+          ),
+          DeveloperValueRow(
+            label: OJDLocalized.string("developer.connection", fallback: "Connection"),
+            value: device.connection
+          ),
+          DeveloperValueRow(
+            label: OJDLocalized.string("developer.usbEndpoints", fallback: "USB endpoints"),
+            value: String(
+              format: "Input 0x%02X · Output 0x%02X",
+              device.inputEndpoint,
+              device.outputEndpoint
+            )
+          )
+        )
+        factRow(
+          DeveloperValueRow(
+            label: OJDLocalized.string("developer.buttons", fallback: "Buttons"),
+            value: buttonValue(model.latestInput?.pressedButtons)
+          ),
+          DeveloperValueRow(
+            label: OJDLocalized.string("developer.leftStick", fallback: "Left stick"),
+            value: stickValue(x: model.latestInput?.leftStickX, y: model.latestInput?.leftStickY)
+          ),
+          DeveloperValueRow(
+            label: OJDLocalized.string("developer.rightStick", fallback: "Right stick"),
+            value: stickValue(x: model.latestInput?.rightStickX, y: model.latestInput?.rightStickY)
+          )
+        )
+      }
     }
 
-    private var inputColumn: some View {
-      VStack(alignment: .leading, spacing: 6) {
-        DeveloperValueRow(
-          label: OJDLocalized.string("developer.buttons", fallback: "Buttons"),
-          value: buttonValue(model.latestInput?.pressedButtons)
-        )
-        DeveloperValueRow(
-          label: OJDLocalized.string("developer.leftStick", fallback: "Left stick"),
-          value: stickValue(x: model.latestInput?.leftStickX, y: model.latestInput?.leftStickY)
-        )
-        DeveloperValueRow(
-          label: OJDLocalized.string("developer.rightStick", fallback: "Right stick"),
-          value: stickValue(x: model.latestInput?.rightStickX, y: model.latestInput?.rightStickY)
-        )
-      }.frame(maxWidth: .infinity, alignment: .leading)
+    private func factRow<First: View, Second: View, Third: View>(
+      _ first: First,
+      _ second: Second,
+      _ third: Third
+    ) -> some View {
+      HStack(alignment: .top, spacing: compact ? 10 : 24) {
+        first.frame(maxWidth: .infinity, alignment: .leading)
+        second.frame(maxWidth: .infinity, alignment: .leading)
+        third.frame(maxWidth: .infinity, alignment: .leading)
+      }
     }
 
     private func stickValue(x: Float?, y: Float?) -> String {
