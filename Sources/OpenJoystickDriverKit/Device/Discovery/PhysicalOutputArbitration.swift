@@ -267,10 +267,12 @@ extension DeviceManager {
       guard let locationID = identifier.locationID,
         let report = await pipeline.hidPlayerIndicatorReport(indicator)
       else { return false }
-      do { try await enforcePhysicalHIDOutputInterval(for: identifier, pipeline: pipeline) } catch {
-        return false
-      }
-      return await hidManager.setOutputReport(locationID: locationID, report: report)
+      return await sendHIDOutputPlan(
+        PhysicalHIDOutputPlan(reports: [report]),
+        locationID: locationID,
+        identifier: identifier,
+        pipeline: pipeline
+      )
     case .color:
       let value = physicalOutputOwnership.effectiveOutput(for: channel, device: identifier)
       let components: (UInt8, UInt8, UInt8)
@@ -282,16 +284,18 @@ extension DeviceManager {
         return false
       }
       guard let locationID = identifier.locationID,
-        let report = await pipeline.hidColorReport(
+        let plan = await pipeline.hidColorOutputPlan(
           red: components.0,
           green: components.1,
           blue: components.2
         )
       else { return false }
-      do { try await enforcePhysicalHIDOutputInterval(for: identifier, pipeline: pipeline) } catch {
-        return false
-      }
-      return await hidManager.setOutputReport(locationID: locationID, report: report)
+      return await sendHIDOutputPlan(
+        plan,
+        locationID: locationID,
+        identifier: identifier,
+        pipeline: pipeline
+      )
     case .brightness:
       let value = physicalOutputOwnership.effectiveOutput(for: channel, device: identifier)
       let brightness: UInt8
@@ -300,9 +304,17 @@ extension DeviceManager {
       } else {
         brightness = 0
       }
-      guard let locationID = identifier.locationID,
-        let report = await pipeline.hidBrightnessReport(brightness)
-      else { return false }
+      if await pipeline.sendUSBBrightness(brightness) { return true }
+      guard let locationID = identifier.locationID else { return false }
+      if let plan = await pipeline.hidBrightnessOutputPlan(brightness) {
+        return await sendHIDOutputPlan(
+          plan,
+          locationID: locationID,
+          identifier: identifier,
+          pipeline: pipeline
+        )
+      }
+      guard let report = await pipeline.hidBrightnessReport(brightness) else { return false }
       return await hidManager.setFeatureReport(locationID: locationID, report: report)
     case .adaptiveTrigger(let trigger):
       let value = physicalOutputOwnership.effectiveOutput(for: channel, device: identifier)
@@ -315,10 +327,12 @@ extension DeviceManager {
       guard let locationID = identifier.locationID,
         let report = await pipeline.hidAdaptiveTriggerReport(trigger, effect: effect)
       else { return false }
-      do { try await enforcePhysicalHIDOutputInterval(for: identifier, pipeline: pipeline) } catch {
-        return false
-      }
-      return await hidManager.setOutputReport(locationID: locationID, report: report)
+      return await sendHIDOutputPlan(
+        PhysicalHIDOutputPlan(reports: [report]),
+        locationID: locationID,
+        identifier: identifier,
+        pipeline: pipeline
+      )
     }
   }
 
@@ -355,12 +369,14 @@ extension DeviceManager {
     }
     let didSendUSB = await pipeline.sendRumble(left: left, right: right, lt: lt, rt: rt)
     if didSendUSB { return true }
-    do { try await enforcePhysicalHIDOutputInterval(for: identifier, pipeline: pipeline) } catch {
-      return false
-    }
-    return await sendHIDRumbleReport(
-      await pipeline.hidRumbleReport(left: left, right: right, lt: lt, rt: rt),
-      locationID: identifier.locationID
+    guard let locationID = identifier.locationID,
+      let report = await pipeline.hidRumbleReport(left: left, right: right, lt: lt, rt: rt)
+    else { return false }
+    return await sendHIDOutputPlan(
+      PhysicalHIDOutputPlan(reports: [report]),
+      locationID: locationID,
+      identifier: identifier,
+      pipeline: pipeline
     )
   }
 
@@ -440,14 +456,43 @@ extension DeviceManager {
     }
   }
 
-  internal func sendHIDRumbleReport(
-    _ report: PhysicalHIDOutputReport?,
-    locationID: UInt32?
+  internal func sendHIDOutputPlan(
+    _ plan: PhysicalHIDOutputPlan,
+    locationID: UInt32,
+    identifier: DeviceIdentifier,
+    pipeline: DevicePipeline
   ) async -> Bool {
-    guard let report, let locationID else { return false }
-    return await hidManager.setOutputReport(locationID: locationID, report: report)
+    let queue = hidOutputQueues[identifier] ?? PhysicalHIDOutputSerialQueue()
+    hidOutputQueues[identifier] = queue
+    return await queue.perform { [weak self] in
+      guard let self else { return false }
+      return await self.performHIDOutputPlan(
+        plan,
+        locationID: locationID,
+        identifier: identifier,
+        pipeline: pipeline
+      )
+    }
   }
 
-  /// Returns structured descriptions for all connected controllers.
-  ///
+  private func performHIDOutputPlan(
+    _ plan: PhysicalHIDOutputPlan,
+    locationID: UInt32,
+    identifier: DeviceIdentifier,
+    pipeline: DevicePipeline
+  ) async -> Bool {
+    for (index, report) in plan.reports.enumerated() {
+      if index > 0, plan.intervalNanoseconds > 0 {
+        do { try await Task.sleep(nanoseconds: plan.intervalNanoseconds) } catch { return false }
+      }
+      guard pipelines[identifier] === pipeline else { return false }
+      do { try await enforcePhysicalHIDOutputInterval(for: identifier, pipeline: pipeline) } catch {
+        return false
+      }
+      guard await hidManager.setOutputReport(locationID: locationID, report: report) else {
+        return false
+      }
+    }
+    return true
+  }
 }

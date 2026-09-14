@@ -167,6 +167,17 @@ public struct PhysicalUSBOutputPacket: Equatable, Sendable {
   }
 }
 
+/// Reports that must be written in order as one physical HID command.
+public struct PhysicalHIDOutputPlan: Equatable, Sendable {
+  public let reports: [PhysicalHIDOutputReport]
+  public let intervalNanoseconds: UInt64
+
+  public init(reports: [PhysicalHIDOutputReport], intervalNanoseconds: UInt64 = 0) {
+    self.reports = reports
+    self.intervalNanoseconds = intervalNanoseconds
+  }
+}
+
 /// Optional physical output support exposed by USB-backed controller protocols.
 public protocol PhysicalRumbleOutput: AnyObject {
   /// Rumble motors the protocol implementation can address.
@@ -236,6 +247,17 @@ extension PhysicalHIDColorOutput {
   public var physicalLightingFeatures: [PhysicalLightingFeature] { [.programmableColor] }
 }
 
+/// Ordered RGB writes for devices whose lighting command spans several HID reports.
+public protocol PhysicalHIDColorOutputPlan: AnyObject {
+  var physicalLightingFeatures: [PhysicalLightingFeature] { get }
+  var physicalDefaultColor: (red: UInt8, green: UInt8, blue: UInt8) { get }
+  func physicalColorOutputPlan(red: UInt8, green: UInt8, blue: UInt8) -> PhysicalHIDOutputPlan?
+}
+
+extension PhysicalHIDColorOutputPlan {
+  public var physicalLightingFeatures: [PhysicalLightingFeature] { [.programmableColor] }
+}
+
 /// Optional scalar LED-brightness support delivered through a HID feature report.
 public protocol PhysicalHIDFeatureBrightnessOutput: AnyObject {
   var physicalLightingFeatures: [PhysicalLightingFeature] { get }
@@ -243,6 +265,26 @@ public protocol PhysicalHIDFeatureBrightnessOutput: AnyObject {
 }
 
 extension PhysicalHIDFeatureBrightnessOutput {
+  public var physicalLightingFeatures: [PhysicalLightingFeature] { [.programmableBrightness] }
+}
+
+/// Ordered brightness writes for devices using HID output rather than a feature report.
+public protocol PhysicalHIDBrightnessOutputPlan: AnyObject {
+  var physicalLightingFeatures: [PhysicalLightingFeature] { get }
+  func physicalBrightnessOutputPlan(_ brightness: UInt8) -> PhysicalHIDOutputPlan?
+}
+
+extension PhysicalHIDBrightnessOutputPlan {
+  public var physicalLightingFeatures: [PhysicalLightingFeature] { [.programmableBrightness] }
+}
+
+/// Ordered brightness writes for raw-USB protocols.
+public protocol PhysicalUSBBrightnessOutputPlan: AnyObject {
+  var physicalLightingFeatures: [PhysicalLightingFeature] { get }
+  func physicalBrightnessOutputPackets(_ brightness: UInt8) -> [PhysicalUSBOutputPacket]?
+}
+
+extension PhysicalUSBBrightnessOutputPlan {
   public var physicalLightingFeatures: [PhysicalLightingFeature] { [.programmableBrightness] }
 }
 

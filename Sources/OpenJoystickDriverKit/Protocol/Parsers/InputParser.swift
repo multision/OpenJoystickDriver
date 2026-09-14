@@ -79,15 +79,27 @@ extension USBStartupOutputProvider {
 
 public protocol USBKeepAliveOutputProvider: AnyObject {
   func usbKeepAlivePacket() -> PhysicalUSBOutputPacket?
+  var usbKeepAliveIntervalNanoseconds: UInt64 { get }
 }
+
+extension USBKeepAliveOutputProvider {
+  public var usbKeepAliveIntervalNanoseconds: UInt64 { 4_000_000_000 }
+}
+
+/// Optional parser hook for a controller-specific periodic HID output cadence.
+public protocol HIDPeriodicOutputProvider: AnyObject {
+  var hidPeriodicOutputIntervalNanoseconds: UInt64 { get }
+  func hidPeriodicOutputReports() -> [PhysicalHIDOutputReport]
+}
+
+/// Resets protocol state whenever a physical transport session starts or ends.
+public protocol InputParserSessionLifecycle: AnyObject { func resetProtocolState() }
 
 /// Optional parser hook for transport packets produced while parsing input.
 ///
 /// Protocol parsing remains synchronous and deterministic. The owning pipeline
 /// drains these packets and performs the asynchronous USB writes in order.
-public protocol USBDeferredOutputProvider: AnyObject {
-  func consumeUSBOutputPackets() -> [[UInt8]]
-}
+public protocol USBDeferredOutputProvider: AnyObject { func consumeUSBOutputPackets() -> [[UInt8]] }
 
 /// Optional parser hook for startup feature reports sent through a HID transport.
 public protocol HIDStartupFeatureReportProvider: AnyObject {

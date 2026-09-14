@@ -34,6 +34,26 @@ struct RumbleStopTokenRegistry {
   mutating func removeAll() { generations.removeAll() }
 }
 
+actor PhysicalHIDOutputSerialQueue {
+  private var tail: Task<Bool, Never>?
+  private var generation: UInt64 = 0
+
+  func perform(_ operation: @escaping @Sendable () async -> Bool) async -> Bool {
+    let previous = tail
+    generation &+= 1
+    let currentGeneration = generation
+    let task = Task {
+      if let previous { _ = await previous.value }
+      guard !Task.isCancelled else { return false }
+      return await operation()
+    }
+    tail = task
+    let result = await task.value
+    if generation == currentGeneration { tail = nil }
+    return result
+  }
+}
+
 /// Manages device detection and pipeline lifecycle for all
 /// connected controllers.
 /// Uses dual detection: an Apple USB transport provider for raw interfaces and
@@ -86,6 +106,8 @@ public actor DeviceManager {
   var deviceInfos: [DeviceIdentifier: DeviceInfo] = [:]
   var detectionTasks: [Task<Void, Never>] = []
   var hidDetectionTask: Task<Void, Never>?
+  var hidPeriodicOutputTasks: [DeviceIdentifier: Task<Void, Never>] = [:]
+  var hidOutputQueues: [DeviceIdentifier: PhysicalHIDOutputSerialQueue] = [:]
   var permissionWatchTask: Task<Void, Never>?
   var externalOutputAllowed = true
   var lastPhysicalHIDOutputNanoseconds: [DeviceIdentifier: UInt64] = [:]
@@ -234,6 +256,8 @@ public actor DeviceManager {
 
   /// Stop all detection and pipelines.
   public func stop() async {
+    for task in hidPeriodicOutputTasks.values { task.cancel() }
+    hidPeriodicOutputTasks = [:]
     for task in rumbleStopTasks.values { task.cancel() }
     rumbleStopTasks = [:]
     rumbleStopTokens.removeAll()
@@ -251,6 +275,7 @@ public actor DeviceManager {
       await pipeline.stop()
     }
     pipelines = [:]
+    hidOutputQueues = [:]
     physicalOutputOwnership.removeAll()
     lastPhysicalHIDOutputNanoseconds = [:]
     await permissionManager.stopPolling()

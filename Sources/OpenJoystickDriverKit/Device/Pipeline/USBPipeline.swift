@@ -64,6 +64,7 @@ extension DevicePipeline {
       }
       usbHandle = handle
       consecutiveUSBIOErrors = 0
+      (parser as? any InputParserSessionLifecycle)?.resetProtocolState()
 
       guard await performUSBHandshake(handle: handle) else {
         // Try again while active, but slow down to avoid hot loops that launchd may kill
@@ -271,7 +272,8 @@ extension DevicePipeline {
   }
 
   func shouldSendKeepAlive(lastKeepAliveNs: UInt64, now: UInt64) -> Bool {
-    now &- lastKeepAliveNs >= keepAliveIntervalNs
+    guard let provider = parser as? any USBKeepAliveOutputProvider else { return false }
+    return now &- lastKeepAliveNs >= provider.usbKeepAliveIntervalNanoseconds
   }
 
   func runKeepAlive(handle: any USBTransportSession) async {
@@ -284,9 +286,7 @@ extension DevicePipeline {
         data: packet.bytes,
         timeout: packet.timeoutMilliseconds
       )
-    } catch {
-      print("[DevicePipeline] Keep-alive failed" + " for \(identifier): \(error)")
-    }
+    } catch { print("[DevicePipeline] Keep-alive failed" + " for \(identifier): \(error)") }
   }
 
   func readInterrupt(handle: any USBTransportSession, inEndpoint: UInt8) async throws -> [UInt8] {

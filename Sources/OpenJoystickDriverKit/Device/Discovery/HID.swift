@@ -89,6 +89,8 @@ extension DeviceManager {
 
     for identifier in hidIdentifiers {
       guard let pipeline = pipelines.removeValue(forKey: identifier) else { continue }
+      hidPeriodicOutputTasks.removeValue(forKey: identifier)?.cancel()
+      hidOutputQueues.removeValue(forKey: identifier)
       await neutralizePhysicalOutputs(for: identifier, pipeline: pipeline)
       deviceInfos.removeValue(forKey: identifier)
       lastPhysicalHIDOutputNanoseconds.removeValue(forKey: identifier)
@@ -123,6 +125,8 @@ extension DeviceManager {
     ) {
       guard case .rawUSB = deviceInfos[existingIdentifier]?.discoverySource else { return }
       let replacedPipeline = pipelines.removeValue(forKey: existingIdentifier)
+      hidPeriodicOutputTasks.removeValue(forKey: existingIdentifier)?.cancel()
+      hidOutputQueues.removeValue(forKey: existingIdentifier)
       if let replacedPipeline {
         await neutralizePhysicalOutputs(for: existingIdentifier, pipeline: replacedPipeline)
       }
@@ -202,6 +206,32 @@ extension DeviceManager {
       )
     }
     await requestHIDInputConnectionStatusIfNeeded(pipeline: pipeline, locationID: locationID)
+    scheduleHIDPeriodicOutput(for: identifier, pipeline: pipeline, locationID: locationID)
+  }
+
+  private func scheduleHIDPeriodicOutput(
+    for identifier: DeviceIdentifier,
+    pipeline: DevicePipeline,
+    locationID: UInt32
+  ) {
+    hidPeriodicOutputTasks.removeValue(forKey: identifier)?.cancel()
+    hidPeriodicOutputTasks[identifier] = Task { [weak self] in
+      guard let self else { return }
+      while !Task.isCancelled {
+        guard let plan = await pipeline.hidPeriodicOutputPlan(), plan.interval > 0 else { return }
+        do { try await Task.sleep(nanoseconds: plan.interval) } catch { return }
+        guard !Task.isCancelled, await self.isCurrentHIDStartupPipeline(pipeline) else { return }
+        let outputPlan = PhysicalHIDOutputPlan(reports: plan.reports)
+        if !(await self.sendHIDOutputPlan(
+          outputPlan,
+          locationID: locationID,
+          identifier: identifier,
+          pipeline: pipeline
+        )) {
+          print("[DeviceManager] HID periodic output failed for loc=\(locationID)")
+        }
+      }
+    }
   }
 
   private func sendHIDStartupFeatureReadRequestsIfNeeded(
@@ -211,9 +241,7 @@ extension DeviceManager {
   ) async {
     let plan = await pipeline.hidStartupFeatureReadPlan(transport: transport)
     for request in plan.requests {
-      let outcome = await HIDFeatureReadRetry.run(
-        maximumAttempts: plan.validatesReplies ? 3 : 1
-      ) {
+      let outcome = await HIDFeatureReadRetry.run(maximumAttempts: plan.validatesReplies ? 3 : 1) {
         await self.attemptHIDStartupFeatureRead(
           pipeline: pipeline,
           request: request,
@@ -331,6 +359,8 @@ extension DeviceManager {
   ) async {
     if let key = pipelines.keys.first(where: { $0.locationID == locationID }) {
       let pipeline = pipelines.removeValue(forKey: key)
+      hidPeriodicOutputTasks.removeValue(forKey: key)?.cancel()
+      hidOutputQueues.removeValue(forKey: key)
       if let pipeline { await neutralizePhysicalOutputs(for: key, pipeline: pipeline) }
       deviceInfos.removeValue(forKey: key)
       lastPhysicalHIDOutputNanoseconds.removeValue(forKey: key)
