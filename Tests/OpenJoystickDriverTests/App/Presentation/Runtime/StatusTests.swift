@@ -184,18 +184,90 @@ struct StatusTests {
 
   @Test
   @MainActor
-  func controllerInventoryRefreshIsScopedAndCoalescesConcurrentRequests() async {
-    let gateway = GatewayStub(statusReadDelayNanoseconds: 100_000_000)
+  func controllerInventoryRefreshQueuesASequentialTrailingRequest() async {
+    let gateway = GatewayStub()
+    await gateway.setStatusReadsAreGated(true)
     let viewModel = RuntimeViewModel(gateway: gateway)
 
-    async let first: Void = viewModel.refreshControllerInventory()
-    try? await Task.sleep(nanoseconds: 10_000_000)
-    async let second: Void = viewModel.refreshControllerInventory()
-    _ = await (first, second)
+    let first = Task { await viewModel.refreshControllerInventory() }
+    await gateway.waitForStatusCall(count: 1)
+    let second = Task { await viewModel.refreshControllerInventory() }
+    await gateway.resumeNextStatusRead()
+    await gateway.waitForStatusCall(count: 2)
+    await gateway.resumeNextStatusRead()
+    await first.value
+    await second.value
+
+    #expect(await gateway.statusCallCount == 2)
+    #expect(await gateway.maximumConcurrentStatusCalls == 1)
+    #expect(await gateway.remappingSnapshotCallCount == 0)
+  }
+
+  @Test
+  @MainActor
+  func inventoryRefreshQueuedDuringLiveRefreshRunsAtTheTrailingEdge() async {
+    let gateway = GatewayStub()
+    await gateway.setStatusReadsAreGated(true)
+    let viewModel = RuntimeViewModel(gateway: gateway)
+
+    let liveRefresh = Task { await viewModel.refreshLiveStatus() }
+    await gateway.waitForStatusCall(count: 1)
+    let inventoryRefresh = Task { await viewModel.refreshControllerInventory() }
 
     #expect(await gateway.statusCallCount == 1)
     #expect(await gateway.maximumConcurrentStatusCalls == 1)
-    #expect(await gateway.remappingSnapshotCallCount == 0)
+    await gateway.resumeNextStatusRead()
+    await gateway.waitForStatusCall(count: 2)
+    #expect(await gateway.maximumConcurrentStatusCalls == 1)
+    let ds4 = ApplicationServiceDeviceDescription(
+      name: "DualShock 4",
+      vendorID: 0x054C,
+      productID: 0x09CC,
+      parser: "DS4",
+      connection: "Bluetooth",
+      serialNumber: nil,
+      runtimeIdentifier: "ds4-bluetooth"
+    )
+    await gateway.setStatusPayload(
+      ApplicationServiceStatusPayload(
+        inputMonitoring: "granted",
+        accessibility: "granted",
+        connectedDevices: [ds4],
+        userSpaceVirtualDeviceEnabled: true,
+        userSpaceVirtualDeviceStatus: "ready",
+        compatibilityIdentity: CompatibilityIdentity.sdl2_3.rawValue
+      )
+    )
+    await gateway.resumeNextStatusRead()
+    _ = await liveRefresh.value
+    await inventoryRefresh.value
+    #expect(await gateway.statusCallCount == 2)
+    guard case .available(let status) = viewModel.statusState else {
+      Issue.record("Expected the trailing inventory to publish available status")
+      return
+    }
+    #expect(status.devices.map(\.runtimeIdentifier) == [ds4.runtimeIdentifier])
+  }
+
+  @Test
+  @MainActor
+  func controllersAndMenuBarUseTheSameScopedRefreshCoordinator() async {
+    let gateway = GatewayStub()
+    await gateway.setStatusReadsAreGated(true)
+    let runtime = RuntimeViewModel(gateway: gateway)
+    let controllers = ControllersViewModel(runtime: runtime)
+    let menuBar = MenuBarViewModel(runtime: runtime)
+
+    controllers.refresh()
+    await gateway.waitForStatusCall(count: 1)
+    let menuRefresh = Task { await menuBar.refreshLiveStatus() }
+
+    #expect(await gateway.maximumConcurrentStatusCalls == 1)
+    await gateway.resumeNextStatusRead()
+    await gateway.waitForStatusCall(count: 2)
+    await gateway.resumeNextStatusRead()
+    _ = await menuRefresh.value
+    #expect(await gateway.statusCallCount == 2)
   }
 
   @Test

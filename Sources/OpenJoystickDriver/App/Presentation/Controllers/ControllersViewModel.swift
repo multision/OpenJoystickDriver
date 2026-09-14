@@ -17,6 +17,8 @@
       return status.devices
     }
 
+    var isRefreshing: Bool { runtime.isScopedRefreshInFlight }
+
     var selectedDevice: ApplicationServiceDeviceDescription? {
       guard let selectedRuntimeIdentifier else { return devices.first }
       return devices.first { $0.runtimeIdentifier == selectedRuntimeIdentifier }

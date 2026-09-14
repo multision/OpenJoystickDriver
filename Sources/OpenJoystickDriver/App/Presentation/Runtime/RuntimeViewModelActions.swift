@@ -260,6 +260,9 @@ extension RuntimeViewModel {
     request: @escaping @Sendable () async throws -> ApplicationServiceRemappingSnapshotPayload
   ) async -> RuntimeMutationResult {
     guard !mutationInFlight else { return rejectMutation(mutationRequest) }
+    await waitForScopedRefreshCompletion()
+    await waitForExclusiveOperationCompletion()
+    guard !mutationInFlight else { return rejectMutation(mutationRequest) }
     let operation = mutationRequest.operation
     let mutationID = mutationRequest.id
     mutationInFlight = true
@@ -272,6 +275,8 @@ extension RuntimeViewModel {
       mutationInFlight = false
       activeMutationOperation = nil
       activeMutationID = nil
+      resumeExclusiveOperationWaiters()
+      schedulePendingScopedRefresh()
     }
     do {
       let snapshot = try await request()

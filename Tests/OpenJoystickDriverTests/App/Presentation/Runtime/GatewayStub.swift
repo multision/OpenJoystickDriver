@@ -55,6 +55,11 @@ actor GatewayStub: ApplicationServiceGateway {
   var statusCallCount = 0
   var activeStatusCalls = 0
   var maximumConcurrentStatusCalls = 0
+  var activeDeviceReads = 0
+  var maximumConcurrentDeviceReads = 0
+  var statusReadsAreGated = false
+  var statusReadContinuations: [CheckedContinuation<Void, Never>] = []
+  var statusCallWaiters: [(count: Int, continuation: CheckedContinuation<Void, Never>)] = []
   var remappingSnapshotCallCount = 0
   var setIdentityCallCount = 0
   var selectedIdentity: CompatibilityIdentity = .sdl2_3
@@ -110,11 +115,17 @@ actor GatewayStub: ApplicationServiceGateway {
 
   func status() async throws -> ApplicationServiceStatusPayload {
     statusCallCount += 1
+    let readyWaiters = statusCallWaiters.filter { statusCallCount >= $0.count }
+    statusCallWaiters.removeAll { statusCallCount >= $0.count }
+    readyWaiters.forEach { $0.continuation.resume() }
     activeStatusCalls += 1
     maximumConcurrentStatusCalls = max(maximumConcurrentStatusCalls, activeStatusCalls)
     defer { activeStatusCalls -= 1 }
     if statusReadDelayNanoseconds > 0 {
       try await Task.sleep(nanoseconds: statusReadDelayNanoseconds)
+    }
+    if statusReadsAreGated {
+      await withCheckedContinuation { statusReadContinuations.append($0) }
     }
     if statusShouldFail { throw ApplicationServiceClientError.timeout }
     return statusPayload
@@ -123,6 +134,18 @@ actor GatewayStub: ApplicationServiceGateway {
   func setStatusPayload(_ payload: ApplicationServiceStatusPayload) { statusPayload = payload }
 
   func setStatusShouldFail(_ shouldFail: Bool) { statusShouldFail = shouldFail }
+
+  func setStatusReadsAreGated(_ areGated: Bool) { statusReadsAreGated = areGated }
+
+  func waitForStatusCall(count: Int) async {
+    guard statusCallCount < count else { return }
+    await withCheckedContinuation { statusCallWaiters.append((count, $0)) }
+  }
+
+  func resumeNextStatusRead() {
+    guard !statusReadContinuations.isEmpty else { return }
+    statusReadContinuations.removeFirst().resume()
+  }
 
   func setSnapshotPayload(_ payload: ApplicationServiceRemappingSnapshotPayload) {
     snapshotPayload = payload
@@ -145,6 +168,9 @@ actor GatewayStub: ApplicationServiceGateway {
   ) throws -> PermissionManager.Snapshot { try requestPermissions() }
 
   func deviceInputState(for selector: RuntimeDeviceSelector) async throws -> DeviceInputState? {
+    activeDeviceReads += 1
+    maximumConcurrentDeviceReads = max(maximumConcurrentDeviceReads, activeDeviceReads)
+    defer { activeDeviceReads -= 1 }
     lastInputSelector = selector
     if let runtimeIdentifier = selector.runtimeIdentifier {
       if let delay = deviceReadDelaysNanoseconds[runtimeIdentifier] {
@@ -161,6 +187,9 @@ actor GatewayStub: ApplicationServiceGateway {
   }
 
   func packetLog(for selector: RuntimeDeviceSelector) async throws -> [PacketLogEntry] {
+    activeDeviceReads += 1
+    maximumConcurrentDeviceReads = max(maximumConcurrentDeviceReads, activeDeviceReads)
+    defer { activeDeviceReads -= 1 }
     lastInputSelector = selector
     if let runtimeIdentifier = selector.runtimeIdentifier {
       if let delay = deviceReadDelaysNanoseconds[runtimeIdentifier] {

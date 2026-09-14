@@ -6,7 +6,6 @@
   @MainActor
   final class MenuBarViewModel {
     let runtime: RuntimeViewModel
-    private var liveRefreshInFlight = false
 
     init(runtime: RuntimeViewModel) { self.runtime = runtime }
 
@@ -27,12 +26,7 @@
       await runtime.refresh()
     }
 
-    func refreshLiveStatus() async -> Bool? {
-      guard !liveRefreshInFlight else { return nil }
-      liveRefreshInFlight = true
-      defer { liveRefreshInFlight = false }
-      return await runtime.refreshLiveStatus()
-    }
+    func refreshLiveStatus() async -> Bool { await runtime.refreshLiveStatus() }
   }
 
 #endif

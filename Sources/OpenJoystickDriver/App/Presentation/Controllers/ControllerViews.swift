@@ -10,6 +10,8 @@
   struct ControllersView: View {
     @ObservedObject
     private var screen: ControllersViewModel
+    @State
+    private var isRefreshing = false
     let openInputTest: @MainActor (ApplicationServiceDeviceDescription) -> Void
 
     init(
@@ -40,8 +42,10 @@
             controllerDetail.frame(maxWidth: .infinity, maxHeight: .infinity)
           }
         }
-      }.onAppear { screen.synchronizeSelection() }.onReceive(viewModel.$statusState) { _ in
+      }.onAppear { screen.refresh() }.onReceive(viewModel.$controllerInventoryGeneration) { _ in
         screen.synchronizeSelection()
+      }.onReceive(viewModel.scopedRefreshInFlightPublisher.removeDuplicates()) { isRefreshing in
+        self.isRefreshing = isRefreshing
       }
     }
 
@@ -71,7 +75,7 @@
             )
           }.buttonStyle(.plain).ojdAccessibilityLabel(
             OJDLocalized.string("controllers.refreshAccessibility", fallback: "Refresh controllers")
-          )
+          ).disabled(isRefreshing)
         }.padding(.horizontal, 14).padding(.top, 18)
 
         switch viewModel.statusState {

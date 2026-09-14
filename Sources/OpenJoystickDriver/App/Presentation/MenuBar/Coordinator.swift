@@ -232,7 +232,7 @@
     private func refreshLiveStatus() {
       Task { @MainActor [weak self] in
         guard let self else { return }
-        guard let statusChanged = await menuBarViewModel.refreshLiveStatus() else { return }
+        let statusChanged = await menuBarViewModel.refreshLiveStatus()
         notificationMonitor.observe(RuntimeNotificationSnapshot(viewModel: viewModel))
         if statusChanged { updateStatusMenu() }
       }

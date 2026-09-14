@@ -2,6 +2,13 @@ import Combine
 import Foundation
 import OpenJoystickDriverKit
 
+struct ScopedRefresh: OptionSet {
+  let rawValue: UInt8
+
+  static let inventory = Self(rawValue: 1 << 0)
+  static let live = Self(rawValue: 1 << 1)
+}
+
 @MainActor
 final class RuntimeViewModel: ObservableObject {
   let gateway: any ApplicationServiceGateway
@@ -42,6 +49,10 @@ final class RuntimeViewModel: ObservableObject {
   var lastMutationID: UUID?
   @Published
   private(set) var systemExtensionSetupState: SystemExtensionSetupState = .checking
+  @Published
+  var controllerInventoryGeneration = 0
+  var isScopedRefreshInFlight = false
+  let scopedRefreshInFlightPublisher = CurrentValueSubject<Bool, Never>(false)
 
   var requestedCompatibilityIdentity: CompatibilityIdentity {
     if let authoritativeCompatibilityIdentity { return authoritativeCompatibilityIdentity }
@@ -64,7 +75,10 @@ final class RuntimeViewModel: ObservableObject {
   var supportLogsGeneration = 0
   var mutationInFlight = false
   var fullRefreshInFlight = false
-  var scopedRefreshInFlight = false
+  var pendingScopedRefreshes: ScopedRefresh = []
+  var controllerRuntimeIdentifiers: [String] = []
+  var scopedRefreshWaiters: [CheckedContinuation<Void, Never>] = []
+  var exclusiveOperationWaiters: [CheckedContinuation<Void, Never>] = []
   private let systemExtensionSetup: SystemExtensionSetupCoordinator
 
   init(
@@ -91,11 +105,19 @@ final class RuntimeViewModel: ObservableObject {
   }
 
   func refresh() async {
-    await refreshSystemExtensionSetup()
+    await waitForScopedRefreshCompletion()
+    await waitForExclusiveOperationCompletion()
     refreshGeneration += 1
     let generation = refreshGeneration
     fullRefreshInFlight = true
-    defer { if generation == refreshGeneration { fullRefreshInFlight = false } }
+    defer {
+      if generation == refreshGeneration {
+        fullRefreshInFlight = false
+        resumeExclusiveOperationWaiters()
+        schedulePendingScopedRefresh()
+      }
+    }
+    await refreshSystemExtensionSetup()
     liveStatusGeneration += 1
     let statusGeneration = liveStatusGeneration
     loadState = .loading
@@ -137,6 +159,7 @@ final class RuntimeViewModel: ObservableObject {
         permissions
       ).applyingCompatibilityIdentity(authoritativeCompatibilityIdentity)
       statusState = .available(presentation)
+      publishControllerInventory(payload.connectedDevices)
       if permissionGeneration == permissionRefreshGeneration {
         permissionState = .available(permissions)
       }
@@ -215,100 +238,6 @@ final class RuntimeViewModel: ObservableObject {
             fallback: "OpenJoystickDriver isn't available right now."
           )
       )
-  }
-
-  /// Refreshes connection- and profile-sensitive state without replacing the UI with loading state.
-  @discardableResult
-  func refreshLiveStatus() async -> Bool {
-    guard !fullRefreshInFlight, !mutationInFlight, !scopedRefreshInFlight else { return false }
-    let previousStatusState = statusState
-    let previousRemappingState = remappingState
-    let previousPermissionState = permissionState
-    let previousPostEventAccessState = postEventAccessState
-    let previousLoadState = loadState
-    let previousLastError = lastError
-    scopedRefreshInFlight = true
-    defer { scopedRefreshInFlight = false }
-    liveStatusGeneration += 1
-    let generation = liveStatusGeneration
-    await refreshStatusRetainingPresentation(generation: generation)
-
-    do {
-      let snapshot = try await gateway.remappingSnapshot()
-      guard generation == liveStatusGeneration else { return false }
-      let nextRemappingState = RuntimeRemappingState.available(snapshot)
-      if remappingState != nextRemappingState { remappingState = nextRemappingState }
-      authoritativePostEventAccess = snapshot.postEventAccess
-      let nextPostEventAccessState = RuntimePostEventAccessLoadState.available(
-        snapshot.postEventAccess
-      )
-      if postEventAccessState != nextPostEventAccessState {
-        postEventAccessState = nextPostEventAccessState
-      }
-      updateStatusRemappingSnapshot(snapshot, postEventAccess: snapshot.postEventAccess)
-    } catch {
-      // Keep the last known remapping state during an unobtrusive background refresh.
-    }
-    return previousStatusState != statusState || previousRemappingState != remappingState
-      || previousPermissionState != permissionState
-      || previousPostEventAccessState != postEventAccessState || previousLoadState != loadState
-      || previousLastError != lastError
-  }
-
-  /// Refreshes controller inventory and permission observations without touching unrelated panes.
-  func refreshControllerInventory() async {
-    guard !fullRefreshInFlight, !mutationInFlight, !scopedRefreshInFlight else { return }
-    scopedRefreshInFlight = true
-    defer { scopedRefreshInFlight = false }
-    liveStatusGeneration += 1
-    await refreshStatusRetainingPresentation(generation: liveStatusGeneration)
-  }
-
-  private func refreshStatusRetainingPresentation(generation: Int) async {
-    do {
-      let payload = try await gateway.status()
-      guard generation == liveStatusGeneration else { return }
-      let previousStatus: RuntimeStatusPresentation?
-      if case .available(let status) = statusState {
-        previousStatus = status
-      } else {
-        previousStatus = nil
-      }
-      let permissions: RuntimePermissionSummary
-      switch permissionState {
-      case .requesting:
-        permissions =
-          authoritativePermissionSummary
-          ?? RuntimePermissionSummary(inputMonitoring: .unknown, accessibility: .unknown)
-      case .loading, .available, .unavailable, .error:
-        permissions = RuntimePermissionSummary(status: payload)
-        authoritativePermissionSummary = permissions
-      }
-      let nextStatusState = RuntimeStatusState.available(
-        RuntimeStatusPresentation(
-          payload: payload,
-          postEventAccess: authoritativePostEventAccess ?? previousStatus?.postEventAccess,
-          requiresPostEventAccess: previousStatus?.requiresPostEventAccess
-        ).applyingPermissions(permissions)
-      )
-      if statusState != nextStatusState { statusState = nextStatusState }
-      if case .requesting = permissionState {
-        // The explicit permission request remains authoritative until its response arrives.
-      } else {
-        let nextPermissionState = RuntimePermissionLoadState.available(permissions)
-        if permissionState != nextPermissionState { permissionState = nextPermissionState }
-      }
-      if loadState != .available { loadState = .available }
-      if lastError != nil { lastError = nil }
-    } catch {
-      guard generation == liveStatusGeneration else { return }
-      if case .loading = statusState {
-        let message = RuntimePresentation.userFacingError(error)
-        statusState =
-          RuntimePresentation.isUnavailable(error) ? .unavailable(message) : .error(message)
-        lastError = message
-      }
-    }
   }
 
   func refreshPermissions() async {
