@@ -1,4 +1,5 @@
 import Foundation
+import IOKit
 import Testing
 
 @testable import OpenJoystickDriverKit
@@ -90,7 +91,7 @@ struct ControllerSessionTests {
   @Test(arguments: [
     (WirelessControllerDisconnectOutcome.disconnected, nil as WirelessControllerDisconnectFailure?),
     (
-      WirelessControllerDisconnectOutcome.failed,
+      WirelessControllerDisconnectOutcome.failed(kIOReturnError),
       WirelessControllerDisconnectFailure.disconnectFailed
     ), (WirelessControllerDisconnectOutcome.timedOut, WirelessControllerDisconnectFailure.timedOut),
   ])
@@ -110,6 +111,7 @@ struct ControllerSessionTests {
         serialNumber: "aa-bb-cc-dd-ee-ff",
         locationID: 71,
         productName: "Wireless Controller",
+
         transport: "Bluetooth",
         ownership: .exclusive
       )
@@ -122,8 +124,19 @@ struct ControllerSessionTests {
       runtimeIdentifier: device.runtimeIdentifier
     )
 
-    #expect(result.state == .suspended)
+    #expect(result.state == (expectedFailure == nil ? .suspended : .active))
+
     #expect(result.failure == expectedFailure)
+    switch outcome {
+    case .failed(let code):
+      #expect(result.failedStage == .closeBluetoothConnection)
+      #expect(result.systemCode == code)
+      #expect(result.detail?.contains(String(code)) == true)
+    case .timedOut:
+      #expect(result.failedStage == .confirmBluetoothDisconnection)
+      #expect(result.recovery != nil)
+    case .disconnected, .stillConnected: break
+    }
     #expect(probe.calls == ["AA:BB:CC:DD:EE:FF"])
     await manager.stop()
   }
@@ -193,6 +206,34 @@ struct ControllerSessionTests {
     #expect(await pipeline.resumeControllerSession())
     #expect(await pipeline.controllerSessionState() == .active)
     await pipeline.stop()
+  }
+
+  @Test
+  func suspendedControllersRemainInInventoryButAreNotCompatibilityTargets() async throws {
+    let manager = DeviceManager(dispatcher: ControllerSessionOutputProbe())
+    await manager.handleHIDEvent(
+      .connected(
+        vendorID: 0x054C,
+        productID: 0x09CC,
+        serialNumber: nil,
+        locationID: 73,
+        productName: "Controller",
+        transport: "USB",
+        ownership: .exclusive
+      )
+    )
+    let device = try #require(await manager.connectedDeviceDescriptions().first)
+    #expect(await manager.activeDeviceIdentifiers().count == 1)
+
+    _ = await manager.suspendController(
+      vendorID: device.vendorID,
+      productID: device.productID,
+      runtimeIdentifier: device.runtimeIdentifier
+    )
+
+    #expect(await manager.connectedDeviceDescriptions().count == 1)
+    #expect(await manager.activeDeviceIdentifiers().isEmpty)
+    await manager.stop()
   }
 
   @Test

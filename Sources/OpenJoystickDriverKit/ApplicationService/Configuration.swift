@@ -111,13 +111,17 @@ public enum CompatibilityIdentityTransitionCause: String, Codable, Equatable, Se
 public struct CompatibilityIdentityTransitionFailure: Codable, Equatable, Sendable {
   public let phase: CompatibilityIdentityTransitionPhase
   public let cause: CompatibilityIdentityTransitionCause
+  /// Operation-specific system or backend detail, when the service supplied it.
+  public let detail: String?
 
   public init(
     phase: CompatibilityIdentityTransitionPhase,
-    cause: CompatibilityIdentityTransitionCause
+    cause: CompatibilityIdentityTransitionCause,
+    detail: String? = nil
   ) {
     self.phase = phase
     self.cause = cause
+    self.detail = detail
   }
 }
 

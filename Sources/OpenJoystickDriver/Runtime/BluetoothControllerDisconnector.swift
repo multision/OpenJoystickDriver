@@ -3,11 +3,27 @@ import IOBluetooth
 import OpenJoystickDriverKit
 
 final class BluetoothControllerDisconnector: WirelessControllerDisconnecting, @unchecked Sendable {
-  private let closeConnection: @Sendable (String) -> IOReturn
+  struct CloseResult: Sendable, Equatable {
+    let status: IOReturn
+    let isConnected: Bool
+  }
+
+  private let closeConnection: @Sendable (String, UInt64) -> CloseResult
 
   init(
-    closeConnection: @escaping @Sendable (String) -> IOReturn = { address in
-      IOBluetoothDevice(addressString: address)?.closeConnection() ?? kIOReturnNotFound
+    closeConnection: @escaping @Sendable (String, UInt64) -> CloseResult = { address, timeout in
+      guard let device = IOBluetoothDevice(addressString: address) else {
+        return CloseResult(status: kIOReturnNotFound, isConnected: false)
+      }
+      let status = device.closeConnection()
+      guard status == kIOReturnSuccess else {
+        return CloseResult(status: status, isConnected: device.isConnected())
+      }
+      let deadline = DispatchTime.now().uptimeNanoseconds &+ timeout
+      while device.isConnected(), DispatchTime.now().uptimeNanoseconds < deadline {
+        Thread.sleep(forTimeInterval: 0.02)
+      }
+      return CloseResult(status: status, isConnected: device.isConnected())
     }
   ) { self.closeConnection = closeConnection }
 
@@ -17,8 +33,16 @@ final class BluetoothControllerDisconnector: WirelessControllerDisconnecting, @u
   ) async -> WirelessControllerDisconnectOutcome {
     let outcomes = AsyncStream<WirelessControllerDisconnectOutcome> { continuation in
       DispatchQueue.global(qos: .userInitiated).async {
-        let result = self.closeConnection(address)
-        continuation.yield(result == kIOReturnSuccess ? .disconnected : .failed)
+        let result = self.closeConnection(address, timeoutNanoseconds)
+        let outcome: WirelessControllerDisconnectOutcome
+        if result.status != kIOReturnSuccess {
+          outcome = .failed(result.status)
+        } else if result.isConnected {
+          outcome = .stillConnected
+        } else {
+          outcome = .disconnected
+        }
+        continuation.yield(outcome)
         continuation.finish()
       }
       Task {
@@ -28,6 +52,6 @@ final class BluetoothControllerDisconnector: WirelessControllerDisconnecting, @u
       }
     }
     for await outcome in outcomes { return outcome }
-    return .failed
+    return .failed(kIOReturnError)
   }
 }

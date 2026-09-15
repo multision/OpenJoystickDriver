@@ -45,6 +45,7 @@ struct ControllerSessionCommand {
               productID: device.productID,
               runtimeIdentifier: device.runtimeIdentifier
             )
+            guard result.succeeded else { throw Failure.wirelessDisconnectFailed(result) }
             return .success(result.succeeded)
           }
         } catch { return .failure(error) }
@@ -111,12 +112,19 @@ struct ControllerSessionCommand {
   private enum Failure: Error, LocalizedError {
     case invalidArguments
     case sessionChangeRejected
+    case wirelessDisconnectFailed(WirelessControllerDisconnectResult)
 
     var errorDescription: String? {
       switch self {
       case .invalidArguments:
         return "Use --vid <value> --pid <value> and/or --device <runtime identifier>."
       case .sessionChangeRejected: return "The controller session could not be changed."
+      case .wirelessDisconnectFailed(let result):
+        let stage = result.failedStage?.rawValue ?? "disconnect-wireless-controller"
+        let cause = result.detail ?? result.failure?.rawValue ?? "unknown failure"
+        let code = result.systemCode.map { " (system code \($0))" } ?? ""
+        let recovery = result.recovery.map { " \($0)" } ?? ""
+        return "Bluetooth controller disconnect failed during \(stage): \(cause)\(code).\(recovery)"
       }
     }
   }

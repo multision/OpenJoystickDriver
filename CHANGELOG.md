@@ -7,6 +7,18 @@ The project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+
+- Restore prompt controller inventory updates, cancel stale HID initialization after removal,
+  keep suspended controllers out of compatibility identity transitions, and preserve backend
+  failure details when an identity change rolls back.
+- Release a Bluetooth controller's HID claim before disconnecting it, confirm the physical link
+  closed, and restore the prior active session when disconnection fails or times out.
+- Report typed HID, Bluetooth, and disconnect-stage failures instead of reducing them to generic
+  Boolean or unavailable results.
+
+## [0.5.0-beta.4] - 2026-09-15
+
 ### Added
 
 - Decode Flydigi Vader 4 Pro over Bluetooth Low Energy (`D7D7:0041`). Face

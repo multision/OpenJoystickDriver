@@ -79,6 +79,7 @@ extension DeviceManager {
         let pipeline = pipelines.removeValue(forKey: identifier)
         discardPhysicalOutputs(for: identifier)
         deviceInfos.removeValue(forKey: identifier)
+        notifyControllerInventoryChanged()
         lastPhysicalHIDOutputNanoseconds.removeValue(forKey: identifier)
         await pipeline?.stop()
         print("[DeviceManager] USB device removed: \(identifier)")
@@ -156,6 +157,7 @@ extension DeviceManager {
       externalOutputAllowed: externalOutputAllowed
     )
     pipelines[identifier] = pipeline
+    notifyControllerInventoryChanged()
     await pipeline.start()
     return .claimed(identifier)
   }

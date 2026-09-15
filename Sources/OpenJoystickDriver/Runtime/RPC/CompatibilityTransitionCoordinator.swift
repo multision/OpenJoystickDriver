@@ -52,7 +52,7 @@ func withCompatibilityTimeout<Value: Sendable>(
   return result
 }
 
-private final class CompatibilityTransitionCancellation: @unchecked Sendable {
+final class CompatibilityTransitionCancellation: @unchecked Sendable {
   private let lock = NSLock()
   private var stopped = false
 
@@ -92,7 +92,7 @@ final class CompatibilityFeedbackGate: @unchecked Sendable {
   typealias SendFeedback = @Sendable (DeviceIdentifier, VirtualRumbleCommand) async -> Void
 
   private let sendFeedback: SendFeedback
-  private let lock = NSLock()
+  let lock = NSLock()
   private var accepting = true
   private var generation: UInt64 = 0
   private var cancellationHandlers: [UUID: @Sendable () -> Void] = [:]
@@ -211,6 +211,19 @@ struct CompatibilityRetrySnapshot: Codable, Equatable, Sendable {
   let requestedIdentity: CompatibilityIdentity
   let priorProfileIdentity: CompatibilityIdentity
   let phase: CompatibilityTransitionPhase
+  let detail: String?
+
+  init(
+    requestedIdentity: CompatibilityIdentity,
+    priorProfileIdentity: CompatibilityIdentity,
+    phase: CompatibilityTransitionPhase,
+    detail: String? = nil
+  ) {
+    self.requestedIdentity = requestedIdentity
+    self.priorProfileIdentity = priorProfileIdentity
+    self.phase = phase
+    self.detail = detail
+  }
 }
 
 enum CompatibilityTransitionPhase: String, Codable, Equatable, Sendable {
@@ -225,7 +238,7 @@ enum CompatibilityTransitionPhase: String, Codable, Equatable, Sendable {
 
 final class CompatibilityBackendCloseSlot: @unchecked Sendable {
   let backend: any CompatibilityUserSpaceOutputDispatching
-  private let lock = NSLock()
+  let lock = NSLock()
   private var closeTask: Task<Void, Never>?
 
   init(_ backend: any CompatibilityUserSpaceOutputDispatching) { self.backend = backend }
@@ -249,165 +262,4 @@ final class CompatibilityBackendCloseSlot: @unchecked Sendable {
   }
 }
 
-extension ApplicationServiceServer {
-  func activateCompatibilityBackendForCurrentDevices() async -> Bool {
-    await compatibilityTransitionCoordinator.enqueue { [weak self] in
-      guard let self else { return false }
-      return await self.performCompatibilityIdentityTransition(
-        to: self.requestedIdentity(),
-        force: true
-      )
-    }
-  }
-
-  func performCompatibilityIdentityTransition(
-    to identity: CompatibilityIdentity,
-    force: Bool = false,
-    removePersistedIdentityOnCommit: Bool = false
-  ) async -> Bool {
-    guard !isCompatibilityServerStopped() else { return false }
-    let prior = compatibilityTransitionSnapshot()
-    if !force, prior.requestedIdentity == identity, prior.liveIdentity == identity, prior.enabled,
-      prior.dispatcher != nil
-    {
-      return true
-    }
-
-    let candidate: UserSpaceDispatcherBuild
-    do {
-      candidate = try await stageCompatibilityDispatcher(
-        identity: identity,
-        timeout: compatibilityTransitionTimeouts.stageNanoseconds
-      )
-    } catch {
-      recordCompatibilityTransitionFailure(
-        phase: .stage,
-        requestedIdentity: identity,
-        priorProfileIdentity: prior.liveIdentity ?? prior.requestedIdentity
-      )
-      return false
-    }
-
-    guard !isCompatibilityServerStopped() else {
-      _ = await closeCompatibilityBackend(candidate.dispatcher, slot: candidate.closeSlot)
-      return false
-    }
-    let identifiers = await connectedIdentifiers()
-    guard
-      await feedbackGate.quiesceAndNeutralize(
-        identifiers,
-        timeout: compatibilityTransitionTimeouts.feedbackNanoseconds,
-        clock: compatibilityTransitionClock
-      )
-    else {
-      _ = await closeCompatibilityBackend(candidate.dispatcher, slot: candidate.closeSlot)
-      recordCompatibilityTransitionFailure(
-        phase: .feedbackQuiescence,
-        requestedIdentity: identity,
-        priorProfileIdentity: prior.liveIdentity ?? prior.requestedIdentity
-      )
-      if prior.enabled, prior.dispatcher != nil { feedbackGate.resume() }
-      return false
-    }
-    var zeroDeviceStarted: UInt64?
-    if let old = prior.dispatcher {
-      userSpaceLock.withLock { dispatcher.setBackend(nil) }
-      let closed = await closeCompatibilityBackend(old, slot: prior.closeSlot)
-      guard closed else {
-        _ = await closeCompatibilityBackend(candidate.dispatcher, slot: candidate.closeSlot)
-        installUnavailableCompatibilityState(
-          phase: .candidateClose,
-          requestedIdentity: identity,
-          prior: prior
-        )
-        return false
-      }
-      zeroDeviceStarted = compatibilityTransitionClock.now()
-    }
-
-    do {
-      let zeroDeviceRemaining = zeroDeviceStarted.map {
-        remainingNanoseconds(
-          since: $0,
-          within: compatibilityTransitionTimeouts.zeroDeviceNanoseconds
-        )
-      }
-      guard zeroDeviceRemaining != 0 else {
-        throw CompatibilityTransitionError.zeroDeviceIntervalTimedOut
-      }
-      let activationTimeout = min(
-        compatibilityTransitionTimeouts.activationNanoseconds(for: identifiers.count),
-        zeroDeviceRemaining ?? UInt64.max
-      )
-      let activated = try await activateCompatibilityDispatcher(
-        candidate.dispatcher,
-        for: identifiers,
-        timeout: activationTimeout
-      )
-      let reconciled = await connectedIdentifiers()
-      guard activated, reconciled == identifiers, !isCompatibilityServerStopped() else {
-        throw CompatibilityTransitionError.serverStopped
-      }
-      guard
-        commitCompatibilityDispatcher(
-          candidate,
-          identity: identity,
-          identifiers: reconciled,
-          removePersistedIdentity: removePersistedIdentityOnCommit
-        )
-      else {
-        _ = await closeCompatibilityBackend(candidate.dispatcher, slot: candidate.closeSlot)
-        return false
-      }
-      feedbackGate.resume()
-      return true
-    } catch {
-      guard
-        await closeCompatibilityBackendWithinZeroDeviceBudget(
-          candidate.dispatcher,
-          slot: candidate.closeSlot,
-          zeroDeviceStarted: zeroDeviceStarted
-        )
-      else {
-        installUnavailableCompatibilityState(
-          phase: .zeroDeviceInterval,
-          requestedIdentity: identity,
-          prior: prior
-        )
-        return false
-      }
-      guard !isCompatibilityServerStopped() else { return false }
-      let rollbackIdentifiers = await connectedIdentifiers()
-      if prior.dispatcher != nil,
-        await rollbackCompatibilityDispatcher(
-          identity: prior.liveIdentity ?? prior.requestedIdentity,
-          identifiers: rollbackIdentifiers,
-          prior: prior,
-          requestedIdentityAfterFailure: identity,
-          zeroDeviceStarted: zeroDeviceStarted
-        )
-      {
-        recordCompatibilityTransitionFailure(
-          phase: .activation,
-          requestedIdentity: identity,
-          priorProfileIdentity: prior.liveIdentity ?? prior.requestedIdentity
-        )
-        feedbackGate.resume()
-      } else if await activateGenericFallback(
-        identifiers: rollbackIdentifiers,
-        prior: prior,
-        requestedIdentityAfterFailure: identity,
-        zeroDeviceStarted: zeroDeviceStarted
-      ) {
-        feedbackGate.resume()
-      } else {
-        installUnavailableCompatibilityState(
-          phase: prior.dispatcher == nil ? .activation : .rollbackActivation,
-          requestedIdentity: identity,
-          prior: prior
-        )
-      }
-      return false
-    }
-  }
-}
+extension ApplicationServiceServer {}

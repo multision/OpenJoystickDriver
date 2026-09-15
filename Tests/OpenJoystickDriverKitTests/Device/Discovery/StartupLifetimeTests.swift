@@ -4,6 +4,26 @@ import Testing
 
 struct StartupLifetimeTests {
   @Test
+  func immediateRemovalCancelsDelayedInitialization() async throws {
+    let manager = DeviceManager(dispatcher: LoggingOutputDispatcher())
+    await manager.scheduleHIDDeviceInitialization(
+      vendorID: 0x057E,
+      productID: 0x2009,
+      serialNumber: nil,
+      locationID: 80,
+      productName: "Pro Controller",
+      transport: "Bluetooth",
+      ownership: .exclusive
+    )
+
+    await manager.handleHIDEvent(.disconnected(vendorID: 0x057E, productID: 0x2009, locationID: 80))
+    try await Task.sleep(nanoseconds: 400_000_000)
+
+    #expect(await manager.connectedDeviceDescriptions().isEmpty)
+    await manager.stop()
+  }
+
+  @Test
   func stoppedAndReplacedPipelinesCannotContinueStartup() async throws {
     let manager = DeviceManager(dispatcher: LoggingOutputDispatcher())
     let identifier = DeviceIdentifier(vendorID: 0x1234, productID: 0x5678, locationID: 81)

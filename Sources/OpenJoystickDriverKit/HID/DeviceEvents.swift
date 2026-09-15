@@ -1,6 +1,13 @@
 import Foundation
 import IOKit.hid
 
+public extension Notification.Name {
+  /// Posted in-process after the physical controller inventory or session state changes.
+  static let ojdControllerInventoryDidChange = Notification.Name(
+    "OpenJoystickDriver.controllerInventoryDidChange"
+  )
+}
+
 /// Observed result of acquiring one physical HID interface, independent of virtual output.
 public enum HIDInputOwnership: String, Codable, Equatable, Sendable {
   case unknown

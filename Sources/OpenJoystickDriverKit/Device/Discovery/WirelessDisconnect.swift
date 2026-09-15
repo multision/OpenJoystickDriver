@@ -1,8 +1,10 @@
 import Foundation
+import IOKit
 
 public enum WirelessControllerDisconnectOutcome: Sendable, Equatable {
   case disconnected
-  case failed
+  case failed(IOReturn)
+  case stillConnected
   case timedOut
 }
 

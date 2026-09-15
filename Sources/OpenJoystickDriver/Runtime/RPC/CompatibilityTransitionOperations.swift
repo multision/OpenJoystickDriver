@@ -77,6 +77,7 @@ extension ApplicationServiceServer {
               since: $0,
               within: compatibilityTransitionTimeouts.zeroDeviceNanoseconds
             )
+
           } ?? UInt64.max
         )
       )
@@ -91,6 +92,7 @@ extension ApplicationServiceServer {
         } ?? UInt64.max
       )
       guard timeout > 0 else { throw CompatibilityTransitionError.zeroDeviceIntervalTimedOut }
+
       let activated = try await activateCompatibilityDispatcher(
         staged.dispatcher,
         for: identifiers,
@@ -243,7 +245,8 @@ extension ApplicationServiceServer {
       let retrySnapshot = CompatibilityRetrySnapshot(
         requestedIdentity: requestedIdentity,
         priorProfileIdentity: prior.liveIdentity ?? prior.requestedIdentity,
-        phase: phase
+        phase: phase,
+        detail: nil
       )
       compatibilityRetrySnapshot = retrySnapshot
       Self.persistCompatibilityRetrySnapshot(retrySnapshot)
@@ -255,13 +258,15 @@ extension ApplicationServiceServer {
     phase: CompatibilityTransitionPhase,
     requestedIdentity: CompatibilityIdentity,
     priorProfileIdentity: CompatibilityIdentity,
-    retainedStatus: String? = nil
+    retainedStatus: String? = nil,
+    detail: String? = nil
   ) {
     userSpaceLock.withLock {
       let retrySnapshot = CompatibilityRetrySnapshot(
         requestedIdentity: requestedIdentity,
         priorProfileIdentity: priorProfileIdentity,
-        phase: phase
+        phase: phase,
+        detail: detail
       )
       compatibilityRetrySnapshot = retrySnapshot
       let status = retainedStatus ?? "retained \(priorProfileIdentity.rawValue)"

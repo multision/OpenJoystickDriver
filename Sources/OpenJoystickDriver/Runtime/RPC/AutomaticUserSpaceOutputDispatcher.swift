@@ -69,6 +69,7 @@ final class AutomaticUserSpaceOutputDispatcher: CompatibilityUserSpaceOutputDisp
   }
   func activate(controller identifier: DeviceIdentifier) async throws {
     try await coordinator.activateOne(
+
       identifier: identifier,
       descriptions: await descriptionsProvider(),
       consumer: currentConsumer(),
@@ -82,6 +83,7 @@ final class AutomaticUserSpaceOutputDispatcher: CompatibilityUserSpaceOutputDisp
   }
 
   func activate(for identifiers: [DeviceIdentifier]) async throws {
+
     try await coordinator.activate(
       identifiers: identifiers,
       descriptions: await descriptionsProvider(),
@@ -124,6 +126,7 @@ final class AutomaticUserSpaceOutputDispatcher: CompatibilityUserSpaceOutputDisp
   func send(_ state: RemappingGamepadState, for identifier: DeviceIdentifier) async throws {
     guard state == .neutral else {
       try await activate(controller: identifier)
+
       try await deliver(events: [], state: state, from: identifier)
       return
     }
@@ -146,6 +149,7 @@ final class AutomaticUserSpaceOutputDispatcher: CompatibilityUserSpaceOutputDisp
   }
 
   func send(_ motion: RemappingVirtualMotionState?, for identifier: DeviceIdentifier) async throws {
+
     if let motion {
       try await activate(controller: identifier)
       try await deliver(motion: motion, from: identifier)
@@ -158,6 +162,7 @@ final class AutomaticUserSpaceOutputDispatcher: CompatibilityUserSpaceOutputDisp
         throw RemappingEventEngineError.sinkUnavailable
       }
       try await sink.send(nil, for: identifier)
+
       await coordinator.recordPublicationCompletion(for: identifier)
     } catch {
       await lease.release()
@@ -192,6 +197,7 @@ final class AutomaticUserSpaceOutputDispatcher: CompatibilityUserSpaceOutputDisp
     else { throw RemappingEventEngineError.sinkUnavailable }
     do {
       await coordinator.recordPublicationAttempt(for: identifier)
+
       guard let sink = lease.backend as? any RemappingGamepadSink else {
         throw RemappingEventEngineError.sinkUnavailable
       }
@@ -318,6 +324,7 @@ final class AutomaticUserSpaceOutputDispatcher: CompatibilityUserSpaceOutputDisp
         $0.runtimeIdentifier == identifier.runtimeIdentifier
       })
     else { return false }
+    guard description.sessionState == .active else { return false }
     let ownership = await ownershipProvider(identifier)
     let profileAvailable = CompatibilityProfileAvailabilityPolicy.decision(
       for: description,

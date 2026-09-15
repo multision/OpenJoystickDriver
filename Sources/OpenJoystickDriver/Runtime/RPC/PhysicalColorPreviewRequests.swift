@@ -6,13 +6,16 @@ extension ApplicationServiceServer {
     vendorID: Int,
     productID: Int,
     runtimeIdentifier: String?,
+
     token: UUID,
     red: Int,
     green: Int,
     blue: Int,
     reply: @escaping (Bool) -> Void
   ) {
-    guard [red, green, blue].allSatisfy({ (0...255).contains($0) }) else {
+    guard let red = UInt8(exactly: red), let green = UInt8(exactly: green),
+      let blue = UInt8(exactly: blue)
+    else {
       reply(false)
       return
     }
@@ -25,12 +28,13 @@ extension ApplicationServiceServer {
       )
       callback.call(
         await dm.previewPhysicalColor(
+
           for: identifier,
           runtimeIdentifier: runtimeIdentifier,
           token: token,
-          red: UInt8(red),
-          green: UInt8(green),
-          blue: UInt8(blue)
+          red: red,
+          green: green,
+          blue: blue
         )
       )
     }
