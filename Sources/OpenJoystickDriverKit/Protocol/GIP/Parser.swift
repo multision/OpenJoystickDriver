@@ -228,14 +228,11 @@ public final class GIPParser: InputParser, PhysicalRumbleOutput, USBDeferredOutp
     rtMotor: UInt8
   ) async throws {
     let seq = sequencer.next(for: GIPCommand.rumble)
-    let activation: UInt8 = gipRumbleAllMotors
-    // The options byte must be 0x00: controllers silently discard rumble frames
-    // flagged with GIPOption.internal (verified on 045E:02D1 hardware), matching
-    // the unflagged rumble commands sent by the Linux xone and xpad drivers.
-    let packet: [UInt8] = [
-      GIPCommand.rumble, 0x00, seq, gipRumbleSubCommandLength, 0x00, activation, ltMotor, rtMotor,
-      left, right, gipRumbleDefaultDuration, 0x00, 0xFF,  // on=255, off=0, repeat=255
-    ]
+    let packet = rumbleFrame(
+      sequence: seq,
+      mainMotors: (left, right),
+      triggerMotors: (ltMotor, rtMotor)
+    )
     _ = try await handle.writeInterruptPacket(
       endpoint: outEndpoint,
       data: packet,
@@ -263,11 +260,11 @@ public final class GIPParser: InputParser, PhysicalRumbleOutput, USBDeferredOutp
     lt: UInt8,
     rt: UInt8
   ) -> PhysicalUSBOutputPacket {
-    let seq = sequencer.next(for: GIPCommand.rumble)
-    let packet: [UInt8] = [
-      GIPCommand.rumble, 0x00, seq, gipRumbleSubCommandLength, 0x00, gipRumbleAllMotors, lt, rt,
-      left, right, gipRumbleDefaultDuration, 0x00, 0xFF,
-    ]
+    let packet = rumbleFrame(
+      sequence: sequencer.next(for: GIPCommand.rumble),
+      mainMotors: (left, right),
+      triggerMotors: (lt, rt)
+    )
     return PhysicalUSBOutputPacket(
       endpoint: outEndpoint,
       bytes: packet,
@@ -276,6 +273,22 @@ public final class GIPParser: InputParser, PhysicalRumbleOutput, USBDeferredOutp
   }
 
   // MARK: - Private
+
+  private func rumbleFrame(
+    sequence: UInt8,
+    mainMotors: (left: UInt8, right: UInt8),
+    triggerMotors: (left: UInt8, right: UInt8)
+  ) -> [UInt8] {
+    // The options byte must be 0x00: controllers silently discard rumble frames
+    // flagged with GIPOption.internal (verified on 045E:02D1 hardware), matching
+    // the unflagged rumble commands sent by the Linux xone and xpad drivers.
+    [
+      GIPCommand.rumble, 0x00, sequence, gipRumbleSubCommandLength, 0x00, gipRumbleAllMotors,
+      // on=255, off=0, repeat=255
+      triggerMotors.left, triggerMotors.right, mainMotors.left, mainMotors.right,
+      gipRumbleDefaultDuration, 0x00, 0xFF,
+    ]
+  }
 
   private func parseMainInput(payload: Data) -> [ControllerEvent] {
     guard payload.count >= 14 else {

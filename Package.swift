@@ -78,22 +78,28 @@ let package = Package(
 
     .executableTarget(
       name: "ParserCompatibilityHarness",
-      dependencies: ["OpenJoystickDriverKit"],
+      dependencies: ["OpenJoystickDriverKit", "ProtocolPacketFixtures"],
       path: "Tests/ParserCompatibilityHarness",
       swiftSettings: [.unsafeFlags(["-target", testTargetTriple])],
       linkerSettings: [.unsafeFlags(["-target", testTargetTriple])]
     ),
     .testTarget(
       name: "OpenJoystickDriverKitTests",
-      dependencies: ["OpenJoystickDriverKit", "OpenJoystickDriverUSB"],
+      dependencies: ["OpenJoystickDriverKit", "OpenJoystickDriverUSB", "ProtocolPacketFixtures"],
       path: "Tests/OpenJoystickDriverKitTests",
+      swiftSettings: [.unsafeFlags(["-target", testTargetTriple])],
+      linkerSettings: [.unsafeFlags(["-target", testTargetTriple])]
+    ),
+    .target(
+      name: "ProtocolPacketFixtures",
+      path: "Tests/ProtocolPacketFixtures",
       swiftSettings: [.unsafeFlags(["-target", testTargetTriple])],
       linkerSettings: [.unsafeFlags(["-target", testTargetTriple])]
     ),
     .testTarget(
       name: "OpenJoystickDriverUSBTests",
       dependencies: [
-        "OpenJoystickDriverKit", "OpenJoystickDriverUSB",
+        "OpenJoystickDriverKit", "OpenJoystickDriverUSB", "ProtocolPacketFixtures",
         .product(name: "SwifterKit", package: "SwifterKit"),
       ],
       path: "Tests/OpenJoystickDriverUSBTests",

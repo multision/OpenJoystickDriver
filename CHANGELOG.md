@@ -7,6 +7,11 @@ The project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+
+- Reuse canonical GIP, GameSir, DualShock 3, Steam Controller, and Switch Pro packet
+  construction, and share test-only protocol fixtures with the macOS 14 compatibility harness.
+
 ### Fixed
 
 - Restore prompt controller inventory updates, cancel stale HID initialization after removal,

@@ -1,6 +1,20 @@
 /// Independently implemented affine conversion from the Sony calibration report's endpoint facts.
 /// Report layout and validation bounds are documented in docs/development/remapping.md.
 struct SonyMotionCalibration {
+  private enum Report {
+    static let dualSenseLength = 41
+    static let dualSenseID: UInt8 = 5
+    static let dualShock4BluetoothLength = 41
+    static let dualShock4BluetoothID: UInt8 = 5
+    static let dualShock4USBLength = 37
+    static let dualShock4USBID: UInt8 = 2
+  }
+
+  private static let nominalGyroCountsPerDegreePerSecond = 16.0
+  private static let nominalAccelerometerCountsPerG = 8_192.0
+  private static let maximumPlausibleBias = 1_024.0
+  private static let plausibleScaleRange = 0.5...1.5
+
   private struct Axis: Equatable {
     let bias: Double
     let unitsPerCount: Double
@@ -14,18 +28,26 @@ struct SonyMotionCalibration {
   private let source: ControllerMotionCalibrationSource
 
   static let nominal = Self(
-    gyro: Array(repeating: Axis(bias: 0, unitsPerCount: 1.0 / 16), count: 3),
-    accel: Array(repeating: Axis(bias: 0, unitsPerCount: 1.0 / 8192), count: 3),
+    gyro: Array(
+      repeating: Axis(bias: 0, unitsPerCount: 1.0 / nominalGyroCountsPerDegreePerSecond),
+      count: 3
+    ),
+    accel: Array(
+      repeating: Axis(bias: 0, unitsPerCount: 1.0 / nominalAccelerometerCountsPerG),
+      count: 3
+    ),
     source: .nominalDeviceScale
   )
 
   static func dualSenseFactory(_ bytes: [UInt8]) -> Self? {
-    guard bytes.count == 41, bytes[0] == 5 else { return nil }
+    guard bytes.count == Report.dualSenseLength, bytes[0] == Report.dualSenseID else { return nil }
     return factory(bytes, groupedGyroEndpoints: false, useBiasedGyroRange: false)
   }
 
   static func dualShock4Factory(_ bytes: [UInt8], bluetooth: Bool) -> Self? {
-    guard bytes.count == (bluetooth ? 41 : 37), bytes[0] == (bluetooth ? 5 : 2) else { return nil }
+    let expectedLength = bluetooth ? Report.dualShock4BluetoothLength : Report.dualShock4USBLength
+    let expectedID = bluetooth ? Report.dualShock4BluetoothID : Report.dualShock4USBID
+    guard bytes.count == expectedLength, bytes[0] == expectedID else { return nil }
     return factory(bytes, groupedGyroEndpoints: bluetooth, useBiasedGyroRange: true)
   }
 
@@ -54,8 +76,9 @@ struct SonyMotionCalibration {
       let gyroGain = speed / gyroRange
       let accelGain = 2 / accelRange
       let accelBias = (accelPlus + accelMinus) / 2
-      guard abs(gyroBias) <= 1024, abs(accelBias) <= 1024, (0.5...1.5).contains(gyroGain * 16),
-        (0.5...1.5).contains(accelGain * 8192)
+      guard abs(gyroBias) <= maximumPlausibleBias, abs(accelBias) <= maximumPlausibleBias,
+        plausibleScaleRange.contains(gyroGain * nominalGyroCountsPerDegreePerSecond),
+        plausibleScaleRange.contains(accelGain * nominalAccelerometerCountsPerG)
       else { return nil }
       gyro.append(Axis(bias: gyroBias, unitsPerCount: gyroGain))
       accel.append(Axis(bias: accelBias, unitsPerCount: accelGain))

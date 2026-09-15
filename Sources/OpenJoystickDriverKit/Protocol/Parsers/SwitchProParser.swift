@@ -67,23 +67,13 @@ public final class SwitchProParser: InputParser, HIDStartupOutputReportProvider,
   public var minimumPhysicalOutputIntervalNanoseconds: UInt64 { 50_000_000 }
 
   public func hidStartupReports() -> [PhysicalHIDOutputReport] {
-    let prefix =
-      layout == .pro
-      ? [usbCommand(0x02), usbCommand(0x03), usbCommand(0x02), usbCommand(0x04)] : []
-    return prefix + [
-      subcommand(0x03, data: [0x30]), subcommand(0x40, data: [0x01]),
-      subcommand(0x48, data: [0x01]),
-    ] + motionCalibrationRequests()
+    startupReports(includeUSBSetup: layout == .pro)
   }
 
   public func hidStartupReports(transport: String?) -> [PhysicalHIDOutputReport] {
     switch transport {
     case "USB": return hidStartupReports()
-    case "Bluetooth":
-      return [
-        subcommand(0x03, data: [0x30]), subcommand(0x40, data: [0x01]),
-        subcommand(0x48, data: [0x01]),
-      ] + motionCalibrationRequests()
+    case "Bluetooth": return startupReports(includeUSBSetup: false)
     default: return []
     }
   }
@@ -166,6 +156,16 @@ public final class SwitchProParser: InputParser, HIDStartupOutputReportProvider,
 
   private func usbCommand(_ command: UInt8) -> PhysicalHIDOutputReport {
     PhysicalHIDOutputReport(reportID: 0x80, bytes: [0x80, command])
+  }
+
+  private func startupReports(includeUSBSetup: Bool) -> [PhysicalHIDOutputReport] {
+    let usbSetup =
+      includeUSBSetup
+      ? [usbCommand(0x02), usbCommand(0x03), usbCommand(0x02), usbCommand(0x04)] : []
+    return usbSetup + [
+      subcommand(0x03, data: [0x30]), subcommand(0x40, data: [0x01]),
+      subcommand(0x48, data: [0x01]),
+    ] + motionCalibrationRequests()
   }
 
   private func motionCalibrationRequests() -> [PhysicalHIDOutputReport] {

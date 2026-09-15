@@ -1,15 +1,29 @@
 /// The left axis pair alternates between stick and pad when both are active.
 struct SteamTouchSamples {
+  private enum Report {
+    static let buttonByte = 10
+    static let leftPadMask: UInt8 = 0x08
+    static let interleavedLeftMask: UInt8 = 0x80
+    static let rightPadMask: UInt8 = 0x10
+    static let leftXOffset = 16
+    static let leftYOffset = 18
+    static let rightXOffset = 20
+    static let rightYOffset = 22
+  }
+
+  private static let touchCoordinateExtent: UInt32 = 65_536
+  private static let touchCoordinateOrigin: Int32 = -32_768
+
   private var leftX: Int32 = 0
   private var leftY: Int32 = 0
 
   mutating func decode(_ bytes: [UInt8], timestamp: ControllerSampleTimestamp) -> [ControllerEvent]
   {
-    let padPacket = bytes[10] & 0x08 != 0
-    let interleaved = bytes[10] & 0x80 != 0
+    let padPacket = bytes[Report.buttonByte] & Report.leftPadMask != 0
+    let interleaved = bytes[Report.buttonByte] & Report.interleavedLeftMask != 0
     if padPacket {
-      leftX = signed16(bytes, at: 16)
-      leftY = signed16(bytes, at: 18)
+      leftX = signed16(bytes, at: Report.leftXOffset)
+      leftY = signed16(bytes, at: Report.leftYOffset)
     } else if !interleaved {
       leftX = 0
       leftY = 0
@@ -18,9 +32,9 @@ struct SteamTouchSamples {
       frame(.left, active: padPacket || interleaved, x: leftX, y: leftY, timestamp: timestamp),
       frame(
         .right,
-        active: bytes[10] & 0x10 != 0,
-        x: signed16(bytes, at: 20),
-        y: signed16(bytes, at: 22),
+        active: bytes[Report.buttonByte] & Report.rightPadMask != 0,
+        x: signed16(bytes, at: Report.rightXOffset),
+        y: signed16(bytes, at: Report.rightYOffset),
         timestamp: timestamp
       ),
     ]
@@ -38,12 +52,12 @@ struct SteamTouchSamples {
         reportTimestamp: timestamp,
         rawTouchCounter: nil,
         historyIndex: 0,
-        width: 65_536,
-        height: 65_536,
+        width: Self.touchCoordinateExtent,
+        height: Self.touchCoordinateExtent,
         contacts: [ControllerTouchContact(id: 0, isActive: active, x: x, y: y)],
         surface: surface,
-        originX: -32_768,
-        originY: -32_768
+        originX: Self.touchCoordinateOrigin,
+        originY: Self.touchCoordinateOrigin
       )
     )
   }

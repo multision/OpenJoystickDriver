@@ -97,8 +97,13 @@ check-fast: lint
     ./Scripts/ojd catalog regenerate --check
     ./Scripts/ojd check profiles
     ./Scripts/ojd check schemas
+    python3 Scripts/Quality/check_swift_file_length.py
     python3 -m unittest discover -s Tests/RepositoryScripts
     git diff --check
+
+# Enforce the 350-code-line limit for tracked Swift source and test files
+check-swift-file-length:
+    python3 Scripts/Quality/check_swift_file_length.py
 
 # Run the complete local validation suite
 check: check-fast

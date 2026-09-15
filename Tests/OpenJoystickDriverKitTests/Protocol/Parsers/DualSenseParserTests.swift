@@ -1,80 +1,8 @@
 import Foundation
+import ProtocolPacketFixtures
 import Testing
 
 @testable import OpenJoystickDriverKit
-
-private func makeDualSenseUSBReport(
-  leftStickX: UInt8 = 128,
-  leftStickY: UInt8 = 128,
-  rightStickX: UInt8 = 128,
-  rightStickY: UInt8 = 128,
-  leftTrigger: UInt8 = 0,
-  rightTrigger: UInt8 = 0,
-  buttons0: UInt8 = 0x08,
-  buttons1: UInt8 = 0,
-  buttons2: UInt8 = 0
-) -> Data {
-  var report = [UInt8](repeating: 0, count: 64)
-  report[0] = 0x01
-  report[1] = leftStickX
-  report[2] = leftStickY
-  report[3] = rightStickX
-  report[4] = rightStickY
-  report[5] = leftTrigger
-  report[6] = rightTrigger
-  report[8] = buttons0
-  report[9] = buttons1
-  report[10] = buttons2
-  return Data(report)
-}
-
-private func dualSenseBluetoothCRC32(_ report: [UInt8]) -> UInt32 {
-  var crc = updateCRC32(0xFFFF_FFFF, byte: 0xA1)
-  for byte in report.dropLast(4) { crc = updateCRC32(crc, byte: byte) }
-  return ~crc
-}
-
-private func dualSenseBluetoothOutputCRC32(_ report: [UInt8]) -> UInt32 {
-  var crc = updateCRC32(0xFFFF_FFFF, byte: 0xA2)
-  for byte in report.dropLast(4) { crc = updateCRC32(crc, byte: byte) }
-  return ~crc
-}
-
-private func updateCRC32(_ current: UInt32, byte: UInt8) -> UInt32 {
-  var crc = current ^ UInt32(byte)
-  for _ in 0..<8 { if crc & 1 == 1 { crc = (crc >> 1) ^ 0xEDB8_8320 } else { crc >>= 1 } }
-  return crc
-}
-
-private func makeDualSenseBluetoothReport(
-  leftStickX: UInt8 = 128,
-  leftStickY: UInt8 = 128,
-  rightStickX: UInt8 = 128,
-  rightStickY: UInt8 = 128,
-  leftTrigger: UInt8 = 0,
-  rightTrigger: UInt8 = 0,
-  buttons0: UInt8 = 0x08,
-  buttons1: UInt8 = 0,
-  buttons2: UInt8 = 0
-) -> Data {
-  var report = [UInt8](repeating: 0, count: 78)
-  report[0] = 0x31
-  report[2] = leftStickX
-  report[3] = leftStickY
-  report[4] = rightStickX
-  report[5] = rightStickY
-  report[6] = leftTrigger
-  report[7] = rightTrigger
-  report[9] = buttons0
-  report[10] = buttons1
-  report[11] = buttons2
-  let crc = dualSenseBluetoothCRC32(report)
-  report[74] = UInt8(truncatingIfNeeded: crc)
-  report[75] = UInt8(truncatingIfNeeded: crc >> 8)
-  report[76] = UInt8(truncatingIfNeeded: crc >> 16)
-  report[77] = UInt8(truncatingIfNeeded: crc >> 24)
-  return Data(report)
-}
 
 private func hasEvent(_ events: [ControllerEvent], _ expected: ControllerEvent) -> Bool {
   events.contains(expected)
@@ -85,19 +13,13 @@ struct DualSenseParserTests {
   func testDualSenseUSBReportParsesPrimaryControls() throws {
     let identifier = DeviceIdentifier(vendorID: 1356, productID: 3302)
     let parser = ParserRegistry().parser(for: identifier)
-    _ = try parser.parse(data: makeDualSenseUSBReport())
+    _ = try parser.parse(data: ProtocolPacketFixtures.DualSense.usbInputReport())
 
     let events = try parser.parse(
-      data: makeDualSenseUSBReport(
-        leftStickX: 255,
-        leftStickY: 0,
-        rightStickX: 0,
-        rightStickY: 255,
-        leftTrigger: 255,
-        rightTrigger: 128,
-        buttons0: 0x28,
-        buttons1: 0x30,
-        buttons2: 0x03
+      data: ProtocolPacketFixtures.DualSense.usbInputReport(
+        sticks: ((255, 0), (0, 255)),
+        triggers: (255, 128),
+        buttons: (0x28, 0x30, 0x03)
       )
     )
 
@@ -115,19 +37,13 @@ struct DualSenseParserTests {
   @Test
   func testDualSenseBluetoothReportParsesPrimaryControlsWithCRC() throws {
     let parser = DualSenseParser()
-    _ = try parser.parse(data: makeDualSenseBluetoothReport())
+    _ = try parser.parse(data: ProtocolPacketFixtures.DualSense.bluetoothInputReport())
 
     let events = try parser.parse(
-      data: makeDualSenseBluetoothReport(
-        leftStickX: 255,
-        leftStickY: 0,
-        rightStickX: 0,
-        rightStickY: 255,
-        leftTrigger: 255,
-        rightTrigger: 128,
-        buttons0: 0x28,
-        buttons1: 0x30,
-        buttons2: 0x07
+      data: ProtocolPacketFixtures.DualSense.bluetoothInputReport(
+        sticks: ((255, 0), (0, 255)),
+        triggers: (255, 128),
+        buttons: (0x28, 0x30, 0x07)
       )
     )
 
@@ -161,7 +77,7 @@ struct DualSenseParserTests {
   @Test
   func testDualSenseBluetoothReportRejectsInvalidCRC() throws {
     let parser = DualSenseParser()
-    var report = Array(makeDualSenseBluetoothReport(buttons0: 0x28))
+    var report = Array(ProtocolPacketFixtures.DualSense.bluetoothInputReport(buttons: (0x28, 0, 0)))
     report[77] ^= 0xFF
 
     do {
@@ -175,9 +91,11 @@ struct DualSenseParserTests {
   @Test
   func testDualSenseUSBReportParsesMicrophoneMute() throws {
     let parser = DualSenseParser()
-    _ = try parser.parse(data: makeDualSenseUSBReport())
+    _ = try parser.parse(data: ProtocolPacketFixtures.DualSense.usbInputReport())
 
-    let events = try parser.parse(data: makeDualSenseUSBReport(buttons2: 0x04))
+    let events = try parser.parse(
+      data: ProtocolPacketFixtures.DualSense.usbInputReport(buttons: (0x08, 0, 0x04))
+    )
 
     #expect(hasEvent(events, .buttonPressed(.mute)))
   }
@@ -203,11 +121,11 @@ struct DualSenseParserTests {
 
   @Test
   func bluetoothSensorPayloadMatchesUSBAndBadCRCCannotAdvanceClock() throws {
-    var report = Array(makeDualSenseBluetoothReport())
+    var report = Array(ProtocolPacketFixtures.DualSense.bluetoothInputReport())
     report[17] = 0xFF
     report[18] = 0xFF
     report[29] = 3
-    let crc = dualSenseBluetoothCRC32(report)
+    let crc = ProtocolPacketFixtures.DualSense.bluetoothInputCRC32(report)
     for index in 0..<4 { report[74 + index] = UInt8(truncatingIfNeeded: crc >> (index * 8)) }
     let parser = DualSenseParser()
     let first = try parser.parse(data: Data([0xA1] + report))
@@ -223,7 +141,7 @@ struct DualSenseParserTests {
     #expect(throws: DualSenseParserError.invalidBluetoothCRC) {
       try parser.parse(data: Data(report))
     }
-    let repeated = try parser.parse(data: Data(makeDualSenseBluetoothReport()))
+    let repeated = try parser.parse(data: ProtocolPacketFixtures.DualSense.bluetoothInputReport())
     let next = try #require(
       repeated.compactMap { event -> ControllerMotionSample? in
         if case .motionSample(let sample) = event { return sample }
@@ -252,8 +170,12 @@ extension DualSenseParserTests {
       let parser = ParserRegistry().parser(for: identifier)
       let report =
         bluetooth
-        ? makeDualSenseBluetoothReport(buttons2: mask) : makeDualSenseUSBReport(buttons2: mask)
-      let neutral = bluetooth ? makeDualSenseBluetoothReport() : makeDualSenseUSBReport()
+        ? ProtocolPacketFixtures.DualSense.bluetoothInputReport(buttons: (0x08, 0, mask))
+        : ProtocolPacketFixtures.DualSense.usbInputReport(buttons: (0x08, 0, mask))
+      let neutral =
+        bluetooth
+        ? ProtocolPacketFixtures.DualSense.bluetoothInputReport()
+        : ProtocolPacketFixtures.DualSense.usbInputReport()
       let profile = RemappingProfile(
         name: "Edge mapping",
         device: RemappingDeviceScope(vendorID: 0x054C, productID: 0x0DF2),
@@ -286,7 +208,9 @@ extension DualSenseParserTests {
   func ordinaryDualSenseDoesNotDecodeEdgeButtonBits() throws {
     let identifier = DeviceIdentifier(vendorID: 0x054C, productID: 0x0CE6)
     let parser = ParserRegistry().parser(for: identifier)
-    let events = try parser.parse(data: makeDualSenseUSBReport(buttons2: 0xF0))
+    let events = try parser.parse(
+      data: ProtocolPacketFixtures.DualSense.usbInputReport(buttons: (0x08, 0, 0xF0))
+    )
     #expect(
       !events.contains {
         if case .buttonPressed = $0 { return true }
@@ -299,13 +223,15 @@ extension DualSenseParserTests {
   @Test
   func badBluetoothCRCCannotConsumeAnEdgeButtonPress() throws {
     let parser = DualSenseParser(hasEdgeButtons: true)
-    let valid = makeDualSenseBluetoothReport(buttons2: 0x40)
+    let valid = ProtocolPacketFixtures.DualSense.bluetoothInputReport(buttons: (0x08, 0, 0x40))
     var bad = valid
     bad[77] ^= 0xFF
     #expect(throws: DualSenseParserError.invalidBluetoothCRC) { try parser.parse(data: bad) }
     #expect(try parser.parse(data: valid).contains(.buttonPressed(.leftPaddle)))
     #expect(
-      try parser.parse(data: makeDualSenseBluetoothReport()).contains(.buttonReleased(.leftPaddle))
+      try parser.parse(data: ProtocolPacketFixtures.DualSense.bluetoothInputReport()).contains(
+        .buttonReleased(.leftPaddle)
+      )
     )
   }
 
@@ -338,7 +264,7 @@ extension DualSenseParserTests {
     let storedCRC =
       UInt32(report.bytes[74]) | (UInt32(report.bytes[75]) << 8) | (UInt32(report.bytes[76]) << 16)
       | (UInt32(report.bytes[77]) << 24)
-    #expect(dualSenseBluetoothOutputCRC32(report.bytes) == storedCRC)
+    #expect(ProtocolPacketFixtures.DualSense.bluetoothOutputCRC32(report.bytes) == storedCRC)
   }
 
   @Test

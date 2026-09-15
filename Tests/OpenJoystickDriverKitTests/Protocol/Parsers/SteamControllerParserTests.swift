@@ -1,61 +1,8 @@
 import Foundation
+import ProtocolPacketFixtures
 import Testing
 
 @testable import OpenJoystickDriverKit
-
-private func writeInt16LE(_ value: Int16, into bytes: inout [UInt8], at offset: Int) {
-  let raw = UInt16(bitPattern: value)
-  bytes[offset] = UInt8(truncatingIfNeeded: raw)
-  bytes[offset + 1] = UInt8(truncatingIfNeeded: raw >> 8)
-}
-
-private func makeSteamControllerReport(
-  b8: UInt8 = 0,
-  b9: UInt8 = 0,
-  b10: UInt8 = 0,
-  leftTrigger: UInt8 = 0,
-  rightTrigger: UInt8 = 0,
-  leftX: Int16 = 0,
-  leftY: Int16 = 0,
-  rightPadX: Int16 = 0,
-  rightPadY: Int16 = 0
-) -> Data {
-  var report = [UInt8](repeating: 0, count: 64)
-  report[0] = 0x01
-  report[1] = 0x00
-  report[2] = 0x01
-  report[3] = 60
-  report[8] = b8
-  report[9] = b9
-  report[10] = b10
-  report[11] = leftTrigger
-  report[12] = rightTrigger
-  writeInt16LE(leftX, into: &report, at: 16)
-  writeInt16LE(leftY, into: &report, at: 18)
-  writeInt16LE(rightPadX, into: &report, at: 20)
-  writeInt16LE(rightPadY, into: &report, at: 22)
-  return Data(report)
-}
-
-private func makeSteamWirelessReport(status: UInt8) -> Data {
-  var report = [UInt8](repeating: 0, count: 64)
-  report[0] = 0x01
-  report[1] = 0x00
-  report[2] = 0x03
-  report[3] = 1
-  report[4] = status
-  return Data(report)
-}
-
-private func makeSteamStatusReport() -> Data {
-  var report = [UInt8](repeating: 0, count: 64)
-  report[0] = 0x01
-  report[1] = 0x00
-  report[2] = 0x04
-  report[3] = 11
-  report[16] = 85
-  return Data(report)
-}
 
 private func eventExists(_ events: [ControllerEvent], _ expected: ControllerEvent) -> Bool {
   events.contains(expected)
@@ -84,19 +31,14 @@ struct SteamControllerParserTests {
   @Test
   func testSteamControllerReportParsesPrimaryControls() throws {
     let parser = ParserRegistry().parser(for: DeviceIdentifier(vendorID: 10462, productID: 4354))
-    _ = try parser.parse(data: makeSteamControllerReport())
+    _ = try parser.parse(data: ProtocolPacketFixtures.Steam.inputReport())
 
     let events = try parser.parse(
-      data: makeSteamControllerReport(
-        b8: 0xFC,
-        b9: 0x70,
-        b10: 0x44,
-        leftTrigger: 255,
-        rightTrigger: 128,
-        leftX: 32767,
-        leftY: -32767,
-        rightPadX: -32767,
-        rightPadY: 32767
+      data: ProtocolPacketFixtures.Steam.inputReport(
+        buttons: (0xFC, 0x70, 0x44),
+        triggers: (255, 128),
+        left: (32767, -32767),
+        rightPad: (-32767, 32767)
       )
     )
 
@@ -120,21 +62,23 @@ struct SteamControllerParserTests {
   @Test
   func testSteamGripBitsHaveDistinctSources() throws {
     let parser = SteamControllerParser()
-    _ = try parser.parse(data: makeSteamControllerReport())
+    _ = try parser.parse(data: ProtocolPacketFixtures.Steam.inputReport())
 
-    let events = try parser.parse(data: makeSteamControllerReport(b9: 0x80, b10: 0x01))
+    let events = try parser.parse(
+      data: ProtocolPacketFixtures.Steam.inputReport(buttons: (0, 0x80, 0x01))
+    )
     #expect(events == [.buttonPressed(.leftGrip), .buttonPressed(.rightGrip)])
-    let releases = try parser.parse(data: makeSteamControllerReport())
+    let releases = try parser.parse(data: ProtocolPacketFixtures.Steam.inputReport())
     #expect(releases == [.buttonReleased(.leftGrip), .buttonReleased(.rightGrip)])
   }
 
   @Test
   func testLeftPadTouchDoesNotCreateVirtualLeftStickMotion() throws {
     let parser = SteamControllerParser()
-    _ = try parser.parse(data: makeSteamControllerReport())
+    _ = try parser.parse(data: ProtocolPacketFixtures.Steam.inputReport())
 
     let events = try parser.parse(
-      data: makeSteamControllerReport(b10: 0x08, leftX: 32767, leftY: -32767)
+      data: ProtocolPacketFixtures.Steam.inputReport(buttons: (0, 0, 0x08), left: (32767, -32767))
     )
 
     #expect(!eventExists(events, .leftStickChanged(x: 1.0, y: 1.0)))
@@ -143,10 +87,10 @@ struct SteamControllerParserTests {
   @Test
   func testLeftPadAndJoyBitDoesNotReplaceStickWithPadCoordinates() throws {
     let parser = SteamControllerParser()
-    _ = try parser.parse(data: makeSteamControllerReport())
+    _ = try parser.parse(data: ProtocolPacketFixtures.Steam.inputReport())
 
     let events = try parser.parse(
-      data: makeSteamControllerReport(b10: 0x88, leftX: 32767, leftY: -32767)
+      data: ProtocolPacketFixtures.Steam.inputReport(buttons: (0, 0, 0x88), left: (32767, -32767))
     )
 
     #expect(!eventExists(events, .leftStickChanged(x: 1.0, y: 1.0)))
@@ -155,9 +99,11 @@ struct SteamControllerParserTests {
   @Test
   func testLeftPadTouchStaysOmitted() throws {
     let parser = SteamControllerParser()
-    _ = try parser.parse(data: makeSteamControllerReport())
+    _ = try parser.parse(data: ProtocolPacketFixtures.Steam.inputReport())
 
-    let events = try parser.parse(data: makeSteamControllerReport(b10: 0x80))
+    let events = try parser.parse(
+      data: ProtocolPacketFixtures.Steam.inputReport(buttons: (0, 0, 0x80))
+    )
 
     #expect(events.isEmpty)
   }
@@ -165,12 +111,20 @@ struct SteamControllerParserTests {
   @Test
   func testSteamControllerReportParsesDpadDirections() throws {
     let parser = SteamControllerParser()
-    _ = try parser.parse(data: makeSteamControllerReport())
+    _ = try parser.parse(data: ProtocolPacketFixtures.Steam.inputReport())
 
-    let upEvents = try parser.parse(data: makeSteamControllerReport(b9: 0x01))
-    let rightEvents = try parser.parse(data: makeSteamControllerReport(b9: 0x02))
-    let downEvents = try parser.parse(data: makeSteamControllerReport(b9: 0x08))
-    let leftEvents = try parser.parse(data: makeSteamControllerReport(b9: 0x04))
+    let upEvents = try parser.parse(
+      data: ProtocolPacketFixtures.Steam.inputReport(buttons: (0, 0x01, 0))
+    )
+    let rightEvents = try parser.parse(
+      data: ProtocolPacketFixtures.Steam.inputReport(buttons: (0, 0x02, 0))
+    )
+    let downEvents = try parser.parse(
+      data: ProtocolPacketFixtures.Steam.inputReport(buttons: (0, 0x08, 0))
+    )
+    let leftEvents = try parser.parse(
+      data: ProtocolPacketFixtures.Steam.inputReport(buttons: (0, 0x04, 0))
+    )
 
     #expect(eventExists(upEvents, .dpadChanged(.north)))
     #expect(eventExists(rightEvents, .dpadChanged(.east)))
@@ -187,7 +141,7 @@ struct SteamControllerParserTests {
     #expect(startup.map { $0.bytes.count } == [64, 64])
     #expect(startup[0].bytes[0] == 0x81)
     #expect(
-      Array(startup[1].bytes.prefix(11)) == [0x87, 9, 0x07, 0x07, 0, 0x08, 0x07, 0, 48, 0x18, 0]
+      Array(startup[1].bytes.prefix(11)) == ProtocolPacketFixtures.Steam.startupSettingsPrefix
     )
 
     let shutdown = parser.hidShutdownFeatureReports()
@@ -238,10 +192,10 @@ struct SteamControllerParserTests {
     let parser = SteamControllerParser(isWirelessReceiver: true)
     #expect(parser.physicalHapticReports(left: 255, right: 0, durationMs: 100).isEmpty)
 
-    _ = try parser.parse(data: makeSteamWirelessReport(status: 0x02))
+    _ = try parser.parse(data: ProtocolPacketFixtures.Steam.wirelessReport(status: 0x02))
     #expect(parser.physicalHapticReports(left: 255, right: 0, durationMs: 100).count == 1)
 
-    _ = try parser.parse(data: makeSteamWirelessReport(status: 0x01))
+    _ = try parser.parse(data: ProtocolPacketFixtures.Steam.wirelessReport(status: 0x01))
     #expect(parser.physicalHapticReports(left: 255, right: 0, durationMs: 100).isEmpty)
   }
 
@@ -263,22 +217,32 @@ struct SteamControllerParserTests {
     let parser = SteamControllerParser(isWirelessReceiver: true)
     #expect(parser.requiresInputConnectionBeforeOutput)
 
-    let preConnectEvents = try parser.parse(data: makeSteamControllerReport(b8: 0x80))
+    let preConnectEvents = try parser.parse(
+      data: ProtocolPacketFixtures.Steam.inputReport(buttons: (0x80, 0, 0))
+    )
     #expect(preConnectEvents.isEmpty)
 
-    let connectEvents = try parser.parse(data: makeSteamWirelessReport(status: 0x02))
+    let connectEvents = try parser.parse(
+      data: ProtocolPacketFixtures.Steam.wirelessReport(status: 0x02)
+    )
     #expect(connectEvents.isEmpty)
     #expect(parser.consumeInputConnectionStateChange() == .connected)
     #expect(parser.consumeInputConnectionStateChange() == nil)
 
-    let inputEvents = try parser.parse(data: makeSteamControllerReport(b8: 0x80))
+    let inputEvents = try parser.parse(
+      data: ProtocolPacketFixtures.Steam.inputReport(buttons: (0x80, 0, 0))
+    )
     #expect(eventExists(inputEvents, .buttonPressed(.a)))
 
-    let disconnectEvents = try parser.parse(data: makeSteamWirelessReport(status: 0x01))
+    let disconnectEvents = try parser.parse(
+      data: ProtocolPacketFixtures.Steam.wirelessReport(status: 0x01)
+    )
     #expect(disconnectEvents.isEmpty)
     #expect(parser.consumeInputConnectionStateChange() == .disconnected)
 
-    let postDisconnectEvents = try parser.parse(data: makeSteamControllerReport(b8: 0x80))
+    let postDisconnectEvents = try parser.parse(
+      data: ProtocolPacketFixtures.Steam.inputReport(buttons: (0x80, 0, 0))
+    )
     #expect(postDisconnectEvents.isEmpty)
   }
 
@@ -286,19 +250,21 @@ struct SteamControllerParserTests {
   func testSteamWirelessStatusReportMarksReceiverConnectedWhenConnectEventWasMissed() throws {
     let parser = SteamControllerParser(isWirelessReceiver: true)
 
-    let statusEvents = try parser.parse(data: makeSteamStatusReport())
+    let statusEvents = try parser.parse(data: ProtocolPacketFixtures.Steam.statusReport)
 
     #expect(statusEvents.isEmpty)
     #expect(parser.consumeInputConnectionStateChange() == .connected)
 
-    let inputEvents = try parser.parse(data: makeSteamControllerReport(b8: 0x80))
+    let inputEvents = try parser.parse(
+      data: ProtocolPacketFixtures.Steam.inputReport(buttons: (0x80, 0, 0))
+    )
     #expect(eventExists(inputEvents, .buttonPressed(.a)))
   }
 
   @Test
   func testSteamControllerIgnoresUnknownNonStateReports() throws {
     let parser = SteamControllerParser()
-    var unknownEvent = Array(makeSteamControllerReport())
+    var unknownEvent = Array(ProtocolPacketFixtures.Steam.inputReport())
     unknownEvent[2] = 0x04
 
     let events = try parser.parse(data: Data(unknownEvent))
@@ -309,15 +275,15 @@ struct SteamControllerParserTests {
   @Test
   func rawMotionUsesReceiptTimeAndSuppressesDuplicateSequenceNumbers() throws {
     let parser: any InputParser = SteamControllerParser()
-    var report = Array(makeSteamControllerReport())
+    var report = Array(ProtocolPacketFixtures.Steam.inputReport())
     report[4] = 255
     report[5] = 255
     report[6] = 255
     report[7] = 255
-    writeInt16LE(-32_768, into: &report, at: 28)
-    writeInt16LE(32_767, into: &report, at: 30)
-    writeInt16LE(-1, into: &report, at: 32)
-    writeInt16LE(123, into: &report, at: 34)
+    ProtocolPacketFixtures.Steam.writeInt16LE(-32_768, into: &report, at: 28)
+    ProtocolPacketFixtures.Steam.writeInt16LE(32_767, into: &report, at: 30)
+    ProtocolPacketFixtures.Steam.writeInt16LE(-1, into: &report, at: 32)
+    ProtocolPacketFixtures.Steam.writeInt16LE(123, into: &report, at: 34)
     let first = try parser.parse(data: Data(report), receivedAtNanoseconds: 100)
     guard case .motionSample(let sample) = first.first(where: isMotionEvent) else {
       Issue.record("Expected raw motion sample")
@@ -350,12 +316,18 @@ struct SteamControllerParserTests {
   @Test
   func receiverReconnectResetsMotionClockAndDuplicateTracking() throws {
     let parser = SteamControllerParser(isWirelessReceiver: true)
-    _ = try parser.parse(data: makeSteamWirelessReport(status: 2))
-    _ = try parser.parse(data: makeSteamControllerReport(), receivedAtNanoseconds: 100)
-    _ = try parser.parse(data: makeSteamWirelessReport(status: 1))
-    #expect(try parser.parse(data: makeSteamControllerReport()).isEmpty)
-    _ = try parser.parse(data: makeSteamWirelessReport(status: 2))
-    let events = try parser.parse(data: makeSteamControllerReport(), receivedAtNanoseconds: 10)
+    _ = try parser.parse(data: ProtocolPacketFixtures.Steam.wirelessReport(status: 2))
+    _ = try parser.parse(
+      data: ProtocolPacketFixtures.Steam.inputReport(),
+      receivedAtNanoseconds: 100
+    )
+    _ = try parser.parse(data: ProtocolPacketFixtures.Steam.wirelessReport(status: 1))
+    #expect(try parser.parse(data: ProtocolPacketFixtures.Steam.inputReport()).isEmpty)
+    _ = try parser.parse(data: ProtocolPacketFixtures.Steam.wirelessReport(status: 2))
+    let events = try parser.parse(
+      data: ProtocolPacketFixtures.Steam.inputReport(),
+      receivedAtNanoseconds: 10
+    )
     guard case .motionSample(let sample) = events.first(where: isMotionEvent) else {
       Issue.record("Expected fresh receiver-session motion sample")
       return

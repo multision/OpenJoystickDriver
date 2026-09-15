@@ -1,30 +1,8 @@
 import Foundation
+import ProtocolPacketFixtures
 import Testing
 
 @testable import OpenJoystickDriverKit
-
-private func writeSwitchStick(x: UInt16, y: UInt16, into report: inout [UInt8], at offset: Int) {
-  report[offset] = UInt8(truncatingIfNeeded: x)
-  report[offset + 1] = UInt8(truncatingIfNeeded: (x >> 8) | ((y & 0x0F) << 4))
-  report[offset + 2] = UInt8(truncatingIfNeeded: y >> 4)
-}
-
-private func makeSwitchProReport(
-  buttons: UInt32 = 0,
-  leftX: UInt16 = 2048,
-  leftY: UInt16 = 2048,
-  rightX: UInt16 = 2048,
-  rightY: UInt16 = 2048
-) -> Data {
-  var report = [UInt8](repeating: 0, count: 49)
-  report[0] = 0x30
-  report[3] = UInt8(truncatingIfNeeded: buttons)
-  report[4] = UInt8(truncatingIfNeeded: buttons >> 8)
-  report[5] = UInt8(truncatingIfNeeded: buttons >> 16)
-  writeSwitchStick(x: leftX, y: leftY, into: &report, at: 6)
-  writeSwitchStick(x: rightX, y: rightY, into: &report, at: 9)
-  return Data(report)
-}
 
 private func eventExists(_ events: [ControllerEvent], _ expected: ControllerEvent) -> Bool {
   events.contains(expected)
@@ -47,10 +25,12 @@ struct SwitchProParserTests {
   @Test
   func testSwitchProReportParsesPrimaryButtonsAndDpad() throws {
     let parser = SwitchProParser()
-    _ = try parser.parse(data: makeSwitchProReport())
+    _ = try parser.parse(data: ProtocolPacketFixtures.SwitchPro.inputReport())
 
     let allPrimaryButtons: UInt32 = 0x00CA_3FCF
-    let events = try parser.parse(data: makeSwitchProReport(buttons: allPrimaryButtons))
+    let events = try parser.parse(
+      data: ProtocolPacketFixtures.SwitchPro.inputReport(buttons: allPrimaryButtons)
+    )
 
     #expect(eventExists(events, .buttonPressed(.a)))
     #expect(eventExists(events, .buttonPressed(.b)))
@@ -83,9 +63,11 @@ struct SwitchProParserTests {
 
     for (mask, button) in expectations {
       let parser = SwitchProParser()
-      _ = try parser.parse(data: makeSwitchProReport())
+      _ = try parser.parse(data: ProtocolPacketFixtures.SwitchPro.inputReport())
 
-      let events = try parser.parse(data: makeSwitchProReport(buttons: mask))
+      let events = try parser.parse(
+        data: ProtocolPacketFixtures.SwitchPro.inputReport(buttons: mask)
+      )
 
       #expect(eventExists(events, .buttonPressed(button)))
     }
@@ -94,10 +76,10 @@ struct SwitchProParserTests {
   @Test
   func testSwitchProReportParsesTwelveBitSticks() throws {
     let parser = SwitchProParser()
-    _ = try parser.parse(data: makeSwitchProReport())
+    _ = try parser.parse(data: ProtocolPacketFixtures.SwitchPro.inputReport())
 
     let events = try parser.parse(
-      data: makeSwitchProReport(leftX: 4095, leftY: 0, rightX: 0, rightY: 4095)
+      data: ProtocolPacketFixtures.SwitchPro.inputReport(sticks: ((4095, 0), (0, 4095)))
     )
 
     #expect(eventExists(events, .leftStickChanged(x: 1.0, y: 1.0)))
@@ -108,14 +90,17 @@ struct SwitchProParserTests {
   func testSwitchProStartupReportsMatchLinuxUsbInitSlice() {
     let reports = SwitchProParser().hidStartupReports()
 
-    #expect(reports.map(\.reportID) == [0x80, 0x80, 0x80, 0x80, 0x01, 0x01, 0x01, 0x01, 0x01])
+    #expect(reports.map(\.reportID) == ProtocolPacketFixtures.SwitchPro.usbStartupReportIDs)
     #expect(
       reports.map { Array($0.bytes.prefix(2)) } == [
         [0x80, 0x02], [0x80, 0x03], [0x80, 0x02], [0x80, 0x04], [0x01, 0x00], [0x01, 0x01],
         [0x01, 0x02], [0x01, 0x03], [0x01, 0x04],
       ]
     )
-    #expect(Array(reports[4].bytes[2...9]) == [0x00, 0x01, 0x40, 0x40] + [0x00, 0x01, 0x40, 0x40])
+    #expect(
+      Array(reports[4].bytes[2...9]) == ProtocolPacketFixtures.SwitchPro.neutralRumble
+        + ProtocolPacketFixtures.SwitchPro.neutralRumble
+    )
     #expect(reports[4].bytes[10] == 0x03)
     #expect(reports[4].bytes[11] == 0x30)
     #expect(reports[5].bytes[10] == 0x40)
@@ -127,11 +112,13 @@ struct SwitchProParserTests {
   @Test
   func testSwitchProStartupReportsAreTransportScopedAndRateLimited() {
     let bluetooth = SwitchProParser().hidStartupReports(transport: "Bluetooth")
-    #expect(bluetooth.map(\.reportID) == [0x01, 0x01, 0x01, 0x01, 0x01])
-    #expect(bluetooth.map { $0.bytes[10] } == [0x03, 0x40, 0x48, 0x10, 0x10])
+    #expect(bluetooth.map(\.reportID) == ProtocolPacketFixtures.SwitchPro.bluetoothStartupReportIDs)
+    #expect(
+      bluetooth.map { $0.bytes[10] } == ProtocolPacketFixtures.SwitchPro.bluetoothStartupSubcommands
+    )
     #expect(SwitchProParser().hidStartupReports(transport: nil).isEmpty)
     let reportIDs = SwitchProParser().hidStartupReports(transport: "USB").map(\.reportID)
-    #expect(reportIDs == [0x80, 0x80, 0x80, 0x80, 0x01, 0x01, 0x01, 0x01, 0x01])
+    #expect(reportIDs == ProtocolPacketFixtures.SwitchPro.usbStartupReportIDs)
     #expect(SwitchProParser().hidStartupReportIntervalNanoseconds(transport: "USB") == 20_000_000)
     #expect(
       SwitchProParser().hidStartupReportIntervalNanoseconds(transport: "Bluetooth") == 60_000_000

@@ -1,3 +1,4 @@
+import ProtocolPacketFixtures
 import Testing
 
 @testable import OpenJoystickDriverKit
@@ -25,7 +26,7 @@ struct XboxOneHIDReportFormatTests {
       (.dpadLeft, 15, 0x20), (.dpadRight, 15, 0x40), (.share, 16, 0x01),
     ]
 
-    #expect(neutral == [1, 0, 128, 0, 128, 0, 128, 0, 128, 0, 0, 0, 0, 0, 0, 0, 0])
+    #expect(neutral == ProtocolPacketFixtures.XboxBluetooth.neutralInputReport)
     for (button, byte, mask) in controls {
       let value = try report(buttonBit: button.rawValue)
       #expect(value[byte] == mask)
