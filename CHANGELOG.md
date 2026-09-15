@@ -11,6 +11,8 @@ The project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Reuse canonical GIP, GameSir, DualShock 3, Steam Controller, and Switch Pro packet
   construction, and share test-only protocol fixtures with the macOS 14 compatibility harness.
+- Keep local commit and push hooks fast by reserving full lint, build, test, and
+  network-backed catalog validation for explicit checks and CI.
 
 ### Fixed
 
@@ -21,6 +23,7 @@ The project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   closed, and restore the prior active session when disconnection fails or times out.
 - Report typed HID, Bluetooth, and disconnect-stage failures instead of reducing them to generic
   Boolean or unavailable results.
+- Restore the authenticated GitHub fallback when raw catalog source downloads are rate limited.
 
 ## [0.5.0-beta.4] - 2026-09-15
 

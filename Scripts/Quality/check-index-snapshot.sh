@@ -31,5 +31,5 @@ fi
 (
   unset GIT_DIR GIT_INDEX_FILE GIT_PREFIX GIT_WORK_TREE
   cd "$temporary_worktree"
-  just check-fast
+  just check-hook
 )

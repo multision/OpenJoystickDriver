@@ -92,6 +92,11 @@ catalog-xpad *args:
 # Checks
 # =========================================================================
 
+# Run the fast structural checks used by local Git hooks
+check-hook:
+    python3 Scripts/Quality/check_swift_file_length.py
+    git diff --check HEAD^ HEAD
+
 # Run snapshot-safe validation
 check-fast: lint
     ./Scripts/ojd catalog regenerate --check

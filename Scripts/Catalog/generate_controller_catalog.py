@@ -16,7 +16,7 @@ import urllib.error
 import urllib.request
 from typing import Any
 
-from Scripts.Catalog.xpad_io import json_text
+from Scripts.Catalog.xpad_io import json_text, run_gh
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 LOCK_PATH = ROOT / "ControllerSources.lock.json"
@@ -108,7 +108,7 @@ HID_RECORDS = (
 )
 
 
-def load_locked_linux_files(generator: Any, linux: dict[str, Any]) -> dict[str, str]:
+def load_locked_linux_files(linux: dict[str, Any]) -> dict[str, str]:
     result: dict[str, str] = {}
     for key, file_lock in sorted(linux["files"].items()):
         url = (
@@ -124,7 +124,7 @@ def load_locked_linux_files(generator: Any, linux: dict[str, Any]) -> dict[str, 
                 source = response.read().decode()
         except urllib.error.HTTPError:
             document = json.loads(
-                generator.run_gh(
+                run_gh(
                     [
                         "api",
                         "-X",
@@ -132,7 +132,8 @@ def load_locked_linux_files(generator: Any, linux: dict[str, Any]) -> dict[str, 
                         f"repos/{linux['repository']}/contents/{file_lock['path']}",
                         "-f",
                         f"ref={linux['commit']}",
-                    ]
+                    ],
+                    CatalogError,
                 )
             )
             source = base64.b64decode(document["content"]).decode()
@@ -314,7 +315,7 @@ def build_catalog() -> dict[tuple[int, int], dict[str, Any]]:
     lock = load_lock()
     linux = lock["linux"]
 
-    sources = load_locked_linux_files(generator, linux)
+    sources = load_locked_linux_files(linux)
     source = sources["xpad"]
     candidates, skipped, _ = generator.generate_candidates(
         devices=generator.parse_devices(source),

@@ -16,9 +16,10 @@ Apple-issued assets, credentials, system permissions,
 publication, destructive writes, and hardware actions retain their official or
 explicit authorization flows. CI never prompts or installs host software.
 
-The pre-commit hook runs `just check-fast` against the exact staged snapshot.
-The pre-push hook runs `just check` in an isolated worktree for each commit tip
-being pushed. Run either recipe directly for the same manual checks.
+The pre-commit hook runs fast structural checks against the exact staged snapshot.
+The pre-push hook checks the outgoing tree diff for whitespace errors without
+repeating lint, builds, tests, or network-backed catalog generation. Run
+`just check` before opening a pull request; CI repeats the complete validation.
 
 Signing, DriverKit, and packaging: `Scripts/README.md`. Dev install:
 `./Scripts/ojd build install dev`. Do not edit `.build/driverkit/generated/`.
