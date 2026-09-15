@@ -1,0 +1,330 @@
+import Foundation
+import OpenJoystickDriverKit
+
+extension PhysicalOutputCommand {
+  internal struct ListedDevice: Codable {
+    let id: String
+    let name: String
+    let vendorID: UInt16
+    let productID: UInt16
+    let parser: String
+    let connection: String
+    let physicalOutputCapabilities: PhysicalControllerOutputCapabilities
+
+    init(_ device: ApplicationServiceDeviceDescription) {
+      id = device.runtimeIdentifier
+      name = device.name
+      vendorID = device.vendorID
+      productID = device.productID
+      parser = device.parser
+      connection = device.connection
+      physicalOutputCapabilities = device.physicalOutputCapabilities
+    }
+  }
+
+  func run(arguments: [String]) {
+    let subcommand = arguments.first ?? "list"
+    switch subcommand {
+    case "list": list(arguments: Array(arguments.dropFirst()))
+    case "rumble": rumble(arguments: Array(arguments.dropFirst()))
+    case "player": player(arguments: Array(arguments.dropFirst()))
+    case "brightness": brightness(arguments: Array(arguments.dropFirst()))
+    case "color": color(arguments: Array(arguments.dropFirst()))
+    case "plan": plan(arguments: Array(arguments.dropFirst()))
+    case "--help", "-h", "help": printHelp()
+    default:
+      fail(
+        CLILocalized.format(
+          "cli.controller.unknownOutputCommand",
+          "Unknown controller output command: %@",
+          subcommand
+        )
+      )
+    }
+  }
+
+  internal func list(arguments: [String]) {
+    guard arguments.allSatisfy({ $0 == "--json" }) && arguments.count <= 1 else {
+      printHelp()
+      exit(1)
+    }
+    let devices = connectedDevices()
+    if arguments.contains("--json") {
+      do {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        let data = try encoder.encode(devices.map(ListedDevice.init))
+        print(String(data: data, encoding: .utf8) ?? "[]")
+      } catch {
+        fail(
+          CLILocalized.format(
+            "cli.controller.outputEncodeFailed",
+            "Could not encode physical output capabilities: %@",
+            error.localizedDescription
+          )
+        )
+      }
+      return
+    }
+
+    if devices.isEmpty {
+      print(
+        CLILocalized.text(
+          "cli.controller.noPhysicalOutputDevices",
+          "Physical output devices: (none connected)"
+        )
+      )
+      return
+    }
+    print(
+      CLILocalized.format(
+        "cli.controller.physicalOutputDevices",
+        "Physical output devices (%d):",
+        devices.count
+      )
+    )
+    for device in devices {
+      let capabilities = device.physicalOutputCapabilities
+      print("  \(device.name) (\(hex(device.vendorID)):\(hex(device.productID)))")
+      print("    device   : \(device.runtimeIdentifier)")
+      print("    motors   : \(names(capabilities.rumbleMotors.map(\.rawValue)))")
+      print("    lighting : \(names(capabilities.lightingFeatures.map(\.rawValue)))")
+      print("    binary   : \(names(capabilities.binaryRumbleMotors.map(\.rawValue)))")
+    }
+  }
+
+  internal func rumble(arguments: [String]) {
+    let parsed = parseDeviceOption(arguments)
+    let arguments = parsed.arguments
+    guard arguments.count >= 2 else {
+      printHelp()
+      exit(1)
+    }
+    let vendorID = parseIdentifier(arguments[0], label: "VID")
+    let productID = parseIdentifier(arguments[1], label: "PID")
+    var left = UInt8(180)
+    var right = UInt8(180)
+    var lt = UInt8(0)
+    var rt = UInt8(0)
+    var durationMs = 450
+    var index = 2
+    while index < arguments.count {
+      guard index + 1 < arguments.count else {
+        fail(
+          CLILocalized.format(
+            "cli.controller.missingOptionValue",
+            "Missing value for %@",
+            arguments[index]
+          )
+        )
+      }
+      let option = arguments[index]
+      let value = parseInteger(arguments[index + 1], label: option)
+      switch option {
+      case "--left": left = parseIntensity(value, label: option)
+      case "--right": right = parseIntensity(value, label: option)
+      case "--lt": lt = parseIntensity(value, label: option)
+      case "--rt": rt = parseIntensity(value, label: option)
+      case "--duration-ms":
+        guard (0...5_000).contains(value) else {
+          fail(CLILocalized.text("cli.controller.durationRange", "--duration-ms must be 0...5000"))
+        }
+        durationMs = value
+      default:
+        fail(
+          CLILocalized.format(
+            "cli.controller.unknownRumbleOption",
+            "Unknown rumble option: %@",
+            option
+          )
+        )
+      }
+      index += 2
+    }
+
+    let device = requireDevice(
+      vendorID: vendorID,
+      productID: productID,
+      runtimeIdentifier: parsed.runtimeIdentifier
+    )
+    let capabilities = device.physicalOutputCapabilities
+    guard capabilities.supportsRumble else {
+      fail(
+        CLILocalized.text(
+          "cli.controller.noRumble",
+          "The selected controller has no physical rumble implementation."
+        )
+      )
+    }
+    if lt > 0 && !capabilities.rumbleMotors.contains(.leftTrigger) {
+      fail(
+        CLILocalized.text(
+          "cli.controller.noLeftTriggerMotor",
+          "The selected controller does not expose a left trigger motor."
+        )
+      )
+    }
+    if rt > 0 && !capabilities.rumbleMotors.contains(.rightTrigger) {
+      fail(
+        CLILocalized.text(
+          "cli.controller.noRightTriggerMotor",
+          "The selected controller does not expose a right trigger motor."
+        )
+      )
+    }
+
+    let rumbleLeft = left
+    let rumbleRight = right
+    let rumbleLT = lt
+    let rumbleRT = rt
+    let rumbleDurationMs = durationMs
+    let hasActiveMotor = left != 0 || right != 0 || lt != 0 || rt != 0
+    let client = ApplicationServiceClient()
+    client.connect()
+    defer { client.disconnect() }
+    let sent: Bool? = runSyncOptionalResult(timeout: applicationServiceCallTimeoutSeconds + 5.0) {
+      guard
+        (try? await client.sendPhysicalRumble(
+          vendorID: vendorID,
+          productID: productID,
+          runtimeIdentifier: device.runtimeIdentifier,
+          left: rumbleLeft,
+          right: rumbleRight,
+          lt: rumbleLT,
+          rt: rumbleRT,
+          durationMs: rumbleDurationMs
+        )) == true
+      else { return false }
+      guard hasActiveMotor, rumbleDurationMs > 0 else { return true }
+      try? await Task.sleep(nanoseconds: UInt64(rumbleDurationMs) * 1_000_000)
+      return
+        (try? await client.sendPhysicalRumble(
+          vendorID: vendorID,
+          productID: productID,
+          runtimeIdentifier: device.runtimeIdentifier,
+          left: 0,
+          right: 0,
+          lt: 0,
+          rt: 0,
+          durationMs: 0
+        )) == true
+    }
+    guard sent == true else {
+      fail(
+        CLILocalized.text(
+          "cli.controller.rumbleFailed",
+          "The application service could not send the physical rumble command."
+        )
+      )
+    }
+    print(
+      CLILocalized.format(
+        "cli.controller.rumbleSent",
+        "Physical rumble command sent to %@:%@.",
+        hex(vendorID),
+        hex(productID)
+      )
+    )
+  }
+
+  internal func player(arguments: [String]) {
+    let parsed = parseDeviceOption(arguments)
+    let arguments = parsed.arguments
+    guard arguments.count == 3 else {
+      printHelp()
+      exit(1)
+    }
+    let vendorID = parseIdentifier(arguments[0], label: "VID")
+    let productID = parseIdentifier(arguments[1], label: "PID")
+    let indicator: PhysicalPlayerIndicator
+
+    if arguments[2] == "off" {
+      indicator = .off
+    } else {
+      let rawValue = parseInteger(arguments[2], label: "player")
+      guard let parsed = PhysicalPlayerIndicator(rawValue: rawValue), parsed != .off else {
+        fail(
+          CLILocalized.text("cli.controller.invalidPlayer", "Player must be off, 1, 2, 3, or 4.")
+        )
+      }
+      indicator = parsed
+    }
+
+    let device = requireDevice(
+      vendorID: vendorID,
+      productID: productID,
+      runtimeIdentifier: parsed.runtimeIdentifier
+    )
+    guard device.physicalOutputCapabilities.supportsPlayerIndicator else {
+      fail(
+        CLILocalized.text(
+          "cli.controller.noPlayerIndicator",
+          "The selected controller has no source-backed player-indicator implementation."
+        )
+      )
+    }
+
+    let client = ApplicationServiceClient()
+    client.connect()
+    defer { client.disconnect() }
+    let sent: Bool? = runSyncOptionalResult(timeout: applicationServiceCallTimeoutSeconds) {
+      try? await client.setPhysicalPlayerIndicator(
+        vendorID: vendorID,
+        productID: productID,
+        runtimeIdentifier: device.runtimeIdentifier,
+        indicator: indicator
+      )
+    }
+    guard sent == true else {
+      fail(
+        CLILocalized.text(
+          "cli.controller.playerIndicatorFailed",
+          "The application service could not set the physical player indicator."
+        )
+      )
+    }
+    print(
+      CLILocalized.format(
+        "cli.controller.playerIndicatorSet",
+        "Physical player indicator set on %@:%@.",
+        hex(vendorID),
+        hex(productID)
+      )
+    )
+  }
+
+  internal func connectedDevices() -> [ApplicationServiceDeviceDescription] {
+    let client = ApplicationServiceClient()
+    client.connect()
+    defer { client.disconnect() }
+    guard
+      let status: ApplicationServiceStatusPayload = runSyncOptionalResult(
+        timeout: applicationServiceCallTimeoutSeconds,
+        { try? await client.getStatus() }
+      )
+    else {
+      fail(
+        CLILocalized.text(
+          "cli.controller.serviceUnavailable",
+          "The application service is unavailable."
+        )
+      )
+    }
+    return status.connectedDevices
+  }
+
+  internal func requireDevice(
+    vendorID: UInt16,
+    productID: UInt16,
+    runtimeIdentifier: String?
+  ) -> ApplicationServiceDeviceDescription {
+    do {
+      return try ConnectedControllerSelection.resolve(
+        devices: connectedDevices(),
+        vendorID: vendorID,
+        productID: productID,
+        runtimeIdentifier: runtimeIdentifier
+      )
+    } catch { fail(error.localizedDescription) }
+  }
+}

@@ -9,7 +9,7 @@ public struct RemappingDeviceScope: Codable, Equatable, Hashable, Sendable {
     self.productID = productID
   }
 
-  private enum CodingKeys: String, CodingKey {
+  enum CodingKeys: String, CodingKey {
     case vendorID
     case productID
   }
@@ -31,7 +31,7 @@ public enum RemappingApplicationScope: Codable, Equatable, Hashable, Sendable {
     case global
   }
 
-  private enum CodingKeys: String, CodingKey {
+  enum CodingKeys: String, CodingKey {
     case type
     case bundleIdentifier
   }
@@ -66,7 +66,7 @@ private struct RemappingJSONKey: CodingKey {
   init?(intValue: Int) { return nil }
 }
 
-private extension Decoder {
+extension Decoder {
   func rejectUnknownRemappingProfileFields(_ allowed: Set<String>) throws {
     let container = try self.container(keyedBy: RemappingJSONKey.self)
     let unknown = Set(container.allKeys.map(\.stringValue)).subtracting(allowed).sorted()
@@ -119,7 +119,7 @@ public struct RemappingAxisTuning: Codable, Equatable, Hashable, Sendable {
 
   public static let `default` = Self()
 
-  private enum CodingKeys: String, CodingKey {
+  enum CodingKeys: String, CodingKey {
     case deadzone
     case gain
     case inverted
@@ -140,7 +140,7 @@ public struct RemappingTurbo: Codable, Equatable, Hashable, Sendable {
     self.dutyCycle = dutyCycle
   }
 
-  private enum CodingKeys: String, CodingKey {
+  enum CodingKeys: String, CodingKey {
     case repeatRateHz
     case dutyCycle
   }
@@ -194,7 +194,7 @@ public struct RemappingBinding: Codable, Equatable, Hashable, Identifiable, Send
     self.additionalActions = additionalActions
   }
 
-  private enum CodingKeys: String, CodingKey {
+  enum CodingKeys: String, CodingKey {
     case id
     case source
     case destination
@@ -316,25 +316,6 @@ public struct RemappingProfile: Codable, Equatable, Identifiable, Sendable {
     self.layers = layers
   }
 
-  private enum CodingKeys: String, CodingKey {
-    case id
-    case name
-    case device
-    case applicationScope
-    case outputPolicy
-    case physicalColor
-    case motionTuning
-    case gyroOutput
-    case joyConPair
-    case stickMappings
-    case triggerMappings
-    case touchMappings
-    case bindings
-    case chords
-    case sequences
-    case layers
-  }
-
   public init(from decoder: any Decoder) throws {
     try decoder.rejectUnknownRemappingProfileFields([
       "id", "name", "device", "applicationScope", "outputPolicy", "physicalColor", "motionTuning",
@@ -374,25 +355,5 @@ public struct RemappingProfile: Codable, Equatable, Identifiable, Sendable {
     chords = try container.decodeIfPresent([RemappingChord].self, forKey: .chords) ?? []
     sequences = try container.decodeIfPresent([RemappingSequence].self, forKey: .sequences) ?? []
     layers = try container.decodeIfPresent([RemappingLayer].self, forKey: .layers) ?? []
-  }
-
-  public func encode(to encoder: any Encoder) throws {
-    var container = encoder.container(keyedBy: CodingKeys.self)
-    try container.encode(id, forKey: .id)
-    try container.encode(name, forKey: .name)
-    try container.encode(device, forKey: .device)
-    try container.encode(applicationScope, forKey: .applicationScope)
-    try container.encode(outputPolicy, forKey: .outputPolicy)
-    try container.encodeIfPresent(physicalColor, forKey: .physicalColor)
-    if motionTuning != .default { try container.encode(motionTuning, forKey: .motionTuning) }
-    if gyroOutput != .default { try container.encode(gyroOutput, forKey: .gyroOutput) }
-    try container.encodeIfPresent(joyConPair, forKey: .joyConPair)
-    if !stickMappings.isEmpty { try container.encode(stickMappings, forKey: .stickMappings) }
-    if !triggerMappings.isEmpty { try container.encode(triggerMappings, forKey: .triggerMappings) }
-    if !touchMappings.isEmpty { try container.encode(touchMappings, forKey: .touchMappings) }
-    try container.encode(bindings, forKey: .bindings)
-    try container.encode(chords, forKey: .chords)
-    try container.encode(sequences, forKey: .sequences)
-    try container.encode(layers, forKey: .layers)
   }
 }
